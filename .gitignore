@@ -1,7 +1,7 @@
 target/
 .idea/
 *.iml
-vaadin-crud-flow-integration-tests/error-screenshots/
+vaadin-rich-text-editor-flow-integration-tests/error-screenshots/
 **/build-tools/node
 **/build-tools/node_modules
 **/package-lock.json
