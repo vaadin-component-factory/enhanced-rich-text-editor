@@ -16,7 +16,7 @@ Add Rich Text Editor to your project
 <dependencies>
   <dependency>
     <groupId>com.vaadin</groupId>
-    <artifactId>vaadin-rich-text-editor-flow</artifactId>
+    <artifactId>incubator-rich-text-editor-flow</artifactId>
     <version>1.0.0.alpha3</version>
   </dependency>
 </dependencies>
@@ -24,7 +24,7 @@ Add Rich Text Editor to your project
 
 ### Using Vaadin Rich Text Editor
 
-[<img src="https://raw.githubusercontent.com/vaadin/vaadin-rich-text-editor-flow/master/screenshot.gif" width="700" alt="Screenshot of Vaadin Rich Text Editor">](https://vaadin.com/components/vaadin-rich-text-editor)
+[<img src="https://raw.githubusercontent.com/vaadin/incubator-rich-text-editor-flow/master/screenshot.gif" width="700" alt="Screenshot of Vaadin Rich Text Editor">](https://vaadin.com/components/incubator-rich-text-editor)
 
 #### Basic use
 In the most basic use case, Vaadin Rich Text Editor should be initialised and its value can be handled using <code>setValue</code> and <code>getValue</code> methods.
@@ -61,7 +61,7 @@ rte.addValueChangeListener(e -> {
 Clone the project in GitHub (or fork it if you plan on contributing)
 
 ```
-git clone git@github.com:vaadin/vaadin-rich-text-editor-flow.git
+git clone git@github.com:vaadin/incubator-rich-text-editor-flow.git
 ```
 
 To build and install the project into the local repository run
