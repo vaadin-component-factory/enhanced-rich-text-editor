@@ -15,4 +15,4 @@ cache:
 
 before_cache:
   # remove all build artifacts
-  - rm -rf $HOME/.m2/repository/com/vaadin/incubator-rich-text-editor-flow
+  - rm -rf $HOME/.m2/repository/com/vaadin/componentfactory/enhanced-rich-text-editor
