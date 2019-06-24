@@ -19,7 +19,7 @@ package com.vaadin.componentfactory;
  * #%L
  * Vaadin EnhancedRichTextEditor for Vaadin 10
  * %%
- * Copyright (C) 2018 Vaadin Ltd
+ * Copyright (C) 2019 Vaadin Ltd
  * %%
  * This program is available under Commercial Vaadin Add-On License 3.0
  * (CVALv3).
@@ -37,6 +37,9 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.HtmlImport;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.HasTheme;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
 import com.vaadin.flow.component.Synchronize;
@@ -48,6 +51,10 @@ import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.function.SerializableFunction;
 import com.vaadin.flow.function.SerializableBiFunction;
 import com.vaadin.flow.component.AbstractSinglePropertyField;
+import elemental.json.JsonObject;
+import elemental.json.impl.JreJsonArray;
+import elemental.json.impl.JreJsonFactory;
+import elemental.json.impl.JreJsonObject;
 
 /**
  * <p>
@@ -233,6 +240,53 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
         getThemeNames().removeAll(
                 Stream.of(variants).map(EnhancedRichTextEditorVariant::getVariantName)
                         .collect(Collectors.toList()));
+    }
+
+    public void setTabStops(List<TabStop> tabStops) {
+        JreJsonFactory factory = new JreJsonFactory();
+        JsonArray arrayTabStops = new JreJsonArray(factory);
+
+        int index = 0;
+        for (TabStop tab : tabStops) {
+            JsonObject obj = new JreJsonObject(factory);
+            obj.put("direction", tab.getDirection().name().toLowerCase());
+            obj.put("position", tab.getPosition());
+
+            arrayTabStops.set(index++, obj );
+        }
+
+        getElement().setPropertyJson("tabStops", arrayTabStops);
+    }
+
+    @Synchronize(property = "tabStops", value = "tab-stops-changed")
+    public List<TabStop> getTabStops() {
+        List<TabStop> tabStops = new ArrayList<>();
+        JsonArray rawArray = (JsonArray) getElement().getPropertyRaw("tabStops");
+        System.out.println("rawArray: " + rawArray);
+        getElement().synchronizeProperty("tabStops", "tabStops-changed");
+        getElement().synchronizeProperty("tabStops", "tab-stops-changed");
+        getElement().synchronizeProperty("tabStops", "change");
+        getElement().synchronizeProperty("tabStops", "value-changed");
+        System.out.println("rawArray: " + getElement().getProperty("tabStops"));
+
+        if (rawArray == null) {
+            return tabStops;
+        }
+
+        for (int i = 0; i < rawArray.length(); i++) {
+            JsonObject obj = rawArray.getObject(i);
+            try {
+                TabStop tab =  new TabStop(
+                        TabStop.Direction.valueOf(obj.getString("direction").toUpperCase()),
+                        obj.get("position").asNumber());
+
+                tabStops.add(tab);
+
+            } catch (IllegalArgumentException e) {
+            }
+        }
+
+        return tabStops;
     }
 
     /**

@@ -9,7 +9,7 @@
 
     <name>Enhanced Rich Text Editor</name>
 
-    <version>1.0.0</version>
+    <version>1.0.4</version>
     <inceptionYear>2019</inceptionYear>
     <organization>
         <name>Vaadin Ltd</name>
@@ -57,6 +57,11 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.webjars.bowergithub.vaadin</groupId>
+            <artifactId>vaadin-lumo-styles</artifactId>
+            <version>1.4.1</version>
+        </dependency>
+        <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>flow-server</artifactId>
             <version>${flow.version}</version>
@@ -71,7 +76,7 @@
         <dependency>
             <groupId>com.vaadin.componentfactory.webjar</groupId>
             <artifactId>vcf-enhanced-rich-text-editor</artifactId>
-            <version>1.0.3</version>
+            <version>1.0.4</version>
         </dependency>
         <dependency>
             <groupId>com.vaadin.webjar</groupId>
