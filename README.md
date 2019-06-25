@@ -4,6 +4,8 @@ Enhanced Rich Text Editor for Flow is an extended version of Vaadin Rich Text
 Editor with more functionalities like tab-stops, non-breaking space, rulers, customizing toolbar buttons and
 read-only sections.
 
+ [Live Demo ↗](https://incubator.app.fi/enhanced-rich-text-editor-demo/enhanced-rich-text-editor)
+
 # Usage
 Tabstops can be set in UI by clicking on horizontal ruler, on top of the editor. 
 There are 3 tabstop possible directions: Left, Right and Middle.
