@@ -241,6 +241,7 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         private String link;
         private String blockquote;
         private String codeBlock;
+        private String readonly;
         private String clean;
 
         /**
@@ -644,6 +645,26 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         }
 
         /**
+         * Gets the translated word for {@code readonly}
+         *
+         * @return the translated word for readonly
+         */
+        public String getReadonly() {
+            return readonly;
+        }
+
+        /**
+         * Sets the translated word for {@code readonly}.
+         *
+         * @param readonly the translated word for readonly
+         * @return this instance for method chaining
+         */
+        public RichTextEditorI18n setReadonly(String readonly) {
+            this.readonly = readonly;
+            return this;
+        }
+
+        /**
          * Gets the translated word for {@code clean}
          *
          * @return the translated word for clean
@@ -691,6 +712,7 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
                     link + ", " +
                     blockquote + ", " +
                     codeBlock + ", " +
+                    readonly + ", " +
                     clean + "]";
         }
     }
@@ -716,6 +738,7 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         LINK,
         BLOCKQUOTE,
         CODE_BLOCK,
+        READONLY,
         CLEAN;
 
 

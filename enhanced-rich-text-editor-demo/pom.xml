@@ -9,7 +9,7 @@
 
     <name>Enhanced Rich Text Editor Demo</name>
 
-    <version>1.0.4</version>
+    <version>1.1.0</version>
 
     <inceptionYear>2019</inceptionYear>
     <organization>
@@ -69,12 +69,6 @@
             <version>1.4.1</version>
         </dependency>
         <dependency>
-            <groupId>com.vaadin.componentfactory</groupId>
-            <artifactId>tooltip</artifactId>
-            <version>1.2.1</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>3.0.1</version>
@@ -106,7 +100,7 @@
         <dependency>
             <groupId>com.vaadin.componentfactory</groupId>
             <artifactId>enhanced-rich-text-editor</artifactId>
-            <version>1.0.4</version>
+            <version>1.1.0</version>
         </dependency>
 
         <dependency>
