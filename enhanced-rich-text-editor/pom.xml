@@ -9,7 +9,7 @@
 
     <name>Enhanced Rich Text Editor</name>
 
-    <version>1.0.4</version>
+    <version>1.1.0</version>
     <inceptionYear>2019</inceptionYear>
     <organization>
         <name>Vaadin Ltd</name>
@@ -76,7 +76,7 @@
         <dependency>
             <groupId>com.vaadin.componentfactory.webjar</groupId>
             <artifactId>vcf-enhanced-rich-text-editor</artifactId>
-            <version>1.0.4</version>
+            <version>1.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.vaadin.webjar</groupId>

@@ -197,6 +197,10 @@ import elemental.json.impl.JreJsonObject;
  * <td>The &quot;code block&quot; button</td>
  * </tr>
  * <tr>
+ * <td>{@code readonly-button}</td>
+ * <td>The &quot;readonly&quot; button</td>
+ * </tr>
+ * <tr>
  * <td>{@code clean-button}</td>
  * <td>The &quot;clean formatting&quot; button</td>
  * </tr>
