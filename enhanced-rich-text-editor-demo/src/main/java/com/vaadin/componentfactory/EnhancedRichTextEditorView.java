@@ -107,6 +107,7 @@ public class EnhancedRichTextEditorView extends DemoView {
         buttons.put(EnhancedRichTextEditor.ToolbarButton.IMAGE, false);
         buttons.put(EnhancedRichTextEditor.ToolbarButton.LINK, false);
         buttons.put(EnhancedRichTextEditor.ToolbarButton.STRIKE, false);
+        buttons.put(EnhancedRichTextEditor.ToolbarButton.READONLY, false);
         rte.setToolbarButtonsVisibility(buttons);
         // end-source-example
 
