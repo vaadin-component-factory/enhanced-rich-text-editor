@@ -29,6 +29,8 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dependency.HtmlImport;
 import com.vaadin.flow.component.dependency.JavaScript;
+import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.value.HasValueChangeMode;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -42,7 +44,7 @@ import elemental.json.JsonObject;
  * @author Vaadin Ltd
  */
 @Tag("vcf-enhanced-rich-text-editor")
-@HtmlImport("frontend://bower_components/vcf-enhanced-rich-text-editor/src/vcf-enhanced-rich-text-editor.html")
+@JsModule("./richTextEditorConnector-npm.js")
 @JavaScript("frontend://richTextEditorConnector.js")
 public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<EnhancedRichTextEditor, String>
         implements HasSize, HasValueChangeMode, InputNotifier, KeyNotifier, CompositionNotifier {
