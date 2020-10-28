@@ -2,6 +2,7 @@ package com.vaadin.componentfactory;
 
 import java.util.*;
 
+import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -22,6 +23,7 @@ public class EnhancedRichTextEditorView extends DemoView {
         createGetHtmlValue();
         createEditorWithLimitedToolbar();
         createEditorWithReadonlySections();
+        createEditorWithPlaceholders();
     }
 
     private void createDefaultEditor() {
@@ -31,6 +33,48 @@ public class EnhancedRichTextEditorView extends DemoView {
         // end-source-example
 
         addCard("Basic Rich Text Editor", rte);
+    }
+
+    private void createEditorWithPlaceholders() {
+        // begin-source-example
+        // source-example-heading: Basic Rich Text Editor
+        EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
+
+        List<Placeholder> placeholders = new ArrayList<>();
+        Placeholder placeholder1 = new Placeholder();
+        placeholder1.setText("N-1=Vaadin");
+        placeholder1.getFormat().put("italic", true);
+        placeholder1.getAltFormat().put("italic", false);
+        placeholder1.getAltFormat().put("bold", true);
+
+        Placeholder placeholder2 = new Placeholder();
+        placeholder2.setText("A-1=Turku, 20540");
+        placeholder2.getAltFormat().put("link", "https://goo.gl/maps/EX8RTEMUWeEAdkNN8");
+
+        Placeholder placeholder3 = new Placeholder();
+        placeholder3.setText("D-1=01-01-2000");
+
+        placeholders.add(placeholder1);
+        placeholders.add(placeholder2);
+        placeholders.add(placeholder3);
+
+        rte.setPlacehoderAltAppearence(true);
+        rte.setPlaceholderAltAppearencePattern("(?<=\\\\=).*$");
+
+        rte.setPlaceholders(placeholders);
+        
+        
+        // end-source-example
+
+        Div valueHolder = new Div();
+        rte.addValueChangeListener(event -> {
+            Html value = new Html("<div>"+rte.getHtmlValueString()+"</div>");
+        	valueHolder.removeAll();
+        	valueHolder.add(value);
+        });
+        
+        rte.setValue("[{\"insert\":\"The company \"},{\"insert\":{\"placeholder\":{\"text\":\"N-1=Vaadin\",\"format\":{\"italic\":true},\"altFormat\":{\"italic\":false,\"bold\":true}}}},{\"insert\":\", located in \"},{\"insert\":{\"placeholder\":{\"text\":\"A-1=Turku, 20540\",\"altFormat\":{\"link\":\"https://goo.gl/maps/EX8RTEMUWeEAdkNN8\"}}}},{\"insert\":\", was founded in \"},{\"insert\":{\"placeholder\":{\"text\":\"D-1=01-01-2000\"}}},{\"insert\":\".\"}]" );
+        addCard("Rich Text Editor with Placeholders",rte,valueHolder);
     }
 
     private void createEditorWithTabstops() {

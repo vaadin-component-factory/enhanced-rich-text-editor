@@ -18,6 +18,8 @@ package com.vaadin.componentfactory;
  */
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
@@ -25,18 +27,21 @@ import com.vaadin.flow.component.CompositionNotifier;
 import com.vaadin.flow.component.HasSize;
 import com.vaadin.flow.component.InputNotifier;
 import com.vaadin.flow.component.KeyNotifier;
+import com.vaadin.flow.component.Synchronize;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.dependency.HtmlImport;
 import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.component.dependency.JsModule;
-import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.value.HasValueChangeMode;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.function.SerializableConsumer;
 import com.vaadin.flow.internal.JsonSerializer;
+
+import elemental.json.JsonArray;
 import elemental.json.JsonObject;
+import elemental.json.impl.JreJsonArray;
+import elemental.json.impl.JreJsonFactory;
 
 /**
  * Server-side component for the {@code <vcf-enhanced-rich-text-editor>} component.
@@ -52,6 +57,7 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
     private ValueChangeMode currentMode;
     private RichTextEditorI18n i18n;
     private Map<ToolbarButton, Boolean> toolbarButtonsVisibility;
+
 
     /**
      * Gets the internationalization object previously set for this component.
@@ -93,6 +99,12 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         return toolbarButtonsVisibility;
     }
 
+    /**
+     * Set which toolbar buttons are visible.
+     * 
+     * @param toolbarButtonsVisibility Map of button and boolean value. Boolean value false associated
+     *                                 with the button means that button will be hidden. 
+     */
     public void setToolbarButtonsVisibility(Map<ToolbarButton, Boolean> toolbarButtonsVisibility) {
         this.toolbarButtonsVisibility = toolbarButtonsVisibility;
         runBeforeClientResponse(ui -> {
@@ -220,6 +232,64 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
     }
 
     /**
+     * Set placeholders.
+     * 
+     * @param placeholders Collection of Placeholder objects
+     */
+    public void setPlaceholders(Collection<Placeholder> placeholders) {
+    	Objects.requireNonNull(placeholders, "placeholders cannot be null");
+        JreJsonFactory factory = new JreJsonFactory();
+        JsonArray jsonArray = new JreJsonArray(factory);
+
+        int index = 0;
+		for (Placeholder placeholder : placeholders) {
+    		jsonArray.set(index++, placeholder.toJson());
+    	};
+    	
+    	getElement().setPropertyJson("placeholders", jsonArray);
+    }
+
+    @Synchronize(property = "placeholders", value = "placeholders-changed")
+    public Collection<Placeholder> getPlaceholders() {
+    	ArrayList<Placeholder> placeholders = new ArrayList<>();
+    	JsonArray rawArray = (JsonArray) getElement().getPropertyRaw("placeholders");
+
+    	if (rawArray == null) {
+            return placeholders;
+        }
+
+        for (int i = 0; i < rawArray.length(); i++) {
+            JsonObject obj = rawArray.getObject(i);
+            try {
+            	Placeholder placeholder = new Placeholder(obj);
+                placeholders.add(placeholder);
+
+            } catch (IllegalArgumentException e) {
+            }
+        }
+
+        return placeholders;
+    }
+
+    public void setPlaceholderAltAppearencePattern(String pattern) {
+        getElement().setProperty("placeholderAltAppearancePattern", pattern);
+    }
+
+    @Synchronize(property = "placeholderAltAppearancePattern", value = "placeholder-alt-appearance-pattern-changed")
+    public String getPlaceholderAltAppearencePattern() {
+        return getElement().getProperty("placeholderAltAppearancePattern");
+    }
+
+    public void setPlacehoderAltAppearence(boolean altAppearence) {
+        getElement().setProperty("placeholderAltAppearance", altAppearence);
+    }
+
+    @Synchronize(property = "placeholderAltAppearance", value = "placeholder-alt-appearance-changed")
+    public boolean isPlacehoderAltAppearence() {
+        return getElement().getProperty("placeholderAltAppearance", false);    	
+    }
+
+    /**
      * The internationalization properties for {@link EnhancedRichTextEditor}.
      */
     public static class RichTextEditorI18n implements Serializable {
@@ -244,6 +314,12 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         private String blockquote;
         private String codeBlock;
         private String readonly;
+        private String placeholder;
+        private String placeholderAppeance;
+        private String placeholderComboBoxLabel;
+        private String placeholderAppearanceLabel1;
+        private String placeholderAppearanceLabel2;
+        private String placeholderDialogTitle;
         private String clean;
 
         /**
@@ -667,6 +743,126 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         }
 
         /**
+         * Gets the translated word for {@code placeholder}
+         *
+         * @return the translated word for placeholder
+         */
+        public String getPlaceholder() {
+            return placeholder;
+        }
+
+        /**
+         * Sets the translated word for {@code placeholder}.
+         *
+         * @param placeholder the translated word for placeholder
+         * @return this instance for method chaining
+         */
+        public RichTextEditorI18n setPlaceholder(String placeholder) {
+            this.placeholder = placeholder;
+            return this;
+        }
+
+        /**
+         * Gets the translated word for {@code placeholderAppeance}
+         *
+         * @return the translated word for placeholderAppeance
+         */
+        public String getPlaceholderAppeance() {
+            return placeholderAppeance;
+        }
+
+        /**
+         * Sets the translated word for {@code placeholderAppeance}.
+         *
+         * @param placeholderAppeance the translated word for placeholderAppeance
+         * @return this instance for method chaining
+         */
+        public RichTextEditorI18n setPlaceholderAppeance(String placeholderAppeance) {
+            this.placeholderAppeance = placeholderAppeance;
+            return this;
+        }        
+
+        /**
+         * Gets the translated word for {@code placeholderComboBoxLabel}
+         *
+         * @return the translated word for placeholderComboBoxLabel
+         */
+        public String getPlaceholderComboBoxLabel() {
+            return placeholderComboBoxLabel;
+        }
+
+        /**
+         * Sets the translated word for {@code placeholderComboBoxLabel}.
+         *
+         * @param placeholderComboBoxLabel the translated word for placeholderComboBoxLabel
+         * @return this instance for method chaining
+         */
+        public RichTextEditorI18n setPlaceholderComboBoxLabel(String placeholderComboBoxLabel) {
+            this.placeholderComboBoxLabel = placeholderComboBoxLabel;
+            return this;
+        } 
+
+        /**
+         * Gets the translated word for {@code placeholderAppearanceLabel1}
+         *
+         * @return the translated word for placeholderAppearanceLabel1
+         */
+        public String setPlaceholderAppearanceLabel1() {
+            return placeholderAppearanceLabel1;
+        }
+
+        /**
+         * Sets the translated word for {@code placeholderAppearanceLabel1}.
+         *
+         * @param placeholderAppearanceLabel1 the translated word for placeholderAppearanceLabel1
+         * @return this instance for method chaining
+         */
+        public RichTextEditorI18n getPlaceholderAppearanceLabel1(String placeholderAppearanceLabel1) {
+            this.placeholderAppearanceLabel1 = placeholderAppearanceLabel1;
+            return this;
+        }
+
+        /**
+         * Gets the translated word for {@code placeholderAppearanceLabel2}
+         *
+         * @return the translated word for placeholderAppearanceLabel2
+         */
+        public String setPlaceholderAppearanceLabel2() {
+            return placeholderAppearanceLabel2;
+        }
+
+        /**
+         * Sets the translated word for {@code placeholderAppearanceLabel2}.
+         *
+         * @param placeholderAppearanceLabel2 the translated word for placeholderAppearanceLabel2
+         * @return this instance for method chaining
+         */
+        public RichTextEditorI18n getPlaceholderAppearanceLabel2(String placeholderAppearanceLabel2) {
+            this.placeholderAppearanceLabel2 = placeholderAppearanceLabel2;
+            return this;
+        }
+
+        /**
+         * Gets the translated word for {@code placeholderDialogTitle}
+         *
+         * @return the translated word for placeholderDialogTitle
+         */
+        public String getPlaceholderDialogTitle() {
+            return placeholderDialogTitle;
+        }
+
+        /**
+         * Sets the translated word for {@code placeholderDialogTitle}.
+         *
+         * @param placeholderDialogTitle the translated word for placeholderDialogTitle
+         * @return this instance for method chaining
+         */
+        public RichTextEditorI18n getPlaceholderDialogTitle(String placeholderDialogTitle) {
+            this.placeholderDialogTitle = placeholderDialogTitle;
+            return this;
+        }
+
+        /**
          * Gets the translated word for {@code clean}
          *
          * @return the translated word for clean
@@ -715,6 +911,12 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
                     blockquote + ", " +
                     codeBlock + ", " +
                     readonly + ", " +
+                    placeholder + ", " +
+                    placeholderAppeance + ", " +
+                    placeholderComboBoxLabel + ", " +
+                    placeholderAppearanceLabel1 + ", " +
+                    placeholderAppearanceLabel2 + ", " +
+                    placeholderDialogTitle + ", " +
                     clean + "]";
         }
     }

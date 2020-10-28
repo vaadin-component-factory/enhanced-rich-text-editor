@@ -9,7 +9,7 @@
 
     <name>Enhanced Rich Text Editor</name>
 
-    <version>2.0.0</version>
+    <version>2.1.0</version>
     <inceptionYear>2019</inceptionYear>
     <organization>
         <name>Vaadin Ltd</name>
@@ -18,8 +18,8 @@
 
     <properties>
         <powermock.version>1.7.1</powermock.version>
-        <flow.version>2.1.5</flow.version>
-        <vaadin.version>14.1.18</vaadin.version>
+        <flow.version>2.4.0</flow.version>
+        <vaadin.version>14.4.1</vaadin.version>
         <testbench.version>6.0.1</testbench.version>
         <jetty.plugin.version>9.4.11.v20180605</jetty.plugin.version>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -59,11 +59,11 @@
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.vaadin.componentfactory.webjar</groupId>
-            <artifactId>vcf-enhanced-rich-text-editor</artifactId>
-            <version>1.2.0</version>
-        </dependency>
+<!--         <dependency> -->
+<!--             <groupId>com.vaadin.componentfactory.webjar</groupId> -->
+<!--             <artifactId>vcf-enhanced-rich-text-editor</artifactId> -->
+<!--             <version>1.2.0</version> -->
+<!--         </dependency> -->
 
         <dependency>
             <groupId>junit</groupId>
