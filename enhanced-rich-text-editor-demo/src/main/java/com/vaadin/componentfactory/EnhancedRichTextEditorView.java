@@ -59,7 +59,7 @@ public class EnhancedRichTextEditorView extends DemoView {
         placeholders.add(placeholder3);
 
         rte.setPlacehoderAltAppearence(true);
-        rte.setPlaceholderAltAppearencePattern("(?<=\\\\=).*$");
+        rte.setPlaceholderAltAppearencePattern("(?<=\\=).*$");
 
         rte.setPlaceholders(placeholders);
         
