@@ -219,7 +219,7 @@ import elemental.json.impl.JreJsonObject;
         "WebComponent: Vaadin.RichTextEditorElement#1.0.0-alpha3",
         "Flow#1.2-SNAPSHOT" })
 @Tag("vcf-enhanced-rich-text-editor")
-@NpmPackage(value = "@vaadin-component-factory/vcf-enhanced-rich-text-editor", version = "1.3.1")
+@NpmPackage(value = "@vaadin-component-factory/vcf-enhanced-rich-text-editor", version = "1.3.2")
 @JsModule("@vaadin-component-factory/vcf-enhanced-rich-text-editor/src/vcf-enhanced-rich-text-editor.js")
 //@HtmlImport("frontend://bower_components/vcf-enhanced-rich-text-editor/src/vcf-enhanced-rich-text-editor.html")
 public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhancedRichTextEditor<R, T>, T>
