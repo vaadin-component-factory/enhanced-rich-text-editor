@@ -44,20 +44,23 @@ import elemental.json.impl.JreJsonArray;
 import elemental.json.impl.JreJsonFactory;
 
 /**
- * Server-side component for the {@code <vcf-enhanced-rich-text-editor>} component.
+ * Server-side component for the {@code <vcf-enhanced-rich-text-editor>}
+ * component.
  *
  * @author Vaadin Ltd
  */
 @Tag("vcf-enhanced-rich-text-editor")
 @JsModule("./richTextEditorConnector-npm.js")
 @JavaScript("frontend://richTextEditorConnector.js")
-public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<EnhancedRichTextEditor, String>
-        implements HasSize, HasValueChangeMode, InputNotifier, KeyNotifier, CompositionNotifier {
+public class EnhancedRichTextEditor
+        extends GeneratedEnhancedRichTextEditor<EnhancedRichTextEditor, String>
+        implements HasSize, HasValueChangeMode, InputNotifier, KeyNotifier,
+        CompositionNotifier {
 
     private ValueChangeMode currentMode;
     private RichTextEditorI18n i18n;
     private Map<ToolbarButton, Boolean> toolbarButtonsVisibility;
-
+    private Collection<Placeholder> placeholders;
 
     /**
      * Gets the internationalization object previously set for this component.
@@ -67,7 +70,7 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
      * {@link EnhancedRichTextEditor#setI18n(RichTextEditorI18n)}
      *
      * @return the i18n object. It will be <code>null</code>, If the i18n
-     * properties weren't set.
+     *         properties weren't set.
      */
     public RichTextEditorI18n getI18n() {
         return i18n;
@@ -76,7 +79,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
     /**
      * Sets the internationalization properties for this component.
      *
-     * @param i18n the internationalized properties, not <code>null</code>
+     * @param i18n
+     *            the internationalized properties, not <code>null</code>
      */
     public void setI18n(RichTextEditorI18n i18n) {
         Objects.requireNonNull(i18n,
@@ -102,16 +106,18 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
     /**
      * Set which toolbar buttons are visible.
      * 
-     * @param toolbarButtonsVisibility Map of button and boolean value. Boolean value false associated
-     *                                 with the button means that button will be hidden. 
+     * @param toolbarButtonsVisibility
+     *            Map of button and boolean value. Boolean value false
+     *            associated with the button means that button will be hidden.
      */
-    public void setToolbarButtonsVisibility(Map<ToolbarButton, Boolean> toolbarButtonsVisibility) {
+    public void setToolbarButtonsVisibility(
+            Map<ToolbarButton, Boolean> toolbarButtonsVisibility) {
         this.toolbarButtonsVisibility = toolbarButtonsVisibility;
         runBeforeClientResponse(ui -> {
             String str = toolbarButtonsVisibility.toString();
             str = str.replaceAll("=", ":");
-            ui.getPage().executeJavaScript(
-                    "setToolbarButtons($0, $1)", getElement(), str);
+            ui.getPage().executeJavaScript("setToolbarButtons($0, $1)",
+                    getElement(), str);
         });
     }
 
@@ -131,7 +137,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
     /**
      * Constructs a {@code EnhancedRichTextEditor} with the initial value
      *
-     * @param initialValue the initial value
+     * @param initialValue
+     *            the initial value
      * @see #setValue(Object)
      */
     public EnhancedRichTextEditor(String initialValue) {
@@ -142,7 +149,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
     /**
      * Constructs an empty {@code TextField} with a value change listener.
      *
-     * @param listener the value change listener
+     * @param listener
+     *            the value change listener
      * @see #addValueChangeListener(com.vaadin.flow.component.HasValue.ValueChangeListener)
      */
     public EnhancedRichTextEditor(
@@ -155,13 +163,15 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
      * Constructs an empty {@code EnhancedRichTextEditor} with a value change
      * listener and an initial value.
      *
-     * @param initialValue the initial value
-     * @param listener     the value change listener
+     * @param initialValue
+     *            the initial value
+     * @param listener
+     *            the value change listener
      * @see #setValue(Object)
      * @see #addValueChangeListener(com.vaadin.flow.component.HasValue.ValueChangeListener)
      */
     public EnhancedRichTextEditor(String initialValue,
-                                  ValueChangeListener<? super ComponentValueChangeEvent<EnhancedRichTextEditor, String>> listener) {
+            ValueChangeListener<? super ComponentValueChangeEvent<EnhancedRichTextEditor, String>> listener) {
         this();
         setValue(initialValue);
         addValueChangeListener(listener);
@@ -185,15 +195,16 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
     }
 
     /**
-     * Sets the value of this editor. Should be in <a href="https://github.com/quilljs/delta">Delta</a> format.
-     * If the new value is not equal to
-     * {@code getValue()}, fires a value change event. Throws
-     * {@code NullPointerException}, if the value is null.
+     * Sets the value of this editor. Should be in
+     * <a href="https://github.com/quilljs/delta">Delta</a> format. If the new
+     * value is not equal to {@code getValue()}, fires a value change event.
+     * Throws {@code NullPointerException}, if the value is null.
      * <p>
      * Note: {@link Binder} will take care of the {@code null} conversion when
      * integrates with the editor, as long as no new converter is defined.
      *
-     * @param value the new value in Delta format, not {@code null}
+     * @param value
+     *            the new value in Delta format, not {@code null}
      */
     @Override
     public void setValue(String value) {
@@ -201,8 +212,9 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
     }
 
     /**
-     * Returns the current value of the text editor in <a href="https://github.com/quilljs/delta">Delta</a> format. By default, the empty
-     * editor will return an empty string.
+     * Returns the current value of the text editor in
+     * <a href="https://github.com/quilljs/delta">Delta</a> format. By default,
+     * the empty editor will return an empty string.
      *
      * @return the current value.
      */
@@ -210,7 +222,6 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
     public String getValue() {
         return super.getValue();
     }
-
 
     /**
      * Value of the editor presented as HTML string.
@@ -226,42 +237,46 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         return org.jsoup.Jsoup.clean(html,
                 org.jsoup.safety.Whitelist.basic()
                         .addTags("img", "h1", "h2", "h3", "s")
-                        .addAttributes("img", "align", "alt", "height", "src", "title", "width")
+                        .addAttributes("img", "align", "alt", "height", "src",
+                                "title", "width")
                         .addAttributes(":all", "style")
                         .addProtocols("img", "src", "data"));
     }
 
     /**
-     * Set placeholders.
+     * Set placeholders shown in the Placeholder drop down menu.
      * 
-     * @param placeholders Collection of Placeholder objects
+     * @param placeholders
+     *            Collection of Placeholder objects
      */
     public void setPlaceholders(Collection<Placeholder> placeholders) {
-    	Objects.requireNonNull(placeholders, "placeholders cannot be null");
+        Objects.requireNonNull(placeholders, "placeholders cannot be null");
         JreJsonFactory factory = new JreJsonFactory();
         JsonArray jsonArray = new JreJsonArray(factory);
 
         int index = 0;
-		for (Placeholder placeholder : placeholders) {
-    		jsonArray.set(index++, placeholder.toJson());
-    	};
-    	
-    	getElement().setPropertyJson("placeholders", jsonArray);
+        for (Placeholder placeholder : placeholders) {
+            jsonArray.set(index++, placeholder.toJson());
+        }
+
+        this.placeholders = placeholders;
+        getElement().setPropertyJson("placeholders", jsonArray);
     }
 
     @Synchronize(property = "placeholders", value = "placeholders-changed")
     public Collection<Placeholder> getPlaceholders() {
-    	ArrayList<Placeholder> placeholders = new ArrayList<>();
-    	JsonArray rawArray = (JsonArray) getElement().getPropertyRaw("placeholders");
+        ArrayList<Placeholder> placeholders = new ArrayList<>();
+        JsonArray rawArray = (JsonArray) getElement()
+                .getPropertyRaw("placeholders");
 
-    	if (rawArray == null) {
+        if (rawArray == null) {
             return placeholders;
         }
 
         for (int i = 0; i < rawArray.length(); i++) {
             JsonObject obj = rawArray.getObject(i);
             try {
-            	Placeholder placeholder = new Placeholder(obj);
+                Placeholder placeholder = new Placeholder(obj);
                 placeholders.add(placeholder);
 
             } catch (IllegalArgumentException e) {
@@ -286,7 +301,24 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
 
     @Synchronize(property = "placeholderAltAppearance", value = "placeholder-alt-appearance-changed")
     public boolean isPlacehoderAltAppearence() {
-        return getElement().getProperty("placeholderAltAppearance", false);    	
+        return getElement().getProperty("placeholderAltAppearance", false);
+    }
+
+    /**
+     * For internal use only. Return Placeholder from the master list matching
+     * the given Placeholder by getText.
+     * 
+     * @param placeholder
+     *            The Placeholder to be searched.
+     * @return A Placeholder
+     */
+    protected Placeholder getPlaceholder(Placeholder placeholder) {
+        Objects.requireNonNull(placeholder, "Placeholder cannot be null");
+        Objects.requireNonNull(placeholders,
+                "getPlaceholder cannot be called before placeholders are set");
+        return placeholders.stream()
+                .filter(p -> p.getText().equals(placeholder.getText()))
+                .findFirst().orElse(null);
     }
 
     /**
@@ -334,7 +366,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code undo}.
          *
-         * @param undo the translated word for undo
+         * @param undo
+         *            the translated word for undo
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setUndo(String undo) {
@@ -354,7 +387,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code redo}.
          *
-         * @param redo the translated word for redo
+         * @param redo
+         *            the translated word for redo
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setRedo(String redo) {
@@ -374,7 +408,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code bold}.
          *
-         * @param bold the translated word for bold
+         * @param bold
+         *            the translated word for bold
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setBold(String bold) {
@@ -394,7 +429,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code italic}.
          *
-         * @param italic the translated word for italic
+         * @param italic
+         *            the translated word for italic
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setItalic(String italic) {
@@ -414,7 +450,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code underline}.
          *
-         * @param underline the translated word for underline
+         * @param underline
+         *            the translated word for underline
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setUnderline(String underline) {
@@ -434,7 +471,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code strike}.
          *
-         * @param strike the translated word for strike
+         * @param strike
+         *            the translated word for strike
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setStrike(String strike) {
@@ -454,7 +492,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code h1}.
          *
-         * @param h1 the translated word for h1
+         * @param h1
+         *            the translated word for h1
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setH1(String h1) {
@@ -474,7 +513,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code h2}.
          *
-         * @param h2 the translated word for h2
+         * @param h2
+         *            the translated word for h2
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setH2(String h2) {
@@ -494,7 +534,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code h3}.
          *
-         * @param h3 the translated word for h3
+         * @param h3
+         *            the translated word for h3
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setH3(String h3) {
@@ -514,7 +555,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code subscript}.
          *
-         * @param subscript the translated word for subscript
+         * @param subscript
+         *            the translated word for subscript
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setSubscript(String subscript) {
@@ -534,7 +576,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code superscript}.
          *
-         * @param superscript the translated word for superscript
+         * @param superscript
+         *            the translated word for superscript
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setSuperscript(String superscript) {
@@ -554,7 +597,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code listOrdered}.
          *
-         * @param listOrdered the translated word for listOrdered
+         * @param listOrdered
+         *            the translated word for listOrdered
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setListOrdered(String listOrdered) {
@@ -574,7 +618,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code listBullet}.
          *
-         * @param listBullet the translated word for listBullet
+         * @param listBullet
+         *            the translated word for listBullet
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setListBullet(String listBullet) {
@@ -594,7 +639,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code alignLeft}.
          *
-         * @param alignLeft the translated word for alignLeft
+         * @param alignLeft
+         *            the translated word for alignLeft
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setAlignLeft(String alignLeft) {
@@ -614,7 +660,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code alignCenter}.
          *
-         * @param alignCenter the translated word for alignCenter
+         * @param alignCenter
+         *            the translated word for alignCenter
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setAlignCenter(String alignCenter) {
@@ -634,7 +681,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code alignRight}.
          *
-         * @param alignRight the translated word for alignRight
+         * @param alignRight
+         *            the translated word for alignRight
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setAlignRight(String alignRight) {
@@ -654,7 +702,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code image}.
          *
-         * @param image the translated word for image
+         * @param image
+         *            the translated word for image
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setImage(String image) {
@@ -674,7 +723,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code link}.
          *
-         * @param link the translated word for link
+         * @param link
+         *            the translated word for link
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setLink(String link) {
@@ -694,7 +744,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code blockquote}.
          *
-         * @param blockquote the translated word for blockquote
+         * @param blockquote
+         *            the translated word for blockquote
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setBlockquote(String blockquote) {
@@ -714,7 +765,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code codeBlock}.
          *
-         * @param codeBlock the translated word for codeBlock
+         * @param codeBlock
+         *            the translated word for codeBlock
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setCodeBlock(String codeBlock) {
@@ -734,7 +786,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code readonly}.
          *
-         * @param readonly the translated word for readonly
+         * @param readonly
+         *            the translated word for readonly
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setReadonly(String readonly) {
@@ -754,7 +807,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code placeholder}.
          *
-         * @param placeholder the translated word for placeholder
+         * @param placeholder
+         *            the translated word for placeholder
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setPlaceholder(String placeholder) {
@@ -774,13 +828,15 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code placeholderAppeance}.
          *
-         * @param placeholderAppeance the translated word for placeholderAppeance
+         * @param placeholderAppeance
+         *            the translated word for placeholderAppeance
          * @return this instance for method chaining
          */
-        public RichTextEditorI18n setPlaceholderAppeance(String placeholderAppeance) {
+        public RichTextEditorI18n setPlaceholderAppeance(
+                String placeholderAppeance) {
             this.placeholderAppeance = placeholderAppeance;
             return this;
-        }        
+        }
 
         /**
          * Gets the translated word for {@code placeholderComboBoxLabel}
@@ -794,13 +850,15 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code placeholderComboBoxLabel}.
          *
-         * @param placeholderComboBoxLabel the translated word for placeholderComboBoxLabel
+         * @param placeholderComboBoxLabel
+         *            the translated word for placeholderComboBoxLabel
          * @return this instance for method chaining
          */
-        public RichTextEditorI18n setPlaceholderComboBoxLabel(String placeholderComboBoxLabel) {
+        public RichTextEditorI18n setPlaceholderComboBoxLabel(
+                String placeholderComboBoxLabel) {
             this.placeholderComboBoxLabel = placeholderComboBoxLabel;
             return this;
-        } 
+        }
 
         /**
          * Gets the translated word for {@code placeholderAppearanceLabel1}
@@ -814,10 +872,12 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code placeholderAppearanceLabel1}.
          *
-         * @param placeholderAppearanceLabel1 the translated word for placeholderAppearanceLabel1
+         * @param placeholderAppearanceLabel1
+         *            the translated word for placeholderAppearanceLabel1
          * @return this instance for method chaining
          */
-        public RichTextEditorI18n getPlaceholderAppearanceLabel1(String placeholderAppearanceLabel1) {
+        public RichTextEditorI18n getPlaceholderAppearanceLabel1(
+                String placeholderAppearanceLabel1) {
             this.placeholderAppearanceLabel1 = placeholderAppearanceLabel1;
             return this;
         }
@@ -834,10 +894,12 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code placeholderAppearanceLabel2}.
          *
-         * @param placeholderAppearanceLabel2 the translated word for placeholderAppearanceLabel2
+         * @param placeholderAppearanceLabel2
+         *            the translated word for placeholderAppearanceLabel2
          * @return this instance for method chaining
          */
-        public RichTextEditorI18n getPlaceholderAppearanceLabel2(String placeholderAppearanceLabel2) {
+        public RichTextEditorI18n getPlaceholderAppearanceLabel2(
+                String placeholderAppearanceLabel2) {
             this.placeholderAppearanceLabel2 = placeholderAppearanceLabel2;
             return this;
         }
@@ -854,10 +916,12 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code placeholderDialogTitle}.
          *
-         * @param placeholderDialogTitle the translated word for placeholderDialogTitle
+         * @param placeholderDialogTitle
+         *            the translated word for placeholderDialogTitle
          * @return this instance for method chaining
          */
-        public RichTextEditorI18n getPlaceholderDialogTitle(String placeholderDialogTitle) {
+        public RichTextEditorI18n getPlaceholderDialogTitle(
+                String placeholderDialogTitle) {
             this.placeholderDialogTitle = placeholderDialogTitle;
             return this;
         }
@@ -874,7 +938,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
         /**
          * Sets the translated word for {@code clean}.
          *
-         * @param clean the translated word for clean
+         * @param clean
+         *            the translated word for clean
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setClean(String clean) {
@@ -889,62 +954,22 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
          */
         @Override
         public String toString() {
-            return "[" +
-                    undo + ", " +
-                    redo + ", " +
-                    bold + ", " +
-                    italic + ", " +
-                    underline + ", " +
-                    strike + ", " +
-                    h1 + ", " +
-                    h2 + ", " +
-                    h3 + ", " +
-                    subscript + ", " +
-                    superscript + ", " +
-                    listOrdered + ", " +
-                    listBullet + ", " +
-                    alignLeft + ", " +
-                    alignCenter + ", " +
-                    alignRight + ", " +
-                    image + ", " +
-                    link + ", " +
-                    blockquote + ", " +
-                    codeBlock + ", " +
-                    readonly + ", " +
-                    placeholder + ", " +
-                    placeholderAppeance + ", " +
-                    placeholderComboBoxLabel + ", " +
-                    placeholderAppearanceLabel1 + ", " +
-                    placeholderAppearanceLabel2 + ", " +
-                    placeholderDialogTitle + ", " +
-                    clean + "]";
+            return "[" + undo + ", " + redo + ", " + bold + ", " + italic + ", "
+                    + underline + ", " + strike + ", " + h1 + ", " + h2 + ", "
+                    + h3 + ", " + subscript + ", " + superscript + ", "
+                    + listOrdered + ", " + listBullet + ", " + alignLeft + ", "
+                    + alignCenter + ", " + alignRight + ", " + image + ", "
+                    + link + ", " + blockquote + ", " + codeBlock + ", "
+                    + readonly + ", " + placeholder + ", " + placeholderAppeance
+                    + ", " + placeholderComboBoxLabel + ", "
+                    + placeholderAppearanceLabel1 + ", "
+                    + placeholderAppearanceLabel2 + ", "
+                    + placeholderDialogTitle + ", " + clean + "]";
         }
     }
 
     public enum ToolbarButton {
-        UNDO,
-        REDO,
-        BOLD,
-        ITALIC,
-        UNDERLINE,
-        STRIKE,
-        H1,
-        H2,
-        H3,
-        SUBSCRIPT,
-        SUPERSCRIPT,
-        LIST_ORDERED,
-        LIST_BULLET,
-        ALIGN_LEFT,
-        ALIGN_CENTER,
-        ALIGN_RIGHT,
-        IMAGE,
-        LINK,
-        BLOCKQUOTE,
-        CODE_BLOCK,
-        READONLY,
-        CLEAN;
-
+        UNDO, REDO, BOLD, ITALIC, UNDERLINE, STRIKE, H1, H2, H3, SUBSCRIPT, SUPERSCRIPT, LIST_ORDERED, LIST_BULLET, ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT, IMAGE, LINK, BLOCKQUOTE, CODE_BLOCK, READONLY, CLEAN;
 
         @Override
         public String toString() {
@@ -954,7 +979,8 @@ public class EnhancedRichTextEditor extends GeneratedEnhancedRichTextEditor<Enha
                 return "\"" + str + "\"";
 
             for (int i = 1; i < parts.length; i++)
-                parts[i] = Character.toUpperCase(parts[i].charAt(0)) + parts[i].substring(1);
+                parts[i] = Character.toUpperCase(parts[i].charAt(0))
+                        + parts[i].substring(1);
 
             return "\"" + String.join("", parts) + "\"";
         }

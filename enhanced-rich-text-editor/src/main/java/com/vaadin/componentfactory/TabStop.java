@@ -58,10 +58,8 @@ public class TabStop implements Serializable {
 
     @Override
     public String toString() {
-        return "TabStop{" +
-                "direction=" + direction +
-                ", position=" + position +
-                '}';
+        return "TabStop{" + "direction=" + direction + ", position=" + position
+                + '}';
     }
 
     public enum Direction {

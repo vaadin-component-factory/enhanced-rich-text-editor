@@ -5,6 +5,7 @@ import java.util.*;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.demo.DemoView;
 import com.vaadin.flow.router.Route;
@@ -49,7 +50,8 @@ public class EnhancedRichTextEditorView extends DemoView {
 
         Placeholder placeholder2 = new Placeholder();
         placeholder2.setText("A-1=Turku, 20540");
-        placeholder2.getAltFormat().put("link", "https://goo.gl/maps/EX8RTEMUWeEAdkNN8");
+        placeholder2.getAltFormat().put("link",
+                "https://goo.gl/maps/EX8RTEMUWeEAdkNN8");
 
         Placeholder placeholder3 = new Placeholder();
         placeholder3.setText("D-1=01-01-2000");
@@ -62,19 +64,41 @@ public class EnhancedRichTextEditorView extends DemoView {
         rte.setPlaceholderAltAppearencePattern("(?<=\\=).*$");
 
         rte.setPlaceholders(placeholders);
-        
-        
+
+        rte.addPlaceholderInsertedListener(event -> {
+            Notification.show(event.getPlaceholder().getText() + " inserted");
+        });
+
+        rte.addPlaceholderBeforeRemoveListener(event -> {
+            Notification
+                    .show(event.getPlaceholder().getText() + " to be removed");
+            if (!event.getPlaceholder().getText().contains("Turku"))
+                event.remove();
+        });
+
+        rte.addPlaceholderRemovedListener(event -> {
+            Notification.show(event.getPlaceholder().getText() + " removed");
+        });
+
+        rte.addPlaceholderAppearenceChangedListener(event -> {
+            if (event.isFromClient())
+                Notification.show(
+                        "Appearence changed to " + event.getAppearenceLabel());
+        });
+
         // end-source-example
 
         Div valueHolder = new Div();
         rte.addValueChangeListener(event -> {
-            Html value = new Html("<div>"+rte.getHtmlValueString()+"</div>");
-        	valueHolder.removeAll();
-        	valueHolder.add(value);
+            Html value = new Html(
+                    "<div>" + rte.getHtmlValueString() + "</div>");
+            valueHolder.removeAll();
+            valueHolder.add(value);
         });
-        
-        rte.setValue("[{\"insert\":\"The company \"},{\"insert\":{\"placeholder\":{\"text\":\"N-1=Vaadin\",\"format\":{\"italic\":true},\"altFormat\":{\"italic\":false,\"bold\":true}}}},{\"insert\":\", located in \"},{\"insert\":{\"placeholder\":{\"text\":\"A-1=Turku, 20540\",\"altFormat\":{\"link\":\"https://goo.gl/maps/EX8RTEMUWeEAdkNN8\"}}}},{\"insert\":\", was founded in \"},{\"insert\":{\"placeholder\":{\"text\":\"D-1=01-01-2000\"}}},{\"insert\":\".\"}]" );
-        addCard("Rich Text Editor with Placeholders",rte,valueHolder);
+
+        rte.setValue(
+                "[{\"insert\":\"The company \"},{\"insert\":{\"placeholder\":{\"text\":\"N-1=Vaadin\",\"format\":{\"italic\":true},\"altFormat\":{\"italic\":false,\"bold\":true}}}},{\"insert\":\", located in \"},{\"insert\":{\"placeholder\":{\"text\":\"A-1=Turku, 20540\",\"altFormat\":{\"link\":\"https://goo.gl/maps/EX8RTEMUWeEAdkNN8\"}}}},{\"insert\":\", was founded in \"},{\"insert\":{\"placeholder\":{\"text\":\"D-1=01-01-2000\"}}},{\"insert\":\".\"}]");
+        addCard("Rich Text Editor with Placeholders", rte, valueHolder);
     }
 
     private void createEditorWithTabstops() {
@@ -88,24 +112,24 @@ public class EnhancedRichTextEditorView extends DemoView {
         tabStops.add(new TabStop(TabStop.Direction.MIDDLE, 550));
 
         rte.setTabStops(tabStops);
-        rte.setValue("[{\"attributes\":{\"tab\":\"3\"},\"insert\":\"﻿\"}," +
-                "{\"attributes\":{\"line-part\":true},\"insert\":\"﻿\"}," +
-                "{\"attributes\":{\"underline\":true,\"line-part\":true},\"insert\":\"3rd tab-stop\"}," +
-                "{\"attributes\":{\"tabs-cont\":\"TABS-CONT\"},\"insert\":\"\\n\"},{\"insert\":\"\\nThis line is just a normal text. Tab-stops are not affecting it.\\n\\n\"}," +
-                "{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},{\"attributes\":{\"bold\":true,\"line-part\":true},\"insert\":\"Product\"}," +
-                "{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},{\"attributes\":{\"bold\":true,\"line-part\":true},\"insert\":\"Price\"}," +
-                "{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},{\"attributes\":{\"bold\":true,\"line-part\":true},\"insert\":\"Quantity\"}," +
-                "{\"attributes\":{\"tabs-cont\":\"TABS-CONT\"},\"insert\":\"\\n\"},{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"}," +
-                "{\"attributes\":{\"line-part\":true},\"insert\":\"Apples\"},{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"}," +
-                "{\"attributes\":{\"line-part\":true},\"insert\":\"2.00\"},{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"}," +
-                "{\"attributes\":{\"line-part\":true},\"insert\":\"5\"},{\"attributes\":{\"tabs-cont\":\"TABS-CONT\"},\"insert\":\"\\n\"}," +
-                "{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},{\"attributes\":{\"line-part\":true},\"insert\":\"Salmon\"}," +
-                "{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},{\"attributes\":{\"line-part\":true},\"insert\":\"25.00\"},{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"}," +
-                "{\"attributes\":{\"line-part\":true},\"insert\":\"2\"},{\"attributes\":{\"tabs-cont\":\"TABS-CONT\"},\"insert\":\"\\n\"}," +
-                "{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},{\"attributes\":{\"tab\":\"true\"},\"insert\":\"﻿\"},{\"insert\":\"\\n\"}," +
-                "{\"attributes\":{\"tab\":\"true\"},\"insert\":\"﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿\"},{\"insert\":\"\\n\"},{\"attributes\":{\"tab\":\"true\"},\"insert\":\"﻿\"}," +
-                "{\"attributes\":{\"bold\":true,\"tab\":\"1\"},\"insert\":\"﻿\"},{\"insert\":\"\\n\"},{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"}," +
-                "{\"attributes\":{\"tab\":\"true\"},\"insert\":\"﻿\"},{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},{\"insert\":\"\\n\"}]");
+        rte.setValue("[{\"attributes\":{\"tab\":\"3\"},\"insert\":\"﻿\"},"
+                + "{\"attributes\":{\"line-part\":true},\"insert\":\"﻿\"},"
+                + "{\"attributes\":{\"underline\":true,\"line-part\":true},\"insert\":\"3rd tab-stop\"},"
+                + "{\"attributes\":{\"tabs-cont\":\"TABS-CONT\"},\"insert\":\"\\n\"},{\"insert\":\"\\nThis line is just a normal text. Tab-stops are not affecting it.\\n\\n\"},"
+                + "{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},{\"attributes\":{\"bold\":true,\"line-part\":true},\"insert\":\"Product\"},"
+                + "{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},{\"attributes\":{\"bold\":true,\"line-part\":true},\"insert\":\"Price\"},"
+                + "{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},{\"attributes\":{\"bold\":true,\"line-part\":true},\"insert\":\"Quantity\"},"
+                + "{\"attributes\":{\"tabs-cont\":\"TABS-CONT\"},\"insert\":\"\\n\"},{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},"
+                + "{\"attributes\":{\"line-part\":true},\"insert\":\"Apples\"},{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},"
+                + "{\"attributes\":{\"line-part\":true},\"insert\":\"2.00\"},{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},"
+                + "{\"attributes\":{\"line-part\":true},\"insert\":\"5\"},{\"attributes\":{\"tabs-cont\":\"TABS-CONT\"},\"insert\":\"\\n\"},"
+                + "{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},{\"attributes\":{\"line-part\":true},\"insert\":\"Salmon\"},"
+                + "{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},{\"attributes\":{\"line-part\":true},\"insert\":\"25.00\"},{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},"
+                + "{\"attributes\":{\"line-part\":true},\"insert\":\"2\"},{\"attributes\":{\"tabs-cont\":\"TABS-CONT\"},\"insert\":\"\\n\"},"
+                + "{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},{\"attributes\":{\"tab\":\"true\"},\"insert\":\"﻿\"},{\"insert\":\"\\n\"},"
+                + "{\"attributes\":{\"tab\":\"true\"},\"insert\":\"﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿\"},{\"insert\":\"\\n\"},{\"attributes\":{\"tab\":\"true\"},\"insert\":\"﻿\"},"
+                + "{\"attributes\":{\"bold\":true,\"tab\":\"1\"},\"insert\":\"﻿\"},{\"insert\":\"\\n\"},{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},"
+                + "{\"attributes\":{\"tab\":\"true\"},\"insert\":\"﻿\"},{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},{\"insert\":\"\\n\"}]");
 
         // end-source-example
 
@@ -117,11 +141,14 @@ public class EnhancedRichTextEditorView extends DemoView {
         // source-example-heading: Save Rich Text Editor value
         TextArea valueBlock = new TextArea();
         EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
-        Button saveBtn = new Button("Save value", e -> valueBlock.setValue(rte.getValue()));
-        Button setBtn = new Button("Set value", e -> rte.setValue(valueBlock.getValue()));
+        Button saveBtn = new Button("Save value",
+                e -> valueBlock.setValue(rte.getValue()));
+        Button setBtn = new Button("Set value",
+                e -> rte.setValue(valueBlock.getValue()));
         // end-source-example
 
-        addCard("Save Rich Text Editor value", rte, saveBtn, setBtn, valueBlock);
+        addCard("Save Rich Text Editor value", rte, saveBtn, setBtn,
+                valueBlock);
     }
 
     private void createGetHtmlValue() {
@@ -132,15 +159,17 @@ public class EnhancedRichTextEditorView extends DemoView {
         Button showHtmlValue = new Button("Show html value", e -> {
             String exsValue = htmlBlock.getElement().getProperty("innerHTML");
             if (exsValue == null || !exsValue.equals(rte.getHtmlValue())) {
-                htmlBlock.getElement().setProperty("innerHTML", rte.getHtmlValue());
+                htmlBlock.getElement().setProperty("innerHTML",
+                        rte.getHtmlValue());
             }
         });
         // end-source-example
 
-        addCard("Save Rich Text Editor htmlValue", rte, showHtmlValue, htmlBlock);
+        addCard("Save Rich Text Editor htmlValue", rte, showHtmlValue,
+                htmlBlock);
     }
 
-    private void createEditorWithLimitedToolbar () {
+    private void createEditorWithLimitedToolbar() {
         // begin-source-example
         // source-example-heading: Rich Text Editor with limited toolbar
         EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
@@ -162,11 +191,10 @@ public class EnhancedRichTextEditorView extends DemoView {
         // begin-source-example
         // source-example-heading: Basic Rich Text Editor with readonly sections
         EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
-        rte.setValue("[" +
-                "{\"insert\":\"Some text\\n\"}," +
-                "{\"insert\":{\"readonly\":\"Some readonly text\\n\"}}," +
-                "{\"insert\":\"More text\\n\"}," +
-                "{\"insert\":{\"readonly\":\"More readonly text\\n\"}}]");
+        rte.setValue("[" + "{\"insert\":\"Some text\\n\"},"
+                + "{\"insert\":{\"readonly\":\"Some readonly text\\n\"}},"
+                + "{\"insert\":\"More text\\n\"},"
+                + "{\"insert\":{\"readonly\":\"More readonly text\\n\"}}]");
         // end-source-example
 
         addCard("Basic Rich Text Editor with readonly sections", rte);

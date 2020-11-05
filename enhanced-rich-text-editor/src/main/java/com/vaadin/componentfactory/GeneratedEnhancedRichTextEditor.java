@@ -42,11 +42,13 @@ import com.vaadin.flow.component.HasTheme;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
 import com.vaadin.flow.component.Synchronize;
 import elemental.json.JsonArray;
 import com.vaadin.flow.component.DomEvent;
+import com.vaadin.flow.component.EventData;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.shared.Registration;
@@ -63,17 +65,17 @@ import elemental.json.impl.JreJsonObject;
  * Description copied from corresponding location in WebComponent:
  * </p>
  * <p>
- * {@code <vcf-enhanced-rich-text-editor>} is a Web Component for rich text editing.
- * It provides a set of toolbar controls to apply formatting on the content,
- * which is stored and can be accessed as HTML5 or JSON string.
+ * {@code <vcf-enhanced-rich-text-editor>} is a Web Component for rich text
+ * editing. It provides a set of toolbar controls to apply formatting on the
+ * content, which is stored and can be accessed as HTML5 or JSON string.
  * </p>
  * <p>
  * {@code <vcf-enhanced-rich-text-editor></vcf-enhanced-rich-text-editor>}
  * </p>
  * <p>
  * Vaadin Rich Text Editor focuses on the structure, not the styling of content.
- * Therefore, the semantic HTML5 tags and CSS usage is limited to most common cases,
- * like horizontal text alignment.
+ * Therefore, the semantic HTML5 tags and CSS usage is limited to most common
+ * cases, like horizontal text alignment.
  * </p>
  * <h3>Styling</h3>
  * <p>
@@ -97,8 +99,7 @@ import elemental.json.impl.JreJsonObject;
  * <td>Set to a readonly text editor</td>
  * <td>:host</td>
  * </tr>
- * </tbody>
- * <caption>Styling</caption>
+ * </tbody> <caption>Styling</caption>
  * </table>
  * <p>
  * The following shadow DOM parts are available for styling:
@@ -206,22 +207,21 @@ import elemental.json.impl.JreJsonObject;
  * <td>{@code clean-button}</td>
  * <td>The &quot;clean formatting&quot; button</td>
  * </tr>
- * </tbody>
- * <caption>Shadow parts</caption>
+ * </tbody> <caption>Shadow parts</caption>
  * </table>
  * <p>
- * See <a
- * href="https://github.com/vaadin/vaadin-themable-mixin/wiki">ThemableMixin –
- * how to apply styles for shadow parts</a>
+ * See
+ * <a href="https://github.com/vaadin/vaadin-themable-mixin/wiki">ThemableMixin
+ * – how to apply styles for shadow parts</a>
  * </p>
  */
 @Generated({ "Generator: com.vaadin.generator.ComponentGenerator#1.2-SNAPSHOT",
         "WebComponent: Vaadin.RichTextEditorElement#1.0.0-alpha3",
         "Flow#1.2-SNAPSHOT" })
 @Tag("vcf-enhanced-rich-text-editor")
-@NpmPackage(value = "@vaadin-component-factory/vcf-enhanced-rich-text-editor", version = "1.3.2")
+@NpmPackage(value = "@vaadin-component-factory/vcf-enhanced-rich-text-editor", version = "1.3.9")
 @JsModule("@vaadin-component-factory/vcf-enhanced-rich-text-editor/src/vcf-enhanced-rich-text-editor.js")
-//@HtmlImport("frontend://bower_components/vcf-enhanced-rich-text-editor/src/vcf-enhanced-rich-text-editor.html")
+// @HtmlImport("frontend://bower_components/vcf-enhanced-rich-text-editor/src/vcf-enhanced-rich-text-editor.html")
 public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhancedRichTextEditor<R, T>, T>
         extends AbstractSinglePropertyField<R, T>
         implements HasStyle, HasTheme {
@@ -233,9 +233,9 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
      *            theme variants to add
      */
     public void addThemeVariants(EnhancedRichTextEditorVariant... variants) {
-        getThemeNames().addAll(
-                Stream.of(variants).map(EnhancedRichTextEditorVariant::getVariantName)
-                        .collect(Collectors.toList()));
+        getThemeNames().addAll(Stream.of(variants)
+                .map(EnhancedRichTextEditorVariant::getVariantName)
+                .collect(Collectors.toList()));
     }
 
     /**
@@ -245,9 +245,9 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
      *            theme variants to remove
      */
     public void removeThemeVariants(EnhancedRichTextEditorVariant... variants) {
-        getThemeNames().removeAll(
-                Stream.of(variants).map(EnhancedRichTextEditorVariant::getVariantName)
-                        .collect(Collectors.toList()));
+        getThemeNames().removeAll(Stream.of(variants)
+                .map(EnhancedRichTextEditorVariant::getVariantName)
+                .collect(Collectors.toList()));
     }
 
     public void setTabStops(List<TabStop> tabStops) {
@@ -260,7 +260,7 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
             obj.put("direction", tab.getDirection().name().toLowerCase());
             obj.put("position", tab.getPosition());
 
-            arrayTabStops.set(index++, obj );
+            arrayTabStops.set(index++, obj);
         }
 
         getElement().setPropertyJson("tabStops", arrayTabStops);
@@ -269,7 +269,8 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
     @Synchronize(property = "tabStops", value = "tab-stops-changed")
     public List<TabStop> getTabStops() {
         List<TabStop> tabStops = new ArrayList<>();
-        JsonArray rawArray = (JsonArray) getElement().getPropertyRaw("tabStops");
+        JsonArray rawArray = (JsonArray) getElement()
+                .getPropertyRaw("tabStops");
         getElement().synchronizeProperty("tabStops", "tabStops-changed");
         getElement().synchronizeProperty("tabStops", "tab-stops-changed");
         getElement().synchronizeProperty("tabStops", "change");
@@ -282,8 +283,9 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
         for (int i = 0; i < rawArray.length(); i++) {
             JsonObject obj = rawArray.getObject(i);
             try {
-                TabStop tab =  new TabStop(
-                        TabStop.Direction.valueOf(obj.getString("direction").toUpperCase()),
+                TabStop tab = new TabStop(
+                        TabStop.Direction.valueOf(
+                                obj.getString("direction").toUpperCase()),
                         obj.get("position").asNumber());
 
                 tabStops.add(tab);
@@ -433,6 +435,243 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
                 (ComponentEventListener) listener);
     }
 
+    public static abstract class PlaceholderEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
+            extends ComponentEvent<R> {
+        private Placeholder placeholder;
+
+        public PlaceholderEvent(R source, boolean fromClient,
+                JsonObject placeholderJson) {
+            super(source, fromClient);
+            if (placeholderJson != null) {
+                placeholder = new Placeholder(placeholderJson);
+            }
+        }
+
+        /**
+         * Get the Placeholder that was target of the event.
+         * 
+         * @return A Placeholder
+         */
+        public Placeholder getPlaceholder() {
+            if (source instanceof EnhancedRichTextEditor) {
+                return ((EnhancedRichTextEditor) source)
+                        .getPlaceholder(placeholder);
+            } else {
+                return null;
+            }
+        }
+    }
+
+    @DomEvent("placeholder-before-delete")
+    public static class PlaceholderBeforeRemoveEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
+            extends PlaceholderEvent<R> {
+        public PlaceholderBeforeRemoveEvent(R source, boolean fromClient,
+                @EventData("event.preventDefault()") Object ignored,
+                @EventData("event.detail") JsonObject detail) {
+            super(source, fromClient, detail.getObject("placeholder"));
+        }
+
+        /**
+         * Confirm removal of the Placeholder. If this method is not called in
+         * the event, the Placeholder will not be removed.
+         * PlaceholderRemovedEvent will be emitted after removal.
+         */
+        public void remove() {
+            EnhancedRichTextEditor s = (EnhancedRichTextEditor) source;
+            s.getElement().executeJs("this._confirmRemovePlaceholder()");
+        }
+    }
+
+    /**
+     * Adds a listener for {@code PlaceholderBeforeRemoveEvent} events fired by
+     * the webcomponent.
+     *
+     * @param listener
+     *            the listener
+     * @return a {@link Registration} for removing the event listener
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected Registration addPlaceholderBeforeRemoveListener(
+            ComponentEventListener<PlaceholderBeforeRemoveEvent<R>> listener) {
+        return addListener(PlaceholderBeforeRemoveEvent.class,
+                (ComponentEventListener) listener);
+    }
+
+    @DomEvent("placeholder-delete")
+    public static class PlaceholderRemovedEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
+            extends PlaceholderEvent<R> {
+        public PlaceholderRemovedEvent(R source, boolean fromClient,
+                @EventData("event.detail") JsonObject detail) {
+            super(source, fromClient, detail.getObject("placeholder"));
+        }
+    }
+
+    /**
+     * Adds a listener for {@code PlaceholderRemovedEvent} events fired by the
+     * webcomponent.
+     *
+     * @param listener
+     *            the listener
+     * @return a {@link Registration} for removing the event listener
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected Registration addPlaceholderRemovedListener(
+            ComponentEventListener<PlaceholderRemovedEvent<R>> listener) {
+        return addListener(PlaceholderRemovedEvent.class,
+                (ComponentEventListener) listener);
+    }
+
+    @DomEvent("placeholder-button-click")
+    public static class PlaceholderButtonClickedEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
+            extends ComponentEvent<R> {
+        private int position;
+
+        public PlaceholderButtonClickedEvent(R source, boolean fromClient,
+                @EventData("event.preventDefault()") Object ignored,
+                @EventData("event.detail.position") int position) {
+            super(source, fromClient);
+            this.position = position;
+        }
+
+        /**
+         * Get current position
+         * 
+         * @return int value
+         */
+        public int getPosition() {
+            return position;
+        }
+
+        /**
+         * Add text as placeholder to current position
+         * 
+         * @param placeholder
+         *            Placeholder text
+         */
+        public void insert(Placeholder placeholder) {
+            insert(placeholder, position);
+        }
+
+        /**
+         * Add text as placeholder to the given position
+         * 
+         * @param placeholder
+         *            Placeholder text
+         * @param position
+         *            Position where to insert, not validated
+         */
+        public void insert(Placeholder placeholder, int position) {
+            Objects.requireNonNull(placeholder,"Placeholder cannot be null");
+            EnhancedRichTextEditor s = (EnhancedRichTextEditor) source;
+            s.getElement().executeJs("this._confirmInsertPlaceholder($0,$1)",
+                    placeholder.toJson(), position);
+        }
+    }
+
+    /**
+     * Adds a listener for {@code PlaceholderButtonClickedEvent} events fired by
+     * the webcomponent.
+     *
+     * @param listener
+     *            the listener
+     * @return a {@link Registration} for removing the event listener
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected Registration addPlaceholderButtonClickedListener(
+            ComponentEventListener<PlaceholderButtonClickedEvent<R>> listener) {
+        return addListener(PlaceholderButtonClickedEvent.class,
+                (ComponentEventListener) listener);
+    }
+
+    @DomEvent("placeholder-insert")
+    public static class PlaceholderInsertedEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
+            extends PlaceholderEvent<R> {
+        public PlaceholderInsertedEvent(R source, boolean fromClient,
+                @EventData("event.detail") JsonObject detail) {
+            super(source, fromClient, detail.getObject("placeholder"));
+        }
+    }
+
+    /**
+     * Adds a listener for {@code PlaceholderInsertedEvent} events fired by the
+     * webcomponent.
+     *
+     * @param listener
+     *            the listener
+     * @return a {@link Registration} for removing the event listener
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected Registration addPlaceholderInsertedListener(
+            ComponentEventListener<PlaceholderInsertedEvent<R>> listener) {
+        return addListener(PlaceholderInsertedEvent.class,
+                (ComponentEventListener) listener);
+    }
+
+    @DomEvent("placeholder-select")
+    public static class PlaceholderSelectedEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
+            extends PlaceholderEvent<R> {
+        public PlaceholderSelectedEvent(R source, boolean fromClient,
+                @EventData("event.detail") JsonObject detail) {
+            super(source, fromClient, detail.getObject("placeholder"));
+        }
+    }
+
+    /**
+     * Adds a listener for {@code PlaceholderSelectedEvent} events fired by the
+     * webcomponent.
+     *
+     * @param listener
+     *            the listener
+     * @return a {@link Registration} for removing the event listener
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected Registration addPlaceholderSelectedListener(
+            ComponentEventListener<PlaceholderSelectedEvent<R>> listener) {
+        return addListener(PlaceholderSelectedEvent.class,
+                (ComponentEventListener) listener);
+    }
+
+    @DomEvent("placeholder-appearance-change")
+    public static class PlaceholderAppearenceChangedEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
+            extends ComponentEvent<R> {
+        private Boolean altAppearence;
+        private String appearenceLabel;
+
+        public PlaceholderAppearenceChangedEvent(R source, boolean fromClient,
+                @EventData("event.detail") JsonObject detail) {
+            super(source, fromClient);
+            altAppearence = detail.hasKey("altAppearance")
+                    ? detail.getBoolean("altAppearance")
+                    : null;
+            appearenceLabel = detail.hasKey("appearanceLabel")
+                    ? detail.getString("appearanceLabel")
+                    : null;
+        }
+
+        public Boolean getAltAppearence() {
+            return altAppearence;
+        }
+
+        public String getAppearenceLabel() {
+            return appearenceLabel;
+        }
+    }
+
+    /**
+     * Adds a listener for {@code PlaceholderAppearenceChangedEvent} events
+     * fired by the webcomponent.
+     *
+     * @param listener
+     *            the listener
+     * @return a {@link Registration} for removing the event listener
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected Registration addPlaceholderAppearenceChangedListener(
+            ComponentEventListener<PlaceholderAppearenceChangedEvent<R>> listener) {
+        return addListener(PlaceholderAppearenceChangedEvent.class,
+                (ComponentEventListener) listener);
+    }
+
     /**
      * Constructs a new GeneratedEnhancedRichTextEditor component with the given
      * arguments.
@@ -451,9 +690,9 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
      *            the property type
      */
     public <P> GeneratedEnhancedRichTextEditor(T initialValue, T defaultValue,
-                                               Class<P> elementPropertyType,
-                                               SerializableFunction<P, T> presentationToModel,
-                                               SerializableFunction<T, P> modelToPresentation) {
+            Class<P> elementPropertyType,
+            SerializableFunction<P, T> presentationToModel,
+            SerializableFunction<T, P> modelToPresentation) {
         super("value", defaultValue, elementPropertyType, presentationToModel,
                 modelToPresentation);
         if (initialValue != null) {
@@ -474,7 +713,7 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
      *            whether <code>null</code> is accepted as a model value
      */
     public GeneratedEnhancedRichTextEditor(T initialValue, T defaultValue,
-                                           boolean acceptNullValues) {
+            boolean acceptNullValues) {
         super("value", defaultValue, acceptNullValues);
         if (initialValue != null) {
             setModelValue(initialValue, false);
@@ -502,9 +741,9 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
      *            the property type
      */
     public <P> GeneratedEnhancedRichTextEditor(T initialValue, T defaultValue,
-                                               Class<P> elementPropertyType,
-                                               SerializableBiFunction<R, P, T> presentationToModel,
-                                               SerializableBiFunction<R, T, P> modelToPresentation) {
+            Class<P> elementPropertyType,
+            SerializableBiFunction<R, P, T> presentationToModel,
+            SerializableBiFunction<R, T, P> modelToPresentation) {
         super("value", defaultValue, elementPropertyType, presentationToModel,
                 modelToPresentation);
         if (initialValue != null) {
