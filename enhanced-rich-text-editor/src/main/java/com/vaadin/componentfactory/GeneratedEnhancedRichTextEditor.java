@@ -632,33 +632,33 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
     }
 
     @DomEvent("placeholder-appearance-change")
-    public static class PlaceholderAppearenceChangedEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
+    public static class PlaceholderAppearanceChangedEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
             extends ComponentEvent<R> {
-        private Boolean altAppearence;
-        private String appearenceLabel;
+        private Boolean altAppearance;
+        private String appearanceLabel;
 
-        public PlaceholderAppearenceChangedEvent(R source, boolean fromClient,
+        public PlaceholderAppearanceChangedEvent(R source, boolean fromClient,
                 @EventData("event.detail") JsonObject detail) {
             super(source, fromClient);
-            altAppearence = detail.hasKey("altAppearance")
+            altAppearance = detail.hasKey("altAppearance")
                     ? detail.getBoolean("altAppearance")
                     : null;
-            appearenceLabel = detail.hasKey("appearanceLabel")
+            appearanceLabel = detail.hasKey("appearanceLabel")
                     ? detail.getString("appearanceLabel")
                     : null;
         }
 
-        public Boolean getAltAppearence() {
-            return altAppearence;
+        public Boolean getAltAppearance() {
+            return altAppearance;
         }
 
-        public String getAppearenceLabel() {
-            return appearenceLabel;
+        public String getAppearanceLabel() {
+            return appearanceLabel;
         }
     }
 
     /**
-     * Adds a listener for {@code PlaceholderAppearenceChangedEvent} events
+     * Adds a listener for {@code PlaceholderAppearanceChangedEvent} events
      * fired by the webcomponent.
      *
      * @param listener
@@ -666,9 +666,9 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
      * @return a {@link Registration} for removing the event listener
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    protected Registration addPlaceholderAppearenceChangedListener(
-            ComponentEventListener<PlaceholderAppearenceChangedEvent<R>> listener) {
-        return addListener(PlaceholderAppearenceChangedEvent.class,
+    protected Registration addPlaceholderAppearanceChangedListener(
+            ComponentEventListener<PlaceholderAppearanceChangedEvent<R>> listener) {
+        return addListener(PlaceholderAppearanceChangedEvent.class,
                 (ComponentEventListener) listener);
     }
 

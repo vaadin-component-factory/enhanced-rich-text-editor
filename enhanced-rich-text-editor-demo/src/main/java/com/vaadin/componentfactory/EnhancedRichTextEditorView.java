@@ -38,7 +38,7 @@ public class EnhancedRichTextEditorView extends DemoView {
 
     private void createEditorWithPlaceholders() {
         // begin-source-example
-        // source-example-heading: Basic Rich Text Editor
+        // source-example-heading: Rich Text Editor with Placeholders
         EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
 
         List<Placeholder> placeholders = new ArrayList<>();
@@ -60,8 +60,8 @@ public class EnhancedRichTextEditorView extends DemoView {
         placeholders.add(placeholder2);
         placeholders.add(placeholder3);
 
-        rte.setPlacehoderAltAppearence(true);
-        rte.setPlaceholderAltAppearencePattern("(?<=\\=).*$");
+        rte.setPlacehoderAltAppearance(true);
+        rte.setPlaceholderAltAppearancePattern("(?<=\\=).*$");
 
         rte.setPlaceholders(placeholders);
 
@@ -80,12 +80,11 @@ public class EnhancedRichTextEditorView extends DemoView {
             Notification.show(event.getPlaceholder().getText() + " removed");
         });
 
-        rte.addPlaceholderAppearenceChangedListener(event -> {
+        rte.addPlaceholderAppearanceChangedListener(event -> {
             if (event.isFromClient())
                 Notification.show(
-                        "Appearence changed to " + event.getAppearenceLabel());
+                        "Appearence changed to " + event.getAppearanceLabel());
         });
-
         // end-source-example
 
         Div valueHolder = new Div();

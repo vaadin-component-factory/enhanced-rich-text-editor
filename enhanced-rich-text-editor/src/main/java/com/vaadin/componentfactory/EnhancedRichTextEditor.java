@@ -286,21 +286,21 @@ public class EnhancedRichTextEditor
         return placeholders;
     }
 
-    public void setPlaceholderAltAppearencePattern(String pattern) {
+    public void setPlaceholderAltAppearancePattern(String pattern) {
         getElement().setProperty("placeholderAltAppearancePattern", pattern);
     }
 
     @Synchronize(property = "placeholderAltAppearancePattern", value = "placeholder-alt-appearance-pattern-changed")
-    public String getPlaceholderAltAppearencePattern() {
+    public String getPlaceholderAltAppearancePattern() {
         return getElement().getProperty("placeholderAltAppearancePattern");
     }
 
-    public void setPlacehoderAltAppearence(boolean altAppearence) {
-        getElement().setProperty("placeholderAltAppearance", altAppearence);
+    public void setPlacehoderAltAppearance(boolean altAppearance) {
+        getElement().setProperty("placeholderAltAppearance", altAppearance);
     }
 
     @Synchronize(property = "placeholderAltAppearance", value = "placeholder-alt-appearance-changed")
-    public boolean isPlacehoderAltAppearence() {
+    public boolean isPlacehoderAltAppearance() {
         return getElement().getProperty("placeholderAltAppearance", false);
     }
 
@@ -347,7 +347,7 @@ public class EnhancedRichTextEditor
         private String codeBlock;
         private String readonly;
         private String placeholder;
-        private String placeholderAppeance;
+        private String placeholderAppearance;
         private String placeholderComboBoxLabel;
         private String placeholderAppearanceLabel1;
         private String placeholderAppearanceLabel2;
@@ -817,24 +817,24 @@ public class EnhancedRichTextEditor
         }
 
         /**
-         * Gets the translated word for {@code placeholderAppeance}
+         * Gets the translated word for {@code placeholderAppearance}
          *
-         * @return the translated word for placeholderAppeance
+         * @return the translated word for placeholderAppearance
          */
-        public String getPlaceholderAppeance() {
-            return placeholderAppeance;
+        public String getPlaceholderAppearance() {
+            return placeholderAppearance;
         }
 
         /**
-         * Sets the translated word for {@code placeholderAppeance}.
+         * Sets the translated word for {@code placeholderAppearance}.
          *
-         * @param placeholderAppeance
-         *            the translated word for placeholderAppeance
+         * @param placeholderAppearance
+         *            the translated word for placeholderAppearance
          * @return this instance for method chaining
          */
         public RichTextEditorI18n setPlaceholderAppeance(
-                String placeholderAppeance) {
-            this.placeholderAppeance = placeholderAppeance;
+                String placeholderAppearance) {
+            this.placeholderAppearance = placeholderAppearance;
             return this;
         }
 
@@ -960,7 +960,7 @@ public class EnhancedRichTextEditor
                     + listOrdered + ", " + listBullet + ", " + alignLeft + ", "
                     + alignCenter + ", " + alignRight + ", " + image + ", "
                     + link + ", " + blockquote + ", " + codeBlock + ", "
-                    + readonly + ", " + placeholder + ", " + placeholderAppeance
+                    + readonly + ", " + placeholder + ", " + placeholderAppearance
                     + ", " + placeholderComboBoxLabel + ", "
                     + placeholderAppearanceLabel1 + ", "
                     + placeholderAppearanceLabel2 + ", "
@@ -969,7 +969,7 @@ public class EnhancedRichTextEditor
     }
 
     public enum ToolbarButton {
-        UNDO, REDO, BOLD, ITALIC, UNDERLINE, STRIKE, H1, H2, H3, SUBSCRIPT, SUPERSCRIPT, LIST_ORDERED, LIST_BULLET, ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT, IMAGE, LINK, BLOCKQUOTE, CODE_BLOCK, READONLY, CLEAN;
+        UNDO, REDO, BOLD, ITALIC, UNDERLINE, STRIKE, H1, H2, H3, SUBSCRIPT, SUPERSCRIPT, LIST_ORDERED, LIST_BULLET, ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT, IMAGE, LINK, BLOCKQUOTE, CODE_BLOCK, READONLY, CLEAN, PLACEHOLDER, PLACEHOLDER_APPEARANCE;
 
         @Override
         public String toString() {
