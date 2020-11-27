@@ -435,11 +435,11 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
                 (ComponentEventListener) listener);
     }
 
-    public static abstract class PlaceholderEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
+    public static abstract class AbstractPlaceholderEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
             extends ComponentEvent<R> {
         private Placeholder placeholder;
 
-        public PlaceholderEvent(R source, boolean fromClient,
+        public AbstractPlaceholderEvent(R source, boolean fromClient,
                 JsonObject placeholderJson) {
             super(source, fromClient);
             if (placeholderJson != null) {
@@ -462,13 +462,47 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
         }
     }
 
+    public static abstract class AbstractPlaceholderDeleteEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
+            extends ComponentEvent<R> {
+        private List<Placeholder> placeholders = new ArrayList<>();
+
+        public AbstractPlaceholderDeleteEvent(R source, boolean fromClient,
+                JsonArray placeholderJson) {
+            super(source, fromClient);
+            if (placeholderJson != null) {
+                for (int i=0;i<placeholderJson.length();i++) {
+                    Placeholder placeholder = new Placeholder(placeholderJson.get(i));
+                    placeholders.add(placeholder);
+                }
+            }
+        }
+
+        /**
+         * Get the Placeholder that was target of the event.
+         * 
+         * @return A Placeholder
+         */
+        public List<Placeholder> getPlaceholders() {
+            if (source instanceof EnhancedRichTextEditor) {
+                List<Placeholder> actualPlaceholders = new ArrayList<>();
+                for (Placeholder placeholder : placeholders) { 
+                    Placeholder actualPlaceholder = ((EnhancedRichTextEditor) source).getPlaceholder(placeholder);
+                    actualPlaceholders.add(actualPlaceholder);
+                }
+                return actualPlaceholders;
+            } else {
+                return null;
+            }
+        }
+    }
+
     @DomEvent("placeholder-before-delete")
     public static class PlaceholderBeforeRemoveEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
-            extends PlaceholderEvent<R> {
+            extends AbstractPlaceholderDeleteEvent<R> {
         public PlaceholderBeforeRemoveEvent(R source, boolean fromClient,
                 @EventData("event.preventDefault()") Object ignored,
                 @EventData("event.detail") JsonObject detail) {
-            super(source, fromClient, detail.getObject("placeholder"));
+            super(source, fromClient, detail.getArray("placeholders"));
         }
 
         /**
@@ -478,7 +512,7 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
          */
         public void remove() {
             EnhancedRichTextEditor s = (EnhancedRichTextEditor) source;
-            s.getElement().executeJs("this._confirmRemovePlaceholder()");
+            s.getElement().executeJs("this._confirmRemovePlaceholders()");
         }
     }
 
@@ -499,10 +533,10 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
 
     @DomEvent("placeholder-delete")
     public static class PlaceholderRemovedEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
-            extends PlaceholderEvent<R> {
+            extends AbstractPlaceholderDeleteEvent<R> {
         public PlaceholderRemovedEvent(R source, boolean fromClient,
                 @EventData("event.detail") JsonObject detail) {
-            super(source, fromClient, detail.getObject("placeholder"));
+            super(source, fromClient, detail.getArray("placeholders"));
         }
     }
 
@@ -561,7 +595,7 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
          *            Position where to insert, not validated
          */
         public void insert(Placeholder placeholder, int position) {
-            Objects.requireNonNull(placeholder,"Placeholder cannot be null");
+            Objects.requireNonNull(placeholder, "Placeholder cannot be null");
             EnhancedRichTextEditor s = (EnhancedRichTextEditor) source;
             s.getElement().executeJs("this._confirmInsertPlaceholder($0,$1)",
                     placeholder.toJson(), position);
@@ -585,7 +619,7 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
 
     @DomEvent("placeholder-insert")
     public static class PlaceholderInsertedEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
-            extends PlaceholderEvent<R> {
+            extends AbstractPlaceholderEvent<R> {
         public PlaceholderInsertedEvent(R source, boolean fromClient,
                 @EventData("event.detail") JsonObject detail) {
             super(source, fromClient, detail.getObject("placeholder"));
@@ -609,7 +643,7 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
 
     @DomEvent("placeholder-select")
     public static class PlaceholderSelectedEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
-            extends PlaceholderEvent<R> {
+            extends AbstractPlaceholderEvent<R> {
         public PlaceholderSelectedEvent(R source, boolean fromClient,
                 @EventData("event.detail") JsonObject detail) {
             super(source, fromClient, detail.getObject("placeholder"));

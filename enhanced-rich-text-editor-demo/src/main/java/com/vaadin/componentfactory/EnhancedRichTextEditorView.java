@@ -70,14 +70,22 @@ public class EnhancedRichTextEditorView extends DemoView {
         });
 
         rte.addPlaceholderBeforeRemoveListener(event -> {
+            String texts = "";
+            for (Placeholder placeholder : event.getPlaceholders()) {
+                texts+=" "+placeholder.getText();
+            }
             Notification
-                    .show(event.getPlaceholder().getText() + " to be removed");
-            if (!event.getPlaceholder().getText().contains("Turku"))
+                    .show(texts + " to be removed");
+            if (!texts.contains("Turku"))
                 event.remove();
         });
 
         rte.addPlaceholderRemovedListener(event -> {
-            Notification.show(event.getPlaceholder().getText() + " removed");
+            String texts = "";
+            for (Placeholder placeholder : event.getPlaceholders()) {
+                texts+=" "+placeholder.getText();
+            }
+            Notification.show(texts + " removed");
         });
 
         rte.addPlaceholderAppearanceChangedListener(event -> {
