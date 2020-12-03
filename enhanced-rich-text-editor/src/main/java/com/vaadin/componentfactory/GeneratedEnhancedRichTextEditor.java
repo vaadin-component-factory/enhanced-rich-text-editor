@@ -643,10 +643,10 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
 
     @DomEvent("placeholder-select")
     public static class PlaceholderSelectedEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
-            extends AbstractPlaceholderEvent<R> {
+            extends AbstractPlaceholderDeleteEvent<R> {
         public PlaceholderSelectedEvent(R source, boolean fromClient,
                 @EventData("event.detail") JsonObject detail) {
-            super(source, fromClient, detail.getObject("placeholder"));
+            super(source, fromClient, detail.getArray("placeholders"));
         }
     }
 
@@ -665,6 +665,31 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
                 (ComponentEventListener) listener);
     }
 
+    @DomEvent("placeholder-leave")
+    public static class PlaceholderLeaveEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
+            extends ComponentEvent<R> {
+
+        public PlaceholderLeaveEvent(R source, boolean fromClient) {
+            super(source, fromClient);
+        }
+    }
+
+    /**
+     * Adds a listener for {@code PlaceholderAppearanceChangedEvent} events
+     * fired by the webcomponent.
+     *
+     * @param listener
+     *            the listener
+     * @return a {@link Registration} for removing the event listener
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected Registration addPlaceholderLeaveListener(
+            ComponentEventListener<PlaceholderLeaveEvent<R>> listener) {
+        return addListener(PlaceholderLeaveEvent.class,
+                (ComponentEventListener) listener);
+    }
+
+    
     @DomEvent("placeholder-appearance-change")
     public static class PlaceholderAppearanceChangedEvent<R extends GeneratedEnhancedRichTextEditor<R, ?>>
             extends ComponentEvent<R> {

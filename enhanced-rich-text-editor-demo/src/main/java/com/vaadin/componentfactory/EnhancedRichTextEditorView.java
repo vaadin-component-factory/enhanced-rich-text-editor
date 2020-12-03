@@ -80,6 +80,19 @@ public class EnhancedRichTextEditorView extends DemoView {
                 event.remove();
         });
 
+        rte.addPlaceholderSelectedListener(event -> {
+            String texts = "";
+            for (Placeholder placeholder : event.getPlaceholders()) {
+                texts+=" "+placeholder.getText();
+            }
+            Notification
+                    .show(texts + " selected");
+        });
+        
+        rte.addPlaceholderLeaveListener(event -> {
+            Notification.show("Placeholder leaved");
+        });
+
         rte.addPlaceholderRemovedListener(event -> {
             String texts = "";
             for (Placeholder placeholder : event.getPlaceholders()) {
