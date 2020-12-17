@@ -88,7 +88,7 @@ public class EnhancedRichTextEditorView extends DemoView {
             Notification
                     .show(texts + " selected");
         });
-        
+
         rte.addPlaceholderLeaveListener(event -> {
             Notification.show("Placeholder leaved");
         });
@@ -116,9 +116,14 @@ public class EnhancedRichTextEditorView extends DemoView {
             valueHolder.add(value);
         });
 
+        Button button = new Button("Click me");
+        button.addClickListener(event -> {
+            Notification.show("Clicked");
+            rte.focus();
+        });
         rte.setValue(
                 "[{\"insert\":\"The company \"},{\"insert\":{\"placeholder\":{\"text\":\"N-1=Vaadin\",\"format\":{\"italic\":true},\"altFormat\":{\"italic\":false,\"bold\":true}}}},{\"insert\":\", located in \"},{\"insert\":{\"placeholder\":{\"text\":\"A-1=Turku, 20540\",\"altFormat\":{\"link\":\"https://goo.gl/maps/EX8RTEMUWeEAdkNN8\"}}}},{\"insert\":\", was founded in \"},{\"insert\":{\"placeholder\":{\"text\":\"D-1=01-01-2000\"}}},{\"insert\":\".\"}]");
-        addCard("Rich Text Editor with Placeholders", rte, valueHolder);
+        addCard("Rich Text Editor with Placeholders", rte, button, valueHolder);        
     }
 
     private void createEditorWithTabstops() {

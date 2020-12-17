@@ -37,6 +37,7 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.HtmlImport;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
+import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.HasTheme;
 
@@ -49,6 +50,7 @@ import com.vaadin.flow.component.Synchronize;
 import elemental.json.JsonArray;
 import com.vaadin.flow.component.DomEvent;
 import com.vaadin.flow.component.EventData;
+import com.vaadin.flow.component.Focusable;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.shared.Registration;
@@ -224,7 +226,7 @@ import elemental.json.impl.JreJsonObject;
 // @HtmlImport("frontend://bower_components/vcf-enhanced-rich-text-editor/src/vcf-enhanced-rich-text-editor.html")
 public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhancedRichTextEditor<R, T>, T>
         extends AbstractSinglePropertyField<R, T>
-        implements HasStyle, HasTheme {
+        implements HasStyle, HasTheme, Focusable<GeneratedEnhancedRichTextEditor<R, T>> {
 
     /**
      * Adds theme variants to the component.
@@ -818,4 +820,15 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
         this(null, null, null, (SerializableFunction) null,
                 (SerializableFunction) null);
     }
-}
+
+    @Override
+    public void focus() {
+        /*
+         * Use setTimeout to call the focus function only after the element is
+         * attached, and after the initial rendering cycle, so webcomponents can
+         * be ready by the time when the function is called.
+         */
+        Element element = getElement();
+        // Using $0 since "this" won't work inside the function
+        element.executeJs("setTimeout(function(){$0._editor.focus()},0)", element);
+    }}
