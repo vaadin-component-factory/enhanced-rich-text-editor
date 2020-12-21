@@ -113,6 +113,13 @@ public class Placeholder implements JsonSerializable {
         return this;
     }
 
+    /**
+     * Get the last insertion index of the placeholder, if there are multiple
+     * occurrences of the placeholder. Populated in
+     * PlaceholderBeforeInsertEvent.
+     * 
+     * @return int value
+     */
     public int getIndex() {
         return index;
     }

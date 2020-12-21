@@ -65,6 +65,16 @@ public class EnhancedRichTextEditorView extends DemoView {
 
         rte.setPlaceholders(placeholders);
 
+        rte.addPlaceholderBeforeInsertListener(event -> {
+            String texts = "";
+            for (Placeholder placeholder : event.getPlaceholders()) {
+                texts+=" "+placeholder.getText();
+                texts+=" at "+placeholder.getIndex();
+            }
+            Notification.show(texts + " to be inserted");
+            event.insert();
+        });
+
         rte.addPlaceholderInsertedListener(event -> {
             String texts = "";
             for (Placeholder placeholder : event.getPlaceholders()) {

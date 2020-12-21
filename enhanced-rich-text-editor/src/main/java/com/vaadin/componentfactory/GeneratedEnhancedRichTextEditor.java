@@ -222,7 +222,7 @@ import elemental.json.impl.JreJsonObject;
         "WebComponent: Vaadin.RichTextEditorElement#1.0.0-alpha3",
         "Flow#1.2-SNAPSHOT" })
 @Tag("vcf-enhanced-rich-text-editor")
-@NpmPackage(value = "@vaadin-component-factory/vcf-enhanced-rich-text-editor", version = "1.3.15")
+@NpmPackage(value = "@vaadin-component-factory/vcf-enhanced-rich-text-editor", version = "1.3.16")
 @JsModule("@vaadin-component-factory/vcf-enhanced-rich-text-editor/src/vcf-enhanced-rich-text-editor.js")
 public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhancedRichTextEditor<R, T>, T>
         extends AbstractSinglePropertyField<R, T> implements HasStyle, HasTheme,
@@ -482,7 +482,7 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
                         pHolder = pHolder.getObject("placeholder");
                     }
                     Placeholder placeholder = new Placeholder(pHolder);
-                    if (index >= 0) {
+                    if (index != -1) {
                         placeholder.setIndex(index);
                     }
                     placeholders.add(placeholder);
@@ -501,7 +501,7 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
                 for (Placeholder placeholder : placeholders) {
                     Placeholder actualPlaceholder = ((EnhancedRichTextEditor) source)
                             .getPlaceholder(placeholder);
-                    if (placeholder.getIndex() >= 0) {
+                    if (placeholder.getIndex() != -1) {
                         actualPlaceholder.setIndex(placeholder.getIndex());
                     }
                     actualPlaceholders.add(actualPlaceholder);
