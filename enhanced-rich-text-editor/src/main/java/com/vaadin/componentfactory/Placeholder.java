@@ -28,6 +28,7 @@ public class Placeholder implements JsonSerializable {
     private String text;
     private JsonObject format;
     private JsonObject altFormat;
+    private int index = -1;
 
     public Placeholder() {
         JreJsonFactory factory = new JreJsonFactory();
@@ -110,5 +111,13 @@ public class Placeholder implements JsonSerializable {
                 ? placeholder.getObject("altFormat")
                 : null;
         return this;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
     }
 }

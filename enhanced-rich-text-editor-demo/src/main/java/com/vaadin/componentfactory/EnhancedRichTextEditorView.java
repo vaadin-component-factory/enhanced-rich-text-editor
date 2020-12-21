@@ -66,7 +66,12 @@ public class EnhancedRichTextEditorView extends DemoView {
         rte.setPlaceholders(placeholders);
 
         rte.addPlaceholderInsertedListener(event -> {
-            Notification.show(event.getPlaceholder().getText() + " inserted");
+            String texts = "";
+            for (Placeholder placeholder : event.getPlaceholders()) {
+                texts+=" "+placeholder.getText();
+                texts+=" at "+placeholder.getIndex();
+            }
+            Notification.show(texts + " inserted");
         });
 
         rte.addPlaceholderBeforeRemoveListener(event -> {
@@ -121,6 +126,7 @@ public class EnhancedRichTextEditorView extends DemoView {
             Notification.show("Clicked");
             rte.focus();
         });
+
         rte.setValue(
                 "[{\"insert\":\"The company \"},{\"insert\":{\"placeholder\":{\"text\":\"N-1=Vaadin\",\"format\":{\"italic\":true},\"altFormat\":{\"italic\":false,\"bold\":true}}}},{\"insert\":\", located in \"},{\"insert\":{\"placeholder\":{\"text\":\"A-1=Turku, 20540\",\"altFormat\":{\"link\":\"https://goo.gl/maps/EX8RTEMUWeEAdkNN8\"}}}},{\"insert\":\", was founded in \"},{\"insert\":{\"placeholder\":{\"text\":\"D-1=01-01-2000\"}}},{\"insert\":\".\"}]");
         addCard("Rich Text Editor with Placeholders", rte, button, valueHolder);        
