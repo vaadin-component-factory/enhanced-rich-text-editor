@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
+import org.jsoup.safety.Whitelist;
+
 import com.vaadin.flow.component.CompositionNotifier;
 import com.vaadin.flow.component.HasSize;
 import com.vaadin.flow.component.InputNotifier;
@@ -30,6 +32,7 @@ import com.vaadin.flow.component.KeyNotifier;
 import com.vaadin.flow.component.Synchronize;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.data.binder.Binder;
@@ -319,6 +322,95 @@ public class EnhancedRichTextEditor
         return placeholders.stream()
                 .filter(p -> p.getText().equals(placeholder.getText()))
                 .findFirst().orElse(null);
+    }
+
+    /**
+     * Return the length of the content stripped as text.
+     * 
+     * @return The length of the text content.
+     */
+    public int getTextLength() {
+        return org.jsoup.Jsoup.clean(getHtmlValueString(),Whitelist.none()).length();    
+    }
+
+    /**
+     * Add a text to the position. Text will be added if position
+     * is within 0 .. length of the current value of the text area.
+     * 
+     * @param text Text to be inserted
+     * @param position Position
+     */
+    public void addText(String text, int position) {
+        Objects.requireNonNull(text, "Text can't be null");
+        this.getHtmlValue();
+        if (position >= 0 && position <= getTextLength()) {
+            getElement().executeJs("$0._editor.insertText($1,$2)", getElement(),
+                    position, text);
+        }
+    }
+
+    /**
+     * Add text to the caret position, when the focus is in the text area.
+     * 
+     * @param text Text to be inserted
+     */
+    public void addText(String text) {
+        Objects.requireNonNull(text, "Text can't be null");
+        getElement().executeJs(
+                "if ($0._editor.getSelection()) $0._editor.insertText($0._editor.getSelection().index,$1)",
+                getElement(), text);
+    }
+
+    /**
+     * Add a custom button to the toolbar.
+     * 
+     * @param button A custom button to be added, not null
+     */
+    public void addCustomButton(Button button) {
+        Objects.requireNonNull(button, "Button can't be null");
+        SlotUtil.addButton(this, button);
+    }
+
+    /**
+     * A convenience method to add multiple custom buttons at one call.
+     *  
+     * @param buttons Custom buttons to be added.
+     */
+    public void addCustomButtons(Button ...buttons) {
+        for (Button button : buttons) {
+            addCustomButton(button);
+        }
+    }
+
+    /**
+     * Get the custom button using its id. 
+     *
+     * @param id Id as a string
+     * @return A button
+     */
+    public Button getCustomButton(String id) {
+        Objects.requireNonNull(id, "Id can't be null");
+        return SlotUtil.getButton(this, id);
+    }
+
+    /**
+     * Remove the given button from the toolbar.
+     *
+     * @param id Id as a string.
+     */
+    public void removeCustomButton(String id) {
+        Objects.requireNonNull(id, "Id can't be null");
+        SlotUtil.removeButton(this, id);
+    }
+
+    /**
+     * Remove a custom button from the toolbar.
+     * 
+     * @param button The button to be removed.
+     */
+    public void removeCustomButton(Button button) {
+        Objects.requireNonNull(button, "Button can't be null");
+        SlotUtil.removeButton(this, button);
     }
 
     /**
@@ -960,9 +1052,9 @@ public class EnhancedRichTextEditor
                     + listOrdered + ", " + listBullet + ", " + alignLeft + ", "
                     + alignCenter + ", " + alignRight + ", " + image + ", "
                     + link + ", " + blockquote + ", " + codeBlock + ", "
-                    + readonly + ", " + placeholder + ", " + placeholderAppearance
-                    + ", " + placeholderComboBoxLabel + ", "
-                    + placeholderAppearanceLabel1 + ", "
+                    + readonly + ", " + placeholder + ", "
+                    + placeholderAppearance + ", " + placeholderComboBoxLabel
+                    + ", " + placeholderAppearanceLabel1 + ", "
                     + placeholderAppearanceLabel2 + ", "
                     + placeholderDialogTitle + ", " + clean + "]";
         }

@@ -3,8 +3,11 @@ package com.vaadin.componentfactory;
 import java.util.*;
 
 import com.vaadin.flow.component.Html;
+import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.demo.DemoView;
@@ -25,6 +28,7 @@ public class EnhancedRichTextEditorView extends DemoView {
         createEditorWithLimitedToolbar();
         createEditorWithReadonlySections();
         createEditorWithPlaceholders();
+        createEditorWithCustomButtons();
     }
 
     private void createDefaultEditor() {
@@ -34,6 +38,40 @@ public class EnhancedRichTextEditorView extends DemoView {
         // end-source-example
 
         addCard("Basic Rich Text Editor", rte);
+    }
+
+    private void createEditorWithCustomButtons() {
+        // begin-source-example
+        // source-example-heading: Basic Rich Text Editor
+        EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
+
+        Button textButton1 = new Button("");
+        textButton1.setIcon(VaadinIcon.AIRPLANE.create());
+        textButton1.addClickShortcut(Key.F8);
+        textButton1.getElement().setProperty("title", "Airplanes are flying machines.");
+        textButton1.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        textButton1.addClickListener(event -> {
+            rte.addText("Airplanes are flying machines. ");
+        });
+
+        Button textButton2 = new Button("");
+        textButton2.setIcon(VaadinIcon.DENTAL_CHAIR.create());
+        textButton2.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        textButton2.getElement().setProperty("title", "Dentists are drilling people.");
+        textButton2.addClickShortcut(Key.F9);
+        textButton2.addClickListener(event -> {
+            rte.addText("Dentists are drilling people. ");
+        });
+
+        rte.addCustomButtons(textButton1,textButton2);
+
+        Button button = new Button("Remove airplane");
+        button.addClickListener(event -> {
+            rte.removeCustomButton(textButton1);
+        });
+        // end-source-example
+
+        addCard("Rich Text Editor With Custom Buttons", rte, button);
     }
 
     private void createEditorWithPlaceholders() {
