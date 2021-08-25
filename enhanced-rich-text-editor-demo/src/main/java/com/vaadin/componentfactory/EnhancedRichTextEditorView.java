@@ -35,6 +35,7 @@ public class EnhancedRichTextEditorView extends DemoView {
         // begin-source-example
         // source-example-heading: Basic Rich Text Editor
         EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
+        rte.setMaxHeight("200px");
         // end-source-example
 
         addCard("Basic Rich Text Editor", rte);
@@ -42,7 +43,7 @@ public class EnhancedRichTextEditorView extends DemoView {
 
     private void createEditorWithCustomButtons() {
         // begin-source-example
-        // source-example-heading: Basic Rich Text Editor
+        // source-example-heading: Rich Text Editor With Custom Buttons
         EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
 
         Button textButton1 = new Button("");
