@@ -54,7 +54,7 @@ import elemental.json.impl.JreJsonFactory;
  */
 @Tag("vcf-enhanced-rich-text-editor")
 @JsModule("./richTextEditorConnector-npm.js")
-@JavaScript("frontend://richTextEditorConnector.js")
+@JavaScript("./richTextEditorConnector.js")
 public class EnhancedRichTextEditor
         extends GeneratedEnhancedRichTextEditor<EnhancedRichTextEditor, String>
         implements HasSize, HasValueChangeMode, InputNotifier, KeyNotifier,
