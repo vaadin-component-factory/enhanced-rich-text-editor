@@ -9,7 +9,7 @@
 
     <name>Enhanced Rich Text Editor Demo</name>
 
-    <version>2.4.2</version>
+    <version>2.4.3</version>
 
     <inceptionYear>2019</inceptionYear>
     <organization>
@@ -20,7 +20,7 @@
     <properties>
         <powermock.version>1.7.1</powermock.version>
         <flow.version>2.4.0</flow.version>
-        <vaadin.version>14.4.1</vaadin.version>
+        <vaadin.version>14.7.5</vaadin.version>
         <testbench.version>6.0.1</testbench.version>
         <jetty.plugin.version>9.4.11.v20180605</jetty.plugin.version>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -73,7 +73,7 @@
         <dependency>
             <groupId>com.vaadin.componentfactory</groupId>
             <artifactId>enhanced-rich-text-editor</artifactId>
-            <version>2.4.2</version>
+            <version>2.4.3</version>
         </dependency>
 
     </dependencies>
