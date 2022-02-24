@@ -426,7 +426,21 @@ public class EnhancedRichTextEditor
         Boolean shortKey, Boolean shiftKey, Boolean altKey) {
       getElement().executeJs("$0.addStandardButtonBinding($1, $2, $3, $4, $5)", getElement(),
           toolbarButton.getButtonName(), keyCode, shortKey, shiftKey, altKey);
-    }   
+    }
+    
+    /**
+     * Adds a custom shortcut to focus the editor toolbar.
+     * 
+     * @param keyCode The key code for the new shortcut.
+     * @param shortKey True if modifier ctrl is part of the shortcut.
+     * @param shiftKey True if modifier shift is part of the shortcut.
+     * @param altKey True if modifier alt is part of the shortcut.
+     */
+    public void addToobarFocusShortcut(Number keyCode, Boolean shortKey, Boolean shiftKey,
+        Boolean altKey) {
+      getElement().executeJs("$0.addToolbarFocusBinding($1, $2, $3, $4)", getElement(), keyCode,
+          shortKey, shiftKey, altKey);
+    }
     
     /**
      * The internationalization properties for {@link EnhancedRichTextEditor}.
