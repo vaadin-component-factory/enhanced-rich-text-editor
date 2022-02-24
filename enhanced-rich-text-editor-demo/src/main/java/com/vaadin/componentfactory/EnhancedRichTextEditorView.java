@@ -1,7 +1,6 @@
 package com.vaadin.componentfactory;
 
-import java.util.*;
-
+import com.vaadin.componentfactory.EnhancedRichTextEditor.ToolbarButton;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
@@ -12,6 +11,11 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.demo.DemoView;
 import com.vaadin.flow.router.Route;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * View for {@link EnhancedRichTextEditor} demo.
@@ -29,6 +33,7 @@ public class EnhancedRichTextEditorView extends DemoView {
         createEditorWithReadonlySections();
         createEditorWithPlaceholders();
         createEditorWithCustomButtons();
+        createEditorWithCustomShortcutsForStandardButtons();
     }
 
     private void createDefaultEditor() {
@@ -37,8 +42,26 @@ public class EnhancedRichTextEditorView extends DemoView {
         EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
         rte.setMaxHeight("200px");
         // end-source-example
-
         addCard("Basic Rich Text Editor", rte);
+    }
+    
+    private void createEditorWithCustomShortcutsForStandardButtons() {
+      // begin-source-example
+      // source-example-heading: Basic Rich Text Editor with custom shortcuts for standard buttons
+      EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
+      
+      // shift + f9 for align center button
+      rte.addStandardToolbarButtonShortcut(ToolbarButton.ALIGN_CENTER, KeyEvent.VK_F9, false, true, false);
+      // shift + P for superscript
+      rte.addStandardToolbarButtonShortcut(ToolbarButton.SUPERSCRIPT, KeyEvent.VK_P, false, true, false);      
+      // ctrol + B for header 1
+      rte.addStandardToolbarButtonShortcut(ToolbarButton.H1, KeyEvent.VK_B, true, false, false);
+      // f9 to load an image
+      rte.addStandardToolbarButtonShortcut(ToolbarButton.IMAGE, KeyEvent.VK_F9, false, false, false);
+      // alt + G for code block
+      rte.addStandardToolbarButtonShortcut(ToolbarButton.CODE_BLOCK, KeyEvent.VK_G, false, false, true);
+      // end-source-example
+      addCard("Basic Rich Text Editor with custom shortcuts for standard buttons", rte);
     }
 
     private void createEditorWithCustomButtons() {
