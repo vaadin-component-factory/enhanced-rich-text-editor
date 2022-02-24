@@ -60,6 +60,10 @@ public class EnhancedRichTextEditorView extends DemoView {
       rte.addStandardToolbarButtonShortcut(ToolbarButton.IMAGE, KeyEvent.VK_F9, false, false, false);
       // alt + G for code block
       rte.addStandardToolbarButtonShortcut(ToolbarButton.CODE_BLOCK, KeyEvent.VK_G, false, false, true);
+      
+      // focus toolbar with shift + J
+      rte.addToobarFocusShortcut(KeyEvent.VK_J, false, true, false);
+      
       // end-source-example
       addCard("Basic Rich Text Editor with custom shortcuts for standard buttons", rte);
     }
