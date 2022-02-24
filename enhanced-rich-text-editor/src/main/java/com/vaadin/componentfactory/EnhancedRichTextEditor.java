@@ -412,7 +412,22 @@ public class EnhancedRichTextEditor
         Objects.requireNonNull(button, "Button can't be null");
         SlotUtil.removeButton(this, button);
     }
-
+    
+    /**
+     * Adds a custom shortcut to a specific toolbar standard button.
+     * 
+     * @param toolbarButton The toolbar button to add the shortcut to.
+     * @param keyCode The key code for the new shortcut.
+     * @param shortKey True if modifier ctrl is part of the shortcut.
+     * @param shiftKey True if modifier shift is part of the shortcut.
+     * @param altKey True if modifier alt is part of the shortcut.
+     */
+    public void addStandardToolbarButtonShortcut(ToolbarButton toolbarButton, Number keyCode,
+        Boolean shortKey, Boolean shiftKey, Boolean altKey) {
+      getElement().executeJs("$0.addStandardButtonBinding($1, $2, $3, $4, $5)", getElement(),
+          toolbarButton.getButtonName(), keyCode, shortKey, shiftKey, altKey);
+    }   
+    
     /**
      * The internationalization properties for {@link EnhancedRichTextEditor}.
      */
@@ -1065,16 +1080,22 @@ public class EnhancedRichTextEditor
 
         @Override
         public String toString() {
-            String str = this.name().toLowerCase();
-            String[] parts = str.split("_");
-            if (parts.length == 1)
-                return "\"" + str + "\"";
-
-            for (int i = 1; i < parts.length; i++)
-                parts[i] = Character.toUpperCase(parts[i].charAt(0))
-                        + parts[i].substring(1);
-
-            return "\"" + String.join("", parts) + "\"";
+            String name = getButtonName();
+            return "\"" + name + "\"";
         }
+        
+        public String getButtonName() {
+          String str = this.name().toLowerCase();
+          String[] parts = str.split("_");
+          if (parts.length == 1)
+              return str;
+
+          for (int i = 1; i < parts.length; i++)
+              parts[i] = Character.toUpperCase(parts[i].charAt(0))
+                      + parts[i].substring(1);
+          
+          return String.join("", parts);
+        }
+        
     }
 }
