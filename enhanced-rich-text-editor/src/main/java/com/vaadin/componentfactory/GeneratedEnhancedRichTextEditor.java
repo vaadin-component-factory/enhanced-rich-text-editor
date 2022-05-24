@@ -271,10 +271,11 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
         List<TabStop> tabStops = new ArrayList<>();
         JsonArray rawArray = (JsonArray) getElement()
                 .getPropertyRaw("tabStops");
-        getElement().synchronizeProperty("tabStops", "tabStops-changed");
-        getElement().synchronizeProperty("tabStops", "tab-stops-changed");
-        getElement().synchronizeProperty("tabStops", "change");
-        getElement().synchronizeProperty("tabStops", "value-changed");
+                 
+        getElement().addPropertyChangeListener("tabStops", "tabStops-changed", e -> {});
+        getElement().addPropertyChangeListener("tabStops", "tab-stops-changed", e -> {});
+        getElement().addPropertyChangeListener("tabStops", "change", e -> {});
+        getElement().addPropertyChangeListener("tabStops", "value-changed", e -> {});
 
         if (rawArray == null) {
             return tabStops;
