@@ -459,9 +459,12 @@ public class EnhancedRichTextEditor
         private String superscript;
         private String listOrdered;
         private String listBullet;
+        private String deindent;
+        private String indent;
         private String alignLeft;
         private String alignCenter;
         private String alignRight;
+        private String alignJustify;
         private String image;
         private String link;
         private String blockquote;
@@ -747,6 +750,48 @@ public class EnhancedRichTextEditor
             this.listBullet = listBullet;
             return this;
         }
+        
+        /**
+         * Gets the translated word for {@code deindent}
+         *
+         * @return the translated word for deindent (outdent)
+         */
+        public String getDeindent() {
+            return deindent;
+        }
+
+        /**
+         * Sets the translated word for {@code deindent}.
+         *
+         * @param deindent
+         *            the translated word for deindent
+         * @return this instance for method chaining
+         */
+        public RichTextEditorI18n setDeindent(String deindent) {
+            this.deindent = deindent;
+            return this;
+        }
+        
+        /**
+         * Gets the translated word for {@code indent}
+         *
+         * @return the translated word for indent
+         */
+        public String getIndent() {
+            return indent;
+        }
+
+        /**
+         * Sets the translated word for {@code indent}.
+         *
+         * @param indent
+         *            the translated word for indent
+         * @return this instance for method chaining
+         */
+        public RichTextEditorI18n setIndent(String indent) {
+            this.indent = indent;
+            return this;
+        }
 
         /**
          * Gets the translated word for {@code alignLeft}
@@ -810,6 +855,28 @@ public class EnhancedRichTextEditor
             this.alignRight = alignRight;
             return this;
         }
+        
+        /**
+         * Gets the translated word for {@code alignJustify}
+         *
+         * @return the translated word for alignJustify
+         */
+        public String getAlignJustify() {
+            return alignJustify;
+        }
+
+        /**
+         * Sets the translated word for {@code alignJustify}.
+         *
+         * @param alignJustify
+         *            the translated word for alignJustify
+         * @return this instance for method chaining
+         */
+        public RichTextEditorI18n setAlignJustify(String alignJustify) {
+            this.alignJustify = alignJustify;
+            return this;
+        }
+        
 
         /**
          * Gets the translated word for {@code image}
@@ -1078,8 +1145,9 @@ public class EnhancedRichTextEditor
             return "[" + undo + ", " + redo + ", " + bold + ", " + italic + ", "
                     + underline + ", " + strike + ", " + h1 + ", " + h2 + ", "
                     + h3 + ", " + subscript + ", " + superscript + ", "
-                    + listOrdered + ", " + listBullet + ", " + alignLeft + ", "
-                    + alignCenter + ", " + alignRight + ", " + image + ", "
+                    + listOrdered + ", " + listBullet + ", " + deindent 
+                    + ", " + indent + ", " + alignLeft + ", "+ alignCenter 
+                    + ", " + alignRight + ", " + alignJustify + ", " + image + ", "
                     + link + ", " + blockquote + ", " + codeBlock + ", "
                     + readonly + ", " + placeholder + ", "
                     + placeholderAppearance + ", " + placeholderComboBoxLabel
@@ -1090,7 +1158,7 @@ public class EnhancedRichTextEditor
     }
 
     public enum ToolbarButton {
-        UNDO, REDO, BOLD, ITALIC, UNDERLINE, STRIKE, H1, H2, H3, SUBSCRIPT, SUPERSCRIPT, LIST_ORDERED, LIST_BULLET, ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT, IMAGE, LINK, BLOCKQUOTE, CODE_BLOCK, READONLY, CLEAN, PLACEHOLDER, PLACEHOLDER_APPEARANCE;
+        UNDO, REDO, BOLD, ITALIC, UNDERLINE, STRIKE, H1, H2, H3, SUBSCRIPT, SUPERSCRIPT, LIST_ORDERED, LIST_BULLET, DEINDENT, INDENT, ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT, ALIGN_JUSTIFY, IMAGE, LINK, BLOCKQUOTE, CODE_BLOCK, READONLY, CLEAN, PLACEHOLDER, PLACEHOLDER_APPEARANCE;
 
         @Override
         public String toString() {
