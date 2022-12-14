@@ -436,7 +436,7 @@ public class EnhancedRichTextEditor
      * @param shiftKey True if modifier shift is part of the shortcut.
      * @param altKey True if modifier alt is part of the shortcut.
      */
-    public void addToobarFocusShortcut(Number keyCode, Boolean shortKey, Boolean shiftKey,
+    public void addToolbarFocusShortcut(Number keyCode, Boolean shortKey, Boolean shiftKey,
         Boolean altKey) {
       getElement().executeJs("$0.addToolbarFocusBinding($1, $2, $3, $4)", getElement(), keyCode,
           shortKey, shiftKey, altKey);
