@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
-import org.jsoup.safety.Whitelist;
+import org.jsoup.safety.Safelist;
 
 import com.vaadin.flow.component.CompositionNotifier;
 import com.vaadin.flow.component.HasSize;
@@ -238,7 +238,7 @@ public class EnhancedRichTextEditor
 
     String sanitize(String html) {
         return org.jsoup.Jsoup.clean(html,
-                org.jsoup.safety.Whitelist.basic()
+                org.jsoup.safety.Safelist.basic()
                         .addTags("img", "h1", "h2", "h3", "s")
                         .addAttributes("img", "align", "alt", "height", "src",
                                 "title", "width")
@@ -330,7 +330,7 @@ public class EnhancedRichTextEditor
      * @return The length of the text content.
      */
     public int getTextLength() {
-        return org.jsoup.Jsoup.clean(getHtmlValueString(),Whitelist.none()).length();    
+        return org.jsoup.Jsoup.clean(getHtmlValueString(),Safelist.none()).length();    
     }
 
     /**

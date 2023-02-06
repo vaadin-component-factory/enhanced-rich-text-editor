@@ -18,12 +18,12 @@
 
     <properties>
         <powermock.version>1.7.1</powermock.version>
-        <flow.version>2.4.0</flow.version>
-        <vaadin.version>14.7.5</vaadin.version>
+        <flow.version>23.3.3</flow.version>
+        <vaadin.version>23.3.5</vaadin.version>
         <testbench.version>6.0.1</testbench.version>
-        <jetty.plugin.version>9.4.11.v20180605</jetty.plugin.version>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <jetty.plugin.version>9.4.36.v20210114</jetty.plugin.version>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8
         </project.reporting.outputEncoding>
