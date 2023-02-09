@@ -11,7 +11,6 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.demo.DemoView;
 import com.vaadin.flow.router.Route;
-import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,18 +50,18 @@ public class EnhancedRichTextEditorView extends DemoView {
       EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
       
       // shift + f9 for align center button
-      rte.addStandardToolbarButtonShortcut(ToolbarButton.ALIGN_CENTER, KeyEvent.VK_F9, false, true, false);
+      rte.addStandardToolbarButtonShortcut(ToolbarButton.ALIGN_CENTER, 120, false, true, false);
       // shift + P for superscript
-      rte.addStandardToolbarButtonShortcut(ToolbarButton.SUPERSCRIPT, KeyEvent.VK_P, false, true, false);      
+      rte.addStandardToolbarButtonShortcut(ToolbarButton.SUPERSCRIPT, 80, false, true, false);      
       // ctrol + B for header 1
-      rte.addStandardToolbarButtonShortcut(ToolbarButton.H1, KeyEvent.VK_B, true, false, false);
+      rte.addStandardToolbarButtonShortcut(ToolbarButton.H1, 66, true, false, false);
       // f9 to load an image
-      rte.addStandardToolbarButtonShortcut(ToolbarButton.IMAGE, KeyEvent.VK_F9, false, false, false);
+      rte.addStandardToolbarButtonShortcut(ToolbarButton.IMAGE, 120, false, false, false);
       // alt + G for code block
-      rte.addStandardToolbarButtonShortcut(ToolbarButton.CODE_BLOCK, KeyEvent.VK_G, false, false, true);
+      rte.addStandardToolbarButtonShortcut(ToolbarButton.CODE_BLOCK, 71, false, false, true);
       
       // focus toolbar with shift + J
-      rte.addToobarFocusShortcut(KeyEvent.VK_J, false, true, false);
+      rte.addToobarFocusShortcut(74, false, true, false);
       
       // end-source-example
       addCard("Basic Rich Text Editor with custom shortcuts for standard buttons", rte);
