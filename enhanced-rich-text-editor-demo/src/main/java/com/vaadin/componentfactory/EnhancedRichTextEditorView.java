@@ -6,6 +6,7 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -33,6 +34,7 @@ public class EnhancedRichTextEditorView extends DemoView {
         createEditorWithPlaceholders();
         createEditorWithCustomButtons();
         createEditorWithCustomShortcutsForStandardButtons();
+        createEditorWithIconReplacementForStandardButtons();
     }
 
     private void createDefaultEditor() {
@@ -67,6 +69,33 @@ public class EnhancedRichTextEditorView extends DemoView {
       addCard("Basic Rich Text Editor with custom shortcuts for standard buttons", rte);
     }
 
+    private void createEditorWithIconReplacementForStandardButtons() {
+        // begin-source-example
+        // source-example-heading: Basic Rich Text Editor with icon replacement for standard buttons
+        EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
+        
+        // replace undo button icon
+        Icon newUndoIcon = new Icon(VaadinIcon.ARROW_BACKWARD);
+        newUndoIcon.setColor("grey");
+        newUndoIcon.setSize("1.25em");
+        rte.replaceStandardToolbarButtonIcon(ToolbarButton.UNDO, newUndoIcon);
+        
+        // replace redo button icon
+        Icon newRedoIcon = new Icon(VaadinIcon.ARROW_FORWARD);
+        newRedoIcon.setColor("grey");
+        newRedoIcon.setSize("1.25em");
+        rte.replaceStandardToolbarButtonIcon(ToolbarButton.REDO, newRedoIcon);
+        
+        // replace redo button icon
+        Icon imageIcon = new Icon(VaadinIcon.PICTURE);
+        imageIcon.setSize("1.25em");
+        rte.replaceStandardToolbarButtonIcon(ToolbarButton.IMAGE, imageIcon);
+                
+        // end-source-example
+        addCard("Basic Rich Text Editor with icon replacement for standard buttons", rte);
+      }
+    
+    
     private void createEditorWithCustomButtons() {
         // begin-source-example
         // source-example-heading: Rich Text Editor With Custom Buttons
