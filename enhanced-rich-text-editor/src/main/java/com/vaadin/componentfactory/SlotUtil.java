@@ -4,9 +4,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasElement;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.dom.Element;
 
 public class SlotUtil {
@@ -66,4 +66,12 @@ public class SlotUtil {
             return null;
         }
     }
+    
+	public static void replaceStandardButtonIcon(EnhancedRichTextEditor target, Icon icon, String iconSlotName) {
+		if (icon != null) {
+			clearSlot(target, iconSlotName);
+			icon.getElement().setAttribute("slot", iconSlotName);
+			target.getElement().appendChild(icon.getElement());
+		}
+	}
 }
