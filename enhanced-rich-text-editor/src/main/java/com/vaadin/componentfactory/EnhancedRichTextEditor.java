@@ -35,6 +35,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.value.HasValueChangeMode;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -440,6 +441,17 @@ public class EnhancedRichTextEditor
         Boolean altKey) {
       getElement().executeJs("$0.addToolbarFocusBinding($1, $2, $3, $4)", getElement(), keyCode,
           shortKey, shiftKey, altKey);
+    }
+    
+    /**
+     * Allows to replace the icon of a standard {@link ToolbarButton toolbar button}.
+     * 
+     * @param toolbarButton toolbar button to replace icon
+     * @param icon replacement icon
+     */
+    public void replaceStandardToolbarButtonIcon(ToolbarButton toolbarButton, Icon icon) {
+   	 	Objects.requireNonNull(icon, "Icon can't be null");
+        SlotUtil.replaceStandardButtonIcon(this, icon, toolbarButton.getButtonName());
     }
     
     /**
