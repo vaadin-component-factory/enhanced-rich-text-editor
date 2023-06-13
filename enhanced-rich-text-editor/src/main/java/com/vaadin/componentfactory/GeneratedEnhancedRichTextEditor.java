@@ -220,7 +220,7 @@ import elemental.json.impl.JreJsonObject;
         "WebComponent: Vaadin.RichTextEditorElement#1.0.0-alpha3",
         "Flow#1.2-SNAPSHOT" })
 @Tag("vcf-enhanced-rich-text-editor")
-@NpmPackage(value = "@vaadin-component-factory/vcf-enhanced-rich-text-editor", version = "3.0.1")
+@NpmPackage(value = "@vaadin-component-factory/vcf-enhanced-rich-text-editor", version = "3.0.2")
 @JsModule("@vaadin-component-factory/vcf-enhanced-rich-text-editor/src/vcf-enhanced-rich-text-editor.js")
 public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhancedRichTextEditor<R, T>, T>
         extends AbstractSinglePropertyField<R, T> implements HasStyle, HasTheme,
@@ -346,6 +346,21 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
      */
     protected void setDisabled(boolean disabled) {
         getElement().setProperty("disabled", disabled);
+    }
+    
+    /**
+     * <p>
+     * Description copied from corresponding location in WebComponent:
+     * </p>
+     * <p>
+     * When true, the user can not modify, nor copy the editor content.
+     * </p>
+     *
+     * @param noRulers
+     *            the boolean value to set
+     */
+    public void setNoRulers(boolean noRulers) {
+        getElement().setProperty("noRulers", noRulers);
     }
 
     /**

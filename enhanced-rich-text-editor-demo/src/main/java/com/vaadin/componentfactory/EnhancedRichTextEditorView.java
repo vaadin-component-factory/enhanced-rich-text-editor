@@ -35,6 +35,7 @@ public class EnhancedRichTextEditorView extends DemoView {
         createEditorWithCustomButtons();
         createEditorWithCustomShortcutsForStandardButtons();
         createEditorWithIconReplacementForStandardButtons();
+        createEditorWithNoRules();
     }
 
     private void createDefaultEditor() {
@@ -333,5 +334,15 @@ public class EnhancedRichTextEditorView extends DemoView {
         // end-source-example
 
         addCard("Basic Rich Text Editor with readonly sections", rte);
+    }
+    
+    private void createEditorWithNoRules() {
+    	// begin-source-example
+        // source-example-heading: Rich Text Editor with no rulers
+        EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
+        rte.setMaxHeight("200px");    
+        rte.setNoRulers(true);
+        // end-source-example
+        addCard("Rich Text Editor with no rulers", rte);
     }
 }
