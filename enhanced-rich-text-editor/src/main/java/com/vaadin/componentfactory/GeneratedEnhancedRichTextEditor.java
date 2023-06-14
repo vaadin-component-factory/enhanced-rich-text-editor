@@ -348,12 +348,9 @@ public abstract class GeneratedEnhancedRichTextEditor<R extends GeneratedEnhance
         getElement().setProperty("disabled", disabled);
     }
     
-    /**
+    /**     
      * <p>
-     * Description copied from corresponding location in WebComponent:
-     * </p>
-     * <p>
-     * When true, the user can not modify, nor copy the editor content.
+     * When true, the horizontal and vertical rulers are not visible. 
      * </p>
      *
      * @param noRulers
