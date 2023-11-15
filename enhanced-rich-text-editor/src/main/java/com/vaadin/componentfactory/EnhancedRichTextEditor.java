@@ -95,7 +95,7 @@ public class EnhancedRichTextEditor
                 JsonObject i18nObject = (JsonObject) JsonSerializer
                         .toJson(this.i18n);
                 for (String key : i18nObject.keys()) {
-                    ui.getPage().executeJavaScript(
+                    ui.getPage().executeJs(
                             "$0.set('i18n." + key + "', $1)", getElement(),
                             i18nObject.get(key));
                 }
@@ -120,7 +120,7 @@ public class EnhancedRichTextEditor
         runBeforeClientResponse(ui -> {
             String str = toolbarButtonsVisibility.toString();
             str = str.replaceAll("=", ":");
-            ui.getPage().executeJavaScript("setToolbarButtons($0, $1)",
+            ui.getPage().executeJs("setToolbarButtons($0, $1)",
                     getElement(), str);
         });
     }
