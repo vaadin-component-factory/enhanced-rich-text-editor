@@ -4,10 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.vaadin.componentfactory</groupId>
-    <artifactId>enhanced-rich-text-editor</artifactId>
+    <artifactId>enhanced-rich-text-editor-tables</artifactId>
     <packaging>jar</packaging>
 
-    <name>Enhanced Rich Text Editor</name>
+    <name>Enhanced Rich Text Editor Tables Extension</name>
 
     <version>4.1.0-SNAPSHOT</version>
     <inceptionYear>2019</inceptionYear>
@@ -17,17 +17,14 @@
     </organization>
 
     <properties>
-        <powermock.version>1.7.1</powermock.version>
+        <erte.version>4.1.0-SNAPSHOT</erte.version>
         <flow.version>23.3.3</flow.version>
         <vaadin.version>23.3.5</vaadin.version>
-        <testbench.version>6.0.1</testbench.version>
-        <jetty.plugin.version>9.4.36.v20210114</jetty.plugin.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8
         </project.reporting.outputEncoding>
-        <popup.version>23.3.5</popup.version>
 
     </properties>
 
@@ -52,40 +49,16 @@
 
     <dependencies>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-core</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.1</version>
-            <scope>test</scope>
+            <groupId>com.vaadin.componentfactory</groupId>
+            <artifactId>enhanced-rich-text-editor</artifactId>
+            <version>${erte.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.10.19</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-module-junit4</artifactId>
-            <version>${powermock.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito</artifactId>
-            <version>${powermock.version}</version>
-            <scope>test</scope>
-        </dependency>
+
         <dependency>
             <groupId>javax.annotation</groupId>
             <artifactId>javax.annotation-api</artifactId>
@@ -98,11 +71,13 @@
             <version>${flow.version}</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
-            <groupId>com.vaadin.componentfactory</groupId>
-            <artifactId>popup</artifactId>
-            <version>${popup.version}</version>
+            <groupId>net.sourceforge.cssparser</groupId>
+            <artifactId>cssparser</artifactId>
+            <version>0.9.30</version>
         </dependency>
+
     </dependencies>
 
 

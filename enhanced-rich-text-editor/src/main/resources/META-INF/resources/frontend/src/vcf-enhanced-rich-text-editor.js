@@ -893,6 +893,46 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
               this.dispatchEvent(new CustomEvent('placeholder-leave', { bubbles: true }));
               delete this._inPlaceholder;
             }
+
+            let detailObject = {
+              selected: undefined,
+              path: [],
+              isTable: false,
+              isList: false
+            };
+
+            if (opt) {
+              let lineElement = this._editor.getLine(opt.index)[0];
+              if (lineElement) {
+                let current = lineElement.domNode;
+
+                if (this.__lastSelectedDomNode !== current) {
+                  this.__lastSelectedDomNode = current;
+                  detailObject.selected = current.tagName.toLowerCase();
+
+                  while(current && current !== this._editor.root) {
+                    let tagName = current.tagName;
+                    if (tagName === "TABLE") {
+                      detailObject.isTable = true;
+                    } else if (tagName === "UL" || tagName === "OL") {
+                      detailObject.isList = true;
+                    }
+
+                    detailObject.path.push(tagName.toLowerCase());
+                    current = current.parentNode;
+                  }
+
+                  let event = new CustomEvent("selected-line-changed", {
+                    detail: detailObject
+                  });
+                  this.dispatchEvent(event);
+                }
+              }
+            } else {
+              delete this.__lastSelectedDomNode;
+              let event = new CustomEvent("selected-line-changed", {detail: detailObject});
+              this.dispatchEvent(event);
+            }
           });
         }
       });

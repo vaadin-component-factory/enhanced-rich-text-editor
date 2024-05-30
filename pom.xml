@@ -8,7 +8,7 @@
     <groupId>com.vaadin.componentfactory</groupId>
     <artifactId>enhanced-rich-text-editor-root</artifactId>
     <packaging>pom</packaging>
-    <version>4.0.3</version>
+    <version>4.1.0-SNAPSHOT</version>
     <name>EnhancedRich Text Editor Root</name>
     <inceptionYear>2018</inceptionYear>
 
@@ -51,6 +51,7 @@
 
     <modules>
         <module>enhanced-rich-text-editor</module>
+        <module>enhanced-rich-text-editor-tables</module>
         <module>enhanced-rich-text-editor-demo</module>
     </modules>
 

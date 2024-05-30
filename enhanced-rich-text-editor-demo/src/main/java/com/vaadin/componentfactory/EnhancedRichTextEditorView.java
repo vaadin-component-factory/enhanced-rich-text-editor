@@ -1,6 +1,8 @@
 package com.vaadin.componentfactory;
 
 import com.vaadin.componentfactory.EnhancedRichTextEditor.ToolbarButton;
+import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
+import com.vaadin.componentfactory.erte.tables.TablesI18n;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
@@ -11,16 +13,23 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.demo.DemoView;
 import com.vaadin.flow.router.Route;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.vaadin.flow.router.RouteAlias;
+import elemental.json.Json;
+import org.apache.commons.io.IOUtils;
+
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
 
 /**
  * View for {@link EnhancedRichTextEditor} demo.
  */
+@RouteAlias("")
 @Route("enhanced-rich-text-editor")
 @JsModule("./src/sampleEditorExtensionConnector.js")
 public class EnhancedRichTextEditorView extends DemoView {
@@ -38,6 +47,8 @@ public class EnhancedRichTextEditorView extends DemoView {
         createEditorWithCustomShortcutsForStandardButtons();
         createEditorWithIconReplacementForStandardButtons();
         createEditorWithNoRules();
+        createEditorWithTableSample();
+        createEditorWithTableI18nSample();
     }
 
     private void createDefaultEditor() {
@@ -48,7 +59,7 @@ public class EnhancedRichTextEditorView extends DemoView {
         // end-source-example
         addCard("Basic Rich Text Editor", rte);
     }
-    
+
     private void createEditorWithCustomShortcutsForStandardButtons() {
       // begin-source-example
       // source-example-heading: Basic Rich Text Editor with custom shortcuts for standard buttons
@@ -347,4 +358,95 @@ public class EnhancedRichTextEditorView extends DemoView {
         // end-source-example
         addCard("Rich Text Editor with no rulers", rte);
     }
+
+    private void createEditorWithTableSample() {
+        String deltaString;
+        String templatesString;
+
+        try (
+                InputStream deltaStream = getClass().getClassLoader().getResourceAsStream("table-sample-delta.json");
+                InputStream templatesStream = getClass().getClassLoader().getResourceAsStream("table-sample-templates.json")
+        ){
+            Objects.requireNonNull(deltaStream);
+            Objects.requireNonNull(templatesStream);
+
+            deltaString = new String(deltaStream.readAllBytes(), StandardCharsets.UTF_8);
+            templatesString = new String(templatesStream.readAllBytes(), StandardCharsets.UTF_8);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        // begin-source-example
+        // source-example-heading: Rich Text Editor with Table Addon
+        EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
+        EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte);
+        tables.setTemplates(Json.parse(templatesString));
+
+        // end-source-example
+        rte.setValue(deltaString);
+        rte.setMaxHeight("500px");
+        rte.setValueChangeMode(ValueChangeMode.EAGER);
+        addCard("Rich Text Editor with Table Addon", rte);
+    }
+
+    private void createEditorWithTableI18nSample() {
+        String deltaString;
+        String templatesString;
+
+        try (
+                InputStream deltaStream = getClass().getClassLoader().getResourceAsStream("table-sample-delta.json");
+                InputStream templatesStream = getClass().getClassLoader().getResourceAsStream("table-sample-templates.json")
+        ){
+            Objects.requireNonNull(deltaStream);
+            Objects.requireNonNull(templatesStream);
+
+            deltaString = new String(deltaStream.readAllBytes(), StandardCharsets.UTF_8);
+            templatesString = new String(templatesStream.readAllBytes(), StandardCharsets.UTF_8);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        // begin-source-example
+        // source-example-heading: Rich Text Editor with Table Addon - I18n Sample
+        EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
+
+        TablesI18n tablesI18n = new TablesI18n();
+        tablesI18n.setInsertTableToolbarSwitchTooltip("Neue Tabelle hinzufügen");
+        tablesI18n.setInsertTableRowsFieldPlaceholder("Zeilen");
+        tablesI18n.setInsertTableRowsFieldTooltip("Anzahl der hinzuzufügenden Zeilen");
+        tablesI18n.setInsertTableColumnsFieldPlaceholder("Spalten");
+        tablesI18n.setInsertTableColumnsFieldTooltip("Anzahl der hinzuzufügenden Spalten");
+        tablesI18n.setInsertTableAddButtonTooltip("Tabelle hinzufügen");
+
+        TablesI18n.TemplatesI18n templatesI18n = tablesI18n.getTemplatesI18n();
+        templatesI18n.setCurrentTemplateSelectFieldLabel("Aktuelle Vorlage");
+        templatesI18n.setCurrentTemplateNameNotUniqueError("Es gibt bereits eine Vorlage mit diesem Namen!");
+
+        templatesI18n.setCreateNewTemplateButtonTooltip("Neue Vorlage hinzufügen");
+        templatesI18n.setCopyTemplateButtonTooltip("Vorlage kopieren");
+        templatesI18n.setDeleteTemplateButtonTooltip("Vorlage löschen");
+
+        templatesI18n.setDeleteTemplateConfirmTitle("Vorlage löschen");
+        templatesI18n.setDeleteTemplateConfirmText("Möchten Sie die ausgewählte Vorlage löschen? Dieser" +
+                                                   " Vorgang kann nicht rückgängig gemacht werden");
+        templatesI18n.setDeleteTemplateConfirmYesButton("Löschen");
+        templatesI18n.setDeleteTemplateConfirmNoButton("Abbrechen");
+
+        // ... more i18n settings
+
+        EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte, tablesI18n);
+        tables.setTemplates(Json.parse(templatesString));
+
+        // end-source-example
+        rte.setValue(deltaString);
+        rte.setMaxHeight("500px");
+        rte.setValueChangeMode(ValueChangeMode.EAGER);
+        addCard("Rich Text Editor with Table Addon - I18n Sample", rte);
+
+    }
+
+
 }
+
