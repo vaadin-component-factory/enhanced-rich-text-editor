@@ -5,6 +5,7 @@ import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -21,6 +22,7 @@ import java.util.Map;
  * View for {@link EnhancedRichTextEditor} demo.
  */
 @Route("enhanced-rich-text-editor")
+@JsModule("./src/sampleEditorExtensionConnector.js")
 public class EnhancedRichTextEditorView extends DemoView {
 
     @Override

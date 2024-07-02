@@ -17,35 +17,28 @@ package com.vaadin.componentfactory;
  * #L%
  */
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
-
-import org.jsoup.safety.Safelist;
-
-import com.vaadin.flow.component.CompositionNotifier;
-import com.vaadin.flow.component.HasSize;
-import com.vaadin.flow.component.InputNotifier;
-import com.vaadin.flow.component.KeyNotifier;
-import com.vaadin.flow.component.Synchronize;
-import com.vaadin.flow.component.Tag;
-import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.value.HasValueChangeMode;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.function.SerializableConsumer;
 import com.vaadin.flow.internal.JsonSerializer;
-
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
 import elemental.json.impl.JreJsonArray;
 import elemental.json.impl.JreJsonFactory;
+import org.jsoup.safety.Safelist;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Server-side component for the {@code <vcf-enhanced-rich-text-editor>}
@@ -56,6 +49,7 @@ import elemental.json.impl.JreJsonFactory;
 @Tag("vcf-enhanced-rich-text-editor")
 @JsModule("./richTextEditorConnector-npm.js")
 @JavaScript("./richTextEditorConnector.js")
+@NpmPackage(value = "@vaadin/vaadin-license-checker", version = "^2.1.2")
 public class EnhancedRichTextEditor
         extends GeneratedEnhancedRichTextEditor<EnhancedRichTextEditor, String>
         implements HasSize, HasValueChangeMode, InputNotifier, KeyNotifier,
@@ -364,22 +358,41 @@ public class EnhancedRichTextEditor
 
     /**
      * Add a custom button to the toolbar.
-     * 
+     * <p/>
+     * This method does NOT apply any toolbar styling to the button, but will keep it "Vaadin native".
+     *
      * @param button A custom button to be added, not null
+     * @deprecated use {@link #addCustomToolbarComponents(Component...)} instead
      */
+    @Deprecated
     public void addCustomButton(Button button) {
         Objects.requireNonNull(button, "Button can't be null");
-        SlotUtil.addButton(this, button);
+        addCustomToolbarComponents(button);
     }
 
     /**
      * A convenience method to add multiple custom buttons at one call.
-     *  
+     * <p/>
+     * This method does NOT apply any toolbar styling to the button, but will keep it "Vaadin native".
+     *
      * @param buttons Custom buttons to be added.
+     * @deprecated use {@link #addCustomToolbarComponents(Component...)} instead
      */
+    @Deprecated
     public void addCustomButtons(Button ...buttons) {
-        for (Button button : buttons) {
-            addCustomButton(button);
+        addCustomToolbarComponents(buttons);
+    }
+
+    /**
+     * A convenience method to add multiple custom components at one call.
+     *
+     * @param components Custom components to be added.
+     */
+    public void addCustomToolbarComponents(Component... components) {
+        Objects.requireNonNull(components);
+        for (Component component : components) {
+            Objects.requireNonNull(component);
+            SlotUtil.addComponent(this, component);
         }
     }
 
@@ -453,7 +466,7 @@ public class EnhancedRichTextEditor
    	 	Objects.requireNonNull(icon, "Icon can't be null");
         SlotUtil.replaceStandardButtonIcon(this, icon, toolbarButton.getButtonName());
     }
-    
+
     /**
      * The internationalization properties for {@link EnhancedRichTextEditor}.
      */
@@ -1155,17 +1168,17 @@ public class EnhancedRichTextEditor
         @Override
         public String toString() {
             return "[" + undo + ", " + redo + ", " + bold + ", " + italic + ", "
-                    + underline + ", " + strike + ", " + h1 + ", " + h2 + ", "
-                    + h3 + ", " + subscript + ", " + superscript + ", "
-                    + listOrdered + ", " + listBullet + ", " + deindent 
-                    + ", " + indent + ", " + alignLeft + ", "+ alignCenter 
-                    + ", " + alignRight + ", " + alignJustify + ", " + image + ", "
-                    + link + ", " + blockquote + ", " + codeBlock + ", "
-                    + readonly + ", " + placeholder + ", "
-                    + placeholderAppearance + ", " + placeholderComboBoxLabel
-                    + ", " + placeholderAppearanceLabel1 + ", "
-                    + placeholderAppearanceLabel2 + ", "
-                    + placeholderDialogTitle + ", " + clean + "]";
+                   + underline + ", " + strike + ", " + h1 + ", " + h2 + ", "
+                   + h3 + ", " + subscript + ", " + superscript + ", "
+                   + listOrdered + ", " + listBullet + ", " + deindent
+                   + ", " + indent + ", " + alignLeft + ", " + alignCenter
+                   + ", " + alignRight + ", " + alignJustify + ", " + image + ", "
+                   + link + ", " + blockquote + ", " + codeBlock + ", "
+                   + readonly + ", " + placeholder + ", "
+                   + placeholderAppearance + ", " + placeholderComboBoxLabel
+                   + ", " + placeholderAppearanceLabel1 + ", "
+                   + placeholderAppearanceLabel2 + ", "
+                   + placeholderDialogTitle + ", " + clean + "]";
         }
     }
 
@@ -1192,4 +1205,5 @@ public class EnhancedRichTextEditor
         }
         
     }
+
 }

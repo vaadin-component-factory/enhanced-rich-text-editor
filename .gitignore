@@ -5,6 +5,7 @@ target/
 **/build-tools/node_modules
 **/package-lock.json
 **/bower_components/
+**/frontend/generated
 .classpath
 .project
 .settings
@@ -14,3 +15,11 @@ enhanced-rich-text-editor-demo/node_modules
 enhanced-rich-text-editor-demo/webpack.generated.js
 enhanced-rich-text-editor-demo/webpack.config.js
 enhanced-rich-text-editor-demo/package.json
+enhanced-rich-text-editor-demo/pnpm-lock.yaml
+enhanced-rich-text-editor-demo/frontend/index.html
+enhanced-rich-text-editor-demo/.pnpmfile.cjs
+enhanced-rich-text-editor-demo/.npmrc
+enhanced-rich-text-editor-demo/tsconfig.json
+enhanced-rich-text-editor-demo/types.d.ts
+enhanced-rich-text-editor-demo/vite.config.ts
+enhanced-rich-text-editor-demo/vite.generated.ts

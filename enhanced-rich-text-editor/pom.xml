@@ -9,7 +9,7 @@
 
     <name>Enhanced Rich Text Editor</name>
 
-    <version>4.0.3</version>
+    <version>4.1.0-SNAPSHOT</version>
     <inceptionYear>2019</inceptionYear>
     <organization>
         <name>Vaadin Ltd</name>
@@ -27,6 +27,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8
         </project.reporting.outputEncoding>
+        <popup.version>23.3.5</popup.version>
+
     </properties>
 
     <licenses>
@@ -96,7 +98,13 @@
             <version>${flow.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.vaadin.componentfactory</groupId>
+            <artifactId>popup</artifactId>
+            <version>${popup.version}</version>
+        </dependency>
     </dependencies>
+
 
     <build>
         <plugins>
