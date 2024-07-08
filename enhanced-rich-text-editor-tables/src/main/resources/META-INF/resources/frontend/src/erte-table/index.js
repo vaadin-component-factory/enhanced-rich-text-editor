@@ -2,15 +2,12 @@ import '../vendor/vaadin-quill.js';
 import Delta from 'quill-delta';
 import TableCell from './js/TableCellBlot.js';
 import TableRow from './js/TableRowBlot.js';
-// import TableColGroup from './js/TableColGroupBlot.js';
-// import TableCol from './js/TableColBlot.js';
 import TableHistory from './js/TableHistory.js';
 import Table from './js/TableBlot.js';
 import Contain from './js/ContainBlot.js';
 import TableTrick from './js/TableTrick.js';
 import TableSelection from './js/TableSelection.js';
 import TableToolbar from './js/TableToolbar.js';
-// import './css/quill.table.css';
 import { hiddenBorderClassName } from './js/TableTrick.js';
 
 const Quill = window.Quill;
@@ -111,20 +108,17 @@ export default class TableModule {
         node.setAttribute('cell_id', TableTrick.random_id());
       }
 
-      console.warn(delta);
-      throw new Error("");
-
-      // return delta.compose(new Delta().retain(delta.length(), {
-      //   td: [
-      //     node.getAttribute('table_id'),
-      //     node.getAttribute('row_id'),
-      //     node.getAttribute('cell_id'),
-      //     node.getAttribute('merge_id'),
-      //     node.getAttribute('colspan'),
-      //     node.getAttribute('rowspan'),
-      //     tableNode.classList.contains(hiddenBorderClassName) //is the table hidden?
-      //   ].join('|')
-      // }));
+      return delta.compose(new Delta().retain(delta.length(), {
+        td: [
+          node.getAttribute('table_id'),
+          node.getAttribute('row_id'),
+          node.getAttribute('cell_id'),
+          node.getAttribute('merge_id'),
+          node.getAttribute('colspan'),
+          node.getAttribute('rowspan'),
+          tableNode.classList.contains(hiddenBorderClassName) //is the table hidden?
+        ].join('|')
+      }));
     });
 
     TableToolbar.enable(quill, ['newtable_*', 'insert', 'undo', 'redo']);
@@ -325,6 +319,12 @@ export default class TableModule {
 
   static get keyBindings() {
     return {
+      // arrowDown: {
+      //   key: 'down',
+      //   handler: function(range, keycontext) {
+      //     // TODO add handlers to jump into prev/next row
+      //   }
+      // },
       tab: {
         key: 'tab',
         handler: function (range, keycontext) {

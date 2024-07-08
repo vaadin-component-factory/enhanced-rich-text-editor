@@ -33,7 +33,7 @@ public class EnhancedRichTextEditorTables {
 
     private final EnhancedRichTextEditor rte;
     private final TablesI18n i18n;
-    private TemplateDialog stylesPopup;
+    private TemplateDialog templatesDialog;
 
     public EnhancedRichTextEditorTables(EnhancedRichTextEditor rte) {
         this(rte, new TablesI18n());
@@ -163,7 +163,8 @@ public class EnhancedRichTextEditorTables {
 
         ToolbarSwitch stylesButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.EYE);
         stylesButton.setEnabled(false);
-        stylesPopup = new TemplateDialog(stylesButton, i18n.getTemplatesI18n());
+        templatesDialog = new TemplateDialog(stylesButton, i18n.getTemplatesI18n());
+        templatesDialog.setWidth("26rem"); // turned out to be the best width by default - if not, change in future
 
         addTableSelectedListener(event -> {
             insertButton.setEnabled(!event.isSelected());
@@ -174,21 +175,21 @@ public class EnhancedRichTextEditorTables {
             mergeCells.setEnabled(cellSelectionActive);
 
             // update the styles popup with the selected table's template
-            stylesPopup.setActiveTemplate(event.getTemplate());
-            stylesPopup.setCurrentPartsEnabled(!cellSelectionActive);
+            templatesDialog.setActiveTemplate(event.getTemplate());
+            templatesDialog.setCurrentPartsEnabled(!cellSelectionActive);
         });
 
         addTableCellChangedListener(event -> {
             if (event.getRowIndex() != null) {
-                stylesPopup.setSelectedRow(event.getRowIndex());
+                templatesDialog.setSelectedRow(event.getRowIndex());
             }
             if (event.getColIndex() != null) {
-                stylesPopup.setSelectedColumn(event.getColIndex());
+                templatesDialog.setSelectedColumn(event.getColIndex());
             }
         });
 
-        stylesPopup.setTemplateSelectedCallback((template, fromClient) -> setTemplateForCurrentTable(template, fromClient));
-        stylesPopup.setTemplatesChangedCallback((templates, fromClient) -> {
+        templatesDialog.setTemplateSelectedCallback((template, fromClient) -> setTemplateForCurrentTable(template, fromClient));
+        templatesDialog.setTemplatesChangedCallback((templates, fromClient) -> {
 //            try {
                 String string = TemplateParser.parse(templates);
                 setClientSideStyles(string);
@@ -213,8 +214,8 @@ public class EnhancedRichTextEditorTables {
      * @param templates templates json object.
      */
     public void setTemplates(JsonObject templates) {
-        if (stylesPopup != null) {
-            stylesPopup.setTemplates(templates);
+        if (templatesDialog != null) {
+            templatesDialog.setTemplates(templates);
         }
         String cssString = TemplateParser.parse(templates);
         setClientSideStyles(cssString);
@@ -226,7 +227,7 @@ public class EnhancedRichTextEditorTables {
      * @return templates json object or null
      */
     public JsonObject getTemplates() {
-        return stylesPopup != null ? stylesPopup.getTemplates() : null;
+        return templatesDialog != null ? templatesDialog.getTemplates() : null;
     }
 
     /**
@@ -273,18 +274,18 @@ public class EnhancedRichTextEditorTables {
     public void executeTableRowAction(String action) {
         executeTableAction(action);
         if (action.contains("remove")) {
-            stylesPopup.updateRowIndexesOnRemove();
+            templatesDialog.updateRowIndexesOnRemove();
         } else {
-            stylesPopup.updateRowIndexesOnAdd(action.contains("above"));
+            templatesDialog.updateRowIndexesOnAdd(action.contains("above"));
         }
     }
 
     public void executeTableColumnAction(String action) {
         executeTableAction(action);
         if (action.contains("remove")) {
-            stylesPopup.updateColIndexesOnRemove();
+            templatesDialog.updateColIndexesOnRemove();
         } else {
-            stylesPopup.updateColIndexesOnAdd(action.contains("before"));
+            templatesDialog.updateColIndexesOnAdd(action.contains("before"));
         }
     }
 
@@ -339,5 +340,13 @@ public class EnhancedRichTextEditorTables {
     public String getI18nOrDefault(ValueProvider<TablesI18n, String> valueProvider, String defaultValue) {
         String value = valueProvider.apply(this.i18n);
         return value != null ? value : defaultValue;
+    }
+
+    /**
+     * Returns the dialog used for template management.
+     * @return templates dialog
+     */
+    public TemplateDialog getTemplatesDialog() {
+        return templatesDialog;
     }
 }
