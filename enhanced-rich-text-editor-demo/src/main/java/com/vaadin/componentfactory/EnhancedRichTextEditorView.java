@@ -441,14 +441,6 @@ public class EnhancedRichTextEditorView extends DemoView {
         EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte, tablesI18n);
         tables.setTemplates(Json.parse(templatesString));
 
-        TemplateDialog templatesDialog = tables.getTemplatesDialog();
-        templatesDialog.getTemplateButtonsContainer().setVisible(false);
-        templatesDialog.getTableSection().setVisible(false);
-        templatesDialog.getCurrentColSection().setVisible(false);
-        templatesDialog.getCurrentRowSection().setVisible(false);
-        templatesDialog.getSpecialRowsSection().setVisible(false);
-        templatesDialog.getTemplateNameField().setVisible(false);
-
         // end-source-example
         rte.setValue(deltaString);
         rte.setMaxHeight("500px");

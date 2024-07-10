@@ -30,10 +30,10 @@ public abstract class RuleFormPart extends VerticalLayout {
 
         setPadding(false);
 
-        addAttachListener(event -> {
+//        addAttachListener(event -> {
             initForm (binder);
-            event.unregisterListener();
-        });
+//            event.unregisterListener();
+//        });
         addClassName("form-part");
     }
 
