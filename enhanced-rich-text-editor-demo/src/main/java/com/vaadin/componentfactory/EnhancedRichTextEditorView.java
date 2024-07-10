@@ -3,6 +3,8 @@ package com.vaadin.componentfactory;
 import com.vaadin.componentfactory.EnhancedRichTextEditor.ToolbarButton;
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
 import com.vaadin.componentfactory.erte.tables.TablesI18n;
+import com.vaadin.componentfactory.erte.tables.templates.TemplateDialog;
+import com.vaadin.componentfactory.erte.tables.templates.TemplateParser;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
@@ -438,6 +440,14 @@ public class EnhancedRichTextEditorView extends DemoView {
 
         EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte, tablesI18n);
         tables.setTemplates(Json.parse(templatesString));
+
+        TemplateDialog templatesDialog = tables.getTemplatesDialog();
+        templatesDialog.getTemplateButtonsContainer().setVisible(false);
+        templatesDialog.getTableSection().setVisible(false);
+        templatesDialog.getCurrentColSection().setVisible(false);
+        templatesDialog.getCurrentRowSection().setVisible(false);
+        templatesDialog.getSpecialRowsSection().setVisible(false);
+        templatesDialog.getTemplateNameField().setVisible(false);
 
         // end-source-example
         rte.setValue(deltaString);

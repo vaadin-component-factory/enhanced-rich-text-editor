@@ -1,6 +1,5 @@
 package com.vaadin.componentfactory.erte.tables.templates;
 
-import com.vaadin.componentfactory.erte.tables.TablesI18n;
 import com.vaadin.componentfactory.erte.tables.TablesI18n.TemplatesI18n;
 import com.vaadin.componentfactory.erte.tables.templates.ruleformparts.*;
 import com.vaadin.componentfactory.toolbar.ToolbarDialog;
@@ -15,11 +14,9 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.function.SerializableBiConsumer;
 import com.vaadin.flow.function.ValueProvider;
 import elemental.json.Json;
@@ -28,7 +25,6 @@ import elemental.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
-import javax.print.attribute.standard.MediaSize;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +38,16 @@ public class TemplateDialog extends ToolbarDialog {
 
     private final VerticalLayout layout;
     private final TemplatesI18n i18n;
-    private ComboBox<String> templateField;
+    private final Details tableDetails;
+    private final Details currentRowDetails;
+    private final Details currentColDetails;
+    private final Details specialRowsDetails;
+    private final TableFormPart tableFormPart;
+    private final FixedIndexRowFormPart headerRowFormPart;
+    private final FixedIndexRowFormPart footerRowFormPart;
+    private final FixedIndexRowFormPart evenRowsFormPart;
+    private final FixedIndexRowFormPart oddRowsFormPart;
+    private ComboBox<String> templateSelectionField;
     private JsonObject currentTemplate;
     private JsonObject templates = Json.createObject();
     private final CurrentRowFormPart currentRowFormPart;
@@ -53,6 +58,12 @@ public class TemplateDialog extends ToolbarDialog {
     private SerializableBiConsumer<JsonObject, Boolean> templatesChangedCallback;
 
     private static final String TEMPLATE_NAME = "template";
+    private TextField templateNameField;
+    private Button createNewTemplateButton;
+    private Button copySelectedTemplateButton;
+    private Button deleteSelectedTemplateButton;
+    private HorizontalLayout templateButtonsContainer;
+    private HorizontalLayout templateSection;
 
     public TemplateDialog(ToolbarSwitch referencedSwitch, TemplatesI18n i18n) {
         super(referencedSwitch);
@@ -68,23 +79,23 @@ public class TemplateDialog extends ToolbarDialog {
 
         initTemplateSelection();
 
-        Details tableDetails = addPartDetails(getI18nOrDefault(TemplatesI18n::getTableSectionTitle, "Table"));
-        addPart(new TableFormPart(this), tableDetails);
+        tableDetails = addPartDetails(getI18nOrDefault(TemplatesI18n::getTableSectionTitle, "Table"));
+        tableFormPart = addPart(new TableFormPart(this), tableDetails);
 
-        Details currentRowDetails = addPartDetails(getI18nOrDefault(TemplatesI18n::getCurrentRowSectionTitle, "Current Row"));
+        currentRowDetails = addPartDetails(getI18nOrDefault(TemplatesI18n::getCurrentRowSectionTitle, "Current Row"));
         currentRowFormPart = addPart(new CurrentRowFormPart(this), currentRowDetails);
 
-        Details currentColDetails = addPartDetails(getI18nOrDefault(TemplatesI18n::getCurrentColumnSectionTitle, "Current Column"));
+        currentColDetails = addPartDetails(getI18nOrDefault(TemplatesI18n::getCurrentColumnSectionTitle, "Current Column"));
         currentColFormPart = addPart(new CurrentColFormPart(this), currentColDetails);
 
-        Details fixedRowsDetails = addPartDetails(getI18nOrDefault(TemplatesI18n::getSpecialRowsSectionTitle, "Special Rows"), false);
-        addPart(new FixedIndexRowFormPart(this, getI18nOrDefault(TemplatesI18n::getSpecialRowsHeaderRowTitle, "Header Row"), "0n+1"), fixedRowsDetails);
-        addPart(new FixedIndexRowFormPart(this, getI18nOrDefault(TemplatesI18n::getSpecialRowsFooterRowTitle, "Footer Row"), "0n+1", true), fixedRowsDetails);
-        addPart(new FixedIndexRowFormPart(this, getI18nOrDefault(TemplatesI18n::getSpecialRowsEvenRowsTitle, "Even Rows"), "2n"), fixedRowsDetails);
-        addPart(new FixedIndexRowFormPart(this, getI18nOrDefault(TemplatesI18n::getSpecialRowsOddRowsTitle, "Odd Rows"), "2n+1"), fixedRowsDetails);
+        specialRowsDetails = addPartDetails(getI18nOrDefault(TemplatesI18n::getSpecialRowsSectionTitle, "Special Rows"), false);
+        headerRowFormPart = addPart(new FixedIndexRowFormPart(this, getI18nOrDefault(TemplatesI18n::getSpecialRowsHeaderRowTitle, "Header Row"), "0n+1"), specialRowsDetails);
+        footerRowFormPart = addPart(new FixedIndexRowFormPart(this, getI18nOrDefault(TemplatesI18n::getSpecialRowsFooterRowTitle, "Footer Row"), "0n+1", true), specialRowsDetails);
+        evenRowsFormPart = addPart(new FixedIndexRowFormPart(this, getI18nOrDefault(TemplatesI18n::getSpecialRowsEvenRowsTitle, "Even Rows"), "2n"), specialRowsDetails);
+        oddRowsFormPart = addPart(new FixedIndexRowFormPart(this, getI18nOrDefault(TemplatesI18n::getSpecialRowsOddRowsTitle, "Odd Rows"), "2n+1"), specialRowsDetails);
         add(layout);
 
-        setFocusOnOpenTarget(templateField);
+        setFocusOnOpenTarget(templateSelectionField);
 
         addOpenedChangeListener(event -> {
             if (event.isOpened()) {
@@ -97,25 +108,25 @@ public class TemplateDialog extends ToolbarDialog {
     }
 
     private void initTemplateSelection() {
-        templateField = new ComboBox<>();
-        templateField.setLabel(getI18nOrDefault(TemplatesI18n::getCurrentTemplateSelectFieldLabel, "Current Template"));
+        templateSelectionField = new ComboBox<>();
+        templateSelectionField.setLabel(getI18nOrDefault(TemplatesI18n::getCurrentTemplateSelectFieldLabel, "Current Template"));
 
-        TextField nameField = new TextField(getI18nOrDefault(TemplatesI18n::getCurrentTemplateNameFieldLabel, "Name"));
-        nameField.addThemeVariants(TextFieldVariant.LUMO_SMALL);
+        templateNameField = new TextField(getI18nOrDefault(TemplatesI18n::getCurrentTemplateNameFieldLabel, "Name"));
+        templateNameField.addThemeVariants(TextFieldVariant.LUMO_SMALL);
 
-        Button createNewTemplate = initCreateTemplateButton();
-        Button copySelectedTemplate = initCopySelectedTemplateButton();
-        Button deleteSelectedTemplate = initDeleteSelectedTemplateButton();
-        HorizontalLayout buttons = new HorizontalLayout(createNewTemplate, copySelectedTemplate, deleteSelectedTemplate);
+        createNewTemplateButton = initCreateTemplateButton();
+        copySelectedTemplateButton = initCopySelectedTemplateButton();
+        deleteSelectedTemplateButton = initDeleteSelectedTemplateButton();
+        templateButtonsContainer = new HorizontalLayout(createNewTemplateButton, copySelectedTemplateButton, deleteSelectedTemplateButton);
 
-        HorizontalLayout templateContainer = new HorizontalLayout(templateField, buttons, nameField);
-        templateContainer.setAlignItems(FlexComponent.Alignment.BASELINE);
-        templateContainer.getStyle().set("flex-wrap", "wrap");
-        templateContainer.addClassNames("form-part");
-        layout.add(templateContainer);
+        templateSection = new HorizontalLayout(templateSelectionField, templateButtonsContainer, templateNameField);
+        templateSection.setAlignItems(FlexComponent.Alignment.BASELINE);
+        templateSection.getStyle().set("flex-wrap", "wrap");
+        templateSection.addClassNames("form-part");
+        layout.add(templateSection);
 
         Binder<JsonObject> nameBinder = new Binder<>();
-        nameBinder.forField(nameField)
+        nameBinder.forField(templateNameField)
                 .asRequired()
                 .withValidator(s -> {
                     Set<String> strings = collectExistingNames(false);
@@ -126,13 +137,13 @@ public class TemplateDialog extends ToolbarDialog {
 
         nameBinder.addValueChangeListener(event -> {
             if (nameBinder.validate().isOk()) {
-                String value = templateField.getValue();
-                templateField.getDataProvider().refreshAll();
-                templateField.setValue(value);
+                String value = templateSelectionField.getValue();
+                templateSelectionField.getDataProvider().refreshAll();
+                templateSelectionField.setValue(value);
             }
         });
 
-        templateField.addValueChangeListener(event -> {
+        templateSelectionField.addValueChangeListener(event -> {
             String value = StringUtils.trimToNull(event.getValue());
             if (value != null && this.templates.hasKey(value)) {
                 currentTemplate = this.templates.getObject(value);
@@ -146,9 +157,9 @@ public class TemplateDialog extends ToolbarDialog {
                 parts.forEach(ruleFormPart -> ruleFormPart.readTemplate(currentTemplate));
             }
 
-            nameField.setEnabled(currentTemplate != null);
-            copySelectedTemplate.setEnabled(currentTemplate != null);
-            deleteSelectedTemplate.setEnabled(currentTemplate != null);
+            templateNameField.setEnabled(currentTemplate != null);
+            copySelectedTemplateButton.setEnabled(currentTemplate != null);
+            deleteSelectedTemplateButton.setEnabled(currentTemplate != null);
 
             if(templateSelectedCallback != null) {
                 templateSelectedCallback.accept(value, event.isFromClient());
@@ -168,7 +179,7 @@ public class TemplateDialog extends ToolbarDialog {
             templates.put(name, object);
             updateTemplatesField();
             notifyTemplateCange(event.isFromClient());
-            templateField.setValue(name);
+            templateSelectionField.setValue(name);
         });
 
         return createNewTemplate;
@@ -215,7 +226,7 @@ public class TemplateDialog extends ToolbarDialog {
             templates.put(key, clone);
             updateTemplatesField();
             notifyTemplateCange(event.isFromClient());
-            templateField.setValue(key);
+            templateSelectionField.setValue(key);
         });
 
         return copySelectedTemplate;
@@ -251,10 +262,10 @@ public class TemplateDialog extends ToolbarDialog {
                     getI18nOrDefault(TemplatesI18n::getDeleteTemplateConfirmTitle, "Delete Template"),
                     getI18nOrDefault(TemplatesI18n::getDeleteTemplateConfirmText, "Shall the selected template be deleted? This process is irreversible."),
                     getI18nOrDefault(TemplatesI18n::getDeleteTemplateConfirmYesButton, "Delete"), confirmEvent -> {
-                templates.remove(templateField.getValue());
+                templates.remove(templateSelectionField.getValue());
                 updateTemplatesField();
                 notifyTemplateCange(event.isFromClient());
-                templateField.clear();
+                templateSelectionField.clear();
             }, getI18nOrDefault(TemplatesI18n::getDeleteTemplateConfirmNoButton, "Cancel"), cancelEvent -> {
             }).open();
         });
@@ -329,8 +340,8 @@ public class TemplateDialog extends ToolbarDialog {
             keys.add(key);
         }
 
-        templateField.setItems(keys);
-        templateField.setItemLabelGenerator(item -> this.templates.getObject(item).getString("name"));
+        templateSelectionField.setItems(keys);
+        templateSelectionField.setItemLabelGenerator(item -> this.templates.getObject(item).getString("name"));
     }
 
     public void setSelectedRow(int row) {
@@ -354,11 +365,11 @@ public class TemplateDialog extends ToolbarDialog {
     }
 
     public void setActiveTemplate(@Nullable String template) {
-        templateField.setValue(template);
+        templateSelectionField.setValue(template);
     }
 
     public Optional<String> getActiveTemplate() {
-        return templateField.getOptionalValue();
+        return templateSelectionField.getOptionalValue();
     }
 
     public void setTemplateSelectedCallback(SerializableBiConsumer<String, Boolean> callback) {
@@ -447,7 +458,153 @@ public class TemplateDialog extends ToolbarDialog {
         return value != null ? value : defaultValue;
     }
 
-//    private void applyOverlayPopupCloseWorkaround(Component component) {
+    /**
+     * Returns the section container, that contains the template combobox, the buttons and the template name field.
+     * @return template section container
+     */
+    public HorizontalLayout getTemplateSection() {
+        return templateSection;
+    }
+
+    /**
+     * Returns the section container, that contains the table form part.
+     * @return table section
+     */
+    public Details getTableSection() {
+        return tableDetails;
+    }
+
+    /**
+     * Returns the section container, that contains the current row form part.
+     * @return current row section
+     */
+    public Details getCurrentRowSection() {
+        return currentRowDetails;
+    }
+
+    /**
+     * Returns the section container, that contains the current column form part.
+     * @return current column section
+     */
+    public Details getCurrentColSection() {
+        return currentColDetails;
+    }
+
+    /**
+     * Returns the section container, that contains the special rows form part. Special rows are for instance
+     * even and odd rows.
+     * @return special rows section
+     */
+    public Details getSpecialRowsSection() {
+        return specialRowsDetails;
+    }
+
+    /**
+     * Returns the table form part. A form part contains the different input fields to define concrete css stylings.
+     * @return table form part
+     */
+    public TableFormPart getTableFormPart() {
+        return tableFormPart;
+    }
+
+    /**
+     * Returns the header row form part. A form part contains the different input fields to define concrete css stylings.
+     * @return header row form part
+     */
+    public FixedIndexRowFormPart getHeaderRowFormPart() {
+        return headerRowFormPart;
+    }
+
+    /**
+     * Returns the footer row form part. A form part contains the different input fields to define concrete css stylings.
+     * @return footer row form part
+     */
+    public FixedIndexRowFormPart getFooterRowFormPart() {
+        return footerRowFormPart;
+    }
+
+    /**
+     * Returns the even rows form part. A form part contains the different input fields to define concrete css stylings.
+     * @return even rows form part
+     */
+    public FixedIndexRowFormPart getEvenRowsFormPart() {
+        return evenRowsFormPart;
+    }
+
+    /**
+     * Returns the odd rows form part. A form part contains the different input fields to define concrete css stylings.
+     * @return odd rows form part
+     */
+    public FixedIndexRowFormPart getOddRowsFormPart() {
+        return oddRowsFormPart;
+    }
+
+    /**
+     * Returns the current row form part. A form part contains the different input fields to define concrete css stylings.
+     * @return current row form part
+     */
+    public CurrentRowFormPart getCurrentRowFormPart() {
+        return currentRowFormPart;
+    }
+
+    /**
+     * Returns the current column form part. A form part contains the different input fields to define concrete css stylings.
+     * @return current column form part
+     */
+    public CurrentColFormPart getCurrentColFormPart() {
+        return currentColFormPart;
+    }
+
+    /**
+     * Returns the template selection field. This allows the user to switch to a different template for the selected
+     * table.
+     * @return template selection
+     */
+    public ComboBox<String> getTemplateSelectionField() {
+        return templateSelectionField;
+    }
+
+    /**
+     * Returns the template name field. This allows the user to change the name of the selected template.
+     * @return template name field
+     */
+    public TextField getTemplateNameField() {
+        return templateNameField;
+    }
+
+    /**
+     * Returns the button that allows the user to create a new template.
+     * @return new template button
+     */
+    public Button getCreateNewTemplateButton() {
+        return createNewTemplateButton;
+    }
+
+    /**
+     * Returns the button, that allows the user to copy the selected template.
+     * @return copy selected template button
+     */
+    public Button getCopySelectedTemplateButton() {
+        return copySelectedTemplateButton;
+    }
+
+    /**
+     * Returns the button, that allows the user to delete the selected template.
+     * @return delete selected template button
+     */
+    public Button getDeleteSelectedTemplateButton() {
+        return deleteSelectedTemplateButton;
+    }
+
+    /**
+     * Returns the component, that contains the template buttons.
+     * @return template buttons container
+     */
+    public HorizontalLayout getTemplateButtonsContainer() {
+        return templateButtonsContainer;
+    }
+
+    //    private void applyOverlayPopupCloseWorkaround(Component component) {
 //        component.getElement().executeJs("this.addEventListener('opened-changed', e => {" +
 //                                         "if(e.detail.value) {  " +
 //                                         "    $0.__stayOpen = true;" +
