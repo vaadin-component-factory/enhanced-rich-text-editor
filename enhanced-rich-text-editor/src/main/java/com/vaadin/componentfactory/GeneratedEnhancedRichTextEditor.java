@@ -38,7 +38,6 @@ import java.util.stream.Stream;
  * #L%
  */
 
-import javax.annotation.Generated;
 import com.vaadin.flow.component.AbstractSinglePropertyField;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
@@ -216,9 +215,9 @@ import elemental.json.impl.JreJsonObject;
  * – how to apply styles for shadow parts</a>
  * </p>
  */
-@Generated({ "Generator: com.vaadin.generator.ComponentGenerator#1.2-SNAPSHOT",
-        "WebComponent: Vaadin.RichTextEditorElement#1.0.0-alpha3",
-        "Flow#1.2-SNAPSHOT" })
+//@Generated({ "Generator: com.vaadin.generator.ComponentGenerator#1.2-SNAPSHOT",
+//        "WebComponent: Vaadin.RichTextEditorElement#1.0.0-alpha3",
+//        "Flow#1.2-SNAPSHOT" })
 @Tag("vcf-enhanced-rich-text-editor")
 //@NpmPackage(value = "@vaadin-component-factory/vcf-enhanced-rich-text-editor", version = "3.0.2")
 @JsModule("./src/vcf-enhanced-rich-text-editor.js")

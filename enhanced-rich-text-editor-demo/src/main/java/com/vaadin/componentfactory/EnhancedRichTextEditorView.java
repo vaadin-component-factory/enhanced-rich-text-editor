@@ -10,6 +10,7 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.dialog.DialogVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -440,6 +441,8 @@ public class EnhancedRichTextEditorView extends DemoView {
 
         EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte, tablesI18n);
         tables.setTemplates(Json.parse(templatesString));
+        tables.getTemplatesDialog().addThemeVariants(DialogVariant.LUMO_NO_PADDING);
+
 
         // end-source-example
         rte.setValue(deltaString);
