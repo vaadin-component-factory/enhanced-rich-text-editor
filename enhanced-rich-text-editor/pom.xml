@@ -20,10 +20,13 @@
         <powermock.version>1.7.1</powermock.version>
         <vaadin.version>24.4.4</vaadin.version>
         <testbench.version>6.0.1</testbench.version>
-    <maven.compiler.release>17</maven.compiler.release>        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>17</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8
         </project.reporting.outputEncoding>
         <popup.version>24.0.5</popup.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
 
     </properties>
 
@@ -85,7 +88,7 @@
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>flow-test-generic</artifactId>
-            <version>${vaadin.version}</version>
+            <version>24.4.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
