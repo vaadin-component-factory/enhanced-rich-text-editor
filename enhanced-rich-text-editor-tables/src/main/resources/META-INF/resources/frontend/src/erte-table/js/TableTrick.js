@@ -635,7 +635,6 @@ export default class TableTrick {
   }
 
   static table_handler(value, quill) {
-    debugger;
     // Check if the selection is for the same Quill instance, otherwise reset selection
     if (
         (TableSelection.selectionStartElement && !quill.container.contains(TableSelection.selectionStartElement)) ||
