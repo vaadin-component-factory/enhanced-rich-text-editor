@@ -1,4 +1,4 @@
-import '../vendor/vaadin-quill.js';
+import '@vaadin/flow-frontend/src/vendor/vaadin-quill.js';
 import Delta from 'quill-delta';
 import TableCell from './js/TableCellBlot.js';
 import TableRow from './js/TableRowBlot.js';
