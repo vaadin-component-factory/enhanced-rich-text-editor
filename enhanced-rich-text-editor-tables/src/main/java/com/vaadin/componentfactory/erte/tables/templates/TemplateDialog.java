@@ -346,12 +346,16 @@ public class TemplateDialog extends ToolbarDialog {
 
     public void setSelectedRow(int row) {
         currentRowFormPart.setSelectedRow(row); // maybe combine these two calls when form part stores the template
-        currentRowFormPart.readTemplate(currentTemplate);
+        if (currentTemplate != null) {
+            currentRowFormPart.readTemplate(currentTemplate);
+        }
     }
 
     public void setSelectedColumn(int col) {
         currentColFormPart.setSelectedColumn(col); // maybe combine these two calls when form part stores the template
-        currentColFormPart.readTemplate(currentTemplate);
+        if (currentTemplate != null) {
+            currentColFormPart.readTemplate(currentTemplate);
+        }
     }
 
     /**
