@@ -154,7 +154,12 @@ public class TemplateDialog extends ToolbarDialog {
             }
 
             if (currentTemplate != null) {
-                parts.forEach(ruleFormPart -> ruleFormPart.readTemplate(currentTemplate));
+                parts.forEach(ruleFormPart -> {
+                    ruleFormPart.setEnabled(true);
+                    ruleFormPart.readTemplate(currentTemplate);
+                });
+            } else {
+                parts.forEach(ruleFormPart -> ruleFormPart.setEnabled(false));
             }
 
             templateNameField.setEnabled(currentTemplate != null);
