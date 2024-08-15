@@ -745,10 +745,10 @@ export default class TableTrick {
           return true;
       }
 
-      TableSelection.cellSelectionChange(quill);
+    }
+      TableSelection.selectionChange(quill);
       // TODO fire a proper event, that informs about new indices, but does
     }
-  }
 
   static getRichTextEditorInstance(quill) {
     // just assure, that our quill is already attached
