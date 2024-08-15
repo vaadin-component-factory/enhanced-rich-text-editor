@@ -164,28 +164,31 @@ class TableSelection {
         const table = TableSelection.selectionStartElement.closest("table");
         tableTemplate = table?.classList?.toString();
         quill.__selectedTable = table;
+
+        // we do not set a cell or row here, since the templates dialog currentrow/col cannot handle it at the moment
+        // quill.__selectedTableCell = TableSelection.selectionStartElement?.closest("td");
+        // quill.__selectedTableRow = TableSelection.selectionStartElement?.closest("tr");
+
       } else {
         // obtain table and class from normal text selection
         const selection = quill.getSelection();
         if (selection) {
           const leaf = quill.getLeaf(selection.index)?.[0]?.domNode;
           if (leaf) {
-            const table = (leaf.tagName ? leaf : leaf.parentElement).closest("table");
+            const leafElement = (leaf.tagName ? leaf : leaf.parentElement);
+            const table = leafElement.closest("table");
 
             if (!isInTable) { // set flag if necessary
               isInTable = table != null;
             }
             tableTemplate = table?.classList?.toString();
             quill.__selectedTable = table;
+            quill.__selectedTableCell = leafElement?.closest("td");
+            quill.__selectedTableRow = leafElement?.closest("tr");
           }
         }
       }
 
-      const selectedCell = selectedNode?.closest("td");
-      const selectedRow = selectedNode?.closest("tr");
-
-      quill.__selectedTableCell = selectedCell;
-      quill.__selectedTableRow = selectedRow;
 
       host.dispatchEvent(new CustomEvent("table-selected", {
         detail: {
