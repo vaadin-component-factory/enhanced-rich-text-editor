@@ -14,7 +14,7 @@ public abstract class AbstractColFormPart extends AbstractIndexedFormPart {
     }
 
     public AbstractColFormPart(TemplateDialog templateDialog, String title) {
-        super(templateDialog, false, true);
+        super(templateDialog);
         this.title = title;
     }
 
@@ -31,5 +31,10 @@ public abstract class AbstractColFormPart extends AbstractIndexedFormPart {
     @Override
     protected String getKey() {
         return COLUMNS;
+    }
+
+    @Override
+    public boolean hasWidthInputs() {
+        return true;
     }
 }

@@ -11,8 +11,8 @@ import static com.vaadin.componentfactory.erte.tables.templates.TemplateJsonCons
 
 public abstract class AbstractIndexedFormPart extends DefaultPropertiesFormPart {
 
-    public AbstractIndexedFormPart(TemplateDialog templateDialog, boolean hasHeight, boolean hasWidth) {
-        super(templateDialog, hasHeight, hasWidth);
+    public AbstractIndexedFormPart(TemplateDialog templateDialog) {
+        super(templateDialog);
     }
 
     @Override

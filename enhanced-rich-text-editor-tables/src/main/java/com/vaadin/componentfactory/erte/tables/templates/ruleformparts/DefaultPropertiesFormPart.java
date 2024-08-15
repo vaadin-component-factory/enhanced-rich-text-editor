@@ -8,16 +8,12 @@ import elemental.json.JsonObject;
 
 public abstract class DefaultPropertiesFormPart extends RuleFormPart {
 
-    private final boolean hasHeight;
-    private final boolean hasWidth;
     private TextField textColorField;
     private TextField backgroundColorField;
     private TextField borderField;
 
-    public DefaultPropertiesFormPart(TemplateDialog templateDialog, boolean hasHeight, boolean hasWidth) {
+    public DefaultPropertiesFormPart(TemplateDialog templateDialog) {
         super(templateDialog);
-        this.hasHeight = hasHeight;
-        this.hasWidth = hasWidth;
     }
 
     @Override
@@ -30,10 +26,10 @@ public abstract class DefaultPropertiesFormPart extends RuleFormPart {
                 backgroundColorField,
                 borderField
         );
-        if (hasWidth) {
+        if (hasWidthInputs()) {
             row.add(createWidthField());
         }
-        if (hasHeight) {
+        if (hasHeightInputs()) {
             row.add(createHeightField());
         }
 
@@ -62,5 +58,13 @@ public abstract class DefaultPropertiesFormPart extends RuleFormPart {
      */
     public TextField getBorderField() {
         return borderField;
+    }
+
+    public boolean hasWidthInputs() {
+        return false;
+    }
+
+    public boolean hasHeightInputs() {
+        return false;
     }
 }

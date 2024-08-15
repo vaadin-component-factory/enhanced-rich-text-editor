@@ -14,7 +14,7 @@ public abstract class AbstractRowFormPart extends AbstractIndexedFormPart {
     }
 
     public AbstractRowFormPart(TemplateDialog templateDialog, String title) {
-        super(templateDialog, true, false);
+        super(templateDialog);
         this.title = title;
     }
 
@@ -30,5 +30,10 @@ public abstract class AbstractRowFormPart extends AbstractIndexedFormPart {
     @Override
     protected String getKey() {
         return ROWS;
+    }
+
+    @Override
+    public boolean hasHeightInputs() {
+        return true;
     }
 }
