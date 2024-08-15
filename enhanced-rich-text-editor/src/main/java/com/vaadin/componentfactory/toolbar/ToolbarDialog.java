@@ -13,12 +13,22 @@ public class ToolbarDialog extends Dialog {
 
     private final ToolbarSwitch toolbarSwitch;
     private Registration focusOnOpenTargetRegistration;
+    private boolean openAtSwitch;
+    private boolean ignoreNextEvent;
 
     public ToolbarDialog(ToolbarSwitch toolbarSwitch) {
+        this(toolbarSwitch, false);
+    }
+
+    public ToolbarDialog(ToolbarSwitch toolbarSwitch, boolean openAtSwitch) {
         this.toolbarSwitch = toolbarSwitch;
+        this.openAtSwitch = openAtSwitch;
+
         toolbarSwitch.addActiveChangedListener(event -> {
-            if (event.isFromClient()) {
+            if (!ignoreNextEvent) {
+                ignoreNextEvent = true;
                 setOpened(event.isActive());
+                ignoreNextEvent = false;
             }
         });
 
@@ -27,7 +37,11 @@ public class ToolbarDialog extends Dialog {
         }
 
         addOpenedChangeListener(event -> {
-            toolbarSwitch.setActive(event.isOpened());
+            if (!ignoreNextEvent) {
+                ignoreNextEvent = true;
+                toolbarSwitch.setActive(event.isOpened());
+                ignoreNextEvent = false;
+            }
             if (!event.isOpened()) {
                 toolbarSwitch.focus();
             }
@@ -41,6 +55,16 @@ public class ToolbarDialog extends Dialog {
         setDraggable(true);
         addThemeVariants(DialogVariant.LUMO_NO_PADDING);
 
+        addOpenedChangeListener(event -> {
+            if (this.openAtSwitch && event.isOpened()) {
+                getElement().executeJs("""
+                                const {left, top, width, height} = $0.getBoundingClientRect();
+                                this.$.overlay.$.overlay.style.position = 'absolute';
+                                this.$.overlay.$.overlay.style.left = left + 'px';
+                                this.$.overlay.$.overlay.style.top = top + height + 'px';""",
+                        getToolbarSwitch());
+            }
+        });
     }
 
     public static ToolbarDialog vertical(ToolbarSwitch toolbarSwitch, Component... components) {
@@ -72,5 +96,14 @@ public class ToolbarDialog extends Dialog {
 
     public ToolbarSwitch getToolbarSwitch() {
         return toolbarSwitch;
+    }
+
+    /**
+     * Will set this dialog to open at the related toolbar switch.
+     * @return open at toolbar swith
+     */
+    public ToolbarDialog openAtSwitch() {
+        this.openAtSwitch = true;
+        return this;
     }
 }

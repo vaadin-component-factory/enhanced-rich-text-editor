@@ -38,11 +38,22 @@ public class SlotUtil {
      * @param component component to add
      */
     public static void addComponent(EnhancedRichTextEditor target, Component component) {
-//        clearSlot(target,SLOTNAME);
-
         if (component != null) {
             component.getElement().setAttribute("slot", SLOTNAME);
             target.getElement().appendChild(component.getElement());
+        }
+    }
+
+    /**
+     * Adds a component to the toolbar slot. Please note, that despite having an index like 0, the
+     * component will still appear inside the custom toolbar slot, not at the beginning of the toolbar.
+     * @param target editor instance
+     * @param component component to add
+     */
+    public static void addComponentAtIndex(EnhancedRichTextEditor target, Component component, int index) {
+        if (component != null) {
+            component.getElement().setAttribute("slot", SLOTNAME);
+            target.getElement().insertChild(index, component.getElement());
         }
     }
 

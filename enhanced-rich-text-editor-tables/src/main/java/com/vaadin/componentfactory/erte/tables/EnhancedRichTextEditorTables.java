@@ -19,8 +19,8 @@ import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.shared.Registration;
 import elemental.json.JsonObject;
+import jakarta.annotation.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.Objects;
 
 @NpmPackage(value = "quill-delta", version = "5.1.0")
@@ -34,6 +34,11 @@ public class EnhancedRichTextEditorTables {
     private final EnhancedRichTextEditor rte;
     private final TablesI18n i18n;
     private TemplateDialog templatesDialog;
+    private ToolbarSwitch insertButton;
+    private ToolbarSwitch settingsButton;
+    private ToolbarSwitch stylesButton;
+    private String tableHoverColor;
+    private String cellHoverColor;
 
     public EnhancedRichTextEditorTables(EnhancedRichTextEditor rte) {
         this(rte, new TablesI18n());
@@ -106,14 +111,14 @@ public class EnhancedRichTextEditorTables {
         Button add = new Button(VaadinIcon.PLUS.create(), event -> insertTableAtCurrentPosition(rows.getValue(), cols.getValue()));
         add.setTooltipText(getI18nOrDefault(TablesI18n::getInsertTableAddButtonTooltip, "Add table"));
 
-        ToolbarSwitch insertButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.PLUS);
+        insertButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.PLUS);
         insertButton.setTooltipText(getI18nOrDefault(TablesI18n::getInsertTableToolbarSwitchTooltip, "Add new table"));
 
         ToolbarPopup insertPopup = ToolbarPopup.horizontal(insertButton, rows, new Span("x"), cols, add);
         insertPopup.setFocusOnOpenTarget(rows);
         add.addClickListener(event -> insertPopup.setOpened(false));
 
-        ToolbarSwitch settingsButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.TOOLS);
+        settingsButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.TOOLS);
         settingsButton.setTooltipText(getI18nOrDefault(TablesI18n::getModifyTableToolbarSwitchTooltip, "Modify Table"));
         settingsButton.setEnabled(false);
 
@@ -162,7 +167,7 @@ public class EnhancedRichTextEditorTables {
                 event -> executeTableAction("remove-table")
         );
 
-        ToolbarSwitch stylesButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.EYE);
+        stylesButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.EYE);
         stylesButton.setTooltipText(getI18nOrDefault(TablesI18n::getTableTemplatesToolbarSwitchTooltip, "Table Template"));
         stylesButton.setEnabled(false);
         templatesDialog = new TemplateDialog(stylesButton, i18n.getTemplatesI18n());
@@ -173,8 +178,13 @@ public class EnhancedRichTextEditorTables {
             settingsButton.setEnabled(event.isSelected());
             stylesButton.setEnabled(event.isSelected());
 
+            if(!event.isSelected()) { // close the dialog, when not having a table selected
+                stylesButton.setActive(false);
+            }
+
             boolean cellSelectionActive = event.isCellSelectionActive();
             mergeCells.setEnabled(cellSelectionActive);
+
 
             // update the styles popup with the selected table's template
             templatesDialog.setActiveTemplate(event.getTemplate());
@@ -193,7 +203,7 @@ public class EnhancedRichTextEditorTables {
         templatesDialog.setTemplateSelectedCallback((template, fromClient) -> setTemplateForCurrentTable(template, fromClient));
         templatesDialog.setTemplatesChangedCallback((templates, fromClient) -> {
 //            try {
-                String string = TemplateParser.parse(templates);
+                String string = TemplateParser.convertToCss(templates);
                 setClientSideStyles(string);
 
                 fireEvent(new TemplatesChangedEvent(this, true, templates, string));
@@ -208,6 +218,24 @@ public class EnhancedRichTextEditorTables {
         });
 
         rte.addCustomToolbarComponents(insertButton, settingsButton, stylesButton);
+
+        insertButton.addActiveChangedListener(event -> {
+            if (event.isActive()) {
+                settingsButton.setActive(false);
+                stylesButton.setActive(false);
+            }
+        });
+
+        settingsButton.addActiveChangedListener(event -> {
+            if (event.isActive()) {
+                insertButton.setActive(false);
+            }
+        });
+        stylesButton.addActiveChangedListener(event -> {
+            if (event.isActive()) {
+                insertButton.setActive(false);
+            }
+        });
     }
 
     /**
@@ -219,7 +247,7 @@ public class EnhancedRichTextEditorTables {
         if (templatesDialog != null) {
             templatesDialog.setTemplates(templates);
         }
-        String cssString = TemplateParser.parse(templates);
+        String cssString = TemplateParser.convertToCss(templates);
         setClientSideStyles(cssString);
         fireEvent(new TemplatesChangedEvent(this, false, templates, cssString));
     }
@@ -238,7 +266,7 @@ public class EnhancedRichTextEditorTables {
      */
     public String getTemplatesAsCssString() {
         JsonObject templates = getTemplates();
-        return templates != null ? TemplateParser.parse(templates) : null;
+        return templates != null ? TemplateParser.convertToCss(templates) : null;
     }
 
     /**
@@ -248,6 +276,15 @@ public class EnhancedRichTextEditorTables {
      * @param cssString css string
      */
     public void setClientSideStyles(String cssString) {
+        if (tableHoverColor != null) {
+            cssString = "table td {border: 1px solid transparent}\n\n" + cssString;
+            cssString = cssString + "\n\n table:hover td {border: 1px dashed " + tableHoverColor + " !important}\n\n";
+        }
+
+        if (cellHoverColor != null) {
+            cssString = cssString + "table td:hover {background-image: linear-gradient("+cellHoverColor+", "+cellHoverColor + ") !important}\n\n";
+        }
+
         rte.getElement().executeJs(SCRIPTS_TABLE + "_setStyles(this, $0)", cssString);
     }
 
@@ -350,5 +387,45 @@ public class EnhancedRichTextEditorTables {
      */
     public TemplateDialog getTemplatesDialog() {
         return templatesDialog;
+    }
+
+    public ToolbarSwitch getInsertTableToolbarButton() {
+        return insertButton;
+    }
+
+    public ToolbarSwitch getModifyTableToolbarButton() {
+        return settingsButton;
+    }
+
+    public ToolbarSwitch getTemplateToolbarButton() {
+        return stylesButton;
+    }
+
+    /**
+     * This method activates a UX helping feature. When setting a css color, that color will be shown as
+     * the table border, when the user hovers the table. Passing null will disable this feature.
+     * @param hoverColor css color
+     */
+    public void setTableHoverColor(@Nullable String hoverColor) {
+        this.tableHoverColor = hoverColor;
+        if (templatesDialog != null && templatesDialog.getTemplates() != null) {
+            setClientSideStyles(TemplateParser.convertToCss(templatesDialog.getTemplates()));
+        } else {
+            setClientSideStyles("");
+        }
+    }
+
+    /**
+     * This method activates a UX helping feature. When setting a css color, that color will be shown as
+     * a slight cell background color, when the user hovers a table cell. Passing null will disable this feature.
+     * @param hoverColor css color
+     */
+    public void setTableCellHoverColor(@Nullable String hoverColor) {
+        this.cellHoverColor = hoverColor;
+        if (templatesDialog != null && templatesDialog.getTemplates() != null) {
+            setClientSideStyles(TemplateParser.convertToCss(templatesDialog.getTemplates()));
+        } else {
+            setClientSideStyles("");
+        }
     }
 }

@@ -26,7 +26,7 @@ public final class TemplateParser {
      * @param templates templates
      * @return css string
      */
-    public static String parse(JsonObject templates) {
+    public static String convertToCss(JsonObject templates) {
         return new TemplateParser(templates).toCss();
     }
 
@@ -36,8 +36,34 @@ public final class TemplateParser {
      * @param templateJson templates as string
      * @return css string
      */
-    public static String parse(String templateJson) {
+    public static String convertToCss(String templateJson) {
         return new TemplateParser(Json.parse(templateJson)).toCss();
+    }
+
+    /**
+     * Parses the given template json and create a json object from it. The given json is taken as it is without
+     * any modifications before or after the parse.
+     * @param templateJson json string
+     * @return json object
+     */
+    public static JsonObject parseJson(String templateJson) {
+        return Json.parse(templateJson);
+    }
+
+    /**
+     * Parses the given template json and create a json object from it. The given json is taken as it is without
+     * any modifications before the parse. However, the method will remove any empty children from the
+     * created json object, if the given boolean parameter is true.
+     * @param templateJson json string
+     * @param removeEmptyChildren remove empty parts
+     * @return json object
+     */
+    public static JsonObject parseJson(String templateJson, boolean removeEmptyChildren) {
+        JsonObject object = parseJson(templateJson);
+        if (removeEmptyChildren) {
+            removeEmptyChildren(object);
+        }
+        return object;
     }
 
     /**
@@ -209,10 +235,18 @@ public final class TemplateParser {
                     : "nth-of-type";
 
             // since index can also be something like "2n + 1" (odd children) we interprete it as string
+            JsonType indexJsonType = declarationDef.get(INDEX).getType();
+
+            String index = switch (indexJsonType) {
+                case NUMBER -> String.valueOf(declarationDef.getNumber(INDEX));
+                case STRING -> declarationDef.getString(INDEX);
+                default -> throw new IllegalStateException("Unexpected value: " + indexJsonType);
+            };
+
             builder.append(":")
                     .append(nth)
                     .append("(")
-                    .append(declarationDef.getString(INDEX))
+                    .append(index)
                     .append(")");
         }
     }

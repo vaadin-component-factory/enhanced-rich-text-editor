@@ -397,6 +397,19 @@ public class EnhancedRichTextEditor
     }
 
     /**
+     * A convenience method to add multiple custom components at one call.
+     *
+     * @param components Custom components to be added.
+     */
+    public void addCustomToolbarComponentsAtIndex(int index, Component... components) {
+        Objects.requireNonNull(components);
+        for (Component component : components) {
+            Objects.requireNonNull(component);
+            SlotUtil.addComponentAtIndex(this, component, index);
+        }
+    }
+
+    /**
      * Get the custom button using its id. 
      *
      * @param id Id as a string
