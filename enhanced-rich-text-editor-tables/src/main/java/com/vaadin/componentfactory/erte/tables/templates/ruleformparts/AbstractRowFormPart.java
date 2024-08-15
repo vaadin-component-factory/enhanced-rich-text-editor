@@ -16,15 +16,10 @@ public abstract class AbstractRowFormPart extends AbstractIndexedFormPart {
     public AbstractRowFormPart(TemplateDialog templateDialog, String title) {
         super(templateDialog);
         this.title = title;
-    }
 
-    @Override
-    void initForm(Binder<JsonObject> binder) {
         if (title != null) {
-            add(createPartTitle(title));
+            addComponentAsFirst(createPartTitle(title));
         }
-
-        super.initForm(binder);
     }
 
     @Override

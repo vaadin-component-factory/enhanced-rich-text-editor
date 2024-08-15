@@ -16,17 +16,10 @@ public abstract class AbstractColFormPart extends AbstractIndexedFormPart {
     public AbstractColFormPart(TemplateDialog templateDialog, String title) {
         super(templateDialog);
         this.title = title;
-    }
-
-    @Override
-    void initForm(Binder<JsonObject> binder) {
         if (title != null) {
-            add(createPartTitle(title));
+            addComponentAsFirst(createPartTitle(title));
         }
-
-        super.initForm(binder);
     }
-
 
     @Override
     protected String getKey() {
