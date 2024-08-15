@@ -38,6 +38,8 @@ public class EnhancedRichTextEditorTables {
     private ToolbarSwitch settingsButton;
     private ToolbarSwitch stylesButton;
     private String tableHoverColor;
+    private String tableFocusColor;
+    private String cellFocusColor;
     private String cellHoverColor;
 
     public EnhancedRichTextEditorTables(EnhancedRichTextEditor rte) {
@@ -285,6 +287,23 @@ public class EnhancedRichTextEditorTables {
             cssString = cssString + "table td:hover {background-image: linear-gradient("+cellHoverColor+", "+cellHoverColor + ") !important}\n\n";
         }
 
+        if (tableFocusColor != null) {
+            cssString = cssString + "table:has(td.focused-cell) {position:relative;}\n\n";
+            cssString = cssString + "table:has(td.focused-cell)::after {    content: '';\n" +
+                        "    border: 1px dashed " + tableFocusColor + " !important;\n" +
+                        "    width: 100%;\n" +
+                        "    height: 100%;\n" +
+                        "    position: absolute;\n" +
+                        "    top: 0;\n" +
+                        "    left: 0;\n" +
+                        "    box-sizing: border-box;" +
+                        "    pointer-events:none}\n\n";
+        }
+
+        if (cellFocusColor != null) {
+            cssString = cssString + "table td.focused-cell {background-image: linear-gradient(" + cellFocusColor + ", " + cellFocusColor + ") !important}";
+        }
+
         rte.getElement().executeJs(SCRIPTS_TABLE + "_setStyles(this, $0)", cssString);
     }
 
@@ -417,7 +436,7 @@ public class EnhancedRichTextEditorTables {
 
     /**
      * This method activates a UX helping feature. When setting a css color, that color will be shown as
-     * the table border, when the user hovers the table. Passing null will disable this feature.
+     * the table cells border, when the user hovers the table. Passing null will disable this feature.
      * @param hoverColor css color
      */
     public void setTableHoverColor(@Nullable String hoverColor) {
@@ -436,6 +455,34 @@ public class EnhancedRichTextEditorTables {
      */
     public void setTableCellHoverColor(@Nullable String hoverColor) {
         this.cellHoverColor = hoverColor;
+        if (templatesDialog != null && templatesDialog.getTemplates() != null) {
+            setClientSideStyles(TemplateParser.convertToCss(templatesDialog.getTemplates()));
+        } else {
+            setClientSideStyles("");
+        }
+    }
+
+    /**
+     * This method activates a UX helping feature. When setting a css color, that color will be shown as
+     * a slight cell background color, when the user focuses a table cell. Passing null will disable this feature.
+     * @param focusColor css color
+     */
+    public void setTableCellFocusColor(@Nullable String focusColor) {
+        this.cellFocusColor = focusColor;
+        if (templatesDialog != null && templatesDialog.getTemplates() != null) {
+            setClientSideStyles(TemplateParser.convertToCss(templatesDialog.getTemplates()));
+        } else {
+            setClientSideStyles("");
+        }
+    }
+
+    /**
+     * This method activates a UX helping feature. When setting a css color, that color will be shown as
+     * a the table border color, when the user focuses a table cell. Passing null will disable this feature.
+     * @param focusColor css color
+     */
+    public void setTableFocusColor(@Nullable String focusColor) {
+        this.tableFocusColor = focusColor;
         if (templatesDialog != null && templatesDialog.getTemplates() != null) {
             setClientSideStyles(TemplateParser.convertToCss(templatesDialog.getTemplates()));
         } else {

@@ -53,9 +53,7 @@ import TableSelection from "./js/TableSelection.js";
 
         _assureFocus(rte) {
             if (!rte._editor.hasFocus()) {
-                rte.__ignoreSelect = true;
                 rte._editor.focus();
-                delete rte.__ignoreSelect;
             }
         },
 
