@@ -11,6 +11,7 @@ public class TablesI18n implements Serializable {
     private String insertTableAddButtonTooltip;
     private String insertTableToolbarSwitchTooltip;
 
+    private String modifyTableToolbarSwitchTooltip;
     private String modifyTableAppendRowAboveItemLabel;
     private String modifyTableAppendRowBelowItemLabel;
     private String modifyTableRemoveRowItemLabel;
@@ -23,6 +24,8 @@ public class TablesI18n implements Serializable {
 
     private String modifyTableMergeCellsItemLabel;
     private String modifyTableSplitCellItemLabel;
+
+    private String tableTemplatesToolbarSwitchTooltip;
 
     private TemplatesI18n templatesI18n = new TemplatesI18n();
 
@@ -152,6 +155,22 @@ public class TablesI18n implements Serializable {
 
     public void setTemplatesI18n(TemplatesI18n templatesI18n) {
         this.templatesI18n = Objects.requireNonNull(templatesI18n);
+    }
+
+    public String getModifyTableToolbarSwitchTooltip() {
+        return modifyTableToolbarSwitchTooltip;
+    }
+
+    public void setModifyTableToolbarSwitchTooltip(String modifyTableToolbarSwitchTooltip) {
+        this.modifyTableToolbarSwitchTooltip = modifyTableToolbarSwitchTooltip;
+    }
+
+    public String getTableTemplatesToolbarSwitchTooltip() {
+        return tableTemplatesToolbarSwitchTooltip;
+    }
+
+    public void setTableTemplatesToolbarSwitchTooltip(String tableTemplatesToolbarSwitchTooltip) {
+        this.tableTemplatesToolbarSwitchTooltip = tableTemplatesToolbarSwitchTooltip;
     }
 
     public static class TemplatesI18n {

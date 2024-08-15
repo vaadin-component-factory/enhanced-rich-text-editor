@@ -114,6 +114,7 @@ public class EnhancedRichTextEditorTables {
         add.addClickListener(event -> insertPopup.setOpened(false));
 
         ToolbarSwitch settingsButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.TOOLS);
+        settingsButton.setTooltipText(getI18nOrDefault(TablesI18n::getModifyTableToolbarSwitchTooltip, "Modify Table"));
         settingsButton.setEnabled(false);
 
         ToolbarSelectPopup selectPopup = new ToolbarSelectPopup(settingsButton);
@@ -162,6 +163,7 @@ public class EnhancedRichTextEditorTables {
         );
 
         ToolbarSwitch stylesButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.EYE);
+        stylesButton.setTooltipText(getI18nOrDefault(TablesI18n::getTableTemplatesToolbarSwitchTooltip, "Table Template"));
         stylesButton.setEnabled(false);
         templatesDialog = new TemplateDialog(stylesButton, i18n.getTemplatesI18n());
         templatesDialog.setWidth("26rem"); // turned out to be the best width by default - if not, change in future

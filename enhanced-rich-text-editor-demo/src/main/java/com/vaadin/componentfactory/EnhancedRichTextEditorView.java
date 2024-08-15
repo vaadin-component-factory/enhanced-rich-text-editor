@@ -423,6 +423,9 @@ public class EnhancedRichTextEditorView extends DemoView {
         tablesI18n.setInsertTableColumnsFieldTooltip("Anzahl der hinzuzufügenden Spalten");
         tablesI18n.setInsertTableAddButtonTooltip("Tabelle hinzufügen");
 
+        tablesI18n.setModifyTableToolbarSwitchTooltip("Tablle anpassen");
+        tablesI18n.setTableTemplatesToolbarSwitchTooltip("Formatvorlagen");
+
         TablesI18n.TemplatesI18n templatesI18n = tablesI18n.getTemplatesI18n();
         templatesI18n.setCurrentTemplateSelectFieldLabel("Aktuelle Vorlage");
         templatesI18n.setCurrentTemplateNameNotUniqueError("Es gibt bereits eine Vorlage mit diesem Namen!");
