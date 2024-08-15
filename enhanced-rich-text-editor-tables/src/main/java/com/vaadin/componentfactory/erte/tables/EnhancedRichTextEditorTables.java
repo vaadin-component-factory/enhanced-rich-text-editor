@@ -200,7 +200,7 @@ public class EnhancedRichTextEditorTables {
             }
         });
 
-        templatesDialog.setTemplateSelectedCallback((template, fromClient) -> setTemplateForCurrentTable(template, fromClient));
+        templatesDialog.setTemplateSelectedCallback((template, fromClient) -> internalUpdateTemplateForCurrentTable(template, fromClient));
         templatesDialog.setTemplatesChangedCallback((templates, fromClient) -> {
 //            try {
                 String string = TemplateParser.convertToCss(templates);
@@ -289,20 +289,34 @@ public class EnhancedRichTextEditorTables {
     }
 
     public void insertTableAtCurrentPosition(int rows, int cols) {
+        insertTableAtCurrentPosition(rows, cols, null);
+    }
+
+    public void insertTableAtCurrentPosition(int rows, int cols, String templates) {
         if (rows <= 0 || cols <= 0) {
             throw new IllegalArgumentException("Rows and cols must be greater than 0!");
         }
 
-        rte.getElement().executeJs(SCRIPTS_TABLE+ "insert(this, $0, $1)", rows, cols);
+        rte.getElement().executeJs(SCRIPTS_TABLE+ "insert(this, $0, $1, $2)", rows, cols, templates);
     }
 
     public void setTemplateForCurrentTable(@Nullable String template) {
-        setTemplateForCurrentTable(template, false);
+        if(templatesDialog != null) {
+            templatesDialog.setActiveTemplate(template);
+        } else { // fallback if no templates dialog is available
+            internalUpdateTemplateForCurrentTable(template, false);
+        }
     }
 
-    private void setTemplateForCurrentTable(@Nullable String template, boolean fromClient) {
+    /**
+     * This internal method will update the current template for the table on the client and fire a template selected
+     * event. Intended to be used by the template dialog, or if none is available, by the setTemplateForCurrentTable
+     * method.
+     * @param template template to be set
+     * @param fromClient change comes from client
+     */
+    private void internalUpdateTemplateForCurrentTable(@Nullable String template, boolean fromClient) {
         rte.getElement().executeJs(SCRIPTS_TABLE + "setTemplate(this, $0)", template);
-
         fireEvent(new TemplateSelectedEvent(this, fromClient, template));
     }
 

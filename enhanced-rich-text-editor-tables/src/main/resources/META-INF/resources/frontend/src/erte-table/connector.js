@@ -1,6 +1,7 @@
 // import '../vendor/vaadin-quill.js';
 import TableModule from "./index";
 import TableTrick from "./js/TableTrick.js";
+import TableSelection from "./js/TableSelection.js";
 
 
 (function () {
@@ -36,9 +37,13 @@ import TableTrick from "./js/TableTrick.js";
     }
 
     window.Vaadin.Flow.vcfEnhancedRichTextEditor.extensions.tables = {
-        insert(rte, rows, cols) {
+        insert(rte, rows, cols, template) {
             this._assureFocus(rte);
-            TableTrick.table_handler(`newtable_${rows}_${cols}`, rte._editor);
+
+            const row_count = Number.parseInt(rows);
+            const col_count = Number.parseInt(cols);
+            TableTrick.insertTable(rte._editor, col_count, row_count, template);
+            TableSelection.selectionChange(rte._editor);
         },
 
         action(rte, action) {
@@ -48,7 +53,9 @@ import TableTrick from "./js/TableTrick.js";
 
         _assureFocus(rte) {
             if (!rte._editor.hasFocus()) {
+                rte.__ignoreSelect = true;
                 rte._editor.focus();
+                delete rte.__ignoreSelect;
             }
         },
 

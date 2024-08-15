@@ -147,7 +147,11 @@ class TableSelection {
 
 
   static selectionChange(quill, range = null, oldRange = null) {
+
     let host = TableTrick.getRichTextEditorInstance(quill);
+    if (host.__ignoreSelect) {
+      return;
+    }
 
     // check, if the current "global" selection is in the editor, otherwise do not fire a table selection event,
     // as it will result in "null" for any clicks outside the editor:
@@ -158,6 +162,7 @@ class TableSelection {
       let isInTable = TableSelection.selectionStartElement != null || TableSelection.selectionEndElement != null;
       let tableTemplate = "";
 
+      const oldTable = quill.__selectedTable;
       delete quill.__selectedTable;
       if (TableSelection.selectionStartElement) {
         // obtain table and class from "cell selection"
@@ -188,7 +193,6 @@ class TableSelection {
           }
         }
       }
-
 
       host.dispatchEvent(new CustomEvent("table-selected", {
         detail: {

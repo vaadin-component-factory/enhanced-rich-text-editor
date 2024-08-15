@@ -27,7 +27,7 @@ public class TableSelectedEvent extends EnhancedRichTextEditorTablesComponentEve
 
         this.selected = selected;
         this.cellSelectionActive = cellSelectionActive;
-        this.template = StringUtils.trimToNull(template);
+        this.template = template != null ? StringUtils.trimToEmpty(template) : null;
     }
 
     /**
@@ -50,8 +50,9 @@ public class TableSelectedEvent extends EnhancedRichTextEditorTablesComponentEve
     }
 
     /**
-     * The template of the current selected table or null, if none is selected or the table has no template
-     * assigned.
+     * The template of the current selected table. This value is an empty string, if no table is selected
+     * or no template has been set. It is null, when no template information has been passed. The latter is only
+     * the case for new tables to prevent overriding
      *
      * @return template
      */

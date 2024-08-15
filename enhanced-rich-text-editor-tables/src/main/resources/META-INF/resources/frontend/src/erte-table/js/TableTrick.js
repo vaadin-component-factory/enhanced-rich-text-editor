@@ -53,9 +53,13 @@ export default class TableTrick {
     return quill;
   }
 
-  static insertTable(quill, col_count, row_count) {
+  static insertTable(quill, col_count, row_count, templates) {
     const table_id = TableTrick.random_id();
     const table = Parchment.create('table', table_id);
+
+    if(templates) {
+      table.domNode.className = templates;
+    }
 
     for (let ri = 0; ri < row_count; ri++) {
       const row_id = TableTrick.random_id();
@@ -645,10 +649,7 @@ export default class TableTrick {
     }
 
     if (value.includes('newtable_')) {
-      const sizes = value.split('_');
-      const row_count = Number.parseInt(sizes[1]);
-      const col_count = Number.parseInt(sizes[2]);
-      TableTrick.insertTable(quill, col_count, row_count);
+      console.error("Not supported anymore, please use the connector to insert tables.")
     } else {
       let append_direction = 'after';
       switch (value) {
@@ -657,30 +658,38 @@ export default class TableTrick {
         case 'append-col':
         case 'append-col-after':
           TableTrick.addCol(quill, append_direction);
+          TableSelection.cellSelectionChange(quill);
           break;
         case 'remove-col':
           TableTrick.removeCol(quill);
+          TableSelection.cellSelectionChange(quill);
           break;
         case 'append-row-above':
           append_direction = 'before';
         case 'append-row':
         case 'append-row-below':
           TableTrick.addRow(quill, append_direction);
+          TableSelection.cellSelectionChange(quill);
           break;
         case 'remove-row':
           TableTrick.removeRow(quill);
+          TableSelection.cellSelectionChange(quill);
           break;
         case 'insert':
           TableTrick.insertTable(quill, 1, 1);
+          TableSelection.selectionChange(quill, null, null, false);
           break;
         case 'remove-table':
           TableTrick.removeTable(quill);
+          TableSelection.selectionChange(quill);
           break;
         case 'split-cell':
           TableTrick.splitCell(quill);
+          TableSelection.cellSelectionChange(quill);
           break;
         case 'merge-selection':
           TableTrick.mergeSelection(quill);
+          TableSelection.cellSelectionChange(quill);
           break;
           // case 'remove-cell':
           //   TableTrick.removeCell(quill);
@@ -746,9 +755,7 @@ export default class TableTrick {
       }
 
     }
-      TableSelection.selectionChange(quill);
-      // TODO fire a proper event, that informs about new indices, but does
-    }
+  }
 
   static getRichTextEditorInstance(quill) {
     // just assure, that our quill is already attached

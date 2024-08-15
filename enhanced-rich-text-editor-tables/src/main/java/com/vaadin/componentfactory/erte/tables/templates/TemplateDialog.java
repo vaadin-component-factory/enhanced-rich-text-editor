@@ -346,7 +346,10 @@ public class TemplateDialog extends ToolbarDialog {
         }
 
         templateSelectionField.setItems(keys);
-        templateSelectionField.setItemLabelGenerator(item -> this.templates.getObject(item).getString("name"));
+        templateSelectionField.setItemLabelGenerator(item -> {
+            JsonObject object = this.templates.getObject(item);
+            return object != null ? object.getString("name") : ("#" + item);
+        });
     }
 
     public void setSelectedRow(int row) {
