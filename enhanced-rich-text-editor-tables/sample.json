@@ -35,6 +35,12 @@
                     "color": "white",
                     "bgColor": "#333"
                 }
+            },
+            {
+                "index": "2n",
+                "declarations" : {
+                    "bgColor": "whitesmoke"
+                }
             }
         ],
         "cells": [

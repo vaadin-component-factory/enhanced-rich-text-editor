@@ -2,9 +2,7 @@ package com.vaadin.componentfactory.erte.tables;
 
 import com.vaadin.componentfactory.EnhancedRichTextEditor;
 import com.vaadin.componentfactory.erte.tables.templates.*;
-import com.vaadin.componentfactory.toolbar.ToolbarPopup;
-import com.vaadin.componentfactory.toolbar.ToolbarSelectPopup;
-import com.vaadin.componentfactory.toolbar.ToolbarSwitch;
+import com.vaadin.componentfactory.erte.toolbar.*;
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.contextmenu.MenuItem;
@@ -170,7 +168,7 @@ public class EnhancedRichTextEditorTables {
         );
 
         stylesButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.EYE);
-        stylesButton.setTooltipText(getI18nOrDefault(TablesI18n::getTableTemplatesToolbarSwitchTooltip, "Table Template"));
+        stylesButton.setTooltipText(getI18nOrDefault(TablesI18n::getTableTemplatesToolbarSwitchTooltip, "Style Templates"));
         stylesButton.setEnabled(false);
         templatesDialog = new TemplateDialog(stylesButton, i18n.getTemplatesI18n());
         templatesDialog.setWidth("26rem"); // turned out to be the best width by default - if not, change in future

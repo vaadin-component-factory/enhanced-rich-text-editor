@@ -24,7 +24,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8
         </project.reporting.outputEncoding>
-        <popup.version>24.0.5</popup.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
 
@@ -91,11 +90,7 @@
             <version>24.4.4</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.vaadin.componentfactory</groupId>
-            <artifactId>popup</artifactId>
-            <version>${popup.version}</version>
-        </dependency>
+
     </dependencies>
 
 

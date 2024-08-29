@@ -1,4 +1,4 @@
-package com.vaadin.componentfactory.toolbar;
+package com.vaadin.componentfactory.erte.toolbar;
 
 import com.vaadin.componentfactory.SlotUtil;
 import com.vaadin.flow.component.Component;
@@ -26,8 +26,17 @@ public class ToolbarSwitch extends Button {
         init();
     }
 
-    public ToolbarSwitch(VaadinIcon icon, VaadinIcon suffixIcon) {
+    public ToolbarSwitch(VaadinIcon icon) {
         super(icon.create());
+        init();
+    }
+
+    public ToolbarSwitch(VaadinIcon icon, VaadinIcon suffixIcon) {
+        this(icon.create(), suffixIcon.create());
+    }
+
+    public ToolbarSwitch(Component icon, Component suffixIcon) {
+        super(icon);
         init();
         SlotUtil.addSuffixIcon(this, suffixIcon);
     }

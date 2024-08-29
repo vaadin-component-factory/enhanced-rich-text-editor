@@ -1,4 +1,4 @@
-package com.vaadin.componentfactory.toolbar;
+package com.vaadin.componentfactory.erte.toolbar;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -9,8 +9,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.shared.Registration;
 
 public class ToolbarDialog extends Dialog {
-    private static final String SET_PROPERTY_IN_OVERLAY_JS = "this.$.overlay.$.overlay.style[$0]=$1";
-
     private final ToolbarSwitch toolbarSwitch;
     private Registration focusOnOpenTargetRegistration;
     private boolean openAtSwitch;

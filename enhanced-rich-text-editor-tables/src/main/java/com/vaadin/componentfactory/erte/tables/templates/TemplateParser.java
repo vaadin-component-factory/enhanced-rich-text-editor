@@ -3,9 +3,7 @@ package com.vaadin.componentfactory.erte.tables.templates;
 import elemental.json.*;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static com.vaadin.componentfactory.erte.tables.templates.TemplateJsonConstants.*;
 
@@ -142,15 +140,46 @@ public final class TemplateParser {
     }
 
     private void parseRows(JsonArray rowsConfigArray) {
+        // sort the array by index priority
+        // * odd / even
+        // * header / footer
+        // * specific row numbers
+        List<JsonObject> arrayEvenOdd = new LinkedList<>();
+        List<JsonObject> arrayHeaderFooter = new LinkedList<>();
+        List<JsonObject> arraySpecific = new LinkedList<>();
 
         for (int i = 0; i < rowsConfigArray.length(); i++) {
-            JsonObject rowsColsConfig = rowsConfigArray.getObject(i);
-            JsonObject declarations = rowsColsConfig.getObject(DECLARATIONS);
+            JsonObject rowsConfig = rowsConfigArray.getObject(i);
+
+            JsonType indexJsonType = Objects.requireNonNull(rowsConfig.get(INDEX).getType());
+
+            if (indexJsonType == JsonType.NUMBER) {
+                arraySpecific.add(rowsConfig);
+            } else if (indexJsonType == JsonType.STRING) {
+                String index = rowsConfig.getString(INDEX);
+                if (index.startsWith("0n")) {
+                    arrayHeaderFooter.add(rowsConfig);
+                } else if(index.startsWith("2n")){
+                    arrayEvenOdd.add(rowsConfig);
+                } else {
+                    arraySpecific.add(rowsConfig);
+                }
+            } else {
+                throw new IllegalStateException("Unexpected value: " + indexJsonType);
+            }
+        }
+
+        LinkedList<JsonObject> objects = new LinkedList<>(arrayEvenOdd);
+        objects.addAll(arrayHeaderFooter);
+        objects.addAll(arraySpecific);
+
+        for (JsonObject rowsConfig : objects) {
+            JsonObject declarations = rowsConfig.getObject(DECLARATIONS);
 
             if (isNotEmpty(declarations)) {
                 appendTableSelectorPart();
                 builder.append(" > tr");
-                appendIndex(rowsColsConfig);
+                appendIndex(rowsConfig);
                 builder.append(" > td"); // important to allow rows "override" columns
 
                 parseDeclarations(ROWS, declarations);
@@ -161,13 +190,13 @@ public final class TemplateParser {
     private void parseCols(JsonArray colsConfigArray) {
 
         for (int i = 0; i < colsConfigArray.length(); i++) {
-            JsonObject rowsColsConfig = colsConfigArray.getObject(i);
-            JsonObject declarations = rowsColsConfig.getObject(DECLARATIONS);
+            JsonObject colsConfig = colsConfigArray.getObject(i);
+            JsonObject declarations = colsConfig.getObject(DECLARATIONS);
 
             if (isNotEmpty(declarations)) {
                 appendTableSelectorPart();
                 builder.append(" > tr > td");
-                appendIndex(rowsColsConfig);
+                appendIndex(colsConfig);
                 parseDeclarations(COLUMNS, declarations);
             }
         }

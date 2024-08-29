@@ -9,7 +9,16 @@ table.template1 > tr > td:nth-of-type(1) {
     width: 5rem;
 }
 
+table.template1 > tr:nth-of-type(2n) > td {
+    background-color: whitesmoke;
+}
+
 table.template1 > tr:nth-of-type(0n+1) > td {
+    color: white;
+    background-color: #333;
+}
+
+table.template1 > tr:nth-last-of-type(0n+1) > td {
     color: white;
     background-color: #333;
 }
@@ -17,11 +26,6 @@ table.template1 > tr:nth-of-type(0n+1) > td {
 table.template1 > tr:nth-of-type(2) > td {
     color: #666;
     background-color: lightgray;
-}
-
-table.template1 > tr:nth-last-of-type(0n+1) > td {
-    color: white;
-    background-color: #333;
 }
 
 table.template1 > tr:nth-of-type(1) > td:nth-of-type(3) {

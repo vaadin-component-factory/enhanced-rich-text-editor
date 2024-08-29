@@ -1,4 +1,4 @@
-package com.vaadin.componentfactory.toolbar;
+package com.vaadin.componentfactory.erte.toolbar;
 
 import com.vaadin.componentfactory.Popup;
 import com.vaadin.flow.component.Component;

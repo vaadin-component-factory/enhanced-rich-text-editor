@@ -1,4 +1,4 @@
-package com.vaadin.componentfactory.toolbar;
+package com.vaadin.componentfactory.erte.toolbar;
 
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.shared.Registration;
