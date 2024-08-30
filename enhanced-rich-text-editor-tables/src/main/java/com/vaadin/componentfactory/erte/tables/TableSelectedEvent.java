@@ -5,6 +5,9 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * This event is fired, when a table has been (de-) selected in an ERTE instance. Contains additional information,
  * if the user uses "cell selection" and which template is applied to the selected table.
+ * <p/>
+ * Cell selection means, that one or multiple cells has been selected (using the Ctrl key) instead of just placing
+ * the text cursor inside one cell. When active, cell merging is possible.
  */
 public class TableSelectedEvent extends EnhancedRichTextEditorTablesComponentEvent {
     private final boolean selected;

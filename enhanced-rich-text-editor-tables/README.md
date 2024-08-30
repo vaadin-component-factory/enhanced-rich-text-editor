@@ -59,6 +59,51 @@ changes to that template will affect all assigned tables.
 The user can by default create, modify or delete templates for a specific ERTE instance. The resulting templates
 can be imported/exported as a json file to allow storing them in your backend. 
 
+### Initializing the templates
+You can provide a predefined set of templates by providing a json to the table extension. That json could
+be created earlier using the template dialog or crafted manually using a text editor.
+
+If you have no json file, the tables extension automatically creates an empty one for you, so there is no
+need to set an empty string initally.
+
+
+```
+String styleTemplatesJson = // ... read from your backend
+
+EnhancedRichTextEditorTables tables = // ...
+Json parsedJson = TemplateParser.parseJson(styleTemplatesJson);
+tables.setTemplates(parsedJson);
+```
+
+The tables extension uses the same Json objects, that other Vaadin API uses. Therefore you can create the
+underlying json structur, using `Json.parse()` and other methods. However, it is recommended to use
+the `TemplateParser` as there might be changes regarding the parsing process in future.
+
+The template for the currently selected table can be read/set using the style templates dialog.
+See also the "Events" chapter for more information regarding template changes.
+```
+String activeTemplate = tables.getStyleTemplatesDialog().getActiveTemplate().orElse(null)
+```
+
+### Create CSS
+While using the ERTE, you do not need to create the templates CSS yourself. But there might be use cases, where
+you want to apply them manually. 
+
+```
+String styleTemplatesJson = // ... read from your backend
+
+String css = TemplateParser.convertToCss(styleTemplatesJson); // can also take the Json object
+
+// ... set the css to a manually create styles element or similar
+```
+
+### Remove unneeded json content
+It can happen, that empty json nodes exist after a json template has been edited in different ways. This is
+no problem and also the resulting css file would simply contain selectors without any declarations inside. 
+
+If you want to remove empty children from the Json, you can use the method 
+`TemplateParser.removeEmptyChildren(JsonObject container)`. It will clean the given json object directly. 
+
 ### Template dialog
 The template dialog provides multiple sections with the following functions.
 
@@ -96,6 +141,16 @@ The order of prioritization is as following (with ascending importance):
 * even / odd rows
 * header / footer
 * specific rows (set by current row)
+
+## Events
+There are several events, that are fired by the ERTE regarding tables. All of the following events
+can be obtained by registering the respective listener on the table extension instance. Please check
+the javadocs of the respective event for additional details.
+
+* TableSelectedEvent - a table has been (de-) selected in the ERTE
+* TableCellChangedEvent - the selected table cell indices have changed
+* TemplatesChangedEvent - the style templates json has changed (e.g. a new template has been added or styles have been manipulated)
+* TemplateSelectedEvent - the active template for the current table has changed (e.g. the user used the dialog combobox)
 
 ## Modifying toolbar components
 Depending on your use case, you may not want the user to use some features or allow them to modify each part
@@ -150,13 +205,50 @@ the table extensions is applied to the ERTE. This may change in future, if requi
         EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte, tablesI18n);
 ```
 
+## UX helper
+Depending on the set styles, a table might be more or less invisible for the naked eye. To provide users some visual
+feedback regarding which table / cell they are currently hovering or working on, you may set hover and focus colors
+for the current table and the current cell. 
+
+These colors are then applied as a special border color (table) or background color (cell). Note: the hover/focused
+border style for the table is currently hard coded. It may change in future.
+
+```
+// by default applies the Lumo blue
+tables.setTableHoverColor("var(--lumo-primary-color-50pct)");
+tables.setTableCellHoverColor("var(--lumo-primary-color-10pct)");
+
+// by default applies the Lumo warning yellow-orange
+tables.setTableFocusColor("var(--lumo-warning-color)");
+tables.setTableCellFocusColor("var(--lumo-warning-color-10pct)");
+```
+
+Additionally, when focused, the respective table cell gets a class name `focused-cell` applied. Using this and 
+normal css, you can create your own styles to provide a similar feature. Please note, that the table element is
+placed inside the ERTE's shadow dom. You have to inject your custom styles into it to make them work.
+
 ## Data formats
 ### Table content / Quill delta
-The table extension has a unique format to encode its contents into the Quill delta format.
+The table extension has a unique format to encode its contents into the Quill delta format. It has been taken
+from the forked base project and modified minimal to allow containing the style template name
 
+The following sample creates an empty, unstyled 3x3 table. 
+```json
+[
+    {"attributes":{"0":"T","1":"A","2":"B","3":"L","4":"E","td":"otk9n3dsmkb|h5bdd8slh2|xhnt6hldo9||||"},"insert":"\n"},
+    {"attributes":{"0":"T","1":"A","2":"B","3":"L","4":"E","td":"otk9n3dsmkb|h5bdd8slh2|zw6yx1sjna||||"},"insert":"\n"},
+    {"attributes":{"0":"T","1":"A","2":"B","3":"L","4":"E","td":"otk9n3dsmkb|h5bdd8slh2|g3vtidnawfv||||"},"insert":"\n"},
+    {"attributes":{"0":"T","1":"A","2":"B","3":"L","4":"E","td":"otk9n3dsmkb|1qhd8f1ab54|89fbepdbvon||||"},"insert":"\n"},
+    {"attributes":{"0":"T","1":"A","2":"B","3":"L","4":"E","td":"otk9n3dsmkb|1qhd8f1ab54|kqjodlt3c4a||||"},"insert":"\n"},
+    {"attributes":{"0":"T","1":"A","2":"B","3":"L","4":"E","td":"otk9n3dsmkb|1qhd8f1ab54|rwztbe0qvff||||"},"insert":"\n"},
+    {"attributes":{"0":"T","1":"A","2":"B","3":"L","4":"E","td":"otk9n3dsmkb|tved8qig6k|u9vy2nlhnh||||"},"insert":"\n"},
+    {"attributes":{"0":"T","1":"A","2":"B","3":"L","4":"E","td":"otk9n3dsmkb|tved8qig6k|rdz2kt2ndf||||"},"insert":"\n"},
+    {"attributes":{"0":"T","1":"A","2":"B","3":"L","4":"E","td":"otk9n3dsmkb|tved8qig6k|c7tv5wno5jo||||"},"insert":"\n"},
+    {"insert":"\n"}
+]
 ```
 
-```
+See the file sample-delta.json for a more complex version.
 
 ### Style Templates Json
 The extension handles style templates as json and uses that to generate the resulting css. 

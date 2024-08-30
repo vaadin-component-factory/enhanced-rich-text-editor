@@ -4,7 +4,7 @@ import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTablesComponentEvent;
 
 /**
- * This event is fired, when a template has been selected in the template dialog.
+ * This event is fired, when the active template for the selected template has changed. This includes deselection.
  */
 public class TemplateSelectedEvent extends EnhancedRichTextEditorTablesComponentEvent {
     private final String template;

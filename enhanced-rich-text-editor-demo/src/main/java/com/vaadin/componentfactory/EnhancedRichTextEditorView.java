@@ -441,7 +441,6 @@ public class EnhancedRichTextEditorView extends DemoView {
         tables.setTemplates(Json.parse(templatesString));
         tables.getStyleTemplatesDialog().addThemeVariants(DialogVariant.LUMO_NO_PADDING);
 
-
         // end-source-example
         rte.setValue(deltaString);
         rte.setMaxHeight("500px");
