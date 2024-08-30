@@ -439,7 +439,7 @@ public class EnhancedRichTextEditorView extends DemoView {
 
         EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte, tablesI18n);
         tables.setTemplates(Json.parse(templatesString));
-        tables.getTemplatesDialog().addThemeVariants(DialogVariant.LUMO_NO_PADDING);
+        tables.getStyleTemplatesDialog().addThemeVariants(DialogVariant.LUMO_NO_PADDING);
 
 
         // end-source-example

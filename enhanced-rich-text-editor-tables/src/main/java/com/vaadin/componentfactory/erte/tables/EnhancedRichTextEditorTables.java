@@ -32,13 +32,15 @@ public class EnhancedRichTextEditorTables {
     private final EnhancedRichTextEditor rte;
     private final TablesI18n i18n;
     private TemplateDialog templatesDialog;
-    private ToolbarSwitch insertButton;
-    private ToolbarSwitch settingsButton;
-    private ToolbarSwitch stylesButton;
+    private ToolbarSwitch addTableButton;
+    private ToolbarSwitch modifyTableButton;
+    private ToolbarSwitch styleTemplatesDialogButton;
     private String tableHoverColor;
     private String tableFocusColor;
     private String cellFocusColor;
     private String cellHoverColor;
+    private ToolbarSelectPopup modifyTableSelectPopup;
+    private ToolbarPopup addTablePopup;
 
     public EnhancedRichTextEditorTables(EnhancedRichTextEditor rte) {
         this(rte, new TablesI18n());
@@ -111,75 +113,75 @@ public class EnhancedRichTextEditorTables {
         Button add = new Button(VaadinIcon.PLUS.create(), event -> insertTableAtCurrentPosition(rows.getValue(), cols.getValue()));
         add.setTooltipText(getI18nOrDefault(TablesI18n::getInsertTableAddButtonTooltip, "Add table"));
 
-        insertButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.PLUS);
-        insertButton.setTooltipText(getI18nOrDefault(TablesI18n::getInsertTableToolbarSwitchTooltip, "Add new table"));
+        addTableButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.PLUS);
+        addTableButton.setTooltipText(getI18nOrDefault(TablesI18n::getInsertTableToolbarSwitchTooltip, "Add new table"));
 
-        ToolbarPopup insertPopup = ToolbarPopup.horizontal(insertButton, rows, new Span("x"), cols, add);
-        insertPopup.setFocusOnOpenTarget(rows);
-        add.addClickListener(event -> insertPopup.setOpened(false));
+        addTablePopup = ToolbarPopup.horizontal(addTableButton, rows, new Span("x"), cols, add);
+        addTablePopup.setFocusOnOpenTarget(rows);
+        add.addClickListener(event -> addTablePopup.setOpened(false));
 
-        settingsButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.TOOLS);
-        settingsButton.setTooltipText(getI18nOrDefault(TablesI18n::getModifyTableToolbarSwitchTooltip, "Modify Table"));
-        settingsButton.setEnabled(false);
+        modifyTableButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.TOOLS);
+        modifyTableButton.setTooltipText(getI18nOrDefault(TablesI18n::getModifyTableToolbarSwitchTooltip, "Modify Table"));
+        modifyTableButton.setEnabled(false);
 
-        ToolbarSelectPopup selectPopup = new ToolbarSelectPopup(settingsButton);
-        selectPopup.addItem(
+        modifyTableSelectPopup = new ToolbarSelectPopup(modifyTableButton);
+        modifyTableSelectPopup.addItem(
                 getI18nOrDefault(TablesI18n::getModifyTableAppendRowAboveItemLabel, "Append row above"),
                 event -> executeTableRowAction("append-row-above")
         );
 
-        selectPopup.addItem(
+        modifyTableSelectPopup.addItem(
                 getI18nOrDefault(TablesI18n::getModifyTableAppendRowBelowItemLabel, "Append row below"),
                 event -> executeTableRowAction("append-row-below")
         );
-        selectPopup.addItem(
+        modifyTableSelectPopup.addItem(
                 getI18nOrDefault(TablesI18n::getModifyTableRemoveRowItemLabel, "Remove row"),
                 event -> executeTableRowAction("remove-row")
         );
-        selectPopup.add(new Hr());
-        selectPopup.addItem(
+        modifyTableSelectPopup.add(new Hr());
+        modifyTableSelectPopup.addItem(
                 getI18nOrDefault(TablesI18n::getModifyTableAppendColumnBeforeItemLabel, "Append column before"),
                 event -> executeTableColumnAction("append-col-before")
         );
-        selectPopup.addItem(
+        modifyTableSelectPopup.addItem(
                 getI18nOrDefault(TablesI18n::getModifyTableAppendColumnAfterItemLabel, "Append column after"),
                 event -> executeTableColumnAction("append-col-after")
         );
-        selectPopup.addItem(
+        modifyTableSelectPopup.addItem(
                 getI18nOrDefault(TablesI18n::getModifyTableRemoveColumnItemLabel, "Remove column"),
                 event -> executeTableColumnAction("remove-col")
         );
 
-        selectPopup.add(new Hr());
-        MenuItem mergeCells = selectPopup.addItem(
+        modifyTableSelectPopup.add(new Hr());
+        MenuItem mergeCells = modifyTableSelectPopup.addItem(
                 getI18nOrDefault(TablesI18n::getModifyTableMergeCellsItemLabel, "Merge selected cells"),
                 event -> executeTableAction( "merge-selection")
         );
 
-        selectPopup.addItem(
+        modifyTableSelectPopup.addItem(
                 getI18nOrDefault(TablesI18n::getModifyTableSplitCellItemLabel, "Split cell"),
                 event -> executeTableAction("split-cell")
         );
 
-        selectPopup.add(new Hr());
-        selectPopup.addItem(
+        modifyTableSelectPopup.add(new Hr());
+        modifyTableSelectPopup.addItem(
                 getI18nOrDefault(TablesI18n::getModifyTableRemoveTableItemLabel, "Remove table"),
                 event -> executeTableAction("remove-table")
         );
 
-        stylesButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.EYE);
-        stylesButton.setTooltipText(getI18nOrDefault(TablesI18n::getTableTemplatesToolbarSwitchTooltip, "Style Templates"));
-        stylesButton.setEnabled(false);
-        templatesDialog = new TemplateDialog(stylesButton, i18n.getTemplatesI18n());
+        styleTemplatesDialogButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.EYE);
+        styleTemplatesDialogButton.setTooltipText(getI18nOrDefault(TablesI18n::getTableTemplatesToolbarSwitchTooltip, "Style Templates"));
+        styleTemplatesDialogButton.setEnabled(false);
+        templatesDialog = new TemplateDialog(styleTemplatesDialogButton, i18n.getTemplatesI18n());
         templatesDialog.setWidth("26rem"); // turned out to be the best width by default - if not, change in future
 
         addTableSelectedListener(event -> {
-            insertButton.setEnabled(!event.isSelected());
-            settingsButton.setEnabled(event.isSelected());
-            stylesButton.setEnabled(event.isSelected());
+            addTableButton.setEnabled(!event.isSelected());
+            modifyTableButton.setEnabled(event.isSelected());
+            styleTemplatesDialogButton.setEnabled(event.isSelected());
 
             if(!event.isSelected()) { // close the dialog, when not having a table selected
-                stylesButton.setActive(false);
+                styleTemplatesDialogButton.setActive(false);
             }
 
             boolean cellSelectionActive = event.isCellSelectionActive();
@@ -217,23 +219,23 @@ public class EnhancedRichTextEditorTables {
 //            }
         });
 
-        rte.addCustomToolbarComponents(insertButton, settingsButton, stylesButton);
+        rte.addCustomToolbarComponents(addTableButton, modifyTableButton, styleTemplatesDialogButton);
 
-        insertButton.addActiveChangedListener(event -> {
+        addTableButton.addActiveChangedListener(event -> {
             if (event.isActive()) {
-                settingsButton.setActive(false);
-                stylesButton.setActive(false);
+                modifyTableButton.setActive(false);
+                styleTemplatesDialogButton.setActive(false);
             }
         });
 
-        settingsButton.addActiveChangedListener(event -> {
+        modifyTableButton.addActiveChangedListener(event -> {
             if (event.isActive()) {
-                insertButton.setActive(false);
+                addTableButton.setActive(false);
             }
         });
-        stylesButton.addActiveChangedListener(event -> {
+        styleTemplatesDialogButton.addActiveChangedListener(event -> {
             if (event.isActive()) {
-                insertButton.setActive(false);
+                addTableButton.setActive(false);
             }
         });
     }
@@ -416,20 +418,28 @@ public class EnhancedRichTextEditorTables {
      * Returns the dialog used for template management.
      * @return templates dialog
      */
-    public TemplateDialog getTemplatesDialog() {
+    public TemplateDialog getStyleTemplatesDialog() {
         return templatesDialog;
     }
 
-    public ToolbarSwitch getInsertTableToolbarButton() {
-        return insertButton;
+    public ToolbarSwitch getAddTableToolbarButton() {
+        return addTableButton;
+    }
+
+    public ToolbarPopup getAddTablePopup() {
+        return addTablePopup;
     }
 
     public ToolbarSwitch getModifyTableToolbarButton() {
-        return settingsButton;
+        return modifyTableButton;
     }
 
-    public ToolbarSwitch getTemplateToolbarButton() {
-        return stylesButton;
+    public ToolbarSelectPopup getModifyTableSelectPopup() {
+        return modifyTableSelectPopup;
+    }
+
+    public ToolbarSwitch getStyleTemplatesDialogToolbarButton() {
+        return styleTemplatesDialogButton;
     }
 
     /**

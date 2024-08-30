@@ -3,6 +3,12 @@ This addon extends the Enhanced Rich Text Editor with a table feature. Users can
 inside the ERTE. Also the addon provides a style template functionality, that allows to predefine, modifiy and/or
 apply visual styles for tables.
 
+## Source
+The addon code is forked from https://github.com/dclement8/quill1-table and has been partially modified afterwards. 
+
+Any licensing different to the Apache License 2.0 applies only to code changes made on the original or new code, that
+does not exist in the forked repository (as of August 1st, 2024). 
+
 ## Addon usage
 The addon extends an existing ERTE instance by registering Quill (the internally used library for the rich text editor)
 modules and adding custom toolbar components to allow the user to add or modify tables.
@@ -78,7 +84,7 @@ To keep things simple, the height / width are currently just numeric values, tha
 
 ### Special rows
 The special rows section allows the user to set stylings for even / odd rows and the header and footer row
-of a table. The differnt parts contain the same potential appearance definitions as the "current row". 
+of a table. The differnt parts contain the same potential appearance definition as the "current row". 
 
 #### Rules of order
 Please note, that styles for rows can mix, when using for instance odd plus first row settings or apply styles for
@@ -91,7 +97,6 @@ The order of prioritization is as following (with ascending importance):
 * header / footer
 * specific rows (set by current row)
 
-
 ## Modifying toolbar components
 Depending on your use case, you may not want the user to use some features or allow them to modify each part
 of a style template. 
@@ -99,7 +104,146 @@ of a style template.
 Most components can be accessed and modified, using normal Vaadin logic like disable or hide the respective 
 components.
 
-``````
+```
+EnhancedRichTextEditorTables tables = ...;
+
+tables.getAddTableToolbarButton().setVisible(false) // hides the "Add table" toolbar button
+
+List<MenuItem> modifyTableItems = tables.getModifyTableSelectPopup().getMenuItems();
+// ... change the available options to modify the table
+    
+
+// change the style templates dialog
+tables.getStyleTemplatesDialog().addThemeVariants(DialogVariant.LUMO_NO_PADDING);
+
+TemplateDialog templateDialog = tables.getStyleTemplatesDialog();
+templateDialog.addThemeVariants(DialogVariant.LUMO_NO_PADDING); // change the dialog theme
+templateDialog.getTemplateButtonsContainer().setVisible(false); // hide the buttons to create, copy or delete the template
+templateDialog.getTemplateNameField().setVisible(false); // hide the field to change the active template's name 
+```
 
 ## I18n
-## File formats
+The table extension supports built-in i18n support to change any label or tooltip to another language.
+Due to the nature of the extensions (setting things inside the ERTE), the i18n configuration has to be provided, when
+the table extensions is applied to the ERTE. This may change in future, if required. 
+
+```
+        EnhancedRichTextEditor rte = ...;
+
+        TablesI18n tablesI18n = new TablesI18n();
+        tablesI18n.setInsertTableToolbarSwitchTooltip("Neue Tabelle hinzufügen");
+        tablesI18n.setInsertTableRowsFieldPlaceholder("Zeilen");
+        // ...
+
+        tablesI18n.setModifyTableToolbarSwitchTooltip("Tablle anpassen");
+        tablesI18n.setTableTemplatesToolbarSwitchTooltip("Formatvorlagen");
+        // ...
+
+        // i18n for the style templates dialog
+        TablesI18n.TemplatesI18n templatesI18n = tablesI18n.getTemplatesI18n();
+        templatesI18n.setCurrentTemplateSelectFieldLabel("Aktuelle Vorlage");
+        templatesI18n.setCurrentTemplateNameNotUniqueError("Es gibt bereits eine Vorlage mit diesem Namen!");
+        // ...
+
+        // ... more i18n settings
+
+        EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte, tablesI18n);
+```
+
+## Data formats
+### Table content / Quill delta
+The table extension has a unique format to encode its contents into the Quill delta format.
+
+```
+
+```
+
+### Style Templates Json
+The extension handles style templates as json and uses that to generate the resulting css. 
+
+The root is a json object, containing named keys "template1" to "templateN" ("template key") by default. 
+These keys need to be valid css class names. They will be applied to the html table class attribute and used as 
+css selectors.
+
+Each "template key" refers to a json object ("template object").
+
+A "template object" supports the following named keys:
+* name
+* table
+* rows
+* cols
+* cells
+
+"name" contains the name, that will be shown inside the styles template dialog for the user. It is a simple string
+and can contain any characters.
+
+_The other keys point to json objects, that themselves contain "declarations" somewhere inside their hierarchy 
+("definition set"). See below, what declarations exist and what rules apply to them._
+
+"table" points to a definition set, that supports the following declaration
+* color
+* bgColor
+* width
+* height
+* border
+* borderCells
+
+"borderCells" is a special declaration, that applies the same rules as "border". 
+
+"rows", "cols" and "cells" point to json arrays to allow multiple declarations for different rows, cols, etc. 
+Each array item is a json object. 
+
+For "rows" and "cols" each json object contains a key "index" and a declaration set. Additionaly they may contain
+a "last" key, pointing to a boolean, to indicate, that the row/col index is to be counted from the end. 
+
+The index has to be a valid css index, usable in the ":nth-of-type" or ":last-of-type" pseudoclass. These indexes
+are also used to differ between "normal" / specific rows, like the 2nd row or 3rd column and special rows like
+the header or odd rows. 
+
+"Normal" rows have a numeric index (but written as a string in json). Special rows use a different approach to
+make it distinguishable for the parser to see, if the related row is "normal" or special. 
+
+The following special indexes are used:
+* 2n - even rows
+* 2n+1 - odd rows
+* 0n+1 - header / footer (footer has the "last" flag set to true)
+
+Rows and Cols support the following declarations:
+* color
+* bgColor
+* border
+
+Additional, rows support the "height" declaration. Columns support the "width" declaration.
+
+"Cells" do not have an index, but "x"/"y" coordinates instead. These are normal numeric values, written as a json
+string. 
+
+Cells support the following declarations:
+* color
+* bgColor
+* border
+
+_Please note: while the json file and template parser support cells, the template dialog currently does not yet.
+Therefore it is recommended to not use cell stylings for modifiable style templates. Alternatively feel free
+to fork the addon and add cell support to the dialog._
+
+#### Declarations
+Declarations are the "leafs" of the json, representing the actual style declarations. While each "owner" may support 
+different declarations, the allowed content of each declaration are the same.
+* color - String value. Allows any valid css color definiton.
+* bgColor - String value. Represents the css `background-color`. Allows any valid css color definiton.
+* width - Numeric value. Will be interpreted as the css unit `rem` at the moment. Must be greater than zero. 
+* height - Numeric value. Will be interpreted as the css unit `rem` at the moment. Must be greater than zero. 
+* border - String value. Expects a valid css `border` declaration, e.g. "1px solid red";
+
+Each "owner" contains a key "declarations", that point to a single json object ("declaration json object"), supporting
+at least one of the above keys.
+
+#### Sample
+Please see the file sample.json. It does not contain all possible combinations of declarations, but should give
+a good impression, how the structure works and be a potential foundation for your own files.
+
+
+
+
+
