@@ -10,6 +10,8 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dialog.DialogVariant;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.html.Pre;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -18,6 +20,7 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.demo.DemoView;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import elemental.json.Json;
 
 import java.io.InputStream;
@@ -34,19 +37,19 @@ public class EnhancedRichTextEditorView extends DemoView {
 
     @Override
     protected void initView() {
-        createDefaultEditor();
-        createEditorWithTabstops();
-        createGetValue();
-        createGetHtmlValue();
-        createEditorWithLimitedToolbar();
-        createEditorWithReadonlySections();
-        createEditorWithPlaceholders();
-        createEditorWithCustomButtons();
-        createEditorWithCustomShortcutsForStandardButtons();
-        createEditorWithIconReplacementForStandardButtons();
-        createEditorWithNoRules();
+//        createDefaultEditor();
+//        createEditorWithTabstops();
+//        createGetValue();
+//        createGetHtmlValue();
+//        createEditorWithLimitedToolbar();
+//        createEditorWithReadonlySections();
+//        createEditorWithPlaceholders();
+//        createEditorWithCustomButtons();
+//        createEditorWithCustomShortcutsForStandardButtons();
+//        createEditorWithIconReplacementForStandardButtons();
+//        createEditorWithNoRules();
         createEditorWithTableSample();
-        createEditorWithTableI18nSample();
+//        createEditorWithTableI18nSample();
     }
 
     private void createDefaultEditor() {
@@ -368,7 +371,18 @@ public class EnhancedRichTextEditorView extends DemoView {
             Objects.requireNonNull(deltaStream);
             Objects.requireNonNull(templatesStream);
 
-            deltaString = new String(deltaStream.readAllBytes(), StandardCharsets.UTF_8);
+//            deltaString = new String(deltaStream.readAllBytes(), StandardCharsets.UTF_8);
+            deltaString = "[{\"insert\":\"1-5\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"nk8yq5xszn|rbsptna6y9|mbj24z2nkwo||3|1|\"},\"insert\":\"\\n\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"nk8yq5xszn|rbsptna6y9|n9slf7tm49j|mbj24z2nkwo|||\"},\"insert\":\"\\n\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"nk8yq5xszn|rbsptna6y9|iv3rtjgv9g8|mbj24z2nkwo|||\"}" +
+                          ",\"insert\":\"\\n\"},{\"insert\":\"6\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"nk8yq5xszn|9let746pqen|0vcytjx5tesh||||\"},\"insert\":\"\\n\"},{\"insert\":\"7\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"nk8yq5xszn|9let746pqen|9iqke2xds5b||||\"},\"insert\":\"\\n\"},{\"insert\":\"8\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"nk8yq5xszn|9let746pq" +
+                          "en|w62z94uxce||||\"},\"insert\":\"\\n\"},{\"insert\":\"11\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"nk8yq5xszn|fro3quja29i|01ifj9vc05xi||||\"},\"insert\":\"\\n\"},{\"insert\":\"12\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"nk8yq5xszn|fro3quja29i|z616i5j7axj||||\"},\"insert\":\"\\n\"},{\"insert\":\"13\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"nk8yq5xszn|fro3quja29i|b04x2unniui||||\"},\"insert\":\"\\n\"},{\"insert\":\"a\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"dtyenwsdgij|vsivjdrxezr|mug783zgis9||||\"},\"insert\":\"\\n\"},{\"insert\":\"b\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"dtyenwsdgij|vsivjdrxezr|vq1qagn5o7||||\"},\"insert\":\"\\n\"},{\"insert\":\"c\"},{\"attribu" +
+                          "tes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"dtyenwsdgij|vsivjdrxezr|5rnr84qywfi||||\"},\"insert\":\"\\n\"},{\"insert\":\"d\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"dtyenwsdgij|01dukwxhkm9t|1r13yo2ny1f||3|" +
+                          "1|\"},\"insert\":\"\\n\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"dtyenwsdgij|01dukwxhkm9t|7abri0j5dbq|1r13yo2ny1f|||\"},\"insert\":\"\\n\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\"" +
+                          ",\"3\":\"L\",\"4\":\"E\",\"td\":\"dtyenwsdgij|01dukwxhkm9t|t5zpzp5j0dt|1r13yo2ny1f|||\"},\"insert\":\"\\n\"},{\"insert\":\"e\"},{\"attributes\":{\"0\":\"T" +
+                          "\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"dtyenwsdgij|hgvwczykre6|amwehnlaz59||||\"},\"insert\":\"\\n\"},{\"insert\":\"f\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"dtyenwsdgij|hgvwczykre6|9lz0ep7vvau||||\"},\"insert\":\"\\n\"},{\"insert\":\"g\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"dtyenwsdgij|hgvwczykre6|tr8yg3bkn3||||\"},\"insert\":\"\\n\"},{\"insert\":\"1\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"ox0wpjtjbfm|mkyf9tqr3wb|howyhcvwrh||||\"},\"insert\":\"\\n\"},{\"insert\":\"2\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"ox0" +
+                          "wpjtjbfm|mkyf9tqr3wb|33vo3h48g7a||||\"},\"insert\":\"\\n\"},{\"insert\":\"3\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"ox0" +
+                          "wpjtjbfm|mkyf9tqr3wb|3ihhksvmsfo||||\"},\"insert\":\"\\n\"},{\"insert\":\"4\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"ox0wpjtjbfm|h49hi41ovq6|myy8q9nrnn||||\"},\"insert\":\"\\n\"},{\"insert\":\"5\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\"" +
+                          ",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"ox0wpjtjbfm|h49hi41ovq6|q7suuuok9lq||||\"},\"insert\":\"\\n\"},{\"insert\":\"6\"},{\"attributes\":{\"0\":\"T\"" +
+                          ",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"ox0wpjtjbfm|h49hi41ovq6|162i3vsvg0u||||\"},\"insert\":\"\\n\"},{\"insert\":\"7\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"ox0wpjtjbfm|37t7taoi3wq|1g4k0ehto7k||||\"},\"insert\":\"\\n\"},{\"insert\":\"8\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"ox0wpjtjbfm|37t7taoi3wq|tevj5drc15||||\"},\"insert\":\"\\n\"},{\"insert\":\"9\"},{\"attributes\":{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"ox0wpjtjbfm|37t7taoi3wq|hnn79pyaku||||\"},\"insert\":\"\\n\"},{\"insert\":\"\\n\"}]\n";
             templatesString = new String(templatesStream.readAllBytes(), StandardCharsets.UTF_8);
 
         } catch (Exception e) {
@@ -379,13 +393,37 @@ public class EnhancedRichTextEditorView extends DemoView {
         // source-example-heading: Rich Text Editor with Table Addon
         EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
         EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte);
-        tables.setTemplates(Json.parse(templatesString));
+//        tables.setTemplates(Json.parse(templatesString));
+
+        /////////////////////////////////////////
+        Pre paragraph = new Pre();
+        Pre paragraph2 = new Pre();
+        Pre paragraph3 = new Pre();
+
+        paragraph.addClassName(LumoUtility.FontSize.SMALL);
+        paragraph2.addClassName(LumoUtility.FontSize.SMALL);
+        paragraph3.addClassName(LumoUtility.FontSize.SMALL);
+
+        rte.addValueChangeListener(event -> {
+            paragraph.setText(event.getValue());
+        });
+        tables.addTemplatesChangedListener(event -> {
+            paragraph.setText(event.getTemplates().toJson());
+            paragraph2.setText(event.getCssString());
+        });
+        add(paragraph3, paragraph,paragraph2);
+        /////////////////////////////////////////
+
+
 
         // end-source-example
         rte.setValue(deltaString);
         rte.setMaxHeight("500px");
         rte.setValueChangeMode(ValueChangeMode.EAGER);
+
         addCard("Rich Text Editor with Table Addon", rte);
+
+
     }
 
     private void createEditorWithTableI18nSample() {

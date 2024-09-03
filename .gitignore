@@ -24,3 +24,5 @@ enhanced-rich-text-editor-demo/types.d.ts
 enhanced-rich-text-editor-demo/vite.config.ts
 enhanced-rich-text-editor-demo/vite.generated.ts
 rebel.xml
+/enhanced-rich-text-editor-demo/src/main/bundles/dev.bundle
+/enhanced-rich-text-editor-demo/src/main/bundles/README.md

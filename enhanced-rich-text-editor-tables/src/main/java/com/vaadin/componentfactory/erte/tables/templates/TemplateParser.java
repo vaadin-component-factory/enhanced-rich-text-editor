@@ -195,7 +195,7 @@ public final class TemplateParser {
 
             if (isNotEmpty(declarations)) {
                 appendTableSelectorPart();
-                builder.append(" > tr > td");
+                builder.append(" > colgroup > col");
                 appendIndex(colsConfig);
                 parseDeclarations(COLUMNS, declarations);
             }

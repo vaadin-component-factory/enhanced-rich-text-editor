@@ -93,6 +93,10 @@ public class TemplateDialog extends ToolbarDialog {
         footerRowFormPart = addPart(new FixedIndexRowFormPart(this, getI18nOrDefault(TemplatesI18n::getSpecialRowsFooterRowTitle, "Footer Row"), "0n+1", true), specialRowsDetails);
         evenRowsFormPart = addPart(new FixedIndexRowFormPart(this, getI18nOrDefault(TemplatesI18n::getSpecialRowsEvenRowsTitle, "Even Rows"), "2n"), specialRowsDetails);
         oddRowsFormPart = addPart(new FixedIndexRowFormPart(this, getI18nOrDefault(TemplatesI18n::getSpecialRowsOddRowsTitle, "Odd Rows"), "2n+1"), specialRowsDetails);
+
+        // disable all parts initially
+        parts.forEach(ruleFormPart -> ruleFormPart.setEnabled(false));
+
         add(layout);
 
         setFocusOnOpenTarget(templateSelectionField);
@@ -110,6 +114,7 @@ public class TemplateDialog extends ToolbarDialog {
     private void initTemplateSelection() {
         templateSelectionField = new ComboBox<>();
         templateSelectionField.setLabel(getI18nOrDefault(TemplatesI18n::getCurrentTemplateSelectFieldLabel, "Current Template"));
+        templateSelectionField.setClearButtonVisible(true);
 
         templateNameField = new TextField(getI18nOrDefault(TemplatesI18n::getCurrentTemplateNameFieldLabel, "Name"));
         templateNameField.addThemeVariants(TextFieldVariant.LUMO_SMALL);
@@ -159,7 +164,10 @@ public class TemplateDialog extends ToolbarDialog {
                     ruleFormPart.readTemplate(currentTemplate);
                 });
             } else {
-                parts.forEach(ruleFormPart -> ruleFormPart.setEnabled(false));
+                parts.forEach(ruleFormPart -> {
+                    ruleFormPart.clearValues();
+                    ruleFormPart.setEnabled(false);
+                });
             }
 
             templateNameField.setEnabled(currentTemplate != null);
@@ -372,12 +380,13 @@ public class TemplateDialog extends ToolbarDialog {
      * @param enabled enable or disable
      */
     public void setCurrentPartsEnabled(boolean enabled) {
-        currentColFormPart.setEnabled(enabled);
-        currentRowFormPart.setEnabled(enabled);
+        boolean internalEnabled = enabled && currentTemplate != null;
+        currentColFormPart.setEnabled(internalEnabled);
+        currentRowFormPart.setEnabled(internalEnabled);
     }
 
     public void setActiveTemplate(@Nullable String template) {
-        templateSelectionField.setValue(template);
+        templateSelectionField.setValue(StringUtils.trimToNull(template));
     }
 
     public Optional<String> getActiveTemplate() {

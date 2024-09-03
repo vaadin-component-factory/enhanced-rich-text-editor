@@ -115,8 +115,11 @@ class TableSelection {
     let colIndex, rowIndex;
     if (quill.__selectedTable && selectedRow) {
       const table = quill.__selectedTable;
-      for (let i = 0; i < table.childNodes.length && !rowIndex; i++) {
-        if (table.childNodes[i] === selectedRow) {
+
+      const rows = table.querySelectorAll("tr");
+
+      for (let i = 0; i < rows.length && !rowIndex; i++) {
+        if (rows[i] === selectedRow) {
           rowIndex = i;
         }
       }

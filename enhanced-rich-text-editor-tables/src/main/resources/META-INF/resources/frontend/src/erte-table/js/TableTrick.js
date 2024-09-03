@@ -139,6 +139,8 @@ export default class TableTrick {
       const table_id = table.domNode.getAttribute('table_id');
       let managed_merged_cells = [];
 
+      table.domNode.querySelector("colgroup").append(document.createElement("col"));
+
       table.children.forEach(function (tr) {
         const row_id = tr.domNode.getAttribute('row_id');
         const cell_id = TableTrick.random_id();
@@ -296,7 +298,15 @@ export default class TableTrick {
 
     if (table && typeof colIndex === 'number' && typeof colsToRemove === 'number') {
       // Remove all TDs with the colIndex and repeat it colsToRemove times if there are multiple columns to delete
+
+      // also update the colgroup
+      const cols = table.domNode.querySelector("colgroup").children;
+
       for (let i = 0; i < colsToRemove; i++) {
+        if (cols.length > 1) { // never delete the last col, since the table will automatically keep the last column
+          cols[cols.length - 1].remove();
+        }
+
         table.children.forEach(function (tr) {
           const td = tr.domNode.children[colIndex];
           if (td) {

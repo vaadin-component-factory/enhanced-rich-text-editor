@@ -69,7 +69,7 @@ class TableCell extends ContainBlot {
         // we will mark td position, put in table and replace mark
         let mark = Parchment.create('block');
         this.parent.insertBefore(mark, this.next);
-        let table = Parchment.create('table', this.domNode.getAttribute('table_id') + '|' + this.domNode.getAttribute('table-class'));
+        let table = Parchment.create('table', this.domNode.getAttribute('table_id') + '|' + (this.domNode.getAttribute('table-class') || ""));
         this.domNode.removeAttribute('table-class'); //no longer need this once we set it in the table, since blots created from cell to table.
         let tr = Parchment.create('tr', this.domNode.getAttribute('row_id'));
         table.appendChild(tr);

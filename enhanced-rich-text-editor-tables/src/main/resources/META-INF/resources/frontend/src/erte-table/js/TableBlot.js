@@ -15,7 +15,7 @@ class Table extends ContainBlot {
     let node = super.create(tagName);
     let atts = value.split('|');
     node.setAttribute('table_id', atts[0]);
-    if (typeof atts[1] === "string"){
+    if (atts[1] && typeof atts[1] === "string" && atts[1] !== "null"){
       node.classList.add(atts[1]);
     }
     return node
@@ -37,6 +37,21 @@ class Table extends ContainBlot {
       // merge table containing single cell with table
       next.moveChildren(this);
       next.remove();
+    } else if(this.domNode.tagName === "TABLE" && this.domNode.querySelectorAll('colgroup').length === 0){
+      if ((next == null || next.domNode.getAttribute('table_id') !== table_id) && (this.prev == null || this.prev.domNode.getAttribute('table_id') !== table_id)) {
+        let maxCols = 0;
+        this.domNode.querySelectorAll('tr').forEach(row => {
+          maxCols = Math.max(maxCols, row.querySelectorAll('td').length);
+        });
+
+        const colgroup = document.createElement("colgroup");
+        for (let i = 0; i < maxCols; i++) {
+          const col = document.createElement("col");
+          colgroup.append(col);
+        }
+
+        this.domNode.prepend(colgroup);
+      }
     }
 
     if (

@@ -75,7 +75,9 @@ import TableSelection from "./js/TableSelection.js";
             const classList = this._getSelectedTable(rte)?.classList;
             if (classList) {
                 classList.remove(...classList);
+                if (template) {
                 classList.add(template);
+            }
             }
         },
     };

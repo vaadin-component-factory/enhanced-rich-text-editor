@@ -150,4 +150,8 @@ public abstract class RuleFormPart extends VerticalLayout {
     public String getI18nOrDefault(ValueProvider<TemplatesI18n, String> valueProvider, String defaultValue) {
         return templateDialog.getI18nOrDefault(valueProvider, defaultValue);
     }
+
+    public void clearValues() {
+        binder.removeBean();
+    }
 }
