@@ -242,7 +242,7 @@ This static part is followed by a pipe `|` separated list of the following cell 
 * reference cell id (only used for merged cells, see below) 
 * col span (only used for merged cells, see below)
 * row span (only used for merged cells, see below)
-* style template id (only used for styled tables, only applied on the very first cell)
+* style template id (only used for styled tables, only applied on the very first cell of the table)
 
 A "normal" cell without any merges or styles looks like this. The addon itself will always generate randomized
 IDs for the tables, rows and cells. 
@@ -275,6 +275,7 @@ colspan and rowspan have to be set. If for instance only two cells in a row are 
 
 A table having the first two cells of the first row merged produces a delta like the following. The first row represents the
 "root" cell, containing the col- and rowspan. The second two represents a merged cell, that references the "root" id.
+
 Please note, that, if created manually, you need to assure, that the resulting col- and rowspans are valid for 
 the generated html table, otherwise it will most likely lead to a broken table.
 
