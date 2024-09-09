@@ -37,7 +37,7 @@ class TableCell extends ContainBlot {
     const tr = this.domNode.parentNode;
     if (tr && tr.children[0] === this.domNode) {
       const table = tr.parentNode;
-      if (table && table.children[0] === tr) {
+      if (table && table.querySelectorAll("tr")[0] === tr) {
         className = table.classList.toString();
       }
     }
