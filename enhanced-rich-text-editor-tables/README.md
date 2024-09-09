@@ -232,6 +232,25 @@ placed inside the ERTE's shadow dom. You have to inject your custom styles into 
 The table extension has a unique format to encode its contents into the Quill delta format. It has been taken
 from the forked base project and modified minimal to allow containing the style template name
 
+The format is built the following way: 
+
+Each cell consists of one attribute entry, starting with a static `"0":"T","1":"A","2":"B","3":"L","4":"E","td":`.
+This static part is followed by a pipe `|` separated list of the following cell details:
+* table id
+* row id
+* cell id
+* reference cell id (only used for merged cells, see below) 
+* col span (only used for merged cells, see below)
+* row span (only used for merged cells, see below)
+* style template id (only used for styled tables, only applied on the very first cell)
+
+A "normal" cell without any merges or styles looks like this. The addon itself will always generate randomized
+IDs for the tables, rows and cells. 
+
+```
+{"attributes":{"0":"T","1":"A","2":"B","3":"L","4":"E","td":"otk9n3dsmkb|h5bdd8slh2|xhnt6hldo9||||"},"insert":"\n"}
+```
+
 The following sample creates an empty, unstyled 3x3 table. 
 ```json
 [
@@ -248,7 +267,32 @@ The following sample creates an empty, unstyled 3x3 table.
 ]
 ```
 
-See the file sample-delta.json for a more complex version.
+To merge cells, the delta format expects the most top-left cell to be the "root" of the merge, containing the 
+relevant info, while all other merged cells contain the "root" cell id as a reference. When cells are merged,
+colspan and rowspan have to be set. If for instance only two cells in a row are merged, the colspan will be set to
+"2" and the rowspan must be "1".
+
+
+A table having the first two cells of the first row merged produces a delta like the following. The first row represents the
+"root" cell, containing the col- and rowspan. The second two represents a merged cell, that references the "root" id.
+Please note, that, if created manually, you need to assure, that the resulting col- and rowspans are valid for 
+the generated html table, otherwise it will most likely lead to a broken table.
+
+```json
+{"attributes":{"0":"T","1":"A","2":"B","3":"L","4":"E","td":"07v201kj4523|7kt0r2e1dao|oxrbl0mohn||2|1|"},"insert":"\n"},
+{"attributes":{"0":"T","1":"A","2":"B","3":"L","4":"E","td":"07v201kj4523|7kt0r2e1dao|6yu9swho64e|oxrbl0mohn|||"},"insert":"\n"},
+```
+
+To initialize a table with a style template the template key needs to be set to the delta (not the display name,
+that is shown to the user). See Style Templates Json for details regarding the json structure for style templates.
+
+Also please note, that only the very first cell of the table in the delta contains the template key. 
+
+The following sample applies the template with the key "template1" to this table:
+
+```json
+{"attributes":{"0":"T","1":"A","2":"B","3":"L","4":"E","td":"07v201kj4523|7kt0r2e1dao|oxrbl0mohn||||template1"},"insert":"\n"},
+```
 
 ### Style Templates Json
 The extension handles style templates as json and uses that to generate the resulting css. 
