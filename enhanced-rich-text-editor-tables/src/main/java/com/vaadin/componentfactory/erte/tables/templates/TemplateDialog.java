@@ -385,11 +385,11 @@ public class TemplateDialog extends ToolbarDialog {
         currentRowFormPart.setEnabled(internalEnabled);
     }
 
-    public void setActiveTemplate(@Nullable String template) {
-        templateSelectionField.setValue(StringUtils.trimToNull(template));
+    public void setActiveTemplateId(@Nullable String templateId) {
+        templateSelectionField.setValue(StringUtils.trimToNull(templateId));
     }
 
-    public Optional<String> getActiveTemplate() {
+    public Optional<String> getActiveTemplateId() {
         return templateSelectionField.getOptionalValue();
     }
 

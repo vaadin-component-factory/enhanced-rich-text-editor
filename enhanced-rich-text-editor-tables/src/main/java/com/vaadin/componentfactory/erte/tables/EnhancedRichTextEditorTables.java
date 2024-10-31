@@ -189,7 +189,7 @@ public class EnhancedRichTextEditorTables {
 
 
             // update the styles popup with the selected table's template
-            templatesDialog.setActiveTemplate(event.getTemplate());
+            templatesDialog.setActiveTemplateId(event.getTemplate());
             templatesDialog.setCurrentPartsEnabled(!cellSelectionActive);
         });
 
@@ -319,9 +319,9 @@ public class EnhancedRichTextEditorTables {
         rte.getElement().executeJs(SCRIPTS_TABLE+ "insert(this, $0, $1, $2)", rows, cols, templates);
     }
 
-    public void setTemplateForCurrentTable(@Nullable String template) {
+    public void setTemplateIdForCurrentTable(@Nullable String template) {
         if(templatesDialog != null) {
-            templatesDialog.setActiveTemplate(template);
+            templatesDialog.setActiveTemplateId(template);
         } else { // fallback if no templates dialog is available
             internalUpdateTemplateForCurrentTable(template, false);
         }

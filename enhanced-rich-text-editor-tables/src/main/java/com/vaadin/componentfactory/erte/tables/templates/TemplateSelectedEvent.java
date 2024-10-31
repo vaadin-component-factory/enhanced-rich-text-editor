@@ -7,18 +7,18 @@ import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTablesCompo
  * This event is fired, when the active template for the selected template has changed. This includes deselection.
  */
 public class TemplateSelectedEvent extends EnhancedRichTextEditorTablesComponentEvent {
-    private final String template;
+    private final String templateId;
 
-    public TemplateSelectedEvent(EnhancedRichTextEditorTables source, boolean fromClient, String template) {
+    public TemplateSelectedEvent(EnhancedRichTextEditorTables source, boolean fromClient, String templateId) {
         super(source, fromClient);
-        this.template = template;
+        this.templateId = templateId;
     }
 
     /**
-     * Returns the name of the selected template.
+     * Returns the id of the selected template.
      * @return template
      */
-    public String getTemplate() {
-        return template;
+    public String getTemplateId() {
+        return templateId;
     }
 }
