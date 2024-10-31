@@ -18,6 +18,7 @@ package com.vaadin.componentfactory;
  */
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /*
   TabStop is class for defining where tab stop should be located on ruler(by setting @position in pixels)
@@ -29,11 +30,8 @@ import java.io.Serializable;
  */
 
 public class TabStop implements Serializable {
-    private Direction direction;
-    private double position;
-
-    public TabStop() {
-    }
+    private final Direction direction;
+    private final double position;
 
     public TabStop(Direction direction, double position) {
         this.direction = direction;
@@ -44,16 +42,8 @@ public class TabStop implements Serializable {
         return direction;
     }
 
-    public void setDirection(Direction direction) {
-        this.direction = direction;
-    }
-
     public double getPosition() {
         return position;
-    }
-
-    public void setPosition(double position) {
-        this.position = position;
     }
 
     @Override
@@ -64,5 +54,18 @@ public class TabStop implements Serializable {
 
     public enum Direction {
         LEFT, RIGHT, MIDDLE
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TabStop tabStop = (TabStop) o;
+        return Double.compare(position, tabStop.position) == 0 && direction == tabStop.direction;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(direction, position);
     }
 }
