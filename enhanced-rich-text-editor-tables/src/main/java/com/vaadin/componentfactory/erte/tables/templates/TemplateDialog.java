@@ -18,6 +18,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.function.SerializableBiConsumer;
+import com.vaadin.flow.function.SerializableConsumer;
 import com.vaadin.flow.function.ValueProvider;
 import elemental.json.Json;
 import elemental.json.JsonArray;
@@ -25,10 +26,7 @@ import elemental.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -55,9 +53,11 @@ public class TemplateDialog extends ToolbarDialog {
 
     private final List<RuleFormPart> parts = new ArrayList<>();
     private SerializableBiConsumer<String, Boolean> templateSelectedCallback;
-    private SerializableBiConsumer<JsonObject, Boolean> templatesChangedCallback;
+    private SerializableConsumer<TemplateModificationDetails> templateCreatedCallback;
+    private SerializableConsumer<TemplateModificationDetails> templateCopiedCallback;
+    private SerializableConsumer<TemplateModificationDetails> templateDeletedCallback;
+    private SerializableConsumer<TemplateModificationDetails> templateUpdatedCallback;
 
-    private static final String TEMPLATE_NAME = "template";
     private TextField templateNameField;
     private Button createNewTemplateButton;
     private Button copySelectedTemplateButton;
@@ -186,13 +186,18 @@ public class TemplateDialog extends ToolbarDialog {
         createNewTemplate.addThemeVariants(ButtonVariant.LUMO_SMALL);
 
         createNewTemplate.addClickListener(event -> {
-            String name = generateTemplateKey();
-            JsonObject object = Json.createObject();
-            object.put(NAME, name);
-            templates.put(name, object);
+            String id = generateTemplateId();
+            JsonObject template = Json.createObject();
+            template.put(NAME, id);
+            templates.put(id, template);
             updateTemplatesField();
-            notifyTemplateCange(event.isFromClient());
-            templateSelectionField.setValue(name);
+
+            if (templateCreatedCallback != null) {
+                String activeTemplateId = getActiveTemplateId().orElse(null); // just for the sake of comleteness
+                templateCreatedCallback.accept(new TemplateModificationDetails(id, activeTemplateId, template, event.isFromClient()));
+            }
+
+            templateSelectionField.setValue(id);
         });
 
         return createNewTemplate;
@@ -207,7 +212,7 @@ public class TemplateDialog extends ToolbarDialog {
 
         copySelectedTemplate.addClickListener(event -> {
             String currentName = currentTemplate.getString(NAME);
-            String key = generateTemplateKey();
+            String id = generateTemplateId();
 
             String i18nCopy = getI18nOrDefault(TemplatesI18n::getTemplateCopySuffix, "Copy");
 
@@ -234,12 +239,18 @@ public class TemplateDialog extends ToolbarDialog {
 
                 currentName = generateNumberedName(firstPart + "(", ")", start, collectExistingNames());
             }
-            JsonObject clone = clone(currentTemplate);
-            clone.put(NAME, currentName);
-            templates.put(key, clone);
+            JsonObject clonedTemplate = TemplateParser.clone(currentTemplate);
+            clonedTemplate.put(NAME, currentName);
+            templates.put(id, clonedTemplate);
             updateTemplatesField();
-            notifyTemplateCange(event.isFromClient());
-            templateSelectionField.setValue(key);
+
+            String originId = getActiveTemplateIdOrThrow();
+
+            if (templateCopiedCallback != null) {
+                templateCopiedCallback.accept(new TemplateModificationDetails(id, originId, clonedTemplate, event.isFromClient()));
+            }
+
+            templateSelectionField.setValue(id);
         });
 
         return copySelectedTemplate;
@@ -268,16 +279,22 @@ public class TemplateDialog extends ToolbarDialog {
         button.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR);
         button.setTooltipText(getI18nOrDefault(TemplatesI18n::getDeleteTemplateButtonTooltip, "Delete template"));
 
-
         button.addClickListener(event -> {
-            String currentName = currentTemplate.getString(NAME);
             new ConfirmDialog(
                     getI18nOrDefault(TemplatesI18n::getDeleteTemplateConfirmTitle, "Delete Template"),
                     getI18nOrDefault(TemplatesI18n::getDeleteTemplateConfirmText, "Shall the selected template be deleted? This process is irreversible."),
                     getI18nOrDefault(TemplatesI18n::getDeleteTemplateConfirmYesButton, "Delete"), confirmEvent -> {
-                templates.remove(templateSelectionField.getValue());
+
+                String id = getActiveTemplateIdOrThrow();
+                JsonObject deletedTemplate = templates.getObject(id);
+                templates.remove(id);
+
                 updateTemplatesField();
-                notifyTemplateCange(event.isFromClient());
+
+                if (templateDeletedCallback != null) {
+                    templateDeletedCallback.accept(new TemplateModificationDetails(id, id, deletedTemplate, event.isFromClient()));
+                }
+
                 templateSelectionField.clear();
             }, getI18nOrDefault(TemplatesI18n::getDeleteTemplateConfirmNoButton, "Cancel"), cancelEvent -> {
             }).open();
@@ -286,8 +303,8 @@ public class TemplateDialog extends ToolbarDialog {
         return button;
     }
 
-    private String generateTemplateKey() {
-        return generateNumberedName(TEMPLATE_NAME, "", 1, Set.of(templates.keys()));
+    private String generateTemplateId() {
+        return generateNumberedName("template", "", 1, Set.of(templates.keys()));
     }
 
     private String generateNumberedName(String prefix, String suffix, int startingCount, Set<String> existingItems) {
@@ -314,32 +331,28 @@ public class TemplateDialog extends ToolbarDialog {
     }
 
     private <T extends RuleFormPart> T addPart(T part, Component container) {
-        part.addValueChangeListener(event -> {
-            notifyTemplateCange(event.isFromClient());
-        });
+        part.addValueChangeListener(event -> notifyTemplateUpdated(event.isFromClient()));
+
         container.getElement().appendChild(part.getElement());
         parts.add(part);
         return part;
     }
 
-    private void notifyTemplateCange(boolean fromClient) {
-        if (templatesChangedCallback != null) {
-            templatesChangedCallback.accept(getTemplates(), fromClient);
+    private void notifyTemplateUpdated(boolean fromClient) {
+        if (templateUpdatedCallback != null) {
+            String id = getActiveTemplateIdOrThrow();
+            templateUpdatedCallback.accept(new TemplateModificationDetails(id, id, currentTemplate, fromClient));
         }
     }
 
     public JsonObject getTemplates() {
-        JsonObject clone = clone(templates);
+        JsonObject clone = TemplateParser.clone(templates);
         TemplateParser.removeEmptyChildren(clone);
         return clone;
     }
 
-    private static JsonObject clone(JsonObject objectToClone) {
-        return Json.parse(objectToClone.toJson());
-    }
-
     public void setTemplates(JsonObject templates) {
-        this.templates = clone(templates);
+        this.templates = TemplateParser.clone(templates);
 
         updateTemplatesField();
     }
@@ -393,12 +406,29 @@ public class TemplateDialog extends ToolbarDialog {
         return templateSelectionField.getOptionalValue();
     }
 
+    public String getActiveTemplateIdOrThrow() {
+        return getActiveTemplateId().orElseThrow(() ->
+                new IllegalStateException("No active template found!"));
+    }
+
     public void setTemplateSelectedCallback(SerializableBiConsumer<String, Boolean> callback) {
         this.templateSelectedCallback = callback;
     }
 
-    public void setTemplatesChangedCallback(SerializableBiConsumer<JsonObject, Boolean> callback) {
-        this.templatesChangedCallback = callback;
+    public void setTemplateCreatedCallback(SerializableConsumer<TemplateModificationDetails> templateCreatedCallback) {
+        this.templateCreatedCallback = templateCreatedCallback;
+    }
+
+    public void setTemplateCopiedCallback(SerializableConsumer<TemplateModificationDetails> templateCopiedCallback) {
+        this.templateCopiedCallback = templateCopiedCallback;
+    }
+
+    public void setTemplateDeletedCallback(SerializableConsumer<TemplateModificationDetails> templateDeletedCallback) {
+        this.templateDeletedCallback = templateDeletedCallback;
+    }
+
+    public void setTemplateUpdatedCallback(SerializableConsumer<TemplateModificationDetails> templateUpdatedCallback) {
+        this.templateUpdatedCallback = templateUpdatedCallback;
     }
 
     public void updateRowIndexesOnAdd(boolean before) {
@@ -434,7 +464,7 @@ public class TemplateDialog extends ToolbarDialog {
 
                 }
 
-                notifyTemplateCange(true);
+                notifyTemplateUpdated(true);
             }
         }
     }
@@ -469,7 +499,7 @@ public class TemplateDialog extends ToolbarDialog {
 
                 }
 
-                notifyTemplateCange(true);
+                notifyTemplateUpdated(true);
             }
         }
     }
@@ -634,4 +664,55 @@ public class TemplateDialog extends ToolbarDialog {
 //    }
 
 
+    public static final class TemplateModificationDetails {
+        private final String id;
+        private final String activeTemplateId;
+        private final JsonObject modifiedTemplate;
+        private final boolean changedByClient;
+
+        TemplateModificationDetails(String id,
+                                    String activeTemplateId,
+                                    JsonObject modifiedTemplate,
+                                    boolean changedByClient) {
+            this.id = id;
+            this.activeTemplateId = activeTemplateId;
+            this.modifiedTemplate = modifiedTemplate;
+            this.changedByClient = changedByClient;
+        }
+
+        /**
+         * The string of the affected template. Is not necessarily the active template id, but can be a new one
+         * (for instance in the case of creating a new template).
+         * @return affected template id
+         */
+        public String getId() {
+            return id;
+        }
+
+        /**
+         * The current active template id. This might be the same as the {@link #id} but can also differ, depending
+         * on the CRUD operation. Can also be null, if the CRUD operation does not need an active template id to
+         * be present.
+         * @return active template id
+         */
+        public String getActiveTemplateId() {
+            return activeTemplateId;
+        }
+
+        /**
+         * Returns the modified template. This is NOT the whole templates structure, but just the affected part.
+         * @return modified template
+         */
+        public JsonObject getModifiedTemplate() {
+            return modifiedTemplate;
+        }
+
+        /**
+         * Modification is initialized by the client.
+         * @return is changed by client
+         */
+        public boolean isChangedByClient() {
+            return changedByClient;
+        }
+    }
 }

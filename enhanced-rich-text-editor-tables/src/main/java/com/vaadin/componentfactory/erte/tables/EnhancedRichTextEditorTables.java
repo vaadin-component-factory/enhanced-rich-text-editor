@@ -4,8 +4,7 @@ import com.vaadin.componentfactory.EnhancedRichTextEditor;
 import com.vaadin.componentfactory.erte.tables.events.TableCellChangedEvent;
 import com.vaadin.componentfactory.erte.tables.events.TableSelectedEvent;
 import com.vaadin.componentfactory.erte.tables.templates.*;
-import com.vaadin.componentfactory.erte.tables.templates.events.TemplateSelectedEvent;
-import com.vaadin.componentfactory.erte.tables.templates.events.TemplatesChangedEvent;
+import com.vaadin.componentfactory.erte.tables.templates.events.*;
 import com.vaadin.componentfactory.erte.toolbar.*;
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
@@ -207,20 +206,25 @@ public class EnhancedRichTextEditorTables {
         });
 
         templatesDialog.setTemplateSelectedCallback((template, fromClient) -> internalUpdateTemplateForCurrentTable(template, fromClient));
-        templatesDialog.setTemplatesChangedCallback((templates, fromClient) -> {
-//            try {
-                String string = TemplateParser.convertToCss(templates);
-                setClientSideStyles(string);
 
-                fireEvent(new TemplatesChangedEvent(this, true, templates, string));
-//            } catch (Exception e) {
-//                TODO add error handler?
-//                Notification
-//                        .show("Could not parse changes from template popup. Please check your inputs and inform the admin.")
-//                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
-//
-//
-//            }
+        templatesDialog.setTemplateCreatedCallback(details -> {
+            onTemplateModificationByTemplateDialog();
+            fireEvent(new TemplateCreatedEvent(this, details.isChangedByClient(), details.getId(), details.getModifiedTemplate()));
+        });
+
+        templatesDialog.setTemplateCopiedCallback(details -> {
+            onTemplateModificationByTemplateDialog();
+            fireEvent(new TemplateCopiedEvent(this, details.isChangedByClient(), details.getId(), details.getActiveTemplateId(), details.getModifiedTemplate()));
+        });
+
+        templatesDialog.setTemplateUpdatedCallback(details -> {
+            onTemplateModificationByTemplateDialog();
+            fireEvent(new TemplateUpdatedEvent(this, details.isChangedByClient(), details.getId(), details.getModifiedTemplate()));
+        });
+
+        templatesDialog.setTemplateDeletedCallback(details -> {
+            onTemplateModificationByTemplateDialog();
+            fireEvent(new TemplateDeletedEvent(this, details.isChangedByClient(), details.getId(), details.getModifiedTemplate()));
         });
 
         rte.addCustomToolbarComponents(addTableButton, modifyTableButton, styleTemplatesDialogButton);
@@ -245,6 +249,15 @@ public class EnhancedRichTextEditorTables {
     }
 
     /**
+     * To be called, when the dialog modifies the templates in any way.
+     */
+    private void onTemplateModificationByTemplateDialog() {
+        JsonObject templates = getTemplates();
+        String string = TemplateParser.convertToCss(templates);
+        setClientSideStyles(string);
+    }
+
+    /**
      * Sets the style templates to be used for this instance. These templates will be converted to css and
      * applied to the client side to modify the tables' appearance.
      * @param templates templates json object.
@@ -255,7 +268,7 @@ public class EnhancedRichTextEditorTables {
         }
         String cssString = TemplateParser.convertToCss(templates);
         setClientSideStyles(cssString);
-        fireEvent(new TemplatesChangedEvent(this, false, templates, cssString));
+        fireEvent(new TemplatesInitialiazedEvent(this, false, templates, cssString));
     }
 
     /**
@@ -393,8 +406,20 @@ public class EnhancedRichTextEditorTables {
         return ComponentUtil.addListener(rte, type, listener);
     }
 
-    public Registration addTemplatesChangedListener(ComponentEventListener<TemplatesChangedEvent> listener) {
-        return addListener(TemplatesChangedEvent.class, listener);
+    public Registration addTemplatesChangedListener(ComponentEventListener<TemplatesInitialiazedEvent> listener) {
+        return addListener(TemplatesInitialiazedEvent.class, listener);
+    }
+
+    public Registration addTemplateCreatedListener(ComponentEventListener<TemplateCreatedEvent> listener) {
+        return addListener(TemplateCreatedEvent.class, listener);
+    }
+
+    public Registration addTemplateUpdatedListener(ComponentEventListener<TemplateUpdatedEvent> listener) {
+        return addListener(TemplateUpdatedEvent.class, listener);
+    }
+
+    public Registration addTemplateDeletedListener(ComponentEventListener<TemplateDeletedEvent> listener) {
+        return addListener(TemplateDeletedEvent.class, listener);
     }
 
     public Registration addTemplateSelectedListener(ComponentEventListener<TemplateSelectedEvent> listener) {

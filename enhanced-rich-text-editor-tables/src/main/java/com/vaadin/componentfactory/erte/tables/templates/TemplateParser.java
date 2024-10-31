@@ -420,4 +420,13 @@ public final class TemplateParser {
 
         return null;
     }
+
+    /**
+     * Clones the given template. The returned template will not be modified in any other way.
+     * @param templateToClone template to be cloned
+     * @return cloned instance
+     */
+    public static JsonObject clone(JsonObject templateToClone) {
+        return Json.parse(templateToClone.toJson());
+    }
 }

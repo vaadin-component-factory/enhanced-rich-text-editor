@@ -5,14 +5,14 @@ import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTablesCompo
 import elemental.json.JsonObject;
 
 /**
- * This event is fired, when the templates of the ERTE table instance have changed, for instance, when a new template
- * has been added or styles have been modified.
+ * This event is fired, when the templates of the ERTE table instance are initialized or resetted. This means,
+ * that the whole set of templates are changed.
  */
-public class TemplatesChangedEvent extends EnhancedRichTextEditorTablesComponentEvent {
+public class TemplatesInitialiazedEvent extends EnhancedRichTextEditorTablesComponentEvent {
     private final JsonObject templates;
     private final String cssString;
 
-    public TemplatesChangedEvent(EnhancedRichTextEditorTables source, boolean fromClient, JsonObject templates, String cssString) {
+    public TemplatesInitialiazedEvent(EnhancedRichTextEditorTables source, boolean fromClient, JsonObject templates, String cssString) {
         super(source, fromClient);
         this.templates = templates;
         this.cssString = cssString;
@@ -28,6 +28,10 @@ public class TemplatesChangedEvent extends EnhancedRichTextEditorTablesComponent
         return templates;
     }
 
+    /**
+     * Returns the css string representing the templates.
+     * @return css
+     */
     public String getCssString() {
         return cssString;
     }
