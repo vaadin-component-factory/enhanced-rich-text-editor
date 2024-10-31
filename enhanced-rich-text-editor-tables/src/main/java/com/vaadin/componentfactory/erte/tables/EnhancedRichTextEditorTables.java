@@ -406,7 +406,7 @@ public class EnhancedRichTextEditorTables {
         return ComponentUtil.addListener(rte, type, listener);
     }
 
-    public Registration addTemplatesChangedListener(ComponentEventListener<TemplatesInitialiazedEvent> listener) {
+    public Registration addTemplatesInitializedListener(ComponentEventListener<TemplatesInitialiazedEvent> listener) {
         return addListener(TemplatesInitialiazedEvent.class, listener);
     }
 
