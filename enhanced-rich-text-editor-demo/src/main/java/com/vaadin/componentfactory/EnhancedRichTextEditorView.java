@@ -386,7 +386,7 @@ public class EnhancedRichTextEditorView extends DemoView {
             System.out.println(event.getTemplate());
         });
         tables.addTemplateCopiedListener(event -> {
-            Notification.show("Copied " + event.getTemplateId() + " from " + event.getCopiedTemplateId());
+            Notification.show("Copied " + event.getTemplateId() + " from " + event.getCopiedTemplateId().orElse("--"));
             System.out.println(event.getTemplate());
         });
         tables.addTemplateUpdatedListener(event -> {
