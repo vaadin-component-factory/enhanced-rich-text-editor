@@ -242,9 +242,10 @@ public class TemplateDialog extends ToolbarDialog {
             JsonObject clonedTemplate = TemplateParser.clone(currentTemplate);
             clonedTemplate.put(NAME, currentName);
             templates.put(id, clonedTemplate);
-            updateTemplatesField();
 
             String originId = getActiveTemplateIdOrThrow();
+
+            updateTemplatesField();
 
             if (templateCopiedCallback != null) {
                 templateCopiedCallback.accept(new TemplateModificationDetails(id, originId, clonedTemplate, event.isFromClient()));
@@ -340,8 +341,9 @@ public class TemplateDialog extends ToolbarDialog {
 
     private void notifyTemplateUpdated(boolean fromClient) {
         if (templateUpdatedCallback != null) {
-            String id = getActiveTemplateIdOrThrow();
-            templateUpdatedCallback.accept(new TemplateModificationDetails(id, id, currentTemplate, fromClient));
+            getActiveTemplateId().ifPresent(id -> {
+                templateUpdatedCallback.accept(new TemplateModificationDetails(id, id, currentTemplate, fromClient));
+            });
         }
     }
 
@@ -366,7 +368,9 @@ public class TemplateDialog extends ToolbarDialog {
             keys.add(key);
         }
 
+        String value = templateSelectionField.getValue();
         templateSelectionField.setItems(keys);
+        templateSelectionField.setValue(value);
         templateSelectionField.setItemLabelGenerator(item -> {
             JsonObject object = this.templates.getObject(item);
             return object != null ? object.getString("name") : ("#" + item);
