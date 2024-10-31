@@ -414,6 +414,10 @@ public class EnhancedRichTextEditorTables {
         return addListener(TemplateCreatedEvent.class, listener);
     }
 
+    public Registration addTemplateCopiedListener(ComponentEventListener<TemplateCopiedEvent> listener) {
+        return addListener(TemplateCopiedEvent.class, listener);
+    }
+
     public Registration addTemplateUpdatedListener(ComponentEventListener<TemplateUpdatedEvent> listener) {
         return addListener(TemplateUpdatedEvent.class, listener);
     }

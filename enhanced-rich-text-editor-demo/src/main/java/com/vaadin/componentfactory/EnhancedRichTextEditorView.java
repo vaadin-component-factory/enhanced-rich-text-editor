@@ -381,6 +381,25 @@ public class EnhancedRichTextEditorView extends DemoView {
         EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte);
         tables.setTemplates(Json.parse(templatesString));
 
+        tables.addTemplateCreatedListener(event -> {
+            Notification.show("Created " + event.getTemplateId());
+            System.out.println(event.getTemplate());
+        });
+        tables.addTemplateCopiedListener(event -> {
+            Notification.show("Copied " + event.getTemplateId() + " from " + event.getCopiedTemplateId());
+            System.out.println(event.getTemplate());
+        });
+        tables.addTemplateUpdatedListener(event -> {
+            Notification.show("Updated " + event.getTemplateId());
+            System.out.println(event.getTemplate());
+        });
+        tables.addTemplateDeletedListener(event -> {
+            Notification.show("Deleted " + event.getTemplateId());
+            System.out.println(event.getTemplate());
+        });
+
+
+
         // end-source-example
         rte.setValue(deltaString);
         rte.setMaxHeight("500px");
