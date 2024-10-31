@@ -1,7 +1,11 @@
 package com.vaadin.componentfactory.erte.tables;
 
 import com.vaadin.componentfactory.EnhancedRichTextEditor;
+import com.vaadin.componentfactory.erte.tables.events.TableCellChangedEvent;
+import com.vaadin.componentfactory.erte.tables.events.TableSelectedEvent;
 import com.vaadin.componentfactory.erte.tables.templates.*;
+import com.vaadin.componentfactory.erte.tables.templates.events.TemplateSelectedEvent;
+import com.vaadin.componentfactory.erte.tables.templates.events.TemplatesChangedEvent;
 import com.vaadin.componentfactory.erte.toolbar.*;
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;

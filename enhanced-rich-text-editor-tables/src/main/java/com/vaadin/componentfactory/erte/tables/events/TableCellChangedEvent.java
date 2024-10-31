@@ -1,4 +1,7 @@
-package com.vaadin.componentfactory.erte.tables;
+package com.vaadin.componentfactory.erte.tables.events;
+
+import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
+import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTablesComponentEvent;
 
 /**
  * This event is fired, when the table cell indices change (including deselection).

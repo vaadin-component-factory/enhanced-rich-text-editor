@@ -1,4 +1,4 @@
-package com.vaadin.componentfactory.erte.tables.templates;
+package com.vaadin.componentfactory.erte.tables.templates.events;
 
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTablesComponentEvent;

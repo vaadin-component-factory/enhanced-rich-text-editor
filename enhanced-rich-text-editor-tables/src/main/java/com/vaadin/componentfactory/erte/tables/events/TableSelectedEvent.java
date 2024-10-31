@@ -1,5 +1,7 @@
-package com.vaadin.componentfactory.erte.tables;
+package com.vaadin.componentfactory.erte.tables.events;
 
+import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
+import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTablesComponentEvent;
 import org.apache.commons.lang3.StringUtils;
 
 /**
