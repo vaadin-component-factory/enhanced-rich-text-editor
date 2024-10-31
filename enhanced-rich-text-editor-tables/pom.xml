@@ -18,7 +18,7 @@
 
     <properties>
         <erte.version>24.0.0-SNAPSHOT</erte.version>
-        <vaadin.version>24.4.10</vaadin.version>
+        <vaadin.version>24.4.14</vaadin.version>
         <vaadin.test-generic.version>24.4.7</vaadin.test-generic.version>
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

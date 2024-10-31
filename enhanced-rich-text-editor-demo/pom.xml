@@ -19,7 +19,7 @@
 
     <properties>
         <powermock.version>1.7.1</powermock.version>
-        <vaadin.version>24.4.10</vaadin.version>
+        <vaadin.version>24.4.14</vaadin.version>
         <testbench.version>6.0.1</testbench.version>
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
