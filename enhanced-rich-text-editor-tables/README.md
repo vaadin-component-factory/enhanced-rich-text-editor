@@ -149,8 +149,13 @@ the javadocs of the respective event for additional details.
 
 * TableSelectedEvent - a table has been (de-) selected in the ERTE
 * TableCellChangedEvent - the selected table cell indices have changed
-* TemplatesChangedEvent - the style templates json has changed (e.g. a new template has been added or styles have been manipulated)
-* TemplateSelectedEvent - the active template for the current table has changed (e.g. the user used the dialog combobox)
+* TemplatesInitializedEvent - a new set of templates has been applied to the table instance (e.g. using `setTemplates()`).
+* TemplateCreatedEvent - a new template has been created (e.g. by the user clicking the create button)
+* TemplateCopiedEvent - an existing template has been copied (e.g. by the user clicking the copy button)
+* TemplateUpdatedEvent - an existing template has been updated (e.g. by the user changing the name or some property)
+* TemplateDeletedEvent - an existing template has been deleted (e.g. by the user clicking the delete button)
+* TemplateSelectedEvent - the active template for the current table has changed (e.g. the user used the dialog combobox). 
+Will always be fired after the previous mentioned template modification events.
 
 ## Modifying toolbar components
 Depending on your use case, you may not want the user to use some features or allow them to modify each part
