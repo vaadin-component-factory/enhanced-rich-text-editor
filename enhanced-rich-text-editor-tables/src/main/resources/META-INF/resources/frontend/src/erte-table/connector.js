@@ -37,6 +37,21 @@ import TableSelection from "./js/TableSelection.js";
     }
 
     window.Vaadin.Flow.vcfEnhancedRichTextEditor.extensions.tables = {
+        init(rte) {
+            rte.shadowRoot.append(
+                this._createStyleElement('table-template-custom-styles-1'),
+                this._createStyleElement('table-template-styles'),
+                this._createStyleElement('table-template-custom-styles-2')
+            );
+
+        },
+
+        _createStyleElement(id) {
+            let s = document.createElement('style');
+            s.id = id;
+            return s;
+        },
+
         insert(rte, rows, cols, template) {
             this._assureFocus(rte);
 
@@ -58,14 +73,15 @@ import TableSelection from "./js/TableSelection.js";
         },
 
         _setStyles(rte, styles) {
-            let s = rte.shadowRoot.querySelector('#table-template-styles')
-            if (!s) {
-                s = document.createElement('style');
-                s.id = 'table-template-styles';
-                rte.shadowRoot.append(s);
-            }
+            const s = rte.shadowRoot.querySelector('#table-template-styles')
             s.innerHTML = styles;
         },
+
+        _setCustomStyles(rte, styles, prepend) {
+            const s = rte.shadowRoot.querySelector(`#table-template-custom-styles-${prepend ? '1' : '2'}`);
+            s.innerHTML = styles;
+        },
+
 
         _getSelectedTable(rte) {
             return rte._editor.__selectedTable;
@@ -76,8 +92,8 @@ import TableSelection from "./js/TableSelection.js";
             if (classList) {
                 classList.remove(...classList);
                 if (template) {
-                classList.add(template);
-            }
+                    classList.add(template);
+                }
             }
         },
     };

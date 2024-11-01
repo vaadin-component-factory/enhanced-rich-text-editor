@@ -53,6 +53,14 @@ public class EnhancedRichTextEditorTables {
         this.rte = Objects.requireNonNull(rte);
         this.i18n = Objects.requireNonNull(i18n);
 
+        initConnector();
+
+        rte.addAttachListener(event -> {
+            if (!event.isInitialAttach()) {
+                initConnector(); // init connector on re-attach
+            }
+        });
+
         Element element = rte.getElement();
         element.addEventListener("table-selected", event -> {
                     JsonObject eventData = event.getEventData();
@@ -83,6 +91,10 @@ public class EnhancedRichTextEditorTables {
                 .addEventData("event.detail.oldRowIndex")
                 .addEventData("event.detail.colIndex")
                 .addEventData("event.detail.oldColIndex");
+    }
+
+    private void initConnector() {
+        rte.getElement().executeJs(SCRIPTS_TABLE + "init(this)");
     }
 
     private Integer toInteger(JsonObject object, String key) {
@@ -289,12 +301,29 @@ public class EnhancedRichTextEditorTables {
     }
 
     /**
+     * Extends any auto generated styles with custom styles.
+     * Interpretes the given string as css (without any additional parsing or escaping!)
+     * <p/>
+     * Depending on the boolean parameter, these custom
+     * styles will be placed before or after the auto generated styles. Calling this method again will replace
+     * previously set custom styles for the respective position (i.e. calling it twice with {@code true} overrides
+     * the previous custom styles placed before the auto generated styles.
+     * Calling it once with {@code true} and {@code false} will not override the other variant).
+     * <p/>
+     *
+     * @param cssString css string
+     */
+    public void setCustomStyles(String cssString, boolean prepend) {
+        rte.getElement().executeJs(SCRIPTS_TABLE + "_setCustomStyles(this, $0, $1)", cssString, prepend);
+    }
+
+    /**
      * Interpretes the given string as css (without any additional parsing or escaping!) and sets it
      * as the client side style for tables in the RTE. This will override any internal set styles and might
      * be overriden itself, when the styles popup is used together with templates.
      * @param cssString css string
      */
-    public void setClientSideStyles(String cssString) {
+    private void setClientSideStyles(String cssString) {
         if (tableHoverColor != null) {
             cssString = "table td {border: 1px solid transparent}\n\n" + cssString;
             cssString = cssString + "\n\n table:hover td {border: 1px dashed " + tableHoverColor + " !important}\n\n";
