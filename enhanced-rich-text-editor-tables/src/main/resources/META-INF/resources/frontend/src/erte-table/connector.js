@@ -88,11 +88,27 @@ import TableSelection from "./js/TableSelection.js";
         },
 
         setTemplate(rte, template) {
-            const classList = this._getSelectedTable(rte)?.classList;
-            if (classList) {
-                classList.remove(...classList);
-                if (template) {
-                    classList.add(template);
+            const selectedTable = this._getSelectedTable(rte);
+            if (selectedTable) {
+                const classList = selectedTable?.classList;
+                if (classList) {
+                    classList.remove(...classList);
+                    if (template) {
+                        classList.add(template);
+                    }
+                }
+
+                const firstRow = selectedTable.__blot?.blot?.children?.head;
+                let firstCell = firstRow?.children?.head;
+                if (firstRow?.domNode && firstCell?.domNode) {
+                    // this shall trigger a value change for the server to notify it about the new template.
+                    // i did not found a different way of doing this without messing in the internal of delta.
+                    // therefore, this is the easier and (for me) cleaner way.
+                    const cNode = firstCell.domNode;
+                    cNode.remove();
+                    firstRow.domNode.prepend(cNode);
+                } else {
+                    console.error("First table cell reference not found, could not fully apply template style.");
                 }
             }
         },
