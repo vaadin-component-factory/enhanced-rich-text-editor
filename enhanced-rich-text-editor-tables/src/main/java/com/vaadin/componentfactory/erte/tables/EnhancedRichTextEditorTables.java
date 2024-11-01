@@ -3,10 +3,15 @@ package com.vaadin.componentfactory.erte.tables;
 import com.vaadin.componentfactory.EnhancedRichTextEditor;
 import com.vaadin.componentfactory.erte.tables.events.TableCellChangedEvent;
 import com.vaadin.componentfactory.erte.tables.events.TableSelectedEvent;
-import com.vaadin.componentfactory.erte.tables.templates.*;
+import com.vaadin.componentfactory.erte.tables.templates.TemplateDialog;
+import com.vaadin.componentfactory.erte.tables.templates.TemplateParser;
 import com.vaadin.componentfactory.erte.tables.templates.events.*;
-import com.vaadin.componentfactory.erte.toolbar.*;
-import com.vaadin.flow.component.*;
+import com.vaadin.componentfactory.erte.toolbar.ToolbarPopup;
+import com.vaadin.componentfactory.erte.toolbar.ToolbarSelectPopup;
+import com.vaadin.componentfactory.erte.toolbar.ToolbarSwitch;
+import com.vaadin.flow.component.ComponentEvent;
+import com.vaadin.flow.component.ComponentEventListener;
+import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.dependency.CssImport;
@@ -21,14 +26,29 @@ import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.shared.Registration;
 import elemental.json.JsonObject;
 import jakarta.annotation.Nullable;
+import org.apache.commons.lang3.StringUtils;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @NpmPackage(value = "quill-delta", version = "5.1.0")
 @JsModule("./src/erte-table/connector.js")
 @CssImport(value = "./src/erte-table/css/erte-shadow.css", themeFor = "vcf-enhanced-rich-text-editor")
 @CssImport(value = "./src/erte-table/css/toolbar.css")
 public class EnhancedRichTextEditorTables {
+
+    private static final Pattern ASSIGNED_TEMPLATE_IDS_DELTA_PATTERN =
+            Pattern.compile("\\{\"attributes\":\\{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"" +
+                            // extend these if the pipe pattern changes
+                            "([a-zA-Z0-9]+)\\|([a-zA-Z0-9]+)\\|([a-zA-Z0-9]+)\\|" +
+                            "([a-zA-Z0-9]*)\\|([a-zA-Z0-9]*)\\|([a-zA-Z0-9]*)\\|" +
+                            "([a-zA-Z0-9]+)" +
+                            "\"},");
+
+    private static final int ASSIGNED_TEMPLATE_IDS_DELTA_PATTERN_INDEX = 7;
 
     private static final String SCRIPTS_TABLE = "window.Vaadin.Flow.vcfEnhancedRichTextEditor.extensions.tables.";
 
@@ -289,6 +309,28 @@ public class EnhancedRichTextEditorTables {
      */
     public JsonObject getTemplates() {
         return templatesDialog != null ? templatesDialog.getTemplates() : null;
+    }
+
+    /**
+     * Reads the given delta string and returns all template ids, that are currently assigned to at least one table.
+     *
+     * @param delta delta string to parse
+     * @return set of assigned template ids (empty if none are assigned)
+     */
+    public static Set<String> getAssignedTemplateIds(String delta) {
+        Matcher matcher = ASSIGNED_TEMPLATE_IDS_DELTA_PATTERN.matcher(delta);
+
+        Set<String> ids = new HashSet<>();
+        while (matcher.find()) {
+            if(matcher.groupCount() >= ASSIGNED_TEMPLATE_IDS_DELTA_PATTERN_INDEX) {
+                String templateId = StringUtils.trimToEmpty(matcher.group(ASSIGNED_TEMPLATE_IDS_DELTA_PATTERN_INDEX));
+                if (!templateId.isEmpty()) {
+                    ids.add(templateId);
+                }
+            }
+        }
+
+        return ids;
     }
 
     /**
