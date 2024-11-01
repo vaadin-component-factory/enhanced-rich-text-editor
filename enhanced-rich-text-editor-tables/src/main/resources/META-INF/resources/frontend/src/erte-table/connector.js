@@ -77,8 +77,8 @@ import TableSelection from "./js/TableSelection.js";
             s.innerHTML = styles;
         },
 
-        _setCustomStyles(rte, styles, prepend) {
-            const s = rte.shadowRoot.querySelector(`#table-template-custom-styles-${prepend ? '1' : '2'}`);
+        _setCustomStyles(rte, styles, beforeGenerated) {
+            const s = rte.shadowRoot.querySelector(`#table-template-custom-styles-${beforeGenerated ? '1' : '2'}`);
             s.innerHTML = styles;
         },
 

@@ -312,9 +312,10 @@ public class EnhancedRichTextEditorTables {
      * <p/>
      *
      * @param cssString css string
+     * @param beforeGenerated place custom string before auto generated string
      */
-    public void setCustomStyles(String cssString, boolean prepend) {
-        rte.getElement().executeJs(SCRIPTS_TABLE + "_setCustomStyles(this, $0, $1)", cssString, prepend);
+    public void setCustomStyles(String cssString, boolean beforeGenerated) {
+        rte.getElement().executeJs(SCRIPTS_TABLE + "_setCustomStyles(this, $0, $1)", cssString, beforeGenerated);
     }
 
     /**
