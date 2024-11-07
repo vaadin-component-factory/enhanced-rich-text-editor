@@ -1,14 +1,14 @@
 package com.vaadin.componentfactory.erte.tables.templates.ruleformparts;
 
-import com.vaadin.componentfactory.erte.tables.TablesI18n;
 import com.vaadin.componentfactory.erte.tables.TablesI18n.TemplatesI18n;
+import com.vaadin.componentfactory.erte.tables.templates.Dimension;
+import com.vaadin.componentfactory.erte.tables.templates.DimensionField;
 import com.vaadin.componentfactory.erte.tables.templates.TemplateDialog;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.data.binder.Binder;
@@ -16,7 +16,6 @@ import com.vaadin.flow.data.binder.Setter;
 import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.shared.Registration;
 import elemental.json.JsonObject;
-import org.apache.commons.lang3.StringUtils;
 
 import static com.vaadin.componentfactory.erte.tables.templates.TemplateJsonConstants.*;
 
@@ -73,28 +72,41 @@ public abstract class RuleFormPart extends VerticalLayout {
         return field;
     }
 
-    protected IntegerField createSizeField(String label, String key) {
-        IntegerField field = createIntegerField(label, key);
-        field.setMin(1);
-        field.setTooltipText(getI18nOrDefault(TemplatesI18n::getFormSizeFieldTooltip, "Expects a positive integer value. Will be interpreted with the css unit 'rem' (global font size)"));
+    protected DimensionField createSizeField(String label, String key) {
+        DimensionField field = new DimensionField(label);
+        field.setStepButtonsVisible(true);
+        String dimensionUnit = templateDialog.getDefaults().getDimensionUnit();
+
+        field.setDefaultUnit(dimensionUnit);
+        updateDimensionFieldTooltip(field, dimensionUnit);
+
+        templateDialog.getDefaults().addDimensionUnitChangedListener(event -> {
+            String newDimensionUnit = event.getNewValue();
+            field.setDefaultUnit(newDimensionUnit);
+            updateDimensionFieldTooltip(field, newDimensionUnit);
+        });
+
+        binder.forField(field)
+                .withValidator(dimension -> dimension == null || dimension.getValue() >= 1,
+                        getI18nOrDefault(TemplatesI18n::getFormNumberFieldLessOrEqualZeroError, "Value must be larger than 0"))
+                .withConverter(
+                        dimension -> dimension != null
+                                        ? dimension.toDimensionString()
+                                        : null,
+                        s -> s != null ?
+                                new Dimension(s)
+                                : null
+                )
+                .bind(getter(key), setter(key));
+
 
         return field;
     }
 
-    protected IntegerField createIntegerField(String label, String key) {
-        IntegerField field = new IntegerField(label);
-        field.addThemeVariants(TextFieldVariant.LUMO_SMALL);
-        field.setWidth("6rem");
-        field.setStepButtonsVisible(true);
-        binder.forField(field)
-                .withValidator(i -> i == null || i >= 1, getI18nOrDefault(TemplatesI18n::getFormNumberFieldLessOrEqualZeroError, "Value must be larger than 0"))
-                .withConverter(
-                        i -> i == null ? "" : i + "rem",
-                        s -> StringUtils.trimToNull(s) != null ? Integer.valueOf(s.replace("rem", "")) : null
-                )
-                .bind(getter(key), setter(key));
-
-        return field;
+    private void updateDimensionFieldTooltip(DimensionField field, String dimensionUnit) {
+        field.setTooltipText(getI18nOrDefault(TemplatesI18n::getFormSizeFieldTooltip,
+                "Expects a positive integer value. Will be interpreted with the css unit '%s' (global font size)"
+                        .formatted(dimensionUnit)));
     }
 
     protected static Component createPartTitle(String label) {
@@ -110,10 +122,11 @@ public abstract class RuleFormPart extends VerticalLayout {
         return row;
     }
 
-    protected IntegerField createWidthField() {
+    protected DimensionField createWidthField() {
         return createSizeField(getI18nOrDefault(TemplatesI18n::getFormWidthFieldLabel, "Width"), P_WIDTH);
     }
-    protected IntegerField createHeightField() {
+
+    protected DimensionField createHeightField() {
         return createSizeField(getI18nOrDefault(TemplatesI18n::getFormHeightFieldLabel, "Height"), P_HEIGHT);
     }
 

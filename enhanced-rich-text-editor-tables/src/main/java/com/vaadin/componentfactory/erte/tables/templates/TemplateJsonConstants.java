@@ -29,7 +29,7 @@ public final class TemplateJsonConstants {
     public static final String FROM_BOTTOM = "last";
     public static final String DECLARATIONS = "declarations";
 
-    public static final Pattern PATTERN_TEMPLATE_NAME = Pattern.compile("[A-Za-z][A-Za-z0-9\\-]*");
+    public static final Pattern PATTERN_TEMPLATE_ID = Pattern.compile("[A-Za-z][A-Za-z0-9\\-]*");
 
     // source https://stackoverflow.com/a/63856391/11016302
     /** Hexcode pattern for colors */

@@ -20,19 +20,24 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.function.SerializableBiConsumer;
 import com.vaadin.flow.function.SerializableConsumer;
 import com.vaadin.flow.function.ValueProvider;
+import com.vaadin.flow.shared.Registration;
 import elemental.json.Json;
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
+import jakarta.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.vaadin.componentfactory.erte.tables.templates.TemplateJsonConstants.*;
 
 public class TemplateDialog extends ToolbarDialog {
+
+    private final Defaults defaults = new Defaults(this);
 
     private final VerticalLayout layout;
     private final TemplatesI18n i18n;
@@ -362,7 +367,7 @@ public class TemplateDialog extends ToolbarDialog {
     private void updateTemplatesField() {
         List<String> keys = new ArrayList<>(templates.keys().length);
         for (String key : templates.keys()) {
-            if (!TemplateJsonConstants.PATTERN_TEMPLATE_NAME.matcher(key).matches()) {
+            if (!PATTERN_TEMPLATE_ID.matcher(key).matches()) {
                 throw new IllegalArgumentException("Invalid template name: " + key);
             }
             keys.add(key);
@@ -668,6 +673,15 @@ public class TemplateDialog extends ToolbarDialog {
 //    }
 
 
+    /**
+     * Returns the defaults used for this template dialog instance. Any changes made to this object
+     * are reflected to this instance.
+     * @return defaults
+     */
+    public Defaults getDefaults() {
+        return defaults;
+    }
+
     public static final class TemplateModificationDetails {
         private final String id;
         private final String activeTemplateId;
@@ -717,6 +731,100 @@ public class TemplateDialog extends ToolbarDialog {
          */
         public boolean isChangedByClient() {
             return changedByClient;
+        }
+    }
+
+    /**
+     * Contains defaults to be applied on the template dialog.
+     */
+    public static class Defaults {
+        /**
+         * The default unit if nothing else has been set.
+         */
+        public static String DIMENSION_UNIT = "rem";
+
+        private final TemplateDialog dialog;
+        private String dimensionUnit = DIMENSION_UNIT;
+
+        @SuppressWarnings("rawtypes")
+        private final Map<String, Set<Consumer>> changeListeners = new HashMap<>();
+
+        Defaults(TemplateDialog dialog) {
+            this.dialog = dialog;
+        }
+
+        /**
+         * Returns the default unit to be used on dimensions. Default is {@link #DIMENSION_UNIT}.
+         * @return dimensions unit
+         */
+        public String getDimensionUnit() {
+            return dimensionUnit;
+        }
+
+        /**
+         * Sets the default dimensions unit. Default is "rem". Must not be null.
+         * <p/>
+         * <i>Note:</i> Changes to this value will not affect existing dimensions.
+         * @param dimensionUnit dimensions unit
+         */
+        public void setDimensionUnit(@Nonnull String dimensionUnit) {
+            String old = this.dimensionUnit;
+            this.dimensionUnit = Objects.requireNonNull(dimensionUnit);
+            fireValueChangeEvent("dimensionUnit", old, dimensionUnit);
+
+        }
+
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        private void fireValueChangeEvent(String property, Object oldValue, Object newValue) {
+            Set<Consumer> consumers = changeListeners.get(property);
+            if (consumers != null && !consumers.isEmpty()) {
+                DefaultValueChangeEvent event = new DefaultValueChangeEvent(dialog, oldValue, newValue);
+                for (Consumer consumer : consumers) {
+                    consumer.accept(event);
+                }
+            }
+        }
+
+        private Registration addListener(String property, Consumer<DefaultValueChangeEvent<?>> listener) {
+            return Registration.addAndRemove(changeListeners.computeIfAbsent(property, aClass -> new LinkedHashSet<>()), listener);
+        }
+
+        /**
+         * Adds a listener that will be notified, when the default dimension unit has been changed.
+         * @param listener listener
+         * @return registration to remove the listener
+         */
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        public Registration addDimensionUnitChangedListener(Consumer<DefaultValueChangeEvent<String>> listener) {
+            return addListener("dimensionUnit", (Consumer) listener);
+        }
+    }
+
+    /**
+     * A simple value change event type for the {@link Defaults} events.
+     * @param <T> value type
+     */
+    public static class DefaultValueChangeEvent<T> extends EventObject {
+        private final T oldValue;
+        private final T newValue;
+
+        public DefaultValueChangeEvent(TemplateDialog templateDialog, T oldValue, T newValue) {
+            super(templateDialog);
+            this.oldValue = oldValue;
+            this.newValue = newValue;
+        }
+
+        @Override
+        public TemplateDialog getSource() {
+            return (TemplateDialog) super.getSource();
+        }
+
+        public T getNewValue() {
+            return newValue;
+        }
+
+        public T getOldValue() {
+            return oldValue;
         }
     }
 }

@@ -86,8 +86,8 @@ public final class TemplateParser {
         builder = new StringBuilder();
         if (templates != null) {
             for (String templateName : templates.keys()) {
-                if (!isValidTemplateName(templateName)) {
-                    throw new IllegalStateException(templateName + " is not a legal template name. It must match " + PATTERN_TEMPLATE_NAME.pattern());
+                if (!isValidTemplateId(templateName)) {
+                    throw new IllegalStateException(templateName + " is not a legal template name. It must match " + PATTERN_TEMPLATE_ID.pattern());
                 }
 
                 currentTemplateName = templateName;
@@ -308,12 +308,12 @@ public final class TemplateParser {
     }
 
     /**
-     * Checks, if the given template name is valid. Checks again the static constant {@code PATTERN_TEMPLATE_NAME}.
-     * @param templateName template name
+     * Checks, if the given template id is valid. Checks again the static constant {@code PATTERN_TEMPLATE_ID}.
+     * @param templateId template id
      * @return matches the pattern
      */
-    public static boolean isValidTemplateName(String templateName) {
-        return PATTERN_TEMPLATE_NAME.asMatchPredicate().test(templateName);
+    public static boolean isValidTemplateId(String templateId) {
+        return PATTERN_TEMPLATE_ID.asMatchPredicate().test(templateId);
     }
 
 //    // for later use maybe?

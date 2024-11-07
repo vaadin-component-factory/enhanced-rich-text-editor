@@ -125,7 +125,19 @@ are the "inner" borders of the table.
 The current row / column sections allow modifying the appearence of the row and column of the cell, that contains
 the text cursor. You can set text- and background color plus the height / width of the row / column.
 
-To keep things simple, the height / width are currently just numeric values, that are interpreted as the css unit "rem". 
+To keep things simple, the height / width are currently just numeric values, that are interpreted as the 
+template dialog's default css unit for dimensions (which is "rem", if not changed).
+
+The default dimensions unit can be changed in the template dialog.
+
+```
+EnhancedRichTextEditorTables tables = ...;
+
+TemplateDialog templateDialog = tables.getStyleTemplatesDialog();
+templateDialog.getDefaults().setDimensionsUnit("px"); // changes the dimensions unit to pixels.
+```
+
+_It might change in future, that you can also set the dimension unit directly on the field itself._
 
 ### Special rows
 The special rows section allows the user to set stylings for even / odd rows and the header and footer row

@@ -602,4 +602,5 @@ public class EnhancedRichTextEditorTables {
             setClientSideStyles("");
         }
     }
+
 }
