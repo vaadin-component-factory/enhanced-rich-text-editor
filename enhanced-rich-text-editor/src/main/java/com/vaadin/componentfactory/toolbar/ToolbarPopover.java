@@ -1,23 +1,23 @@
-package com.vaadin.componentfactory.erte.toolbar;
+package com.vaadin.componentfactory.toolbar;
 
-import com.vaadin.componentfactory.Popup;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.shared.Registration;
 
-public class ToolbarPopup extends Popup {
+public class ToolbarPopover extends Popover {
     private Registration focusOnOpenTargetRegistration;
 
-    public static ToolbarPopup vertical(ToolbarSwitch toolbarSwitch, Component... components) {
-        ToolbarPopup popup = new ToolbarPopup(toolbarSwitch);
+    public static ToolbarPopover vertical(ToolbarSwitch toolbarSwitch, Component... components) {
+        ToolbarPopover popup = new ToolbarPopover(toolbarSwitch);
         popup.add(new VerticalLayout(components));
         return popup;
     }
 
-    public static ToolbarPopup horizontal(ToolbarSwitch toolbarSwitch, Component... components) {
-        ToolbarPopup popup = new ToolbarPopup(toolbarSwitch);
+    public static ToolbarPopover horizontal(ToolbarSwitch toolbarSwitch, Component... components) {
+        ToolbarPopover popup = new ToolbarPopover(toolbarSwitch);
         HorizontalLayout layout = new HorizontalLayout(components);
         layout.setPadding(true);
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
@@ -25,14 +25,14 @@ public class ToolbarPopup extends Popup {
         return popup;
     }
 
-    public ToolbarPopup(ToolbarSwitch referencedSwitch) {
-        setTarget(referencedSwitch.getElement());
-        setFocusTrap(true);
+    public ToolbarPopover(ToolbarSwitch referencedSwitch) {
+        setTarget(referencedSwitch);
+        setAutofocus(true);
 
         //        setRestoreFocusOnClose(true); // not working with 24 anymore, so we set it manually
         getElement().setProperty("restoreFocusOnClose", true);
 
-        addPopupOpenChangedEventListener(event -> referencedSwitch.setActive(event.isOpened()));
+        addOpenedChangeListener(event -> referencedSwitch.setActive(event.isOpened()));
 
         referencedSwitch.addAttachListener(event -> {
             event.getSource().getParent().orElseThrow(IllegalStateException::new).getElement().appendChild(getElement());
@@ -48,7 +48,7 @@ public class ToolbarPopup extends Popup {
             focusOnOpenTargetRegistration.remove();
         }
 
-        focusOnOpenTargetRegistration = addPopupOpenChangedEventListener(event -> {
+        focusOnOpenTargetRegistration = addOpenedChangeListener(event -> {
             if (event.isOpened()) {
                 component.getElement().callJsFunction("focus");
             }

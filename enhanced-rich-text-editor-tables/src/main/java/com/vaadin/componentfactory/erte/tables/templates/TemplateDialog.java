@@ -2,8 +2,8 @@ package com.vaadin.componentfactory.erte.tables.templates;
 
 import com.vaadin.componentfactory.erte.tables.TablesI18n.TemplatesI18n;
 import com.vaadin.componentfactory.erte.tables.templates.ruleformparts.*;
-import com.vaadin.componentfactory.erte.toolbar.ToolbarDialog;
-import com.vaadin.componentfactory.erte.toolbar.ToolbarSwitch;
+import com.vaadin.componentfactory.toolbar.ToolbarDialog;
+import com.vaadin.componentfactory.toolbar.ToolbarSwitch;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;

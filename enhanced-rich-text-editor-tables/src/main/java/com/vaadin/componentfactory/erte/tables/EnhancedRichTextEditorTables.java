@@ -6,9 +6,9 @@ import com.vaadin.componentfactory.erte.tables.events.TableSelectedEvent;
 import com.vaadin.componentfactory.erte.tables.templates.TemplateDialog;
 import com.vaadin.componentfactory.erte.tables.templates.TemplateParser;
 import com.vaadin.componentfactory.erte.tables.templates.events.*;
-import com.vaadin.componentfactory.erte.toolbar.ToolbarPopup;
-import com.vaadin.componentfactory.erte.toolbar.ToolbarSelectPopup;
-import com.vaadin.componentfactory.erte.toolbar.ToolbarSwitch;
+import com.vaadin.componentfactory.toolbar.ToolbarPopover;
+import com.vaadin.componentfactory.toolbar.ToolbarSelectPopup;
+import com.vaadin.componentfactory.toolbar.ToolbarSwitch;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.ComponentUtil;
@@ -63,7 +63,7 @@ public class EnhancedRichTextEditorTables {
     private String cellFocusColor;
     private String cellHoverColor;
     private ToolbarSelectPopup modifyTableSelectPopup;
-    private ToolbarPopup addTablePopup;
+    private ToolbarPopover addTablePopup;
 
     public EnhancedRichTextEditorTables(EnhancedRichTextEditor rte) {
         this(rte, new TablesI18n());
@@ -151,7 +151,7 @@ public class EnhancedRichTextEditorTables {
         addTableButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.PLUS);
         addTableButton.setTooltipText(getI18nOrDefault(TablesI18n::getInsertTableToolbarSwitchTooltip, "Add new table"));
 
-        addTablePopup = ToolbarPopup.horizontal(addTableButton, rows, new Span("x"), cols, add);
+        addTablePopup = ToolbarPopover.horizontal(addTableButton, rows, new Span("x"), cols, add);
         addTablePopup.setFocusOnOpenTarget(rows);
         add.addClickListener(event -> addTablePopup.setOpened(false));
 
@@ -531,7 +531,7 @@ public class EnhancedRichTextEditorTables {
         return addTableButton;
     }
 
-    public ToolbarPopup getAddTablePopup() {
+    public ToolbarPopover getAddTablePopup() {
         return addTablePopup;
     }
 

@@ -1,4 +1,4 @@
-package com.vaadin.componentfactory.erte.toolbar;
+package com.vaadin.componentfactory.toolbar;
 
 import com.vaadin.componentfactory.SlotUtil;
 import com.vaadin.flow.component.Component;

@@ -1,4 +1,4 @@
-package com.vaadin.componentfactory.erte.toolbar;
+package com.vaadin.componentfactory.toolbar;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.dialog.Dialog;

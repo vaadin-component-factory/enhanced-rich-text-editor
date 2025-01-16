@@ -379,26 +379,8 @@ public class EnhancedRichTextEditorView extends DemoView {
         // source-example-heading: Rich Text Editor with Table Addon
         EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
         EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte);
+
         tables.setTemplates(Json.parse(templatesString));
-
-        tables.addTemplateCreatedListener(event -> {
-            Notification.show("Created " + event.getTemplateId());
-            System.out.println(event.getTemplate());
-        });
-        tables.addTemplateCopiedListener(event -> {
-            Notification.show("Copied " + event.getTemplateId() + " from " + event.getCopiedTemplateId().orElse("--"));
-            System.out.println(event.getTemplate());
-        });
-        tables.addTemplateUpdatedListener(event -> {
-            Notification.show("Updated " + event.getTemplateId());
-            System.out.println(event.getTemplate());
-        });
-        tables.addTemplateDeletedListener(event -> {
-            Notification.show("Deleted " + event.getTemplateId());
-            System.out.println(event.getTemplate());
-        });
-
-
 
         // end-source-example
         rte.setValue(deltaString);
@@ -406,8 +388,6 @@ public class EnhancedRichTextEditorView extends DemoView {
         rte.setValueChangeMode(ValueChangeMode.EAGER);
 
         addCard("Rich Text Editor with Table Addon", rte);
-
-
     }
 
     private void createEditorWithTableI18nSample() {
