@@ -20,6 +20,7 @@ import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.function.ValueProvider;
@@ -34,6 +35,10 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * A table extension for the {@link EnhancedRichTextEditor}. Allows the user to define new or modify existing
+ * tables in an ERTE document.
+ */
 @NpmPackage(value = "quill-delta", version = "5.1.0")
 @JsModule("./src/erte-table/connector.js")
 @CssImport(value = "./src/erte-table/css/erte-shadow.css", themeFor = "vcf-enhanced-rich-text-editor")
@@ -65,11 +70,13 @@ public class EnhancedRichTextEditorTables {
     private ToolbarSelectPopup modifyTableSelectPopup;
     private ToolbarPopover addTablePopup;
 
-    public EnhancedRichTextEditorTables(EnhancedRichTextEditor rte) {
-        this(rte, new TablesI18n());
-    }
-
-    public EnhancedRichTextEditorTables(EnhancedRichTextEditor rte, TablesI18n i18n) {
+    /**
+     * Extends the given ERTE instance with table functionality. Uses the given i18n instance to initialize
+     * components with the respective translations.
+     * @param rte editor instance to extend
+     * @param i18n i18n instance to use
+     */
+    protected EnhancedRichTextEditorTables(EnhancedRichTextEditor rte, TablesI18n i18n) {
         this.rte = Objects.requireNonNull(rte);
         this.i18n = Objects.requireNonNull(i18n);
 
@@ -121,10 +128,20 @@ public class EnhancedRichTextEditorTables {
         return object.hasKey(key) ? Double.valueOf(object.getNumber(key)).intValue() : null;
     }
 
+    /**
+     * Extends the given ERTE instance with table functionality. Uses the default i18n.
+     * @param rte editor instance to extend
+     */
     public static EnhancedRichTextEditorTables enable(EnhancedRichTextEditor rte) {
         return enable(rte, new TablesI18n());
     }
 
+    /**
+     * Extends the given ERTE instance with table functionality. Uses the given i18n instance to initialize
+     * components with the respective translations.
+     * @param rte editor instance to extend
+     * @param i18n i18n instance to use
+     */
     public static EnhancedRichTextEditorTables enable(EnhancedRichTextEditor rte, TablesI18n i18n) {
         EnhancedRichTextEditorTables tables = new EnhancedRichTextEditorTables(rte, i18n);
         tables.initToolbarTable();
@@ -132,15 +149,18 @@ public class EnhancedRichTextEditorTables {
         return tables;
     }
 
-    public void initToolbarTable() {
+    /**
+     * Builds up the toolbar, that provides table functionality for the user.
+     */
+    protected void initToolbarTable() {
         // insert new table
         IntegerField rows = createTableInsertNumberField(
-                getI18nOrDefault(TablesI18n::getInsertTableRowsFieldPlaceholder, "Rows"),
+                getI18nOrDefault(TablesI18n::getInsertTableRowsFieldLabel, "Rows"),
                 getI18nOrDefault(TablesI18n::getInsertTableRowsFieldTooltip, "Amount of rows for the new table")
         );
 
         IntegerField cols = createTableInsertNumberField(
-                getI18nOrDefault(TablesI18n::getInsertTableColumnsFieldPlaceholder, "Columns"),
+                getI18nOrDefault(TablesI18n::getInsertTableColumnsFieldLabel, "Columns"),
                 getI18nOrDefault(TablesI18n::getInsertTableColumnsFieldTooltip, "Amount of columns for the new table")
 
         );
@@ -151,7 +171,7 @@ public class EnhancedRichTextEditorTables {
         addTableButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.PLUS);
         addTableButton.setTooltipText(getI18nOrDefault(TablesI18n::getInsertTableToolbarSwitchTooltip, "Add new table"));
 
-        addTablePopup = ToolbarPopover.horizontal(addTableButton, rows, new Span("x"), cols, add);
+        addTablePopup = ToolbarPopover.horizontal(addTableButton, Alignment.BASELINE, rows, new Span("x"), cols, add);
         addTablePopup.setFocusOnOpenTarget(rows);
         add.addClickListener(event -> addTablePopup.setOpened(false));
 
@@ -396,23 +416,39 @@ public class EnhancedRichTextEditorTables {
         rte.getElement().executeJs(SCRIPTS_TABLE + "_setStyles(this, $0)", cssString);
     }
 
+    /**
+     * Inserst a new table with the given dimension at the current cursor position.
+     * @param rows amount of rows
+     * @param cols amount of cols
+     */
     public void insertTableAtCurrentPosition(int rows, int cols) {
         insertTableAtCurrentPosition(rows, cols, null);
     }
 
-    public void insertTableAtCurrentPosition(int rows, int cols, String templates) {
+    /**
+     * Inserst a new table with the given dimension at the current cursor position. Applies the given template
+     * to the table. This template must match the css class name of the template / its id, not its display name.
+     * @param rows amount of rows
+     * @param cols amount of cols
+     * @param templateId template class name
+     */
+    public void insertTableAtCurrentPosition(int rows, int cols, String templateId) {
         if (rows <= 0 || cols <= 0) {
             throw new IllegalArgumentException("Rows and cols must be greater than 0!");
         }
 
-        rte.getElement().executeJs(SCRIPTS_TABLE+ "insert(this, $0, $1, $2)", rows, cols, templates);
+        rte.getElement().executeJs(SCRIPTS_TABLE+ "insert(this, $0, $1, $2)", rows, cols, templateId);
     }
 
-    public void setTemplateIdForCurrentTable(@Nullable String template) {
+    /**
+     * Sets the given template id as current / active template to use.
+     * @param templateId template
+     */
+    public void setTemplateIdForCurrentTable(@Nullable String templateId) {
         if(templatesDialog != null) {
-            templatesDialog.setActiveTemplateId(template);
+            templatesDialog.setActiveTemplateId(templateId);
         } else { // fallback if no templates dialog is available
-            internalUpdateTemplateForCurrentTable(template, false);
+            internalUpdateTemplateForCurrentTable(templateId, false);
         }
     }
 
@@ -428,11 +464,19 @@ public class EnhancedRichTextEditorTables {
         fireEvent(new TemplateSelectedEvent(this, fromClient, template));
     }
 
-    public void executeTableAction(String action) {
+    /**
+     * Executes a specific client side action on the table. See TableTrick.js#table_handler for more details.
+     * @param action action
+     */
+    protected void executeTableAction(String action) {
         rte.getElement().executeJs(SCRIPTS_TABLE+ "action(this, $0)", action);
     }
 
-    public void executeTableRowAction(String action) {
+    /**
+     * Executes a specific, row related client side action on the table. See TableTrick.js#table_handler for more details.
+     * @param action action
+     */
+    protected void executeTableRowAction(String action) {
         executeTableAction(action);
         if (action.contains("remove")) {
             templatesDialog.updateRowIndexesOnRemove();
@@ -440,8 +484,11 @@ public class EnhancedRichTextEditorTables {
             templatesDialog.updateRowIndexesOnAdd(action.contains("above"));
         }
     }
-
-    public void executeTableColumnAction(String action) {
+    /**
+     * Executes a specific, col related client side action on the table. See TableTrick.js#table_handler for more details.
+     * @param action action
+     */
+    protected void executeTableColumnAction(String action) {
         executeTableAction(action);
         if (action.contains("remove")) {
             templatesDialog.updateColIndexesOnRemove();
@@ -464,7 +511,7 @@ public class EnhancedRichTextEditorTables {
         field.setAutoselect(true);
 
         field.setStepButtonsVisible(true);
-        field.setPlaceholder(placeholder);
+        field.setLabel(placeholder);
         field.setTooltipText(tooltip);
 
         return field;

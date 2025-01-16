@@ -94,7 +94,7 @@
                 <artifactId>jetty-ee10-maven-plugin</artifactId>
                 <version>12.0.11</version>
                 <configuration>
-                    <scanIntervalSeconds>1</scanIntervalSeconds>
+                    <scan>2</scan>
                 </configuration>
             </plugin>
             <plugin>

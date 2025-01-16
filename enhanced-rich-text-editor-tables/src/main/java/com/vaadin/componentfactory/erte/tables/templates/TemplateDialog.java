@@ -35,6 +35,10 @@ import java.util.stream.Stream;
 
 import static com.vaadin.componentfactory.erte.tables.templates.TemplateJsonConstants.*;
 
+/**
+ * Dialog to modify the templates of an ERTE instance. Allows assigning the active template for a selected table
+ * and modifying its rules.
+ */
 public class TemplateDialog extends ToolbarDialog {
 
     private final Defaults defaults = new Defaults(this);

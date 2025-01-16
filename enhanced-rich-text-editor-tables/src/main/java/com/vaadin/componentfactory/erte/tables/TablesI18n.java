@@ -4,8 +4,9 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class TablesI18n implements Serializable {
-    private String insertTableRowsFieldPlaceholder;
-    private String insertTableColumnsFieldPlaceholder;
+
+    private String insertTableRowsFieldLabel;
+    private String insertTableColumnsFieldLabel;
     private String insertTableRowsFieldTooltip;
     private String insertTableColumnsFieldTooltip;
     private String insertTableAddButtonTooltip;
@@ -29,20 +30,20 @@ public class TablesI18n implements Serializable {
 
     private TemplatesI18n templatesI18n = new TemplatesI18n();
 
-    public String getInsertTableRowsFieldPlaceholder() {
-        return insertTableRowsFieldPlaceholder;
+    public String getInsertTableRowsFieldLabel() {
+        return insertTableRowsFieldLabel;
     }
 
-    public void setInsertTableRowsFieldPlaceholder(String insertTableRowsFieldPlaceholder) {
-        this.insertTableRowsFieldPlaceholder = Objects.requireNonNull(insertTableRowsFieldPlaceholder);
+    public void setInsertTableRowsFieldLabel(String insertTableRowsFieldLabel) {
+        this.insertTableRowsFieldLabel = Objects.requireNonNull(insertTableRowsFieldLabel);
     }
 
-    public String getInsertTableColumnsFieldPlaceholder() {
-        return insertTableColumnsFieldPlaceholder;
+    public String getInsertTableColumnsFieldLabel() {
+        return insertTableColumnsFieldLabel;
     }
 
-    public void setInsertTableColumnsFieldPlaceholder(String insertTableColumnsFieldPlaceholder) {
-        this.insertTableColumnsFieldPlaceholder = Objects.requireNonNull(insertTableColumnsFieldPlaceholder);
+    public void setInsertTableColumnsFieldLabel(String insertTableColumnsFieldLabel) {
+        this.insertTableColumnsFieldLabel = Objects.requireNonNull(insertTableColumnsFieldLabel);
     }
 
     public String getInsertTableRowsFieldTooltip() {

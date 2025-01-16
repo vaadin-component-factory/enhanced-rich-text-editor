@@ -8,16 +8,29 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.shared.Registration;
 
+/**
+ * A dialog, that can be opened/closed using a toolbar switch.
+ */
 public class ToolbarDialog extends Dialog {
     private final ToolbarSwitch toolbarSwitch;
     private Registration focusOnOpenTargetRegistration;
     private boolean openAtSwitch;
     private boolean ignoreNextEvent;
 
+    /**
+     * Creates a new instance, that opens/closes based on the given switch state.
+     * @param toolbarSwitch switch
+     */
     public ToolbarDialog(ToolbarSwitch toolbarSwitch) {
         this(toolbarSwitch, false);
     }
 
+    /**
+     * Creates a new instance, that opens/closes based on the given switch state. The boolean parameter defines, if
+     * the dialog shall be opened aligned to the switch or not.
+     * @param toolbarSwitch switch
+     * @param openAtSwitch should be aligned to the switch
+     */
     public ToolbarDialog(ToolbarSwitch toolbarSwitch, boolean openAtSwitch) {
         this.toolbarSwitch = toolbarSwitch;
         this.openAtSwitch = openAtSwitch;
@@ -65,29 +78,56 @@ public class ToolbarDialog extends Dialog {
         });
     }
 
+    /**
+     * Creates a new instance listing the given components in a vertical order.
+     * @param toolbarSwitch switch to open the popover
+     * @param components content
+     * @return new instance
+     */
     public static ToolbarDialog vertical(ToolbarSwitch toolbarSwitch, Component... components) {
         ToolbarDialog dialog = new ToolbarDialog(toolbarSwitch);
         dialog.add(new VerticalLayout(components));
         return dialog;
     }
 
+    /**
+     * Creates a new instance listing the given components in a horizontal order (center aligned).
+     * @param toolbarSwitch switch to open the dialog
+     * @param components content
+     * @return new instance
+     */
     public static ToolbarDialog horizontal(ToolbarSwitch toolbarSwitch, Component... components) {
+        return horizontal(toolbarSwitch, FlexComponent.Alignment.CENTER, components);
+    }
+
+
+    /**
+     * Creates a new instance listing the given components in a horizontal order with the given alignment.
+     * @param toolbarSwitch switch to open the dialog
+     * @param components content
+     * @return new instance
+     */
+    public static ToolbarDialog horizontal(ToolbarSwitch toolbarSwitch, FlexComponent.Alignment alignment, Component... components) {
         ToolbarDialog dialog = new ToolbarDialog(toolbarSwitch);
         HorizontalLayout layout = new HorizontalLayout(components);
         layout.setPadding(true);
-        layout.setAlignItems(FlexComponent.Alignment.CENTER);
+        layout.setAlignItems(alignment);
         dialog.add(layout);
         return dialog;
     }
 
-    public void setFocusOnOpenTarget(Component component) {
+    /**
+     * Allows to define a component, that should be focused initially, when opening this instance.
+     * @param focusOnOpenTarget initial focus target
+     */
+    public void setFocusOnOpenTarget(Component focusOnOpenTarget) {
         if (focusOnOpenTargetRegistration != null) {
             focusOnOpenTargetRegistration.remove();
         }
 
         focusOnOpenTargetRegistration = addOpenedChangeListener(event -> {
             if (event.isOpened()) {
-                component.getElement().callJsFunction("focus");
+                focusOnOpenTarget.getElement().callJsFunction("focus");
             }
         });
     }

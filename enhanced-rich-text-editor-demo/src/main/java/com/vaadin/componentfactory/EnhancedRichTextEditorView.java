@@ -414,9 +414,9 @@ public class EnhancedRichTextEditorView extends DemoView {
 
         TablesI18n tablesI18n = new TablesI18n();
         tablesI18n.setInsertTableToolbarSwitchTooltip("Neue Tabelle hinzufügen");
-        tablesI18n.setInsertTableRowsFieldPlaceholder("Zeilen");
+        tablesI18n.setInsertTableRowsFieldLabel("Zeilen");
         tablesI18n.setInsertTableRowsFieldTooltip("Anzahl der hinzuzufügenden Zeilen");
-        tablesI18n.setInsertTableColumnsFieldPlaceholder("Spalten");
+        tablesI18n.setInsertTableColumnsFieldLabel("Spalten");
         tablesI18n.setInsertTableColumnsFieldTooltip("Anzahl der hinzuzufügenden Spalten");
         tablesI18n.setInsertTableAddButtonTooltip("Tabelle hinzufügen");
 
