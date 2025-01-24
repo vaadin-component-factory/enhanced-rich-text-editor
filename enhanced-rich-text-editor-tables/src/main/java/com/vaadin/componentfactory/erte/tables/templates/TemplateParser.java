@@ -194,10 +194,27 @@ public final class TemplateParser {
             JsonObject declarations = colsConfig.getObject(DECLARATIONS);
 
             if (isNotEmpty(declarations)) {
+                // unfortunateley colgroup cols do not support all css properties, and on the otherhand
+                // tds cannot handle everything. "width" for instance is something only supported in cols, while
+                // "color" is only supported by tds.
+
+                JsonObject tdDeclarations = Json.createObject();
+                if(declarations.hasKey(P_COLOR)) {
+                    tdDeclarations.put(P_COLOR, declarations.getString(P_COLOR));
+                    declarations.remove(P_COLOR);
+
+                    // extend and improve when other properties are added
+                }
+
                 appendTableSelectorPart();
                 builder.append(" > colgroup > col");
                 appendIndex(colsConfig);
                 parseDeclarations(COLUMNS, declarations);
+
+                appendTableSelectorPart();
+                builder.append(" > tr > td");
+                appendIndex(colsConfig);
+                parseDeclarations(COLUMNS, tdDeclarations);
             }
         }
     }
