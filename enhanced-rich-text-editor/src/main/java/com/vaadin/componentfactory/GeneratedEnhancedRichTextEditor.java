@@ -77,7 +77,7 @@ import elemental.json.impl.JreJsonObject;
  * Therefore, the semantic HTML5 tags and CSS usage is limited to most common
  * cases, like horizontal text alignment.
  * </p>
- * <h3>Styling</h3>
+ * <b>Styling</b>
  * <p>
  * The following state attributes are available for styling:
  * </p>

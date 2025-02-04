@@ -357,8 +357,7 @@ public class EnhancedRichTextEditor
     }
 
     /**
-     * Add a custom button to the toolbar.
-     * <p/>
+     * Add a custom button to the toolbar.<br>
      * This method does NOT apply any toolbar styling to the button, but will keep it "Vaadin native".
      *
      * @param button A custom button to be added, not null
@@ -371,8 +370,7 @@ public class EnhancedRichTextEditor
     }
 
     /**
-     * A convenience method to add multiple custom buttons at one call.
-     * <p/>
+     * A convenience method to add multiple custom buttons at one call.<br>
      * This method does NOT apply any toolbar styling to the button, but will keep it "Vaadin native".
      *
      * @param buttons Custom buttons to be added.
