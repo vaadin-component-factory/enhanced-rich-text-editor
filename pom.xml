@@ -8,9 +8,15 @@
     <groupId>com.vaadin.componentfactory</groupId>
     <artifactId>enhanced-rich-text-editor-root</artifactId>
     <packaging>pom</packaging>
-    <version>4.0.3</version>
+    <version>5.0.0</version>
     <name>EnhancedRich Text Editor Root</name>
     <inceptionYear>2018</inceptionYear>
+
+    <properties>
+        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
 
     <organization>
         <name>Vaadin Ltd</name>
@@ -51,6 +57,7 @@
 
     <modules>
         <module>enhanced-rich-text-editor</module>
+        <module>enhanced-rich-text-editor-tables</module>
         <module>enhanced-rich-text-editor-demo</module>
     </modules>
 

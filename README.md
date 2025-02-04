@@ -68,7 +68,7 @@ rte.setValue("[" +
         "{\"insert\":{\"readonly\":\"Some readonly text\\n\"}}," +
         "{\"insert\":\"More text\\n\"}," +
         "{\"insert\":{\"readonly\":\"More readonly text\\n\"}}]");
-```
+``` 
 
 # Running the demo
 * Run from the command line `mvn install -DskipTests`

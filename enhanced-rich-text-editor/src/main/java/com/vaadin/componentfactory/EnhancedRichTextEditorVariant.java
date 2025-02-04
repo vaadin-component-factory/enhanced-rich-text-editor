@@ -32,16 +32,16 @@ package com.vaadin.componentfactory;
  * #L%
  */
 
-import javax.annotation.Generated;
+import com.vaadin.flow.component.shared.ThemeVariant;
 
 /**
  * Set of theme variants applicable for {@code vcf-enhanced-rich-text-editor}
  * component.
  */
-@Generated({ "Generator: com.vaadin.generator.ComponentGenerator#1.2-SNAPSHOT",
-        "WebComponent: Vaadin.RichTextEditorElement#1.0.0-alpha3",
-        "Flow#1.2-SNAPSHOT" })
-public enum EnhancedRichTextEditorVariant {
+//@Generated({ "Generator: com.vaadin.generator.ComponentGenerator#1.2-SNAPSHOT",
+//        "WebComponent: Vaadin.RichTextEditorElement#1.0.0-alpha3",
+//        "Flow#1.2-SNAPSHOT" })
+public enum EnhancedRichTextEditorVariant implements ThemeVariant {
     LUMO_NO_BORDER("no-border"), LUMO_COMPACT("compact"), MATERIAL_NO_BORDER(
             "no-border");
 
