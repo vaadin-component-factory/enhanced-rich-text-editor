@@ -299,10 +299,19 @@ class PlaceholderBlot extends Embed {
     let altText = '';
     let text = placeholder.text;
     if (PlaceholderBlot.altAppearanceRegex) {
-      altText = new RegExp(PlaceholderBlot.altAppearanceRegex).exec(text) || '';
-      const altTextNodeStr = `<span alt>${altText}</span>`;
-      if (altText && placeholder.altAppearance) text = altTextNodeStr;
-      else text = text.replace(altText, altTextNodeStr);
+      const match = new RegExp(PlaceholderBlot.altAppearanceRegex).exec(text);
+      if(match) {
+        altText = match[0];
+        const altTextNodeStr = `<span alt>${altText}</span>`;
+        const startIndex = match.index;
+        const endIndex = startIndex + altText.length;
+        if(placeholder.altAppearance) text = altTextNodeStr;
+        else text = text.slice(0,startIndex) + altTextNodeStr + text.slice(endIndex);
+      } else {
+        if(placeholder.altAppearance) {
+          text = '';
+        }
+      }
     }
     if (PlaceholderBlot.tags && !placeholder.altAppearance) text = PlaceholderBlot._wrapTags(text);
     node.innerHTML = text;
