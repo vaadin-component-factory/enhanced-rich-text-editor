@@ -10,7 +10,7 @@
     <name>Enhanced Rich Text Editor Tables Extension</name>
 
     <version>1.0.0-SNAPSHOT</version>
-    <inceptionYear>2019</inceptionYear>
+    <inceptionYear>2025</inceptionYear>
     <organization>
         <name>Vaadin Ltd</name>
         <url>http://vaadin.com/</url>
@@ -18,7 +18,7 @@
 
     <properties>
         <erte.version>5.0.0-SNAPSHOT</erte.version>
-        <vaadin.version>24.6.2</vaadin.version>
+        <vaadin.version>24.6.4</vaadin.version>
         <vaadin.test-generic.version>24.4.7</vaadin.test-generic.version>
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
