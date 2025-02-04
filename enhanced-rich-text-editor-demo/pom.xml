@@ -69,7 +69,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.vaadin.componentfactory</groupId>
+            <groupId>org.vaadin.addons.componentfactory</groupId>
             <artifactId>enhanced-rich-text-editor-tables</artifactId>
             <version>1.0.0</version>
         </dependency>
