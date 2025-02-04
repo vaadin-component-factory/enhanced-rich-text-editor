@@ -70,6 +70,11 @@ rte.setValue("[" +
         "{\"insert\":{\"readonly\":\"More readonly text\\n\"}}]");
 ``` 
 
+## Tables
+To enable the usage of tables in the editor, you need to add the 
+[Table Extension ↗](https://vaadin.com/directory/component/enhanced-rich-text-editor-tables-extension), which is a 
+separate addon. Follow the instructions of the extension on how to use the table functionality.
+
 # Running the demo
 * Run from the command line `mvn install -DskipTests`
 * Run from the command line `mvn -pl enhanced-rich-text-editor-demo -Pwar jetty:run`
