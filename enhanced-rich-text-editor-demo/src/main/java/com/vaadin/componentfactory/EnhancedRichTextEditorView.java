@@ -39,20 +39,20 @@ public class EnhancedRichTextEditorView extends DemoView {
 
     @Override
     protected void initView() {
-//        createDefaultEditor();
-//        createEditorWithTabstops();
-//        createGetValue();
-//        createGetHtmlValue();
-//        createEditorWithLimitedToolbar();
-//        createEditorWithReadonlySections();
-//        createEditorWithPlaceholders();
-//        createEditorWithCustomButtons();
+        createDefaultEditor();
+        createEditorWithTabstops();
+        createGetValue();
+        createGetHtmlValue();
+        createEditorWithLimitedToolbar();
+        createEditorWithReadonlySections();
+        createEditorWithPlaceholders();
+        createEditorWithCustomButtons();
         createEditorWithCustomButtonsExtended();
-//        createEditorWithCustomShortcutsForStandardButtons();
-//        createEditorWithIconReplacementForStandardButtons();
-//        createEditorWithNoRules();
-//        createEditorWithTableSample();
-//        createEditorWithTableI18nSample();
+        createEditorWithCustomShortcutsForStandardButtons();
+        createEditorWithIconReplacementForStandardButtons();
+        createEditorWithNoRules();
+        createEditorWithTableSample();
+        createEditorWithTableI18nSample();
     }
 
     private void createDefaultEditor() {
