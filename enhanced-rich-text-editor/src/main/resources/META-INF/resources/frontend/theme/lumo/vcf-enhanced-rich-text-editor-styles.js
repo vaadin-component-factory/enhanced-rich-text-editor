@@ -7,8 +7,8 @@ import { typography } from '@vaadin/vaadin-lumo-styles/typography.js';
 import { css, registerStyles } from '@vaadin/vaadin-themable-mixin/vaadin-themable-mixin.js';
 
 const lightDomStyles = css`
-  [slot="toolbar"] vaadin-button,
-  vaadin-button[slot="toolbar"] {
+  [slot] vaadin-button,
+  vaadin-button[slot] {
       width: var(--lumo-size-m);
       height: var(--lumo-size-m);
       border-radius: var(--lumo-border-radius);
@@ -17,25 +17,25 @@ const lightDomStyles = css`
       background: transparent;
   }
   
-  [slot="toolbar"] vaadin-button[disabled],
-  vaadin-button[slot="toolbar"][disabled] {
+  [slot] vaadin-button[disabled],
+  vaadin-button[slot][disabled] {
       color: var(--lumo-contrast-30pct);
   }
 
-  [slot="toolbar"] vaadin-button:hover,
-  vaadin-button[slot="toolbar"]:hover {
+  [slot] vaadin-button:hover,
+  vaadin-button[slot]:hover {
       background-color: var(--lumo-contrast-5pct);
       color: var(--lumo-contrast-80pct);
       box-shadow: none;
   }
   
-  [slot="toolbar"] vaadin-button[on],
-  vaadin-button[slot="toolbar"][on] {
+  [slot] vaadin-button[on],
+  vaadin-button[slot][on] {
       background-color: var(--lumo-primary-color-10pct);
       color: var(--lumo-primary-text-color);
   }
   
-  .switchable-content[slot="toolbar"] {
+  .switchable-content[slot] {
     gap: var(--lumo-space-xs);
     padding: var(--lumo-space-xs);
     background: var(--lumo-contrast-5pct);
@@ -44,19 +44,19 @@ const lightDomStyles = css`
     border-radius: var(--lumo-border-radius-m);
   }
   
-  .switchable-content[slot="toolbar"] vaadin-integer-field {
+  .switchable-content[slot] vaadin-integer-field {
     --lumo-text-field-size: var(--lumo-size-s);
     --lumo-font-size-m: 0.8rem;
   }
 
-  .switchable-content[slot="toolbar"] vaadin-button {
+  .switchable-content[slot] vaadin-button {
     width: var(--lumo-size-s);
     height: var(--lumo-size-s);
     --lumo-font-size-m: 0.8rem;
     background-color: var(--lumo-contrast-20pct);
   }
   
-  .switchable-content[slot="toolbar"] vaadin-button:hover {
+  .switchable-content[slot] vaadin-button:hover {
     background-color: var(--lumo-contrast-30pct);
   }
   
@@ -65,13 +65,13 @@ const lightDomStyles = css`
     font-size: var(--lumo-font-size-xs);
   }
 
-  vaadin-button.suffix-icon[slot="toolbar"],
-  [slot="toolbar"] vaadin-button.suffix-icon {
+  vaadin-button.suffix-icon[slot],
+  [slot] vaadin-button.suffix-icon {
     width: var(--lumo-size-l);
   }
   
-  vaadin-button.suffix-icon[slot="toolbar"] vaadin-icon[slot="suffix"],
-  [slot="toolbar"] vaadin-button.suffix-icon vaadin-icon[slot="suffix"] {
+  vaadin-button.suffix-icon[slot] vaadin-icon[slot="suffix"],
+  [slot] vaadin-button.suffix-icon vaadin-icon[slot="suffix"] {
     padding-left: 0;
   }
   

@@ -197,6 +197,9 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
         <div class="vcf-enhanced-rich-text-editor-container">
           <!-- Create toolbar container -->
           <div part="toolbar">
+            <slot name="toolbar-start"></slot>
+            <slot name="toolbar-before-group-history"></slot>
+
             <span part="toolbar-group toolbar-group-history" style="display: [[_buttonGroupDisplay(toolbarButtons, 'history')]];">
               <!-- Undo and Redo -->
               <button type="button" part="toolbar-button toolbar-button-undo" on-click="_undo" title$="[[i18n.undo]]" style="display: [[_buttonDisplay(toolbarButtons, 'undo')]];">
@@ -210,6 +213,8 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
                 </slot>
               </button>
             </span>
+            <slot name="toolbar-after-group-history"></slot>
+            <slot name="toolbar-before-group-emphasis"></slot>
 
             <span part="toolbar-group toolbar-group-emphasis" style="display: [[_buttonGroupDisplay(toolbarButtons, 'emphasis')]];">
               <!-- Bold -->
@@ -240,6 +245,8 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
                 </slot>
               </button>
             </span>
+            <slot name="toolbar-after-group-emphasis"></slot>
+            <slot name="toolbar-before-group-heading"></slot>
 
             <span part="toolbar-group toolbar-group-heading" style="display: [[_buttonGroupDisplay(toolbarButtons, 'heading')]];">
               <!-- Header buttons -->
@@ -259,6 +266,8 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
                 </slot>
               </button>
             </span>
+            <slot name="toolbar-after-group-heading"></slot>
+            <slot name="toolbar-before-group-glyph-transformation"></slot>
 
             <span part="toolbar-group toolbar-group-glyph-transformation" style="display: [[_buttonGroupDisplay(toolbarButtons, 'glyph-transformation')]];">
               <!-- Subscript and superscript -->
@@ -273,6 +282,8 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
                 </slot>
               </button>
             </span>
+            <slot name="toolbar-after-group-glyph-transformation"></slot>
+            <slot name="toolbar-before-group-list"></slot>
 
             <span part="toolbar-group toolbar-group-list" style="display: [[_buttonGroupDisplay(toolbarButtons, 'list')]];">
               <!-- List buttons -->
@@ -287,6 +298,8 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
                 </slot>
               </button>
             </span>
+            <slot name="toolbar-after-group-list"></slot>
+            <slot name="toolbar-before-group-indent"></slot>
 
             <span part="toolbar-group toolbar-group-indent" style="display: [[_buttonGroupDisplay(toolbarButtons, 'indent')]];">
               <!-- List buttons -->
@@ -301,6 +314,8 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
                 </slot>
               </button>
             </span>
+            <slot name="toolbar-after-group-indent"></slot>
+            <slot name="toolbar-before-group-alignment"></slot>
 
             <span part="toolbar-group toolbar-group-alignment" style="display: [[_buttonGroupDisplay(toolbarButtons, 'alignment')]];">
               <!-- Align buttons -->
@@ -325,6 +340,8 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
                 </slot>
               </button>
             </span>
+            <slot name="toolbar-after-group-alignment"></slot>
+            <slot name="toolbar-before-group-rich-text"></slot>
 
             <span part="toolbar-group toolbar-group-rich-text" style="display: [[_buttonGroupDisplay(toolbarButtons, 'rich-text')]];">
               <!-- Image -->
@@ -340,6 +357,8 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
                 </slot>
               </button>
             </span>
+            <slot name="toolbar-after-group-rich-text"></slot>
+            <slot name="toolbar-before-group-block"></slot>
 
             <span part="toolbar-group toolbar-group-block" style="display: [[_buttonGroupDisplay(toolbarButtons, 'block')]];">
               <!-- Blockquote -->
@@ -366,6 +385,8 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
                 [[placeholderAppearance]]
               </button>
             </span>
+            <slot name="toolbar-after-group-block"></slot>
+            <slot name="toolbar-before-group-format"></slot>
 
             <span part="toolbar-group toolbar-group-format" style="display: [[_buttonGroupDisplay(toolbarButtons, 'format')]];">
               <!-- Read-only -->
@@ -382,10 +403,14 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
                 </slot>
               </button>
             </span>
+            <slot name="toolbar-after-group-format"></slot>
+            <slot name="toolbar-before-group-custom"></slot>
 
             <span part="toolbar-group toolbar-group-custom">
               <slot name="toolbar" on-slot-change="_onToolbarSlotChange"></slot>
             </span>
+            <slot name="toolbar-after-group-custom"></slot>
+            <slot name="toolbar-end"></slot>
 
             <input id="fileInput" type="file" accept="image/png, image/gif, image/jpeg, image/bmp, image/x-icon" on-change="_uploadImage" />
 
