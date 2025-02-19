@@ -141,7 +141,7 @@ public class EnhancedRichTextEditorView extends DemoView {
 
         Button button = new Button("Remove airplane");
         button.addClickListener(event -> {
-            rte.removeToolbarComponent(ToolbarSlot.TOOLBAR_GROUP_CUSTOM, textButton1);
+            rte.removeToolbarComponent(ToolbarSlot.GROUP_CUSTOM, textButton1);
         });
         // end-source-example
 
@@ -155,18 +155,18 @@ public class EnhancedRichTextEditorView extends DemoView {
 
         ComboBox<String> presets = new ComboBox<>("", "Preset 1", "Preset 2", "Preset 3");
         presets.setValue("Preset 1");
-        presets.setTooltipText("A (non functional) custom toolbar component, placed in the '" + ToolbarSlot.TOOLBAR_START.getSlotName() + "' slot");
-        rte.addToolbarComponents(ToolbarSlot.TOOLBAR_START, presets);
+        presets.setTooltipText("A (non functional) custom toolbar component, placed in the '" + ToolbarSlot.START.getSlotName() + "' slot");
+        rte.addToolbarComponents(ToolbarSlot.START, presets);
 
         Select<String> colors = new Select<>();
         colors.setItems("Red", "Green", "Blue");
         colors.setValue("Red");
-        colors.setTooltipText("A (non functional) custom toolbar component, placed in the '" + ToolbarSlot.TOOLBAR_START.getSlotName() + "' slot");
-        rte.addToolbarComponents(ToolbarSlot.TOOLBAR_START, colors);
+        colors.setTooltipText("A (non functional) custom toolbar component, placed in the '" + ToolbarSlot.BEFORE_GROUP_GLYPH_TRANSFORMATION.getSlotName() + "' slot");
+        rte.addToolbarComponents(ToolbarSlot.BEFORE_GROUP_GLYPH_TRANSFORMATION, colors);
 
         List<Button> slottedButtons = new LinkedList<>();
         for (ToolbarSlot slot : ToolbarSlot.values()) {
-            if(slot == ToolbarSlot.TOOLBAR_GROUP_CUSTOM) {
+            if(slot == ToolbarSlot.GROUP_CUSTOM) {
                 continue; // special handling for the custom group
             }
 
@@ -188,10 +188,10 @@ public class EnhancedRichTextEditorView extends DemoView {
             slottedButtons.forEach(button -> button.setVisible(active));
         });
         toolbarSwitch.setTooltipText("A toolbar switch, placed in the '" +
-                                     ToolbarSlot.TOOLBAR_GROUP_CUSTOM.getSlotName() + "' slot. Click to show/hide" +
+                                     ToolbarSlot.GROUP_CUSTOM.getSlotName() + "' slot. Click to show/hide" +
                                      " additional toolbar components, that are placed between" +
                                      " the standard button groups");
-        rte.addToolbarComponents(ToolbarSlot.TOOLBAR_GROUP_CUSTOM, toolbarSwitch);
+        rte.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, toolbarSwitch);
 
         // end-source-example
 

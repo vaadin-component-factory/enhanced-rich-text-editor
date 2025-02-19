@@ -48,6 +48,26 @@ buttons.put(EnhancedRichTextEditor.ToolbarButton.LINK, false);
 rte.setToolbarButtonsVisibility(buttons);
 ```
 
+You can also add custom components, like `Button`, `ComboBox` or `ToolbarSwitch` to the toolbar, using the
+`addToolbarComponents` method. Currently the toolbar supports placement of custom components at its start, end, between
+groups and in the special (legacy) "custom" slot at the end of the toolbar. The enumeration `ToolbarSlot` provides a 
+list of potential places to add them. 
+
+```
+ComboBox<String> presets = new ComboBox<>("", "Preset 1", "Preset 2", "Preset 3");
+presets.setValue("Preset 1");
+presets.setTooltipText("A (non functional) custom toolbar component, placed in the '" + 
+ToolbarSlot.START.getSlotName() + "' slot");
+rte.addToolbarComponents(ToolbarSlot.START, presets);
+
+Select<String> colors = new Select<>();
+colors.setItems("Red", "Green", "Blue");
+colors.setValue("Red");
+colors.setTooltipText("A (non functional) custom toolbar component, placed in the '" + 
+ToolbarSlot.BEFORE_GROUP_GLYPH_TRANSFORMATION.getSlotName() + "' slot");
+rte.addToolbarComponents(ToolbarSlot.BEFORE_GROUP_GLYPH_TRANSFORMATION, colors);
+```
+
 ## Readonly sections
 
 To make part of text read only, select text and click `lock` icon in toolbar. Now text is not editable. 

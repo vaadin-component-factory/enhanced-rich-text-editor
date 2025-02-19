@@ -384,24 +384,24 @@ public class EnhancedRichTextEditor
 
     /**
      * A convenience method to add multiple custom components at one call. Uses the
-     * {@link ToolbarSlot#TOOLBAR_GROUP_CUSTOM}.
+     * {@link ToolbarSlot#GROUP_CUSTOM}.
      *
      * @param components Custom components to be added.
      */
     public void addCustomToolbarComponents(Component... components) {
-        addToolbarComponents(ToolbarSlot.TOOLBAR_GROUP_CUSTOM, components);
+        addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, components);
     }
 
     /**
      * A convenience method to add multiple custom components at one call. Uses the
-     * {@link ToolbarSlot#TOOLBAR_GROUP_CUSTOM}. The index allows to define the position of the newly added components
+     * {@link ToolbarSlot#GROUP_CUSTOM}. The index allows to define the position of the newly added components
      * relative to already existing ones.
      *
      * @param index index
      * @param components Custom components to be added.
      */
     public void addCustomToolbarComponentsAtIndex(int index, Component... components) {
-        addToolbarComponentsAtIndex(ToolbarSlot.TOOLBAR_GROUP_CUSTOM, index, components);
+        addToolbarComponentsAtIndex(ToolbarSlot.GROUP_CUSTOM, index, components);
     }
 
     /**
@@ -474,7 +474,7 @@ public class EnhancedRichTextEditor
      *
      * @param id Id as a string
      * @return A button
-     * @deprecated use {@link #getToolbarComponent(ToolbarSlot, String)} instead with the {@link ToolbarSlot#TOOLBAR_GROUP_CUSTOM}
+     * @deprecated use {@link #getToolbarComponent(ToolbarSlot, String)} instead with the {@link ToolbarSlot#GROUP_CUSTOM}
      */
     @Deprecated
     public Button getCustomButton(String id) {
@@ -486,7 +486,7 @@ public class EnhancedRichTextEditor
      * Remove the given button from the toolbar.
      *
      * @param id Id as a string.
-     * @deprecated use {@link #removeToolbarComponent(ToolbarSlot, String)} instead with the {@link ToolbarSlot#TOOLBAR_GROUP_CUSTOM}
+     * @deprecated use {@link #removeToolbarComponent(ToolbarSlot, String)} instead with the {@link ToolbarSlot#GROUP_CUSTOM}
      */
     @Deprecated
     public void removeCustomButton(String id) {
@@ -498,7 +498,7 @@ public class EnhancedRichTextEditor
      * Remove a custom button from the toolbar.
      *
      * @param button The button to be removed.
-     * @deprecated use {@link #removeToolbarComponent(ToolbarSlot, Component)} instead with the {@link ToolbarSlot#TOOLBAR_GROUP_CUSTOM}
+     * @deprecated use {@link #removeToolbarComponent(ToolbarSlot, Component)} instead with the {@link ToolbarSlot#GROUP_CUSTOM}
      */
     @Deprecated
     public void removeCustomButton(Button button) {

@@ -13,7 +13,7 @@ import com.vaadin.flow.dom.Element;
 
 public class SlotUtil {
 
-    public static final String CUSTOM_GROUP_SLOTNAME = ToolbarSlot.TOOLBAR_GROUP_CUSTOM.getSlotName();
+    public static final String CUSTOM_GROUP_SLOTNAME = ToolbarSlot.GROUP_CUSTOM.getSlotName();
 
     private static Stream<Element> getElementsInSlot(HasElement target,
                                                      String slot) {
@@ -33,7 +33,7 @@ public class SlotUtil {
     }
 
     /**
-     * Adds a component to the toolbar slot {@link ToolbarSlot#TOOLBAR_GROUP_CUSTOM}.
+     * Adds a component to the toolbar slot {@link ToolbarSlot#GROUP_CUSTOM}.
      * @param target editor instance
      * @param component component to add
      */
@@ -42,7 +42,7 @@ public class SlotUtil {
     }
 
     /**
-     * Adds a component to the toolbar slot {@link ToolbarSlot#TOOLBAR_GROUP_CUSTOM}.
+     * Adds a component to the toolbar slot {@link ToolbarSlot#GROUP_CUSTOM}.
      * @param target editor instance
      * @param component component to add
      */
@@ -51,7 +51,7 @@ public class SlotUtil {
     }
 
     /**
-     * Adds a component to the toolbar slot {@link ToolbarSlot#TOOLBAR_GROUP_CUSTOM}.
+     * Adds a component to the toolbar slot {@link ToolbarSlot#GROUP_CUSTOM}.
      * @param target editor instance
      * @param slot slot name to place the component in
      * @param component component to add
@@ -64,7 +64,7 @@ public class SlotUtil {
     }
 
     /**
-     * Adds a component to the toolbar slot {@link ToolbarSlot#TOOLBAR_GROUP_CUSTOM}.
+     * Adds a component to the toolbar slot {@link ToolbarSlot#GROUP_CUSTOM}.
      * @param target editor instance
      * @param slot slot name to place the component in
      * @param component component to add
