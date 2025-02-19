@@ -17,6 +17,7 @@ package com.vaadin.componentfactory;
  * #L%
  */
 
+import com.vaadin.componentfactory.toolbar.ToolbarSlot;
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.JavaScript;
@@ -382,37 +383,100 @@ public class EnhancedRichTextEditor
     }
 
     /**
-     * A convenience method to add multiple custom components at one call.
+     * A convenience method to add multiple custom components at one call. Uses the
+     * {@link ToolbarSlot#TOOLBAR_GROUP_CUSTOM}.
      *
      * @param components Custom components to be added.
      */
     public void addCustomToolbarComponents(Component... components) {
-        Objects.requireNonNull(components);
-        for (Component component : components) {
-            Objects.requireNonNull(component);
-            SlotUtil.addComponent(this, component);
-        }
+        addToolbarComponents(ToolbarSlot.TOOLBAR_GROUP_CUSTOM, components);
     }
 
     /**
-     * A convenience method to add multiple custom components at one call.
+     * A convenience method to add multiple custom components at one call. Uses the
+     * {@link ToolbarSlot#TOOLBAR_GROUP_CUSTOM}. The index allows to define the position of the newly added components
+     * relative to already existing ones.
      *
+     * @param index index
      * @param components Custom components to be added.
      */
     public void addCustomToolbarComponentsAtIndex(int index, Component... components) {
+        addToolbarComponentsAtIndex(ToolbarSlot.TOOLBAR_GROUP_CUSTOM, index, components);
+    }
+
+    /**
+     * Adds the components to the toolbar slot. Appends the components to existing ones.
+     *
+     * @param toolbarSlot slot to add the components to
+     * @param components Components to be added
+     */
+    public void addToolbarComponents(ToolbarSlot toolbarSlot, Component... components) {
         Objects.requireNonNull(components);
         for (Component component : components) {
             Objects.requireNonNull(component);
-            SlotUtil.addComponentAtIndex(this, component, index);
+            SlotUtil.addComponent(this, toolbarSlot.getSlotName(), component);
         }
     }
 
     /**
-     * Get the custom button using its id. 
+     * Adds the components to the toolbar slot. Appends the components to existing ones. The index allows to
+     * define the position of the newly added components relative to already existing ones.
+     *
+     * @param toolbarSlot slot to add the components to
+     * @param components Components to be added
+     */
+    public void addToolbarComponentsAtIndex(ToolbarSlot toolbarSlot, int index, Component... components) {
+        Objects.requireNonNull(components);
+        for (Component component : components) {
+            Objects.requireNonNull(component);
+            SlotUtil.addComponentAtIndex(this, toolbarSlot.getSlotName(), component, index);
+        }
+    }
+
+    /**
+     * Returns a toolbar component with the given id from the toolbar slot. The component must have been
+     * added using one of the {@code addToolbarComponents} methods beforehand.
+     * @param toolbarSlot toolbar slot
+     * @param id component id
+     * @return component
+     * @param <T> return type
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends Component> T getToolbarComponent(ToolbarSlot toolbarSlot, String id) {
+        Objects.requireNonNull(id, "Id can't be null");
+        return (T) SlotUtil.getComponent(this, toolbarSlot.getSlotName(), id);
+    }
+
+    /**
+     * Remove the given component from the toolbar. The component must have been
+     * added using one of the {@code addToolbarComponents} methods beforehand.
+     *
+     * @param id component id
+     */
+    public void removeToolbarComponent(ToolbarSlot toolbarSlot, String id) {
+        Objects.requireNonNull(id, "Id can't be null");
+        SlotUtil.removeComponent(this, toolbarSlot.getSlotName(), id);
+    }
+
+    /**
+     * Remove a custom component from the toolbar. The component must have been
+     * added using one of the {@code addToolbarComponents} methods beforehand.
+     *
+     * @param component The component to be removed.
+     */
+    public void removeToolbarComponent(ToolbarSlot toolbarSlot, Component component) {
+        Objects.requireNonNull(component, "Button can't be null");
+        SlotUtil.removeComponent(this, toolbarSlot.getSlotName(), component);
+    }
+
+    /**
+     * Get the custom button using its id.
      *
      * @param id Id as a string
      * @return A button
+     * @deprecated use {@link #getToolbarComponent(ToolbarSlot, String)} instead with the {@link ToolbarSlot#TOOLBAR_GROUP_CUSTOM}
      */
+    @Deprecated
     public Button getCustomButton(String id) {
         Objects.requireNonNull(id, "Id can't be null");
         return SlotUtil.getButton(this, id);
@@ -422,7 +486,9 @@ public class EnhancedRichTextEditor
      * Remove the given button from the toolbar.
      *
      * @param id Id as a string.
+     * @deprecated use {@link #removeToolbarComponent(ToolbarSlot, String)} instead with the {@link ToolbarSlot#TOOLBAR_GROUP_CUSTOM}
      */
+    @Deprecated
     public void removeCustomButton(String id) {
         Objects.requireNonNull(id, "Id can't be null");
         SlotUtil.removeButton(this, id);
@@ -430,9 +496,11 @@ public class EnhancedRichTextEditor
 
     /**
      * Remove a custom button from the toolbar.
-     * 
+     *
      * @param button The button to be removed.
+     * @deprecated use {@link #removeToolbarComponent(ToolbarSlot, Component)} instead with the {@link ToolbarSlot#TOOLBAR_GROUP_CUSTOM}
      */
+    @Deprecated
     public void removeCustomButton(Button button) {
         Objects.requireNonNull(button, "Button can't be null");
         SlotUtil.removeButton(this, button);
