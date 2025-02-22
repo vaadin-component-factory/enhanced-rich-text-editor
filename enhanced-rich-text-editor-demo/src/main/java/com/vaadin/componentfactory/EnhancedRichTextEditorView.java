@@ -3,16 +3,21 @@ package com.vaadin.componentfactory;
 import com.vaadin.componentfactory.EnhancedRichTextEditor.ToolbarButton;
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
 import com.vaadin.componentfactory.erte.tables.TablesI18n;
+import com.vaadin.componentfactory.toolbar.ToolbarSlot;
+import com.vaadin.componentfactory.toolbar.ToolbarSwitch;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dialog.DialogVariant;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.demo.DemoView;
@@ -42,6 +47,7 @@ public class EnhancedRichTextEditorView extends DemoView {
         createEditorWithReadonlySections();
         createEditorWithPlaceholders();
         createEditorWithCustomButtons();
+        createEditorWithCustomButtonsExtended();
         createEditorWithCustomShortcutsForStandardButtons();
         createEditorWithIconReplacementForStandardButtons();
         createEditorWithNoRules();
@@ -131,15 +137,68 @@ public class EnhancedRichTextEditorView extends DemoView {
             rte.addText("Dentists are drilling people. ");
         });
 
-        rte.addCustomButtons(textButton1,textButton2);
+        rte.addCustomToolbarComponents(textButton1, textButton2);
 
         Button button = new Button("Remove airplane");
         button.addClickListener(event -> {
-            rte.removeCustomButton(textButton1);
+            rte.removeToolbarComponent(ToolbarSlot.GROUP_CUSTOM, textButton1);
         });
         // end-source-example
 
         addCard("Rich Text Editor With Custom Buttons", rte, button);
+    }
+
+    private void createEditorWithCustomButtonsExtended() {
+        // begin-source-example
+        // source-example-heading: Rich Text Editor With Custom Buttons
+        EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
+
+        ComboBox<String> presets = new ComboBox<>("", "Preset 1", "Preset 2", "Preset 3");
+        presets.setValue("Preset 1");
+        presets.setTooltipText("A (non functional) custom toolbar component, placed in the '" + ToolbarSlot.START.getSlotName() + "' slot");
+        rte.addToolbarComponents(ToolbarSlot.START, presets);
+
+        Select<String> colors = new Select<>();
+        colors.setItems("Red", "Green", "Blue");
+        colors.setValue("Red");
+        colors.setTooltipText("A (non functional) custom toolbar component, placed in the '" + ToolbarSlot.BEFORE_GROUP_GLYPH_TRANSFORMATION.getSlotName() + "' slot");
+        rte.addToolbarComponents(ToolbarSlot.BEFORE_GROUP_GLYPH_TRANSFORMATION, colors);
+
+        List<Button> slottedButtons = new LinkedList<>();
+        for (ToolbarSlot slot : ToolbarSlot.values()) {
+            if(slot == ToolbarSlot.GROUP_CUSTOM) {
+                continue; // special handling for the custom group
+            }
+
+            Button button = new Button(VaadinIcon.CIRCLE_THIN.create(), event -> {
+                Notification.show("This is a button in the '" + slot.getSlotName() + "' slot of the toolbar. " +
+                                  "You can add more buttons or other components, like ComboBoxes, if you want to.");
+            });
+
+            button.setTooltipText("A button in the '" + slot.getSlotName() + "' slot");
+            button.setVisible(false);
+            button.getStyle().set("color", "red");
+            slottedButtons.add(button);
+            rte.addToolbarComponents(slot, button);
+        }
+
+        ToolbarSwitch toolbarSwitch = new ToolbarSwitch(VaadinIcon.EYE.create());
+        toolbarSwitch.addActiveChangedListener(event -> {
+            boolean active = event.isActive();
+            slottedButtons.forEach(button -> button.setVisible(active));
+        });
+        toolbarSwitch.setTooltipText("A toolbar switch, placed in the '" +
+                                     ToolbarSlot.GROUP_CUSTOM.getSlotName() + "' slot. Click to show/hide" +
+                                     " additional toolbar components, that are placed between" +
+                                     " the standard button groups");
+        rte.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, toolbarSwitch);
+
+        // end-source-example
+
+        Span info = new Span("Click the EYE Button to show/hide additional toolbar components, that are placed between" +
+                             " the standard button groups");
+
+        addCard("Rich Text Editor With Custom Buttons (extended)", info, rte);
     }
 
     private void createEditorWithPlaceholders() {
