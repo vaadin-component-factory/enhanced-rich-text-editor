@@ -1362,7 +1362,7 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
             const sel = this._editor.getSelection();
             let nextPlaceholder = false;
             if (sel && sel.length === 0) {
-              const index = sel.index + 1;
+              const index = sel.index;
               const ops = this._editor.getContents(index).ops || [];
               nextPlaceholder = ops[0].insert && ops[0].insert.placeholder;
               this._editor.setSelection(index, 1);
