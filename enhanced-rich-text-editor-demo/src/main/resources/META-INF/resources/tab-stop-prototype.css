@@ -1,0 +1,75 @@
+/* The tabulator spacer */
+span.ql-tab {
+    display: inline-block;
+    min-width: 2px;       /* Prevents it from disappearing completely */
+    height: 1rem;          /* Placeholder height - don't use EM, since line height is 0 here */
+    white-space: pre;     /* Important: No line break */
+    vertical-align: bottom;
+    position: relative;
+    cursor: default;      /* Indicates that this is not editable text */
+
+    /* Fix for "Ghost Character" (\u200B):
+       Hide the text content so it doesn't affect line height or visuals,
+       but keeps the element robust for cursor navigation. */
+    font-size: 0;
+    line-height: 0;
+    overflow: hidden;
+}
+
+/* Optional: Debugging aid (shows tabs with a light gray background) */
+.debug span.ql-tab {
+    background: var(--lumo-contrast-5pct);
+    border-right: 1px dotted var(--lumo-contrast-20pct);
+}
+
+.debug span.ql-tab::before {
+    position: absolute;
+    content: '→';
+    right: 0;
+    line-height: 1;
+    font-size: var(--lumo-font-size-m);
+}
+
+/* The ruler container itself */
+.native-quill-ruler {
+    position: relative;
+    height: 24px;              /* Bar height */
+    background-color: #f8f9fa; /* Light gray */
+    border-bottom: 1px solid #ddd;
+    border-top: 1px solid #ddd;
+    box-sizing: border-box;
+    width: 100%;
+    overflow: hidden; /* Prevent markers from overflowing */
+    font-family: sans-serif;
+    font-size: 10px;
+    color: #888;
+}
+
+/* The individual marker (tick line) */
+.ruler-tick {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: #999;
+    z-index: 1;
+}
+
+/* Optional: Small triangle at the top of the marker */
+.ruler-tick::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -3px;
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    border-top: 4px solid #555;
+}
+
+/* The label (e.g., "100") */
+.ruler-label {
+    position: absolute;
+    top: 6px;
+    left: 4px; /* Right of the tick line */
+    pointer-events: none;
+}
