@@ -87,7 +87,7 @@ public class TabStopPrototypeView extends VerticalLayout {
         editorContainer.setAlignItems(Alignment.STRETCH);
         editorContainer.getStyle().set("flex", "1 0 50%").setBoxSizing(Style.BoxSizing.BORDER_BOX);
 
-        Code deltaOut = new Code(Json.parse(INITIAL_VALUE).toJson());
+        Code deltaOut = new Code(/*Json.parse(INITIAL_VALUE).toJson()*/);
         deltaOut.getStyle().setOverflow(Style.Overflow.AUTO);
 
         Checkbox showTabs = new Checkbox("Show tabs");
@@ -96,7 +96,7 @@ public class TabStopPrototypeView extends VerticalLayout {
 
         add(showTabs, editorContainer, deltaOut);
 
-        getElement().executeJs("window._nativeQuill.init($0, $1)", editorPlaceholder, INITIAL_VALUE);
+        getElement().executeJs("window._nativeQuill.init($0, $1)", editorPlaceholder, /*INITIAL_VALUE*/"");
         getElement().addEventListener("change", event -> {
             JsonObject eventData = event.getEventData();
             String string = eventData.getString("event.detail.value");

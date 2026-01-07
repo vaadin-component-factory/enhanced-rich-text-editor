@@ -35,45 +35,61 @@ span.ql-soft-break {
 }
 
 /* The ruler container itself */
+/*/* --- Ruler Styles --- */
+/* --- Ruler Styles --- */
+
 .native-quill-ruler {
     position: relative;
-    height: 24px;              /* Bar height */
-    background-color: #f8f9fa; /* Light gray */
+    height: 24px; /* Höhe kann so bleiben */
+    background-color: #f8f9fa;
     border-bottom: 1px solid #ddd;
     border-top: 1px solid #ddd;
     box-sizing: border-box;
     width: 100%;
-    overflow: hidden; /* Prevent markers from overflowing */
+    overflow: hidden;
     font-family: sans-serif;
-    font-size: 10px;
     color: #888;
+    margin-bottom: 5px;
 }
 
-/* The individual marker (tick line) */
+/* Update für .ruler-tick */
 .ruler-tick {
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 1px;
-    background-color: #999;
-    z-index: 1;
+    width: 12px;       /* Breitere Hitbox für einfacheres Klicken */
+    transform: translateX(-50%); /* Zentriert die Hitbox auf der Koordinate */
+    cursor: pointer;   /* Zeigt an: Klickbar */
+    z-index: 10;       /* Über dem Hintergrund */
+    display: flex;
+    justify-content: center; /* Zentriert die Linie und den Text im Container */
 }
 
-/* Optional: Small triangle at the top of the marker */
+/* Die sichtbare Linie ist jetzt ein Pseudo-Element in der Mitte */
 .ruler-tick::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: -3px;
-    border-left: 3px solid transparent;
-    border-right: 3px solid transparent;
-    border-top: 4px solid #555;
+    top: 12px;         /* Start unter dem Text */
+    bottom: 0;
+    width: 1px;        /* Die sichtbare Linie */
+    background-color: #999;
 }
 
-/* The label (e.g., "100") */
-.ruler-label {
-    position: absolute;
-    top: 6px;
-    left: 4px; /* Right of the tick line */
-    pointer-events: none;
+/* Hover-Effekt (optional) */
+.ruler-tick:hover::before {
+    background-color: #555;
+    width: 2px;
 }
+
+/* Text Position anpassen */
+.ruler-align-text {
+    position: absolute;
+    top: 0px;
+    font-size: 11px;
+    font-weight: bold;
+    color: #555;
+    pointer-events: none; /* Klick geht durch auf .ruler-tick */
+}
+
+/* Label ausblenden, stört beim Klicken */
+.ruler-label { display: none; }
