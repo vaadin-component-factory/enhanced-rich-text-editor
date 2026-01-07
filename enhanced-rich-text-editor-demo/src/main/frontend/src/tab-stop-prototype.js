@@ -193,7 +193,12 @@ window._nativeQuill = {
                         'enter': { key: 13, shiftKey: false, handler: function() { return true; } }
                     }
                 },
-                toolbar: [ ['bold', 'italic', 'underline'], ['clean'] ]
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{'header': 1}, {'header': 2}],
+                    [{ 'indent': '-1'}, { 'indent': '+1' }],
+                    ['clean']
+                ]
             }
         });
 
