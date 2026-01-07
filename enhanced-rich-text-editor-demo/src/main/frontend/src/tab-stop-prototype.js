@@ -2,265 +2,348 @@ import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
 
 const Embed = Quill.import('blots/embed');
+const Parchment = Quill.import('parchment');
 
 /**
- * Custom Blot for Tab Stops.
- * Renders as a span but acts like a character.
+ * 1. Custom Blot for Tab Stops.
  */
 class TabBlot extends Embed {
     static create(value) {
         let node = super.create();
         node.setAttribute('contenteditable', 'false');
+        node.innerText = '\u200B'; // Zero Width Space
 
-        // Insert Zero Width Space (\u200B).
-        // This trick ensures the browser treats the element as a distinct character
-        // for cursor navigation and deletion, preventing it from being skipped.
-        node.innerText = '\u200B';
+        // Smart Cursor Placement (Left/Right click detection)
+        node.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const quill = window._nativeQuill ? window._nativeQuill.quillInstance : null;
+            if (!quill) return;
+
+            const blot = Quill.find(node);
+            if (!blot) return;
+
+            const index = quill.getIndex(blot);
+            const rect = node.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+
+            if (clickX < rect.width / 2) {
+                quill.setSelection(index, 0, Quill.sources.USER);
+            } else {
+                quill.setSelection(index + 1, 0, Quill.sources.USER);
+            }
+        });
+
         return node;
     }
 }
-
 TabBlot.blotName = 'tab';
 TabBlot.tagName = 'span';
 TabBlot.className = 'ql-tab';
 
+/**
+ * 2. Custom Attribute for Tab Stops (Paragraph Level).
+ * FIX: Robust handling of String vs Object to ensure immediate Delta updates.
+ */
+class TabStopAttribute extends Parchment.Attributor.Attribute {
+    add(node, value) {
+        // Quill logic check:
+        // Sometimes Quill passes the already stringified value (from Delta import).
+        // Sometimes it passes the raw object (from our formatLine call).
+        if (typeof value === 'object') {
+            value = JSON.stringify(value);
+        }
+        super.add(node, value);
+    }
+
+    value(node) {
+        const val = super.value(node);
+        // Important: Return undefined if empty, so Quill knows "attribute is removed".
+        if (!val) return undefined;
+        try {
+            return JSON.parse(val);
+        } catch (e) {
+            return undefined;
+        }
+    }
+}
+const TabStops = new TabStopAttribute('tab-stops', 'data-tab-stops', {
+    scope: Parchment.Scope.BLOCK
+});
+
+/**
+ * 3. Soft Break Blot
+ */
 class SoftBreakBlot extends Embed {
     static create(value) {
         let node = super.create(value);
         node.innerHTML = '<br>';
-
         return node;
     }
 }
-
 SoftBreakBlot.blotName = 'soft-break';
 SoftBreakBlot.tagName = 'span';
 SoftBreakBlot.className = 'ql-soft-break';
 
-window._nativeQuill = {
-    EXTERNAL_TAB_STOPS: [
-        { pos: 100, align: 'left' },
-        { pos: 300, align: 'center' },
-        { pos: 500, align: 'right' }
-    ],
-    DEFAULT_TAB_SIZE: 50,
 
+/**
+ * 4. Main Logic
+ */
+window._nativeQuill = {
+    DEFAULT_TAB_SIZE: 50,
     quillInstance: null,
     updateTicking: false,
-    isBlotRegistered: false,
-    lastCommittedDelta: null, // Stores JSON string of delta for comparison
+    lastKnownRange: null,
 
-    /**
-     * Initializes the Quill instance.
-     * @param {HTMLElement} containerElement - The wrapper element from Vaadin/DOM.
-     * @param {object|string} initialValue - Delta object or JSON string to initialize.
-     */
     init: function (containerElement, initialValue) {
-        if (!this.isBlotRegistered) {
-            Quill.register(TabBlot);
-            Quill.register(SoftBreakBlot);
-            this.isBlotRegistered = true;
-        }
+        // Register formats
+        Quill.register(TabBlot);
+        Quill.register(TabStops, true);
+        Quill.register(SoftBreakBlot);
 
         this.quillInstance = new Quill(containerElement, {
             theme: 'snow',
             modules: {
                 keyboard: {
                     bindings: {
+                        // TAB Key
                         tab: {
                             key: 9,
-                            handler: (range, context) => {
+                            handler: (range) => {
                                 this.handleTabPress(range);
-                                return false; // Prevent default focus loss
+                                return false;
                             }
                         },
+                        // SHIFT + ENTER (Soft Break)
                         'softBreak': {
-                            key: 13,
-                            shiftKey: true,
+                            key: 13, shiftKey: true,
                             handler: function(range) {
                                 const quill = this.quill;
-
-                                // 1. Aktuelle Zeile (Block) und Start-Index ermitteln
-                                const [line, offset] = quill.getLine(range.index);
-
-                                // 2. Zählen, wie viele Tabs am Anfang dieser Zeile stehen
+                                const [line] = quill.getLine(range.index);
                                 let leadingTabsCount = 0;
-                                let currentBlot = line.children.head; // Der erste Teil der Zeile
-
-                                // Wir laufen durch die Blots, solange es Tabs sind
+                                let currentBlot = line.children.head;
                                 while (currentBlot && currentBlot.statics.blotName === 'tab') {
                                     leadingTabsCount++;
                                     currentBlot = currentBlot.next;
                                 }
 
-                                // 3. Den Soft-Break einfügen
                                 quill.insertEmbed(range.index, 'soft-break', true, Quill.sources.USER);
 
-                                // 4. Die gezählten Tabs direkt dahinter wieder einfügen
-                                // Wir fügen sie nacheinander ein. Index verschiebt sich jedes Mal um 1.
                                 let insertPos = range.index + 1;
-
                                 for (let i = 0; i < leadingTabsCount; i++) {
                                     quill.insertEmbed(insertPos, 'tab', true, Quill.sources.USER);
                                     insertPos++;
                                 }
 
-                                // 5. Cursor hinter die neu eingefügten Tabs setzen
-                                // Timeout ist wichtig wegen Rendering
                                 setTimeout(() => {
                                     quill.setSelection(insertPos, Quill.sources.SILENT);
-
-                                    // WICHTIG: Da wir neue Tabs eingefügt haben, müssen wir
-                                    // die Breitenberechnung triggern!
                                     window._nativeQuill.requestTabUpdate();
                                 }, 1);
-
                                 return false;
                             }
-                        }                    }
+                        },
+                        // BACKSPACE HANDLER (Fixes Merge Issues & Ctrl+Backspace)
+                        'backspace': {
+                            key: 8,
+                            handler: function(range, context) {
+                                // 1. If selection is not empty, allow default delete
+                                if (range.length > 0) return true;
+
+                                // 2. Check if we are at the start of a line
+                                const quill = this.quill;
+                                const [currentLine, offset] = quill.getLine(range.index);
+
+                                if (offset === 0 && range.index > 0) {
+                                    // We are merging with previous line.
+                                    // Find previous line to see if we need to rescue its tabs.
+                                    const [prevLine] = quill.getLine(range.index - 1);
+
+                                    if (prevLine) {
+                                        // Capture tabs from previous line BEFORE merge
+                                        const prevTabsAttr = prevLine.domNode.getAttribute('data-tab-stops');
+
+                                        // Allow the default Backspace to happen (browser merge)
+                                        setTimeout(() => {
+                                            // Restore tabs if they existed on the target line
+                                            if (prevTabsAttr) {
+                                                try {
+                                                    const stops = JSON.parse(prevTabsAttr);
+                                                    // Re-apply to the new merged line
+                                                    const newRange = quill.getSelection();
+                                                    if (newRange) {
+                                                        quill.formatLine(newRange.index, 0, 'tab-stops', stops, Quill.sources.USER);
+
+                                                        // Update UI
+                                                        if (window._nativeQuill) {
+                                                            window._nativeQuill.drawRuler();
+                                                            window._nativeQuill.requestTabUpdate();
+                                                        }
+                                                    }
+                                                } catch(e) { console.error(e); }
+                                            }
+                                        }, 0);
+                                        return true; // Let Quill/Browser do the delete
+                                    }
+                                }
+                                return true; // Default behavior for other cases
+                            }
+                        },
+                        // ENTER
+                        'enter': { key: 13, shiftKey: false, handler: function() { return true; } }
+                    }
                 },
-                toolbar: [
-                    ['bold', 'italic', 'underline'],
-                    [{'header': 1}, {'header': 2}],
-                    ['clean']
-                ]
+                toolbar: [ ['bold', 'italic', 'underline'], ['clean'] ]
             }
         });
 
-        // Initialize Content with Delta
         if (initialValue) {
             let delta = initialValue;
-            // Handle JSON string input if passed from Java as string
-            if (typeof initialValue === 'string') {
-                try {
-                    delta = JSON.parse(initialValue);
-                } catch (e) {
-                    console.error("NativeQuill: Could not parse initialValue JSON", e);
-                }
-            }
+            try { if (typeof initialValue === 'string') delta = JSON.parse(initialValue); } catch(e){}
             this.quillInstance.setContents(delta);
         }
 
-        // Store initial state as stringified JSON for easy comparison
-        this.lastCommittedDelta = JSON.stringify(this.quillInstance.getContents());
+        // --- Event Listeners ---
 
-        this.drawRuler();
-
-        // Update layouts on text change or resize
-        this.quillInstance.on('text-change', () => {
-            this.requestTabUpdate();
-        });
-
-        window.addEventListener('resize', () => {
-            this.requestTabUpdate();
-        });
-
-        // Mimic standard <input> behavior:
-        // Track value on focus, check for changes on blur, and dispatch event.
-        this.quillInstance.root.addEventListener('focus', () => {
-            this.lastCommittedDelta = JSON.stringify(this.quillInstance.getContents());
-        });
-
-        this.quillInstance.root.addEventListener('blur', () => {
-            const currentDelta = this.quillInstance.getContents();
-            const currentDeltaString = JSON.stringify(currentDelta);
-
-            if (currentDeltaString !== this.lastCommittedDelta) {
-                this.lastCommittedDelta = currentDeltaString;
-
-                const event = new CustomEvent('change', {
-                    detail: { value: currentDeltaString }, // Payload is the Delta Object
-                    bubbles: true,
-                    composed: true
-                });
-                containerElement.dispatchEvent(event);
+        // Selection Change
+        this.quillInstance.on('selection-change', (range) => {
+            if (range) {
+                this.lastKnownRange = range;
+                this.drawRuler();
             }
         });
 
+        // Text Change
+        this.quillInstance.on('text-change', (delta, oldDelta, source) => {
+            this.requestTabUpdate();
+            this.drawRuler();
+
+            // Dispatch Change Event for Frameworks (Vaadin etc)
+            const currentContent = JSON.stringify(this.quillInstance.getContents());
+            const event = new CustomEvent('change', {
+                detail: { value: currentContent },
+                bubbles: true,
+                composed: true
+            });
+            containerElement.dispatchEvent(event);
+        });
+
+        window.addEventListener('resize', () => { this.requestTabUpdate(); });
+
+        // Init Draw
+        this.drawRuler();
         this.requestTabUpdate();
+
+        // Focus Tracking
+        this.quillInstance.root.addEventListener('focus', () => {
+            // Optional: Track focus state
+        });
 
         console.log("NativeQuill initialized.");
     },
 
     /**
-     * Renders a static ruler visualization between the toolbar and the editor area.
+     * Helper: Gets tab stops from DOM directly (Robust)
      */
+    getCurrentTabStops: function() {
+        let range = this.quillInstance.getSelection({ focus: false });
+        if (!range) range = this.lastKnownRange;
+        if (!range) return [];
+
+        const [lineBlot] = this.quillInstance.getLine(range.index);
+        if (!lineBlot || !lineBlot.domNode) return [];
+
+        const attrValue = lineBlot.domNode.getAttribute('data-tab-stops');
+        try { return attrValue ? JSON.parse(attrValue) : []; } catch (e) { return []; }
+    },
+
     /**
-     * Renders a static ruler visualization with alignment icons.
+     * Helper: Writes modified tab stops back to the Delta.
+     * FIX: Uses direct Blot formatting to ensure attributes stick to the Block (\n).
      */
+    applyTabStopsToSelection: function(newStops) {
+        let range = this.quillInstance.getSelection({ focus: false });
+        if (!range) range = this.lastKnownRange;
+
+        if (range) {
+            // 1. Get the Line Blot (The Block container) directly
+            const [line, offset] = this.quillInstance.getLine(range.index);
+
+            if (line) {
+                console.log("Applying Tabs to Block Blot:", newStops);
+
+                // 2. Apply format directly to the Blot.
+                // This bypasses index calculations and forces the attribute onto the Block.
+                // It results in the DOM attribute 'data-tab-stops' being set immediately.
+                line.format('tab-stops', newStops, Quill.sources.USER);
+
+                // 3. Force Delta synchronization
+                // We call update() to make sure Quill's internal Delta reflects the DOM change.
+                this.quillInstance.update(Quill.sources.USER);
+
+                // 4. Update UI
+                this.drawRuler();
+                this.requestTabUpdate();
+
+                // 5. Dispatch Change Event manually
+                const currentContent = JSON.stringify(this.quillInstance.getContents());
+                const event = new CustomEvent('change', {
+                    detail: { value: currentContent },
+                    bubbles: true,
+                    composed: true
+                });
+                this.quillInstance.root.dispatchEvent(event);
+            }
+        } else {
+            console.warn("NativeQuill: No selection found, cannot save tab stops.");
+        }
+    },
+
     /**
-     * Renders a static ruler visualization with simple text alignment icons (L, C, R).
+     * Ruler Logic
      */
     drawRuler: function () {
         if (!this.quillInstance) return;
 
-        // Altes Lineal entfernen
+        let currentStops = JSON.parse(JSON.stringify(this.getCurrentTabStops()));
+
         const oldRuler = this.quillInstance.container.parentNode.querySelector('.native-quill-ruler');
         if (oldRuler) oldRuler.remove();
 
         const ruler = document.createElement('div');
         ruler.className = 'native-quill-ruler';
+        ruler.addEventListener('mousedown', (e) => e.preventDefault());
 
-        // ---------------------------------------------------------
-        // A) Klick auf Hintergrund -> NEUEN STOP ERSTELLEN
-        // ---------------------------------------------------------
+        // Background Click -> New Tab
         ruler.addEventListener('click', (e) => {
-            // Nur feuern, wenn man direkt auf das Lineal klickt (nicht auf einen existierenden Marker)
-            if (e.target !== ruler) return;
-
-            const newPos = e.offsetX; // Klick-Position relativ zum Lineal
-
-            // Optional: Einrasten auf 10er Schritte (Snap to grid)
-            // const snappedPos = Math.round(newPos / 10) * 10;
-
-            // Neuen Stop hinzufügen (Left ist default)
-            this.EXTERNAL_TAB_STOPS.push({ pos: newPos, align: 'left' });
-
-            // Array sortieren (wichtig für die Logik!)
-            this.EXTERNAL_TAB_STOPS.sort((a, b) => a.pos - b.pos);
-
-            // Update alles
-            this.drawRuler();
-            this.updateTabWidths();
+            if (e.target.closest('.ruler-tick')) return;
+            const newPos = e.offsetX;
+            currentStops.push({ pos: newPos, align: 'left' });
+            currentStops.sort((a, b) => a.pos - b.pos);
+            this.applyTabStopsToSelection(currentStops);
         });
 
-        // ---------------------------------------------------------
-        // B) MARKER ZEICHNEN
-        // ---------------------------------------------------------
-        this.EXTERNAL_TAB_STOPS.forEach(stopData => {
-            // Normalize Data
-            const pos = (typeof stopData === 'object') ? stopData.pos : stopData;
-            let align = (typeof stopData === 'object') ? (stopData.align || 'left') : 'left';
+        // Markers
+        currentStops.forEach((stopData, index) => {
+            const pos = stopData.pos;
+            let align = stopData.align || 'left';
 
             const tick = document.createElement('div');
             tick.className = 'ruler-tick';
             tick.style.left = pos + 'px';
 
-            // 1. Align Text (L, C, R)
             const alignText = document.createElement('span');
             alignText.className = 'ruler-align-text';
             alignText.innerText = (align === 'center') ? 'C' : (align === 'right') ? 'R' : 'L';
             tick.appendChild(alignText);
 
-            // 2. KLICK HANDLER: Zyklus L -> C -> R -> Delete
             tick.addEventListener('click', (e) => {
-                e.stopPropagation(); // Verhindert, dass das Lineal darunter reagiert
+                e.stopPropagation();
+                if (align === 'left') stopData.align = 'center';
+                else if (align === 'center') stopData.align = 'right';
+                else currentStops.splice(index, 1);
 
-                const index = this.EXTERNAL_TAB_STOPS.indexOf(stopData);
-                if (index === -1) return; // Sollte nicht passieren
-
-                if (align === 'left') {
-                    stopData.align = 'center'; // L -> C
-                } else if (align === 'center') {
-                    stopData.align = 'right';  // C -> R
-                } else {
-                    // R -> Löschen (aus Array entfernen)
-                    this.EXTERNAL_TAB_STOPS.splice(index, 1);
-                }
-
-                // Update alles
-                this.drawRuler();
-                this.updateTabWidths();
+                this.applyTabStopsToSelection(currentStops);
             });
 
             ruler.appendChild(tick);
@@ -271,25 +354,17 @@ window._nativeQuill = {
     },
 
     /**
-     * Inserts the tab blot and manages cursor position.
+     * Tab Key Handler
      */
     handleTabPress: function (range) {
         if (!this.quillInstance) return;
-
         this.quillInstance.insertEmbed(range.index, 'tab', true, Quill.sources.USER);
-
-        // A minimal timeout is required to allow the browser to render the DOM node
-        // before we attempt to set the selection after it.
         setTimeout(() => {
             this.quillInstance.setSelection(range.index + 1, Quill.sources.API);
         }, 1);
-
         this.requestTabUpdate();
     },
 
-    /**
-     * Debounces the width calculation using requestAnimationFrame.
-     */
     requestTabUpdate: function () {
         if (!this.updateTicking) {
             window.requestAnimationFrame(() => {
@@ -301,67 +376,41 @@ window._nativeQuill = {
     },
 
     /**
-     * Core Logic: Calculates and applies the correct pixel width for every tab stop
-     * based on its current X-position relative to the editor.
+     * Update Widths Logic
      */
     updateTabWidths: function() {
         if (!this.quillInstance) return;
-
-        const MIN_TAB_WIDTH = 2; // Mindestbreite
+        const MIN_TAB_WIDTH = 2;
         const editorNode = this.quillInstance.root;
         const editorRect = editorNode.getBoundingClientRect();
-
-        // Alle Tabs holen
         const tabs = Array.from(editorNode.querySelectorAll('.ql-tab'));
 
         tabs.forEach(tab => {
+            const parentBlock = tab.closest('[data-tab-stops]');
+            let localStops = [];
+            if (parentBlock && parentBlock.getAttribute('data-tab-stops')) {
+                try { localStops = JSON.parse(parentBlock.getAttribute('data-tab-stops')); } catch(e) {}
+            }
+
             const tabRect = tab.getBoundingClientRect();
-            // Startposition relativ zum Editor-Rand
             const startPos = tabRect.left - editorRect.left;
 
-            // 1. Zugehörigen Text ermitteln (Look-Ahead)
-            // Wir suchen alles, was nach dem Tab kommt, bis zum nächsten Tab, Break oder Block-Ende
             let contentWidth = 0;
             let nextNode = tab.nextSibling;
-
-            // Wir schauen uns die nächsten Nodes an (TextNodes oder Elements)
             while (nextNode) {
-                // Abbruchbedingungen:
-                // - Nächster Node ist selbst ein Tab
-                if (nextNode.classList && nextNode.classList.contains('ql-tab')) break;
-                // - Nächster Node ist ein Soft-Break (<br class="ql-soft-break">)
-                if (nextNode.classList && nextNode.classList.contains('ql-soft-break')) break;
-                // - Nächster Node ist ein Block-Element (sollte in Quill p/h1 kaum passieren inline)
-                if (nextNode.tagName && ['P', 'DIV', 'LI'].includes(nextNode.tagName)) break;
+                if (nextNode.classList && (nextNode.classList.contains('ql-tab') || nextNode.classList.contains('ql-soft-break'))) break;
+                if (nextNode.tagName && ['P', 'DIV', 'LI', 'H1'].includes(nextNode.tagName)) break;
 
-                // Messen
-                if (nextNode.nodeType === 3) { // TextNode
-                    contentWidth += this.measureTextWidth(nextNode.nodeValue, tab.parentNode);
-                } else if (nextNode.innerText) { // Element (z.B. strong, em)
-                    // Bei Elementen können wir direkt deren Breite nehmen oder auch textContent messen
-                    // Messen ist sicherer wegen padding/margin styles
-                    contentWidth += this.measureTextWidth(nextNode.innerText, nextNode);
-                }
-
+                if (nextNode.nodeType === 3) contentWidth += this.measureTextWidth(nextNode.nodeValue, tab.parentNode);
+                else if (nextNode.innerText) contentWidth += this.measureTextWidth(nextNode.innerText, nextNode);
                 nextNode = nextNode.nextSibling;
             }
 
-            // 2. Passenden Tabstop finden
-            // Wir suchen den nächsten Stop, der nach unserer Startposition kommt.
-            // Bei Right/Center muss der Stop aber "Platz" für den Text haben.
-
-            let targetStop = this.EXTERNAL_TAB_STOPS.find(stop => {
-                // Einfache Logik: Ist der Stop weiter rechts als mein Start?
-                // (Verfeinerung: Man könnte hier prüfen, ob er "erreichbar" ist)
-                return stop.pos > (startPos + MIN_TAB_WIDTH);
-            });
-
-            // Fallback: Default Grid (immer Left align)
-            let alignment = 'left';
+            let targetStop = localStops.find(stop => stop.pos > (startPos + MIN_TAB_WIDTH));
             let stopPos = 0;
+            let alignment = 'left';
 
             if (!targetStop) {
-                // Infinite Grid Logic (wie gehabt)
                 let potentialPos = Math.ceil(startPos / this.DEFAULT_TAB_SIZE) * this.DEFAULT_TAB_SIZE;
                 if (potentialPos - startPos < MIN_TAB_WIDTH) potentialPos += this.DEFAULT_TAB_SIZE;
                 stopPos = potentialPos;
@@ -370,41 +419,19 @@ window._nativeQuill = {
                 alignment = targetStop.align || 'left';
             }
 
-            // 3. Breite berechnen basierend auf Alignment
-            let widthNeeded = 0;
-            const rawDistance = stopPos - startPos;
-
-            if (alignment === 'right') {
-                // Stop ist rechts, Text wächst nach links.
-                // Tab schrumpft, je breiter der Text wird.
-                widthNeeded = rawDistance - contentWidth;
-            } else if (alignment === 'center') {
-                // Stop ist die Mitte des Textes.
-                widthNeeded = rawDistance - (contentWidth / 2);
-            } else {
-                // Left (Standard)
-                widthNeeded = rawDistance;
-            }
-
-            // Sicherheitsnetz: Tab darf nicht negativ werden oder verschwinden
-            // Wenn der Text zu lang ist, schiebt er halt über den Tabstop hinaus.
+            let widthNeeded = (stopPos - startPos);
+            if (alignment === 'right') widthNeeded -= contentWidth;
+            else if (alignment === 'center') widthNeeded -= (contentWidth / 2);
             if (widthNeeded < MIN_TAB_WIDTH) widthNeeded = MIN_TAB_WIDTH;
 
-            // DOM Update
-            const newWidthStr = widthNeeded + 'px';
-            if (tab.style.width !== newWidthStr) {
-                tab.style.width = newWidthStr;
+            if (tab.style.width !== (widthNeeded + 'px')) {
+                tab.style.width = widthNeeded + 'px';
             }
         });
     },
 
-    /**
-     * Misst die Pixelbreite eines Strings mit den exakten Styles des Editors.
-     */
     measureTextWidth: function(text, referenceNode) {
         if (!text) return 0;
-
-        // Wir erstellen (oder recyceln) ein unsichtbares Span zum Messen
         let measureSpan = document.getElementById('ql-measure-span');
         if (!measureSpan) {
             measureSpan = document.createElement('span');
@@ -415,16 +442,13 @@ window._nativeQuill = {
             measureSpan.style.left = '-9999px';
             document.body.appendChild(measureSpan);
         }
-
-        // Styles vom aktuellen Kontext kopieren (wichtig für bold/italic/font-size)
         const computedStyle = window.getComputedStyle(referenceNode);
         measureSpan.style.fontFamily = computedStyle.fontFamily;
         measureSpan.style.fontSize = computedStyle.fontSize;
         measureSpan.style.fontWeight = computedStyle.fontWeight;
         measureSpan.style.fontStyle = computedStyle.fontStyle;
         measureSpan.style.letterSpacing = computedStyle.letterSpacing;
-
         measureSpan.textContent = text;
         return measureSpan.getBoundingClientRect().width;
-    },
+    }
 };

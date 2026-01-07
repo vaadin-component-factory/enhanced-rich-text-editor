@@ -19,59 +19,11 @@ public class TabStopPrototypeView extends VerticalLayout {
 
     private static final String INITIAL_VALUE = """
             {
-              "ops": [
-                { "insert": "Bestellübersicht 2024" },
-                { "attributes": { "header": 1 }, "insert": "\\n" },
-            
-                { "attributes": { "bold": true }, "insert": "Pos." },
-                { "insert": { "tab": true } },
-                { "attributes": { "bold": true }, "insert": "Artikelbeschreibung" },
-                { "insert": { "tab": true } },
-                { "insert": { "tab": true } },
-                { "attributes": { "bold": true }, "insert": "Menge" },
-                { "insert": { "tab": true } },
-                { "attributes": { "bold": true }, "insert": "Einzelpreis" },
-                { "insert": { "tab": true } },
-                { "attributes": { "bold": true }, "insert": "Gesamt\\n" },
-            
-                { "insert": "001" },
-                { "insert": { "tab": true } },
-                { "insert": "High-End Grafikkarte RTX 4090" },
-                { "insert": { "tab": true } },
-                { "insert": "2 Stk." },
-                { "insert": { "tab": true } },
-                { "insert": "1.899,00 €" },
-                { "insert": { "tab": true } },
-                { "insert": "3.798,00 €\\n" },
-            
-                { "insert": "002" },
-                { "insert": { "tab": true } },
-                { "insert": "USB-C Kabel (2m, Schwarz)" },
-                { "insert": { "tab": true } },
-                { "insert": "50 Stk." },
-                { "insert": { "tab": true } },
-                { "insert": "9,99 €" },
-                { "insert": { "tab": true } },
-                { "insert": "499,50 €\\n" },
-            
-                { "insert": "003" },
-                { "insert": { "tab": true } },
-                { "insert": "Servicepauschale Installation" },
-                { "insert": { "tab": true } },
-                { "insert": "1 Pausch." },
-                { "insert": { "tab": true } },
-                { "insert": "150,00 €" },
-                { "insert": { "tab": true } },
-                { "insert": "150,00 €\\n" },
-            
-                { "insert": "\\nSumme Netto:" },
-                { "insert": { "tab": true } },
-                { "insert": { "tab": true } },
-                { "insert": { "tab": true } },
-                { "insert": { "tab": true } },
-                { "attributes": { "underline": true, "bold": true }, "insert": "4.447,50 €\\n" }
-              ]
+                "ops":[
+                {"insert":"111"},{"insert":{"tab":true}},{"insert":"2222"},{"insert":{"tab":true}},{"insert":"33333"},{"attributes":{"tab-stops":[{"pos":211,"align":"left"},{"pos":376,"align":"right"}]},"insert":"\\n"}
+                ]
             }
+            
             """;
 
     public TabStopPrototypeView() {
@@ -87,7 +39,7 @@ public class TabStopPrototypeView extends VerticalLayout {
         editorContainer.setAlignItems(Alignment.STRETCH);
         editorContainer.getStyle().set("flex", "1 0 50%").setBoxSizing(Style.BoxSizing.BORDER_BOX);
 
-        Code deltaOut = new Code(/*Json.parse(INITIAL_VALUE).toJson()*/);
+        Code deltaOut = new Code(Json.parse(INITIAL_VALUE).toJson());
         deltaOut.getStyle().setOverflow(Style.Overflow.AUTO);
 
         Checkbox showTabs = new Checkbox("Show tabs");
@@ -96,7 +48,7 @@ public class TabStopPrototypeView extends VerticalLayout {
 
         add(showTabs, editorContainer, deltaOut);
 
-        getElement().executeJs("window._nativeQuill.init($0, $1)", editorPlaceholder, /*INITIAL_VALUE*/"");
+        getElement().executeJs("window._nativeQuill.init($0, $1)", editorPlaceholder, INITIAL_VALUE);
         getElement().addEventListener("change", event -> {
             JsonObject eventData = event.getEventData();
             String string = eventData.getString("event.detail.value");
