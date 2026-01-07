@@ -74,17 +74,46 @@ window._nativeQuill = {
                             key: 13,
                             shiftKey: true,
                             handler: function(range) {
-                                this.quill.insertEmbed(range.index, 'soft-break', true, Quill.sources.USER);
+                                const quill = this.quill;
 
-                                // Timeout für Cursor-Fixierung
+                                // 1. Aktuelle Zeile (Block) und Start-Index ermitteln
+                                const [line, offset] = quill.getLine(range.index);
+
+                                // 2. Zählen, wie viele Tabs am Anfang dieser Zeile stehen
+                                let leadingTabsCount = 0;
+                                let currentBlot = line.children.head; // Der erste Teil der Zeile
+
+                                // Wir laufen durch die Blots, solange es Tabs sind
+                                while (currentBlot && currentBlot.statics.blotName === 'tab') {
+                                    leadingTabsCount++;
+                                    currentBlot = currentBlot.next;
+                                }
+
+                                // 3. Den Soft-Break einfügen
+                                quill.insertEmbed(range.index, 'soft-break', true, Quill.sources.USER);
+
+                                // 4. Die gezählten Tabs direkt dahinter wieder einfügen
+                                // Wir fügen sie nacheinander ein. Index verschiebt sich jedes Mal um 1.
+                                let insertPos = range.index + 1;
+
+                                for (let i = 0; i < leadingTabsCount; i++) {
+                                    quill.insertEmbed(insertPos, 'tab', true, Quill.sources.USER);
+                                    insertPos++;
+                                }
+
+                                // 5. Cursor hinter die neu eingefügten Tabs setzen
+                                // Timeout ist wichtig wegen Rendering
                                 setTimeout(() => {
-                                    this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
+                                    quill.setSelection(insertPos, Quill.sources.SILENT);
+
+                                    // WICHTIG: Da wir neue Tabs eingefügt haben, müssen wir
+                                    // die Breitenberechnung triggern!
+                                    window._nativeQuill.requestTabUpdate();
                                 }, 1);
 
                                 return false;
                             }
-                        }
-                    }
+                        }                    }
                 },
                 toolbar: [
                     ['bold', 'italic', 'underline'],
