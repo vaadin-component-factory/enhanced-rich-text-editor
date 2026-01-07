@@ -24,6 +24,18 @@ TabBlot.blotName = 'tab';
 TabBlot.tagName = 'span';
 TabBlot.className = 'ql-tab';
 
+class SoftBreakBlot extends Embed {
+    static create(value) {
+        let node = super.create(value);
+        node.innerHTML = '<br>';
+
+        return node;
+    }
+}
+
+SoftBreakBlot.blotName = 'soft-break';
+SoftBreakBlot.tagName = 'span';
+SoftBreakBlot.className = 'ql-soft-break';
 
 window._nativeQuill = {
     EXTERNAL_TAB_STOPS: [100, 250, 450, 600, 750],
@@ -42,6 +54,7 @@ window._nativeQuill = {
     init: function (containerElement, initialValue) {
         if (!this.isBlotRegistered) {
             Quill.register(TabBlot);
+            Quill.register(SoftBreakBlot);
             this.isBlotRegistered = true;
         }
 
@@ -55,6 +68,20 @@ window._nativeQuill = {
                             handler: (range, context) => {
                                 this.handleTabPress(range);
                                 return false; // Prevent default focus loss
+                            }
+                        },
+                        'softBreak': {
+                            key: 13,
+                            shiftKey: true,
+                            handler: function(range) {
+                                this.quill.insertEmbed(range.index, 'soft-break', true, Quill.sources.USER);
+
+                                // Timeout für Cursor-Fixierung
+                                setTimeout(() => {
+                                    this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
+                                }, 1);
+
+                                return false;
                             }
                         }
                     }
