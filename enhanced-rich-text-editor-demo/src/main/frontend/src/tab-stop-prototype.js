@@ -9,33 +9,37 @@ const Parchment = Quill.import('parchment');
  */
 class TabBlot extends Embed {
     static create(value) {
-        let node = super.create();
+        const node = super.create();
         node.setAttribute('contenteditable', 'false');
         node.innerText = '\u200B'; // Zero Width Space
-
-        // Smart Cursor Placement (Left/Right click detection)
-        node.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            const quill = window._nativeQuill ? window._nativeQuill.quillInstance : null;
-            if (!quill) return;
-
-            const blot = Quill.find(node);
-            if (!blot) return;
-
-            const index = quill.getIndex(blot);
-            const rect = node.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-
-            if (clickX < rect.width / 2) {
-                quill.setSelection(index, 0, Quill.sources.USER);
-            } else {
-                quill.setSelection(index + 1, 0, Quill.sources.USER);
-            }
-        });
-
         return node;
+    }
+
+    attach() {
+        super.attach();
+        // Attach event listener only once when blot is attached
+        this.domNode.addEventListener('mousedown', this.handleMouseDown);
+    }
+
+    detach() {
+        this.domNode.removeEventListener('mousedown', this.handleMouseDown);
+        super.detach();
+    }
+
+    handleMouseDown = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const quill = window._nativeQuill?.quillInstance;
+        if (!quill) return;
+
+        const index = quill.getIndex(this);
+        const rect = this.domNode.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+
+        // Smart cursor placement
+        const targetIndex = clickX < rect.width / 2 ? index : index + 1;
+        quill.setSelection(targetIndex, 0, Quill.sources.USER);
     }
 }
 TabBlot.blotName = 'tab';
@@ -44,22 +48,15 @@ TabBlot.className = 'ql-tab';
 
 /**
  * 2. Custom Attribute for Tab Stops (Paragraph Level).
- * FIX: Robust handling of String vs Object to ensure immediate Delta updates.
  */
 class TabStopAttribute extends Parchment.Attributor.Attribute {
     add(node, value) {
-        // Quill logic check:
-        // Sometimes Quill passes the already stringified value (from Delta import).
-        // Sometimes it passes the raw object (from our formatLine call).
-        if (typeof value === 'object') {
-            value = JSON.stringify(value);
-        }
-        super.add(node, value);
+        const stringValue = typeof value === 'object' ? JSON.stringify(value) : value;
+        super.add(node, stringValue);
     }
 
     value(node) {
         const val = super.value(node);
-        // Important: Return undefined if empty, so Quill knows "attribute is removed".
         if (!val) return undefined;
         try {
             return JSON.parse(val);
@@ -77,7 +74,7 @@ const TabStops = new TabStopAttribute('tab-stops', 'data-tab-stops', {
  */
 class SoftBreakBlot extends Embed {
     static create(value) {
-        let node = super.create(value);
+        const node = super.create(value);
         node.innerHTML = '<br>';
         return node;
     }
@@ -86,17 +83,90 @@ SoftBreakBlot.blotName = 'soft-break';
 SoftBreakBlot.tagName = 'span';
 SoftBreakBlot.className = 'ql-soft-break';
 
+/**
+ * 4. Text Width Measurement Utility (Singleton)
+ */
+class TextMeasurer {
+    constructor() {
+        this.measureSpan = null;
+        this.cache = new Map(); // Cache für häufige Messungen
+    }
+
+    measure(text, referenceNode) {
+        if (!text) return 0;
+
+        const computedStyle = window.getComputedStyle(referenceNode);
+        const styleKey = `${computedStyle.fontFamily}-${computedStyle.fontSize}-${computedStyle.fontWeight}`;
+        const cacheKey = `${styleKey}-${text}`;
+
+        // Cache-Lookup
+        if (this.cache.has(cacheKey)) {
+            return this.cache.get(cacheKey);
+        }
+
+        if (!this.measureSpan) {
+            this.measureSpan = document.createElement('span');
+            Object.assign(this.measureSpan.style, {
+                visibility: 'hidden',
+                position: 'absolute',
+                whiteSpace: 'pre',
+                left: '-9999px'
+            });
+            document.body.appendChild(this.measureSpan);
+        }
+
+        Object.assign(this.measureSpan.style, {
+            fontFamily: computedStyle.fontFamily,
+            fontSize: computedStyle.fontSize,
+            fontWeight: computedStyle.fontWeight,
+            fontStyle: computedStyle.fontStyle,
+            letterSpacing: computedStyle.letterSpacing
+        });
+
+        this.measureSpan.textContent = text;
+        const width = this.measureSpan.getBoundingClientRect().width;
+
+        // Cache mit Limit (max 100 Einträge)
+        if (this.cache.size > 100) {
+            const firstKey = this.cache.keys().next().value;
+            this.cache.delete(firstKey);
+        }
+        this.cache.set(cacheKey, width);
+
+        return width;
+    }
+
+    destroy() {
+        if (this.measureSpan && this.measureSpan.parentNode) {
+            this.measureSpan.parentNode.removeChild(this.measureSpan);
+        }
+        this.measureSpan = null;
+        this.cache.clear();
+    }
+}
 
 /**
- * 4. Main Logic
+ * 5. Main NativeQuill Class
  */
-window._nativeQuill = {
-    DEFAULT_TAB_SIZE: 50,
-    quillInstance: null,
-    updateTicking: false,
-    lastKnownRange: null,
+class NativeQuill {
+    constructor() {
+        this.DEFAULT_TAB_SIZE = 50;
+        this.MIN_TAB_WIDTH = 2;
+        this.quillInstance = null;
+        this.updateTicking = false;
+        this.lastKnownRange = null;
+        this.textMeasurer = new TextMeasurer();
+        this.containerElement = null;
 
-    init: function (containerElement, initialValue) {
+        // Bound methods for event listeners
+        this.boundHandleResize = this.handleResize.bind(this);
+        this.boundHandleSelectionChange = this.handleSelectionChange.bind(this);
+        this.boundHandleTextChange = this.handleTextChange.bind(this);
+    }
+
+    init(containerElement, initialValue) {
+        this.containerElement = containerElement;
+
         // Register formats
         Quill.register(TabBlot);
         Quill.register(TabStops, true);
@@ -107,7 +177,6 @@ window._nativeQuill = {
             modules: {
                 keyboard: {
                     bindings: {
-                        // TAB Key
                         tab: {
                             key: 9,
                             handler: (range) => {
@@ -115,345 +184,357 @@ window._nativeQuill = {
                                 return false;
                             }
                         },
-                        // SHIFT + ENTER (Soft Break)
-                        'softBreak': {
-                            key: 13, shiftKey: true,
-                            handler: function(range) {
-                                const quill = this.quill;
-                                const [line] = quill.getLine(range.index);
-                                let leadingTabsCount = 0;
-                                let currentBlot = line.children.head;
-                                while (currentBlot && currentBlot.statics.blotName === 'tab') {
-                                    leadingTabsCount++;
-                                    currentBlot = currentBlot.next;
-                                }
-
-                                quill.insertEmbed(range.index, 'soft-break', true, Quill.sources.USER);
-
-                                let insertPos = range.index + 1;
-                                for (let i = 0; i < leadingTabsCount; i++) {
-                                    quill.insertEmbed(insertPos, 'tab', true, Quill.sources.USER);
-                                    insertPos++;
-                                }
-
-                                setTimeout(() => {
-                                    quill.setSelection(insertPos, Quill.sources.SILENT);
-                                    window._nativeQuill.requestTabUpdate();
-                                }, 1);
-                                return false;
-                            }
+                        softBreak: {
+                            key: 13,
+                            shiftKey: true,
+                            handler: this.handleSoftBreak.bind(this)
                         },
-                        // BACKSPACE HANDLER (Fixes Merge Issues & Ctrl+Backspace)
-                        'backspace': {
+                        backspace: {
                             key: 8,
-                            handler: function(range, context) {
-                                // 1. If selection is not empty, allow default delete
-                                if (range.length > 0) return true;
-
-                                // 2. Check if we are at the start of a line
-                                const quill = this.quill;
-                                const [currentLine, offset] = quill.getLine(range.index);
-
-                                if (offset === 0 && range.index > 0) {
-                                    // We are merging with previous line.
-                                    // Find previous line to see if we need to rescue its tabs.
-                                    const [prevLine] = quill.getLine(range.index - 1);
-
-                                    if (prevLine) {
-                                        // Capture tabs from previous line BEFORE merge
-                                        const prevTabsAttr = prevLine.domNode.getAttribute('data-tab-stops');
-
-                                        // Allow the default Backspace to happen (browser merge)
-                                        setTimeout(() => {
-                                            // Restore tabs if they existed on the target line
-                                            if (prevTabsAttr) {
-                                                try {
-                                                    const stops = JSON.parse(prevTabsAttr);
-                                                    // Re-apply to the new merged line
-                                                    const newRange = quill.getSelection();
-                                                    if (newRange) {
-                                                        quill.formatLine(newRange.index, 0, 'tab-stops', stops, Quill.sources.USER);
-
-                                                        // Update UI
-                                                        if (window._nativeQuill) {
-                                                            window._nativeQuill.drawRuler();
-                                                            window._nativeQuill.requestTabUpdate();
-                                                        }
-                                                    }
-                                                } catch(e) { console.error(e); }
-                                            }
-                                        }, 0);
-                                        return true; // Let Quill/Browser do the delete
-                                    }
-                                }
-                                return true; // Default behavior for other cases
-                            }
+                            handler: this.handleBackspace.bind(this)
                         },
-                        // ENTER
-                        'enter': { key: 13, shiftKey: false, handler: function() { return true; } }
+                        enter: { key: 13, shiftKey: false, handler: () => true }
                     }
                 },
                 toolbar: [
                     ['bold', 'italic', 'underline'],
-                    [{'header': 1}, {'header': 2}],
-                    [{ 'indent': '-1'}, { 'indent': '+1' }],
+                    [{ 'header': 1 }, { 'header': 2 }],
+                    [{ 'indent': '-1' }, { 'indent': '+1' }],
                     ['clean']
                 ]
             }
         });
 
         if (initialValue) {
-            let delta = initialValue;
-            try { if (typeof initialValue === 'string') delta = JSON.parse(initialValue); } catch(e){}
-            this.quillInstance.setContents(delta);
+            const delta = typeof initialValue === 'string'
+                ? this.safeParse(initialValue)
+                : initialValue;
+            if (delta) this.quillInstance.setContents(delta);
         }
 
-        // --- Event Listeners ---
+        // Event Listeners
+        this.quillInstance.on('selection-change', this.boundHandleSelectionChange);
+        this.quillInstance.on('text-change', this.boundHandleTextChange);
+        window.addEventListener('resize', this.boundHandleResize);
 
-        // Selection Change
-        this.quillInstance.on('selection-change', (range) => {
-            if (range) {
-                this.lastKnownRange = range;
-                this.drawRuler();
-            }
-        });
-
-        // Text Change
-        this.quillInstance.on('text-change', (delta, oldDelta, source) => {
-            this.requestTabUpdate();
-            this.drawRuler();
-
-            // Dispatch Change Event for Frameworks (Vaadin etc)
-            const currentContent = JSON.stringify(this.quillInstance.getContents());
-            const event = new CustomEvent('change', {
-                detail: { value: currentContent },
-                bubbles: true,
-                composed: true
-            });
-            containerElement.dispatchEvent(event);
-        });
-
-        window.addEventListener('resize', () => { this.requestTabUpdate(); });
-
-        // Init Draw
+        // Initial draw
         this.drawRuler();
         this.requestTabUpdate();
 
-        // Focus Tracking
-        this.quillInstance.root.addEventListener('focus', () => {
-            // Optional: Track focus state
+        console.log("NativeQuill initialized.");
+    }
+
+    handleResize() {
+        this.requestTabUpdate();
+    }
+
+    handleSelectionChange(range) {
+        if (range) {
+            this.lastKnownRange = range;
+            this.drawRuler();
+        }
+    }
+
+    handleTextChange(delta, oldDelta, source) {
+        this.requestTabUpdate();
+        this.drawRuler();
+        this.dispatchChangeEvent();
+    }
+
+    handleSoftBreak(range) {
+        const quill = this.quillInstance;
+        const [line] = quill.getLine(range.index);
+
+        // Count leading tabs
+        let leadingTabsCount = 0;
+        let currentBlot = line.children.head;
+        while (currentBlot && currentBlot.statics.blotName === 'tab') {
+            leadingTabsCount++;
+            currentBlot = currentBlot.next;
+        }
+
+        quill.insertEmbed(range.index, 'soft-break', true, Quill.sources.USER);
+
+        // Insert tabs
+        let insertPos = range.index + 1;
+        for (let i = 0; i < leadingTabsCount; i++) {
+            quill.insertEmbed(insertPos, 'tab', true, Quill.sources.USER);
+            insertPos++;
+        }
+
+        // Deferred selection update
+        requestAnimationFrame(() => {
+            quill.setSelection(insertPos, Quill.sources.SILENT);
+            this.requestTabUpdate();
         });
 
-        console.log("NativeQuill initialized.");
-    },
+        return false;
+    }
 
-    /**
-     * Helper: Gets tab stops from DOM directly (Robust)
-     */
-    getCurrentTabStops: function() {
-        let range = this.quillInstance.getSelection({ focus: false });
-        if (!range) range = this.lastKnownRange;
+    handleBackspace(range, context) {
+        if (range.length > 0) return true;
+
+        const quill = this.quillInstance;
+        const [currentLine, offset] = quill.getLine(range.index);
+
+        if (offset === 0 && range.index > 0) {
+            const [prevLine] = quill.getLine(range.index - 1);
+
+            if (prevLine) {
+                const prevTabsAttr = prevLine.domNode.getAttribute('data-tab-stops');
+
+                requestAnimationFrame(() => {
+                    if (prevTabsAttr) {
+                        const stops = this.safeParse(prevTabsAttr);
+                        if (stops) {
+                            const newRange = quill.getSelection();
+                            if (newRange) {
+                                quill.formatLine(newRange.index, 0, 'tab-stops', stops, Quill.sources.USER);
+                                this.drawRuler();
+                                this.requestTabUpdate();
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        return true;
+    }
+
+    safeParse(str) {
+        try {
+            return JSON.parse(str);
+        } catch (e) {
+            console.error('Parse error:', e);
+            return null;
+        }
+    }
+
+    getCurrentTabStops() {
+        let range = this.quillInstance.getSelection({ focus: false }) || this.lastKnownRange;
         if (!range) return [];
 
         const [lineBlot] = this.quillInstance.getLine(range.index);
-        if (!lineBlot || !lineBlot.domNode) return [];
+        if (!lineBlot?.domNode) return [];
 
         const attrValue = lineBlot.domNode.getAttribute('data-tab-stops');
-        try { return attrValue ? JSON.parse(attrValue) : []; } catch (e) { return []; }
-    },
+        return attrValue ? this.safeParse(attrValue) || [] : [];
+    }
 
-    /**
-     * Helper: Writes modified tab stops back to the Delta.
-     * FIX: Uses direct Blot formatting to ensure attributes stick to the Block (\n).
-     */
-    applyTabStopsToSelection: function(newStops) {
-        let range = this.quillInstance.getSelection({ focus: false });
-        if (!range) range = this.lastKnownRange;
-
-        if (range) {
-            // 1. Get the Line Blot (The Block container) directly
-            const [line, offset] = this.quillInstance.getLine(range.index);
-
-            if (line) {
-                console.log("Applying Tabs to Block Blot:", newStops);
-
-                // 2. Apply format directly to the Blot.
-                // This bypasses index calculations and forces the attribute onto the Block.
-                // It results in the DOM attribute 'data-tab-stops' being set immediately.
-                line.format('tab-stops', newStops, Quill.sources.USER);
-
-                // 3. Force Delta synchronization
-                // We call update() to make sure Quill's internal Delta reflects the DOM change.
-                this.quillInstance.update(Quill.sources.USER);
-
-                // 4. Update UI
-                this.drawRuler();
-                this.requestTabUpdate();
-
-                // 5. Dispatch Change Event manually
-                const currentContent = JSON.stringify(this.quillInstance.getContents());
-                const event = new CustomEvent('change', {
-                    detail: { value: currentContent },
-                    bubbles: true,
-                    composed: true
-                });
-                this.quillInstance.root.dispatchEvent(event);
-            }
-        } else {
+    applyTabStopsToSelection(newStops) {
+        let range = this.quillInstance.getSelection({ focus: false }) || this.lastKnownRange;
+        if (!range) {
             console.warn("NativeQuill: No selection found, cannot save tab stops.");
+            return;
         }
-    },
 
-    /**
-     * Ruler Logic
-     */
-    drawRuler: function () {
+        const [line] = this.quillInstance.getLine(range.index);
+        if (!line) return;
+
+        console.log("Applying Tabs to Block Blot:", newStops);
+
+        line.format('tab-stops', newStops, Quill.sources.USER);
+        this.quillInstance.update(Quill.sources.USER);
+
+        this.drawRuler();
+        this.requestTabUpdate();
+        this.dispatchChangeEvent();
+    }
+
+    drawRuler() {
         if (!this.quillInstance) return;
 
-        let currentStops = JSON.parse(JSON.stringify(this.getCurrentTabStops()));
+        const currentStops = [...this.getCurrentTabStops()];
 
+        // Remove old ruler
         const oldRuler = this.quillInstance.container.parentNode.querySelector('.native-quill-ruler');
         if (oldRuler) oldRuler.remove();
 
         const ruler = document.createElement('div');
         ruler.className = 'native-quill-ruler';
+
+        // Prevent text selection
         ruler.addEventListener('mousedown', (e) => e.preventDefault());
 
-        // Background Click -> New Tab
+        // Background click -> New Tab
         ruler.addEventListener('click', (e) => {
             if (e.target.closest('.ruler-tick')) return;
-            const newPos = e.offsetX;
-            currentStops.push({ pos: newPos, align: 'left' });
+            currentStops.push({ pos: e.offsetX, align: 'left' });
             currentStops.sort((a, b) => a.pos - b.pos);
             this.applyTabStopsToSelection(currentStops);
         });
 
-        // Markers
+        // Create markers
         currentStops.forEach((stopData, index) => {
-            const pos = stopData.pos;
-            let align = stopData.align || 'left';
-
-            const tick = document.createElement('div');
-            tick.className = 'ruler-tick';
-            tick.style.left = pos + 'px';
-
-            const alignText = document.createElement('span');
-            alignText.className = 'ruler-align-text';
-            alignText.innerText = (align === 'center') ? 'C' : (align === 'right') ? 'R' : 'L';
-            tick.appendChild(alignText);
-
-            tick.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (align === 'left') stopData.align = 'center';
-                else if (align === 'center') stopData.align = 'right';
-                else currentStops.splice(index, 1);
-
-                this.applyTabStopsToSelection(currentStops);
-            });
-
+            const tick = this.createRulerTick(stopData, index, currentStops);
             ruler.appendChild(tick);
         });
 
         const qlContainer = this.quillInstance.container;
         qlContainer.parentNode.insertBefore(ruler, qlContainer);
-    },
+    }
 
-    /**
-     * Tab Key Handler
-     */
-    handleTabPress: function (range) {
+    createRulerTick(stopData, index, currentStops) {
+        const { pos, align = 'left' } = stopData;
+
+        const tick = document.createElement('div');
+        tick.className = 'ruler-tick';
+        tick.style.left = `${pos}px`;
+
+        const alignText = document.createElement('span');
+        alignText.className = 'ruler-align-text';
+        alignText.innerText = align === 'center' ? 'C' : align === 'right' ? 'R' : 'L';
+        tick.appendChild(alignText);
+
+        tick.addEventListener('click', (e) => {
+            e.stopPropagation();
+
+            if (align === 'left') {
+                stopData.align = 'center';
+            } else if (align === 'center') {
+                stopData.align = 'right';
+            } else {
+                currentStops.splice(index, 1);
+            }
+
+            this.applyTabStopsToSelection(currentStops);
+        });
+
+        return tick;
+    }
+
+    handleTabPress(range) {
         if (!this.quillInstance) return;
         this.quillInstance.insertEmbed(range.index, 'tab', true, Quill.sources.USER);
-        setTimeout(() => {
+        requestAnimationFrame(() => {
             this.quillInstance.setSelection(range.index + 1, Quill.sources.API);
-        }, 1);
+        });
         this.requestTabUpdate();
-    },
+    }
 
-    requestTabUpdate: function () {
+    requestTabUpdate() {
         if (!this.updateTicking) {
-            window.requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
                 this.updateTabWidths();
                 this.updateTicking = false;
             });
             this.updateTicking = true;
         }
-    },
+    }
 
-    /**
-     * Update Widths Logic
-     */
-    updateTabWidths: function() {
+    updateTabWidths() {
         if (!this.quillInstance) return;
-        const MIN_TAB_WIDTH = 2;
+
         const editorNode = this.quillInstance.root;
         const editorRect = editorNode.getBoundingClientRect();
-        const tabs = Array.from(editorNode.querySelectorAll('.ql-tab'));
+        const tabs = editorNode.querySelectorAll('.ql-tab');
 
         tabs.forEach(tab => {
             const parentBlock = tab.closest('[data-tab-stops]');
-            let localStops = [];
-            if (parentBlock && parentBlock.getAttribute('data-tab-stops')) {
-                try { localStops = JSON.parse(parentBlock.getAttribute('data-tab-stops')); } catch(e) {}
-            }
+            const localStops = parentBlock
+                ? this.safeParse(parentBlock.getAttribute('data-tab-stops')) || []
+                : [];
 
             const tabRect = tab.getBoundingClientRect();
             const startPos = tabRect.left - editorRect.left;
 
-            let contentWidth = 0;
-            let nextNode = tab.nextSibling;
-            while (nextNode) {
-                if (nextNode.classList && (nextNode.classList.contains('ql-tab') || nextNode.classList.contains('ql-soft-break'))) break;
-                if (nextNode.tagName && ['P', 'DIV', 'LI', 'H1'].includes(nextNode.tagName)) break;
+            const contentWidth = this.measureContentAfterTab(tab);
 
-                if (nextNode.nodeType === 3) contentWidth += this.measureTextWidth(nextNode.nodeValue, tab.parentNode);
-                else if (nextNode.innerText) contentWidth += this.measureTextWidth(nextNode.innerText, nextNode);
-                nextNode = nextNode.nextSibling;
-            }
+            const { stopPos, alignment } = this.findTargetStop(localStops, startPos);
 
-            let targetStop = localStops.find(stop => stop.pos > (startPos + MIN_TAB_WIDTH));
-            let stopPos = 0;
-            let alignment = 'left';
+            let widthNeeded = this.calculateTabWidth(stopPos, startPos, alignment, contentWidth);
 
-            if (!targetStop) {
-                let potentialPos = Math.ceil(startPos / this.DEFAULT_TAB_SIZE) * this.DEFAULT_TAB_SIZE;
-                if (potentialPos - startPos < MIN_TAB_WIDTH) potentialPos += this.DEFAULT_TAB_SIZE;
-                stopPos = potentialPos;
-            } else {
-                stopPos = targetStop.pos;
-                alignment = targetStop.align || 'left';
-            }
-
-            let widthNeeded = (stopPos - startPos);
-            if (alignment === 'right') widthNeeded -= contentWidth;
-            else if (alignment === 'center') widthNeeded -= (contentWidth / 2);
-            if (widthNeeded < MIN_TAB_WIDTH) widthNeeded = MIN_TAB_WIDTH;
-
-            if (tab.style.width !== (widthNeeded + 'px')) {
-                tab.style.width = widthNeeded + 'px';
+            // Apply width only if changed
+            const newWidth = `${widthNeeded}px`;
+            if (tab.style.width !== newWidth) {
+                tab.style.width = newWidth;
             }
         });
-    },
-
-    measureTextWidth: function(text, referenceNode) {
-        if (!text) return 0;
-        let measureSpan = document.getElementById('ql-measure-span');
-        if (!measureSpan) {
-            measureSpan = document.createElement('span');
-            measureSpan.id = 'ql-measure-span';
-            measureSpan.style.visibility = 'hidden';
-            measureSpan.style.position = 'absolute';
-            measureSpan.style.whiteSpace = 'pre';
-            measureSpan.style.left = '-9999px';
-            document.body.appendChild(measureSpan);
-        }
-        const computedStyle = window.getComputedStyle(referenceNode);
-        measureSpan.style.fontFamily = computedStyle.fontFamily;
-        measureSpan.style.fontSize = computedStyle.fontSize;
-        measureSpan.style.fontWeight = computedStyle.fontWeight;
-        measureSpan.style.fontStyle = computedStyle.fontStyle;
-        measureSpan.style.letterSpacing = computedStyle.letterSpacing;
-        measureSpan.textContent = text;
-        return measureSpan.getBoundingClientRect().width;
     }
-};
+
+    measureContentAfterTab(tab) {
+        let contentWidth = 0;
+        let nextNode = tab.nextSibling;
+
+        while (nextNode) {
+            if (nextNode.classList?.contains('ql-tab') ||
+                nextNode.classList?.contains('ql-soft-break') ||
+                ['P', 'DIV', 'LI', 'H1'].includes(nextNode.tagName)) {
+                break;
+            }
+
+            if (nextNode.nodeType === 3) {
+                contentWidth += this.textMeasurer.measure(nextNode.nodeValue, tab.parentNode);
+            } else if (nextNode.innerText) {
+                contentWidth += this.textMeasurer.measure(nextNode.innerText, nextNode);
+            }
+            nextNode = nextNode.nextSibling;
+        }
+
+        return contentWidth;
+    }
+
+    findTargetStop(localStops, startPos) {
+        const targetStop = localStops.find(stop => stop.pos > startPos + this.MIN_TAB_WIDTH);
+
+        if (!targetStop) {
+            let potentialPos = Math.ceil(startPos / this.DEFAULT_TAB_SIZE) * this.DEFAULT_TAB_SIZE;
+            if (potentialPos - startPos < this.MIN_TAB_WIDTH) {
+                potentialPos += this.DEFAULT_TAB_SIZE;
+            }
+            return { stopPos: potentialPos, alignment: 'left' };
+        }
+
+        return { stopPos: targetStop.pos, alignment: targetStop.align || 'left' };
+    }
+
+    calculateTabWidth(stopPos, startPos, alignment, contentWidth) {
+        let widthNeeded = stopPos - startPos;
+
+        if (alignment === 'right') {
+            widthNeeded -= contentWidth;
+        } else if (alignment === 'center') {
+            widthNeeded -= contentWidth / 2;
+        }
+
+        return Math.max(widthNeeded, this.MIN_TAB_WIDTH);
+    }
+
+    dispatchChangeEvent() {
+        if (!this.containerElement) return;
+
+        const currentContent = JSON.stringify(this.quillInstance.getContents());
+        const event = new CustomEvent('change', {
+            detail: { value: currentContent },
+            bubbles: true,
+            composed: true
+        });
+        this.containerElement.dispatchEvent(event);
+    }
+
+    destroy() {
+        // Remove event listeners
+        if (this.quillInstance) {
+            this.quillInstance.off('selection-change', this.boundHandleSelectionChange);
+            this.quillInstance.off('text-change', this.boundHandleTextChange);
+        }
+        window.removeEventListener('resize', this.boundHandleResize);
+
+        // Cleanup text measurer
+        this.textMeasurer.destroy();
+
+        // Remove ruler
+        const ruler = this.quillInstance?.container.parentNode.querySelector('.native-quill-ruler');
+        if (ruler) ruler.remove();
+
+        // Clear references
+        this.quillInstance = null;
+        this.containerElement = null;
+        this.lastKnownRange = null;
+
+        console.log("NativeQuill destroyed.");
+    }
+}
+
+// Export as singleton
+window._nativeQuill = new NativeQuill();

@@ -1,31 +1,68 @@
-/* --- Tab Blot Styles --- */
+/* ===========================
+   CSS Variables for Customization
+   =========================== */
+:root {
+    /* Tab Blot */
+    --nq-tab-min-width: 2px;
+    --nq-tab-height: 1rem;
+    --nq-tab-debug-bg: rgba(0, 0, 0, 0.05);
+    --nq-tab-debug-border: rgba(0, 0, 0, 0.2);
+
+    /* Ruler */
+    --nq-ruler-height: 25px;
+    --nq-ruler-bg: #f4f4f4;
+    --nq-ruler-border: #ccc;
+    --nq-ruler-margin: 5px;
+
+    /* Ruler Tick */
+    --nq-tick-width: 12px;
+    --nq-tick-line-color: #555;
+    --nq-tick-line-hover: #000;
+    --nq-tick-line-width: 1px;
+    --nq-tick-line-hover-width: 2px;
+
+    /* Alignment Text */
+    --nq-align-text-size: 10px;
+    --nq-align-text-color: #333;
+}
+
+/* ===========================
+   Tab Blot Styles
+   =========================== */
 
 /* The tabulator spacer */
 span.ql-tab {
     display: inline-block;
-    min-width: 2px;       /* Prevents it from disappearing completely */
-    height: 1rem;         /* Placeholder height - don't use EM, since line height is 0 here */
-    white-space: pre;     /* Important: No line break */
+    min-width: var(--nq-tab-min-width);
+    height: var(--nq-tab-height);
+    white-space: pre;
     vertical-align: bottom;
     position: relative;
-    cursor: default;      /* Indicates that this is not editable text */
+    cursor: default;
 
-    /* Fix for "Ghost Character" (\u200B):
-       Hide the text content so it doesn't affect line height or visuals,
-       but keeps the element robust for cursor navigation. */
+    /* Hide zero-width space without affecting layout */
     font-size: 0;
     line-height: 0;
     overflow: hidden;
+
+    /* Prevent selection artifacts */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
 }
 
+/* Soft Break - inline, no visual representation */
 span.ql-soft-break {
     display: inline;
 }
 
-/* Optional: Debugging aid (shows tabs with a light gray background) */
+/* ===========================
+   Debug Mode (Optional)
+   =========================== */
+
 .debug span.ql-tab {
-    background: var(--lumo-contrast-5pct);
-    border-right: 1px dotted var(--lumo-contrast-20pct);
+    background: var(--nq-tab-debug-bg);
+    border-right: 1px dotted var(--nq-tab-debug-border);
 }
 
 .debug span.ql-tab::before {
@@ -33,22 +70,30 @@ span.ql-soft-break {
     content: '→';
     right: 0;
     line-height: 1;
-    font-size: var(--lumo-font-size-m);
+    font-size: var(--lumo-font-size-m, 14px); /* Fallback wenn Lumo nicht verfügbar */
+    color: var(--nq-tab-debug-border);
 }
 
-/* --- Ruler Styles --- */
+/* ===========================
+   Ruler Styles
+   =========================== */
 
 /* Ruler Container */
 .native-quill-ruler {
     position: relative;
-    height: 25px;
-    background-color: #f4f4f4;
-    border-bottom: 1px solid #ccc;
-    border-top: 1px solid #ccc;
+    height: var(--nq-ruler-height);
+    background-color: var(--nq-ruler-bg);
+    border-bottom: 1px solid var(--nq-ruler-border);
+    border-top: 1px solid var(--nq-ruler-border);
     width: 100%;
     font-family: sans-serif;
-    margin-bottom: 5px;
-    cursor: text; /* Indicates clickable area */
+    margin-bottom: var(--nq-ruler-margin);
+    cursor: text;
+
+    /* Prevent text selection on ruler */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
 }
 
 /* The individual marker (Tick) */
@@ -56,10 +101,13 @@ span.ql-soft-break {
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 12px;       /* Wide click area for better UX */
-    margin-left: -6px; /* Centers the tick exactly on the pixel position */
+    width: var(--nq-tick-width);
+    margin-left: calc(var(--nq-tick-width) / -2); /* Centers the tick */
     cursor: pointer;
     z-index: 10;
+
+    /* Improve click area on touch devices */
+    touch-action: manipulation;
 }
 
 /* The visible line inside the marker */
@@ -67,29 +115,99 @@ span.ql-soft-break {
     content: '';
     position: absolute;
     left: 50%;
-    top: 10px; /* Starts below the letter */
+    top: 10px; /* Below the letter */
     bottom: 0;
-    width: 1px;
-    background-color: #555;
+    width: var(--nq-tick-line-width);
+    background-color: var(--nq-tick-line-color);
     transform: translateX(-50%);
+
+    /* Smooth transition for hover effect */
+    transition: background-color 0.15s ease, width 0.15s ease;
 }
 
 /* The alignment letter (L, C, R) */
 .ruler-align-text {
     position: absolute;
-    top: 0px;
+    top: 0;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 10px;
+    font-size: var(--nq-align-text-size);
     font-weight: bold;
-    color: #333;
+    color: var(--nq-align-text-color);
+
+    /* Ensure text is always readable */
+    line-height: 1;
+    pointer-events: none; /* Don't interfere with click detection */
 }
 
 /* Hover Effect */
 .ruler-tick:hover::before {
-    background-color: #000;
-    width: 2px;
+    background-color: var(--nq-tick-line-hover);
+    width: var(--nq-tick-line-hover-width);
 }
 
-/* Hide label, interferes with clicking */
-.ruler-label { display: none; }
+/* Active/Focus state for accessibility */
+.ruler-tick:active::before {
+    background-color: var(--nq-tick-line-hover);
+    width: var(--nq-tick-line-hover-width);
+}
+
+/* Hide label (deprecated/unused) */
+.ruler-label {
+    display: none;
+}
+
+/* ===========================
+   Accessibility Enhancements
+   =========================== */
+
+/* Focus visible for keyboard navigation */
+.ruler-tick:focus-visible {
+    outline: 2px solid #4A90E2;
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .ruler-tick::before {
+        transition: none;
+    }
+}
+
+/* ===========================
+   Dark Mode Support (Optional)
+   =========================== */
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --nq-ruler-bg: #2a2a2a;
+        --nq-ruler-border: #555;
+        --nq-tick-line-color: #bbb;
+        --nq-tick-line-hover: #fff;
+        --nq-align-text-color: #ddd;
+        --nq-tab-debug-bg: rgba(255, 255, 255, 0.1);
+        --nq-tab-debug-border: rgba(255, 255, 255, 0.3);
+    }
+}
+
+/* ===========================
+   Print Styles
+   =========================== */
+
+@media print {
+    /* Hide ruler when printing */
+    .native-quill-ruler {
+        display: none;
+    }
+
+    /* Make tabs invisible in print */
+    .debug span.ql-tab::before {
+        display: none;
+    }
+
+    span.ql-tab {
+        background: transparent;
+        border: none;
+    }
+}
