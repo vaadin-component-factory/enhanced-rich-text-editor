@@ -3,6 +3,7 @@ package com.vaadin.componentfactory;
 import com.vaadin.componentfactory.EnhancedRichTextEditor.ToolbarButton;
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
 import com.vaadin.componentfactory.erte.tables.TablesI18n;
+import com.vaadin.componentfactory.helper.SpringDemoView;
 import com.vaadin.componentfactory.toolbar.ToolbarSlot;
 import com.vaadin.componentfactory.toolbar.ToolbarSwitch;
 import com.vaadin.flow.component.Html;
@@ -35,24 +36,28 @@ import java.util.*;
 @RouteAlias("")
 @Route("enhanced-rich-text-editor")
 @JsModule("./src/sampleEditorExtensionConnector.js")
-public class EnhancedRichTextEditorView extends DemoView {
+public class EnhancedRichTextEditorView extends SpringDemoView {
+
+    public EnhancedRichTextEditorView() {
+//        doInit();
+    }
 
     @Override
     protected void initView() {
-        createDefaultEditor();
+//        createDefaultEditor();
         createEditorWithTabstops();
-        createGetValue();
-        createGetHtmlValue();
-        createEditorWithLimitedToolbar();
-        createEditorWithReadonlySections();
-        createEditorWithPlaceholders();
-        createEditorWithCustomButtons();
-        createEditorWithCustomButtonsExtended();
-        createEditorWithCustomShortcutsForStandardButtons();
-        createEditorWithIconReplacementForStandardButtons();
-        createEditorWithNoRules();
-        createEditorWithTableSample();
-        createEditorWithTableI18nSample();
+//        createGetValue();
+//        createGetHtmlValue();
+//        createEditorWithLimitedToolbar();
+//        createEditorWithReadonlySections();
+//        createEditorWithPlaceholders();
+//        createEditorWithCustomButtons();
+//        createEditorWithCustomButtonsExtended();
+//        createEditorWithCustomShortcutsForStandardButtons();
+//        createEditorWithIconReplacementForStandardButtons();
+//        createEditorWithNoRules();
+//        createEditorWithTableSample();
+//        createEditorWithTableI18nSample();
     }
 
     private void createDefaultEditor() {
