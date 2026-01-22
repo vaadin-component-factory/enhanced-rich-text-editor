@@ -7,11 +7,13 @@ span.ql-tab {
     vertical-align: bottom;
     position: relative;
     cursor: default;      /* Indicates not editable text */
-
     /* Fix for "Ghost Character" (\u200B) */
     font-size: 0;
     line-height: 0;
     overflow: hidden;
+    /* GPU acceleration for smoother updates */
+    will-change: width;
+    transform: translateZ(0);
 }
 
 span.ql-soft-break {
@@ -33,7 +35,6 @@ span.ql-soft-break {
 }
 
 /* --- Ruler Styles --- */
-
 .native-quill-ruler {
     position: relative;
     height: 24px;
@@ -46,6 +47,8 @@ span.ql-soft-break {
     font-family: sans-serif;
     color: #888;
     margin-bottom: 5px;
+    /* Improve rendering performance */
+    will-change: scroll-position;
 }
 
 /* Ruler Tick */
@@ -59,6 +62,8 @@ span.ql-soft-break {
     z-index: 10;
     display: flex;
     justify-content: center;
+    /* GPU acceleration */
+    will-change: transform;
 }
 
 /* Visual Line */
@@ -69,6 +74,9 @@ span.ql-soft-break {
     bottom: 0;
     width: 1px;
     background-color: #999;
+    /* Smooth transitions with GPU acceleration */
+    transition: width 0.1s ease, background-color 0.1s ease;
+    will-change: width, background-color;
 }
 
 /* Hover Effect */
@@ -85,6 +93,21 @@ span.ql-soft-break {
     font-weight: bold;
     color: #555;
     pointer-events: none;
+    /* Improve text rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-.ruler-label { display: none; }
+.ruler-label {
+    display: none;
+}
+
+/* Performance optimization: Reduce paint on scroll */
+.ql-editor {
+    will-change: scroll-position;
+}
+
+/* Smooth scrolling performance */
+.ql-container {
+    contain: layout style paint;
+}
