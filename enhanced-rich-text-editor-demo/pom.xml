@@ -5,7 +5,7 @@
 
     <groupId>com.vaadin.componentfactory</groupId>
     <artifactId>enhanced-rich-text-editor-demo</artifactId>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
 
     <name>Enhanced Rich Text Editor Demo</name>
 
@@ -30,6 +30,17 @@
         <spring-boot.version>3.5.9</spring-boot.version>
 
     </properties>
+
+
+    <repositories>
+        <repository>
+            <id>Vaadin Directory</id>
+            <url>https://maven.vaadin.com/vaadin-addons</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <dependencyManagement>
         <dependencies>
@@ -124,20 +135,36 @@
 
     <profiles>
         <profile>
+            <!-- Production mode is activated using -Pproduction -->
             <id>production</id>
-			<properties>
-            		<vaadin.productionMode>true</vaadin.productionMode>
-        		</properties>
             <dependencies>
+                <!-- Exclude development dependencies from production -->
                 <dependency>
                     <groupId>com.vaadin</groupId>
-                    <artifactId>flow-server-production-mode</artifactId>
-                    <version>${vaadin.version}</version>
+                    <artifactId>vaadin-core</artifactId>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>com.vaadin</groupId>
+                            <artifactId>vaadin-dev</artifactId>
+                        </exclusion>
+                    </exclusions>
                 </dependency>
             </dependencies>
 
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <version>${spring-boot.version}</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>repackage</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <groupId>com.vaadin</groupId>
                         <artifactId>vaadin-maven-plugin</artifactId>
@@ -145,9 +172,9 @@
                         <executions>
                             <execution>
                                 <goals>
-									<goal>prepare-frontend</goal>
-                                		<goal>build-frontend</goal>
+                                    <goal>build-frontend</goal>
                                 </goals>
+                                <phase>compile</phase>
                             </execution>
                         </executions>
                     </plugin>

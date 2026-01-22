@@ -21,7 +21,7 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 @SpringBootApplication
 @PageTitle("VCF Enhanced RTE Demo")
 @Theme(themeClass = Lumo.class, variant = Lumo.DARK)
-public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
+public class Application implements AppShellConfigurator {
 
 
     public static void main(String[] args) {
