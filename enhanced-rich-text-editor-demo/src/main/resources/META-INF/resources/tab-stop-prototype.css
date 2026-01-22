@@ -1,16 +1,14 @@
 /* The tabulator spacer */
 span.ql-tab {
     display: inline-block;
-    min-width: 2px;       /* Prevents it from disappearing completely */
-    height: 1rem;          /* Placeholder height - don't use EM, since line height is 0 here */
-    white-space: pre;     /* Important: No line break */
+    min-width: 2px;       /* Prevents disappearing */
+    height: 1rem;         /* Placeholder height */
+    white-space: pre;     /* No line break */
     vertical-align: bottom;
     position: relative;
-    cursor: default;      /* Indicates that this is not editable text */
+    cursor: default;      /* Indicates not editable text */
 
-    /* Fix for "Ghost Character" (\u200B):
-       Hide the text content so it doesn't affect line height or visuals,
-       but keeps the element robust for cursor navigation. */
+    /* Fix for "Ghost Character" (\u200B) */
     font-size: 0;
     line-height: 0;
     overflow: hidden;
@@ -20,7 +18,7 @@ span.ql-soft-break {
     display: inline;
 }
 
-/* Optional: Debugging aid (shows tabs with a light gray background) */
+/* Optional: Debugging aid */
 .debug span.ql-tab {
     background: var(--lumo-contrast-5pct);
     border-right: 1px dotted var(--lumo-contrast-20pct);
@@ -34,13 +32,11 @@ span.ql-soft-break {
     font-size: var(--lumo-font-size-m);
 }
 
-/* The ruler container itself */
-/*/* --- Ruler Styles --- */
 /* --- Ruler Styles --- */
 
 .native-quill-ruler {
     position: relative;
-    height: 24px; /* Höhe kann so bleiben */
+    height: 24px;
     background-color: #f8f9fa;
     border-bottom: 1px solid #ddd;
     border-top: 1px solid #ddd;
@@ -52,44 +48,43 @@ span.ql-soft-break {
     margin-bottom: 5px;
 }
 
-/* Update für .ruler-tick */
+/* Ruler Tick */
 .ruler-tick {
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 12px;       /* Breitere Hitbox für einfacheres Klicken */
-    transform: translateX(-50%); /* Zentriert die Hitbox auf der Koordinate */
-    cursor: pointer;   /* Zeigt an: Klickbar */
-    z-index: 10;       /* Über dem Hintergrund */
+    width: 12px;       /* Wider hit area */
+    transform: translateX(-50%);
+    cursor: pointer;
+    z-index: 10;
     display: flex;
-    justify-content: center; /* Zentriert die Linie und den Text im Container */
+    justify-content: center;
 }
 
-/* Die sichtbare Linie ist jetzt ein Pseudo-Element in der Mitte */
+/* Visual Line */
 .ruler-tick::before {
     content: '';
     position: absolute;
-    top: 12px;         /* Start unter dem Text */
+    top: 12px;
     bottom: 0;
-    width: 1px;        /* Die sichtbare Linie */
+    width: 1px;
     background-color: #999;
 }
 
-/* Hover-Effekt (optional) */
+/* Hover Effect */
 .ruler-tick:hover::before {
     background-color: #555;
     width: 2px;
 }
 
-/* Text Position anpassen */
+/* Alignment Text */
 .ruler-align-text {
     position: absolute;
     top: 0px;
     font-size: 11px;
     font-weight: bold;
     color: #555;
-    pointer-events: none; /* Klick geht durch auf .ruler-tick */
+    pointer-events: none;
 }
 
-/* Label ausblenden, stört beim Klicken */
 .ruler-label { display: none; }
