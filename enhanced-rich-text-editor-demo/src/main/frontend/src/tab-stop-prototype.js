@@ -380,10 +380,9 @@ window._nativeQuill = {
     },
 
     /**
-     * Core Logic for Tab Widths (OPTIMIZED)
-     * - Batch DOM measurements
-     * - Cached text width calculations
-     * - Improved line wrap detection
+     * Core Logic for Tab Widths (ITERATIVE)
+     * Processes tabs one by one: measure position → calculate width → set width → next
+     * This ensures each tab's position is measured AFTER previous tabs have been sized.
      */
     updateTabWidths: function() {
         if (!this.quillInstance) return;
@@ -393,34 +392,26 @@ window._nativeQuill = {
 
         if (tabs.length === 0) return;
 
-        // OPTIMIZATION: Batch all measurements first (avoid layout thrashing)
-        const editorRect = editorNode.getBoundingClientRect();
+        // These can be cached as they don't change during iteration
         const charWidth8 = this.measureTextWidth("0".repeat(CONSTANTS.DEFAULT_TAB_CHARS), editorNode);
         const fixedTabWidth = charWidth8 > 0 ? charWidth8 : CONSTANTS.FIXED_TAB_FALLBACK;
 
-        const measurements = tabs.map(tab => {
+        // Process each tab iteratively - measure → calculate → set → next
+        tabs.forEach(tab => {
+            // Measure position AFTER previous tabs have been sized
+            const editorRect = editorNode.getBoundingClientRect();
             const tabRect = tab.getBoundingClientRect();
             const parentBlock = tab.closest(BLOCK_SELECTOR) || tab.parentElement;
             const parentRect = parentBlock ? parentBlock.getBoundingClientRect() : null;
+            const startPos = tabRect.left - editorRect.left;
 
-            return {
-                tab,
-                rect: tabRect,
-                parentBlock,
-                parentRect,
-                startPos: tabRect.left - editorRect.left
-            };
-        });
+            // Line wrap detection
+            const isWrappedLine = this._isWrappedLine(tab, tabRect, parentBlock, parentRect);
 
-        // OPTIMIZATION: Then apply all updates (single layout pass)
-        measurements.forEach(({ tab, rect, parentBlock, parentRect, startPos }) => {
-            // Improved Line Wrap Detection
-            const isWrappedLine = this._isWrappedLine(tab, rect, parentBlock, parentRect);
-
-            // Measure Content (Look Ahead) - with caching
+            // Measure content width
             const contentWidth = this._measureContentWidth(tab);
 
-            // Find Tab Stop (only if not wrapped)
+            // Find next tab stop (only if not wrapped)
             let targetStop = null;
             if (!isWrappedLine) {
                 targetStop = this.EXTERNAL_TAB_STOPS.find(
@@ -431,7 +422,7 @@ window._nativeQuill = {
             let widthNeeded = 0;
 
             if (targetStop) {
-                // Scenario A: Valid Tab Stop found
+                // Valid tab stop found - calculate width based on alignment
                 const stopPos = targetStop.pos;
                 const alignment = targetStop.align || 'left';
                 const rawDistance = stopPos - startPos;
@@ -444,7 +435,7 @@ window._nativeQuill = {
                     widthNeeded = rawDistance;
                 }
             } else {
-                // Scenario B: No Tab Stop OR Line Wrapped
+                // No tab stop or wrapped line - use fixed width
                 widthNeeded = fixedTabWidth;
             }
 
@@ -452,11 +443,8 @@ window._nativeQuill = {
                 widthNeeded = CONSTANTS.MIN_TAB_WIDTH;
             }
 
-            // Only update if changed (avoid unnecessary reflows)
-            const newWidth = widthNeeded + 'px';
-            if (tab.style.width !== newWidth) {
-                tab.style.width = newWidth;
-            }
+            // Set width immediately (affects subsequent tab positions)
+            tab.style.width = widthNeeded + 'px';
         });
     },
 
