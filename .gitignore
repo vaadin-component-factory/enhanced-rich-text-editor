@@ -26,3 +26,6 @@ enhanced-rich-text-editor-demo/vite.generated.ts
 rebel.xml
 /enhanced-rich-text-editor-demo/src/main/bundles/dev.bundle
 /enhanced-rich-text-editor-demo/src/main/bundles/README.md
+.claude
+.devcontainer
+.mcp.json
