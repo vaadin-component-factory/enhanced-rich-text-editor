@@ -4,16 +4,27 @@ import 'quill/dist/quill.snow.css';
 const Embed = Quill.import('blots/embed');
 
 /**
- * Constants
+ * Constants for TabStop behavior
  */
 const CONSTANTS = {
+    /** Threshold-Multiplikator für Zeilenumbruch-Erkennung (0.8 = 80% der Zeilenhöhe) */
     WRAP_DETECTION_MULTIPLIER: 0.8,
+    /** Standard-Tab-Breite in Zeichen (wie MS Word) */
     DEFAULT_TAB_CHARS: 8,
+    /** Minimale Tab-Breite in Pixeln (verhindert Verschwinden) */
     MIN_TAB_WIDTH: 2,
+    /** Fallback-Breite wenn Zeichenmessung fehlschlägt */
     FIXED_TAB_FALLBACK: 50,
-    UPDATE_DEBOUNCE_MS: 16, // ~1 frame
+    /** Zero-Width-Space als Tab-Inhalt */
     ZERO_WIDTH_SPACE: '\u200B'
 };
+
+/**
+ * Block elements that break content measurement
+ */
+const BLOCK_ELEMENTS = ['P', 'DIV', 'LI', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+                        'BLOCKQUOTE', 'PRE', 'OL', 'UL', 'TABLE', 'TR', 'TD', 'TH'];
+const BLOCK_SELECTOR = BLOCK_ELEMENTS.map(t => t.toLowerCase()).join(', ');
 
 /**
  * 1. Custom Blot for Tab Stops (with cleanup)
@@ -90,14 +101,16 @@ window._nativeQuill = {
     ],
 
     quillInstance: null,
-    updateTicking: false,
     isBlotRegistered: false,
     lastCommittedDelta: null,
 
     // Optimization: Cache and reusable resources
     _textWidthCache: new Map(),
+    _styleCache: new WeakMap(),
+    _cacheMaxSize: 500,
     _measureSpan: null,
     _updateTimeout: null,
+    _rafId: null,
     _resizeHandler: null,
     _textChangeHandler: null,
 
@@ -146,10 +159,11 @@ window._nativeQuill = {
                                     insertPos++;
                                 }
 
-                                setTimeout(() => {
+                                // Use Promise.resolve() for next microtask instead of setTimeout(1)
+                                Promise.resolve().then(() => {
                                     quill.setSelection(insertPos, Quill.sources.SILENT);
                                     window._nativeQuill.requestTabUpdate();
-                                }, 1);
+                                });
                                 return false;
                             }
                         },
@@ -171,9 +185,14 @@ window._nativeQuill = {
 
         if (initialValue) {
             let delta = initialValue;
-            try {
-                if (typeof initialValue === 'string') delta = JSON.parse(initialValue);
-            } catch(e){}
+            if (typeof initialValue === 'string') {
+                try {
+                    delta = JSON.parse(initialValue);
+                } catch (e) {
+                    console.error('Invalid initial value JSON:', e);
+                    delta = { ops: [] };
+                }
+            }
             this.quillInstance.setContents(delta);
         }
 
@@ -192,7 +211,9 @@ window._nativeQuill = {
         };
 
         this._resizeHandler = () => {
-            this._textWidthCache.clear(); // Clear cache on resize
+            // Invalidate caches on resize
+            this._textWidthCache.clear();
+            this._styleCache = new WeakMap();
             this.requestTabUpdate();
         };
 
@@ -209,27 +230,36 @@ window._nativeQuill = {
      * Cleanup method to prevent memory leaks
      */
     destroy: function() {
-        // Clear timeout
+        // Clear timeout and RAF
         if (this._updateTimeout) {
             clearTimeout(this._updateTimeout);
+            this._updateTimeout = null;
+        }
+        if (this._rafId) {
+            cancelAnimationFrame(this._rafId);
+            this._rafId = null;
         }
 
         // Remove event listeners
         if (this._resizeHandler) {
             window.removeEventListener('resize', this._resizeHandler);
+            this._resizeHandler = null;
         }
 
         if (this.quillInstance && this._textChangeHandler) {
             this.quillInstance.off('text-change', this._textChangeHandler);
+            this._textChangeHandler = null;
         }
 
         // Clean up measure span
         if (this._measureSpan && this._measureSpan.parentNode) {
             this._measureSpan.parentNode.removeChild(this._measureSpan);
         }
+        this._measureSpan = null;
 
-        // Clear cache
+        // Clear caches
         this._textWidthCache.clear();
+        this._styleCache = new WeakMap();
 
         // Remove ruler
         if (this.quillInstance) {
@@ -253,6 +283,7 @@ window._nativeQuill = {
 
     /**
      * Ruler Logic using EXTERNAL_TAB_STOPS
+     * Uses event delegation to avoid memory leaks from individual tick listeners
      */
     drawRuler: function () {
         if (!this.quillInstance) return;
@@ -264,39 +295,59 @@ window._nativeQuill = {
         ruler.className = 'native-quill-ruler';
         ruler.addEventListener('mousedown', (e) => e.preventDefault());
 
-        // Background Click -> New Stop
+        // Event delegation: single click handler for ruler and all ticks
         ruler.addEventListener('click', (e) => {
-            if (e.target !== ruler) return;
-            const newPos = e.offsetX;
-            this.EXTERNAL_TAB_STOPS.push({ pos: newPos, align: 'left' });
-            this.EXTERNAL_TAB_STOPS.sort((a, b) => a.pos - b.pos);
-            this.drawRuler();
-            this.requestTabUpdate();
+            const tick = e.target.closest('.ruler-tick');
+
+            if (tick) {
+                // Click on existing tab stop marker
+                e.stopPropagation();
+                const stopIndex = parseInt(tick.dataset.stopIndex, 10);
+                const stopData = this.EXTERNAL_TAB_STOPS[stopIndex];
+
+                if (stopData) {
+                    const align = stopData.align || 'left';
+                    if (align === 'left') {
+                        stopData.align = 'center';
+                    } else if (align === 'center') {
+                        stopData.align = 'right';
+                    } else {
+                        // Fix: Use indexOf to find correct index instead of captured index
+                        const idx = this.EXTERNAL_TAB_STOPS.indexOf(stopData);
+                        if (idx !== -1) {
+                            this.EXTERNAL_TAB_STOPS.splice(idx, 1);
+                        }
+                    }
+                    this.drawRuler();
+                    this.requestTabUpdate();
+                }
+            } else if (e.target === ruler) {
+                // Click on ruler background -> New Stop
+                // Account for scroll position
+                const rulerRect = ruler.getBoundingClientRect();
+                const newPos = e.clientX - rulerRect.left + ruler.scrollLeft;
+
+                this.EXTERNAL_TAB_STOPS.push({ pos: newPos, align: 'left' });
+                this.EXTERNAL_TAB_STOPS.sort((a, b) => a.pos - b.pos);
+                this.drawRuler();
+                this.requestTabUpdate();
+            }
         });
 
-        // Markers
+        // Create markers (no individual event listeners needed)
         this.EXTERNAL_TAB_STOPS.forEach((stopData, index) => {
             const pos = stopData.pos;
-            let align = stopData.align || 'left';
+            const align = stopData.align || 'left';
 
             const tick = document.createElement('div');
             tick.className = 'ruler-tick';
             tick.style.left = pos + 'px';
+            tick.dataset.stopIndex = index;  // Store index for event delegation
 
             const alignText = document.createElement('span');
             alignText.className = 'ruler-align-text';
             alignText.innerText = (align === 'center') ? 'C' : (align === 'right') ? 'R' : 'L';
             tick.appendChild(alignText);
-
-            tick.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (align === 'left') stopData.align = 'center';
-                else if (align === 'center') stopData.align = 'right';
-                else this.EXTERNAL_TAB_STOPS.splice(index, 1);
-
-                this.drawRuler();
-                this.requestTabUpdate();
-            });
 
             ruler.appendChild(tick);
         });
@@ -308,26 +359,24 @@ window._nativeQuill = {
     handleTabPress: function (range) {
         if (!this.quillInstance) return;
         this.quillInstance.insertEmbed(range.index, 'tab', true, Quill.sources.USER);
-        setTimeout(() => {
+        // Use Promise.resolve() for next microtask instead of setTimeout(1)
+        Promise.resolve().then(() => {
             this.quillInstance.setSelection(range.index + 1, Quill.sources.API);
-        }, 1);
+        });
         this.requestTabUpdate();
     },
 
     /**
-     * Optimized: Debounced requestAnimationFrame
+     * Optimized: Pure RAF-based update (fastest response)
+     * Coalesces multiple calls into single frame
      */
     requestTabUpdate: function () {
-        clearTimeout(this._updateTimeout);
-        this._updateTimeout = setTimeout(() => {
-            if (!this.updateTicking) {
-                window.requestAnimationFrame(() => {
-                    this.updateTabWidths();
-                    this.updateTicking = false;
-                });
-                this.updateTicking = true;
-            }
-        }, CONSTANTS.UPDATE_DEBOUNCE_MS);
+        if (this._rafId) return;  // Already scheduled
+
+        this._rafId = requestAnimationFrame(() => {
+            this.updateTabWidths();
+            this._rafId = null;
+        });
     },
 
     /**
@@ -351,21 +400,22 @@ window._nativeQuill = {
 
         const measurements = tabs.map(tab => {
             const tabRect = tab.getBoundingClientRect();
-            const parentBlock = tab.closest('p, div, li, h1, h2, h3') || tab.parentElement;
+            const parentBlock = tab.closest(BLOCK_SELECTOR) || tab.parentElement;
             const parentRect = parentBlock ? parentBlock.getBoundingClientRect() : null;
 
             return {
                 tab,
                 rect: tabRect,
+                parentBlock,
                 parentRect,
                 startPos: tabRect.left - editorRect.left
             };
         });
 
         // OPTIMIZATION: Then apply all updates (single layout pass)
-        measurements.forEach(({ tab, rect, parentRect, startPos }) => {
+        measurements.forEach(({ tab, rect, parentBlock, parentRect, startPos }) => {
             // Improved Line Wrap Detection
-            const isWrappedLine = this._isWrappedLine(tab, rect, parentRect);
+            const isWrappedLine = this._isWrappedLine(tab, rect, parentBlock, parentRect);
 
             // Measure Content (Look Ahead) - with caching
             const contentWidth = this._measureContentWidth(tab);
@@ -412,36 +462,48 @@ window._nativeQuill = {
 
     /**
      * Improved line wrap detection
+     * Uses parent line-height instead of tab height (which is 0 due to CSS font-size: 0)
      */
-    _isWrappedLine: function(tab, tabRect, parentRect) {
-        if (!parentRect) return false;
+    _isWrappedLine: function(tab, tabRect, parentBlock, parentRect) {
+        if (!parentRect || !parentBlock) return false;
+
+        // Use parent line-height instead of tab height (tab has font-size: 0)
+        const computedStyle = this._getCachedStyle(parentBlock);
+        const lineHeight = parseFloat(computedStyle.lineHeight) ||
+                           parseFloat(computedStyle.fontSize) * 1.2;
 
         // Check vertical offset from parent
         const verticalOffset = tabRect.top - parentRect.top;
-        const threshold = tabRect.height * CONSTANTS.WRAP_DETECTION_MULTIPLIER;
+        const threshold = lineHeight * CONSTANTS.WRAP_DETECTION_MULTIPLIER;
 
         return verticalOffset > threshold;
     },
 
     /**
+     * Get cached computed style for an element
+     */
+    _getCachedStyle: function(element) {
+        if (!this._styleCache.has(element)) {
+            this._styleCache.set(element, window.getComputedStyle(element));
+        }
+        return this._styleCache.get(element);
+    },
+
+    /**
      * Measure content width with caching
+     * Recursively measures text nodes to handle nested inline styles
      */
     _measureContentWidth: function(tab) {
         let contentWidth = 0;
         let nextNode = tab.nextSibling;
 
         while (nextNode) {
-            if (nextNode.classList && (
-                nextNode.classList.contains('ql-tab') ||
-                nextNode.classList.contains('ql-soft-break')
-            )) break;
+            if (this._isBreakingNode(nextNode)) break;
 
-            if (nextNode.tagName && ['P', 'DIV', 'LI', 'H1', 'H2', 'H3'].includes(nextNode.tagName)) break;
-
-            if (nextNode.nodeType === 3) {
-                contentWidth += this.measureTextWidth(nextNode.nodeValue, tab.parentNode);
-            } else if (nextNode.innerText) {
-                contentWidth += this.measureTextWidth(nextNode.innerText, nextNode);
+            // Recursively collect and measure all text nodes
+            const textNodes = this._getTextNodes(nextNode);
+            for (const { text, element } of textNodes) {
+                contentWidth += this.measureTextWidth(text, element);
             }
 
             nextNode = nextNode.nextSibling;
@@ -451,17 +513,62 @@ window._nativeQuill = {
     },
 
     /**
-     * OPTIMIZED: Cached text width measurement
+     * Check if a node breaks the content measurement
+     */
+    _isBreakingNode: function(node) {
+        if (!node) return true;
+
+        // Check for tab or soft-break classes
+        if (node.classList && (
+            node.classList.contains('ql-tab') ||
+            node.classList.contains('ql-soft-break')
+        )) {
+            return true;
+        }
+
+        // Check for block elements
+        if (node.tagName && BLOCK_ELEMENTS.includes(node.tagName)) {
+            return true;
+        }
+
+        return false;
+    },
+
+    /**
+     * Recursively get all text nodes with their parent elements for style measurement
+     */
+    _getTextNodes: function(node) {
+        const result = [];
+
+        if (node.nodeType === 3) {
+            // Text node - use parent for style
+            result.push({ text: node.nodeValue, element: node.parentNode });
+        } else if (node.childNodes && node.childNodes.length > 0) {
+            // Element node - recurse into children
+            for (const child of node.childNodes) {
+                result.push(...this._getTextNodes(child));
+            }
+        }
+
+        return result;
+    },
+
+    /**
+     * OPTIMIZED: Cached text width measurement with LRU eviction
      */
     measureTextWidth: function(text, referenceNode) {
         if (!text) return 0;
 
-        const computedStyle = window.getComputedStyle(referenceNode);
+        const computedStyle = this._getCachedStyle(referenceNode);
         const cacheKey = `${text}|${computedStyle.fontFamily}|${computedStyle.fontSize}|${computedStyle.fontWeight}`;
 
-        // Check cache first
+        // Check cache first (with LRU re-ordering)
         if (this._textWidthCache.has(cacheKey)) {
-            return this._textWidthCache.get(cacheKey);
+            const value = this._textWidthCache.get(cacheKey);
+            // Re-insert for LRU ordering (most recently used goes to end)
+            this._textWidthCache.delete(cacheKey);
+            this._textWidthCache.set(cacheKey, value);
+            return value;
         }
 
         // Measure using reusable span
@@ -475,8 +582,8 @@ window._nativeQuill = {
 
         const width = measureSpan.getBoundingClientRect().width;
 
-        // Cache result (limit cache size)
-        if (this._textWidthCache.size > 1000) {
+        // LRU cache: remove oldest entry if at capacity
+        if (this._textWidthCache.size >= this._cacheMaxSize) {
             const firstKey = this._textWidthCache.keys().next().value;
             this._textWidthCache.delete(firstKey);
         }
@@ -485,3 +592,7 @@ window._nativeQuill = {
         return width;
     }
 };
+
+// TODO: RTL-Support - not implemented
+// TODO: CSS Zoom/Transform - not implemented
+// TODO: Multi-Editor-Support - Singleton pattern maintained
