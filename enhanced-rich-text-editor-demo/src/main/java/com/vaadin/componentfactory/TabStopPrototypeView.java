@@ -12,7 +12,7 @@ import elemental.json.JsonObject;
 
 @Route("tab-stop")
 @NpmPackage(value = "quill", version = "1.3.6")
-@CssImport("quill/dist/quill.snow.css") // Lädt das CSS direkt aus dem npm paket
+@CssImport("quill/dist/quill.snow.css") // Loads CSS directly from the npm package
 @StyleSheet("tab-stop-prototype.css")
 @JsModule("./src/tab-stop-prototype.js")
 public class TabStopPrototypeView extends VerticalLayout {

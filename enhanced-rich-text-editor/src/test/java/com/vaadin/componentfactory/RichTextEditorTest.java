@@ -105,13 +105,13 @@ public class RichTextEditorTest {
     @Test
     public void sanitizeOrderedListTag_OrderedListTagPersist() {
         EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
-        Assert.assertEquals("<ol>\n Foo\n</ol>", rte.sanitize("<ol>Foo</ol>"));
+        Assert.assertEquals("<ol>Foo</ol>", rte.sanitize("<ol>Foo</ol>"));
     }
 
     @Test
     public void sanitizeBulletListTag_BulletListTagPersist() {
         EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
-        Assert.assertEquals("<ul>\n Foo\n</ul>", rte.sanitize("<ul>Foo</ul>"));
+        Assert.assertEquals("<ul>Foo</ul>", rte.sanitize("<ul>Foo</ul>"));
     }
 
     @Test
@@ -162,7 +162,7 @@ public class RichTextEditorTest {
     @Test
     public void sanitizeBlockquoteTag_blockquoteTagPersist() {
         EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
-        Assert.assertEquals("<blockquote>\n Foo\n</blockquote>", rte.sanitize("<blockquote>Foo</blockquote>"));
+        Assert.assertEquals("<blockquote>Foo</blockquote>", rte.sanitize("<blockquote>Foo</blockquote>"));
     }
 
     // Code block sanitization
