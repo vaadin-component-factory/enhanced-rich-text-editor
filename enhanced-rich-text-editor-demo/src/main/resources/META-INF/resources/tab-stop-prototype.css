@@ -20,7 +20,70 @@ span.ql-soft-break {
     display: inline;
 }
 
-/* Optional: Debugging aid */
+/* ==========================================
+   WHITESPACE INDICATORS (Show Whitespace)
+   Shows special characters for tabs, soft-breaks, and paragraph ends
+   ========================================== */
+
+/* Tab indicator: → (right arrow) */
+.show-whitespace span.ql-tab::before {
+    position: absolute;
+    content: '→';
+    right: 0;
+    line-height: 1;
+    font-size: var(--lumo-font-size-m);
+    color: var(--lumo-contrast-40pct);
+    pointer-events: none;
+}
+
+/* Soft-break indicator: ↵ (return symbol) */
+.show-whitespace span.ql-soft-break::before {
+    content: '↵';
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-contrast-40pct);
+    vertical-align: baseline;
+    pointer-events: none;
+}
+
+/* Paragraph/Hard-break indicator: ¶ (pilcrow) at end of each paragraph */
+.show-whitespace .ql-editor p::after,
+.show-whitespace .ql-editor h1::after,
+.show-whitespace .ql-editor h2::after,
+.show-whitespace .ql-editor h3::after,
+.show-whitespace .ql-editor li::after,
+.show-whitespace .ql-editor blockquote::after {
+    content: '¶';
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-contrast-30pct);
+    margin-left: 2px;
+    pointer-events: none;
+}
+
+/* Auto-wrap indicator: ↲ (downward arrow with leftward tip) */
+.show-whitespace span.ql-tab.ql-auto-wrap::after {
+    position: absolute;
+    content: '↲';
+    left: 0;
+    line-height: 1;
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-contrast-40pct);
+    pointer-events: none;
+}
+
+/* ==========================================
+   TAB DEBUG (Background highlighting)
+   Shows subtle background color for tabs
+   ========================================== */
+
+.tab-debug span.ql-tab {
+    background: var(--lumo-contrast-5pct);
+    border-right: 1px dotted var(--lumo-contrast-20pct);
+}
+
+/* ==========================================
+   LEGACY: Keep .debug as alias for both features
+   (for backward compatibility)
+   ========================================== */
 .debug span.ql-tab {
     background: var(--lumo-contrast-5pct);
     border-right: 1px dotted var(--lumo-contrast-20pct);
@@ -32,6 +95,39 @@ span.ql-soft-break {
     right: 0;
     line-height: 1;
     font-size: var(--lumo-font-size-m);
+    color: var(--lumo-contrast-40pct);
+    pointer-events: none;
+}
+
+.debug span.ql-soft-break::before {
+    content: '↵';
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-contrast-40pct);
+    vertical-align: baseline;
+    pointer-events: none;
+}
+
+.debug .ql-editor p::after,
+.debug .ql-editor h1::after,
+.debug .ql-editor h2::after,
+.debug .ql-editor h3::after,
+.debug .ql-editor li::after,
+.debug .ql-editor blockquote::after {
+    content: '¶';
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-contrast-30pct);
+    margin-left: 2px;
+    pointer-events: none;
+}
+
+.debug span.ql-tab.ql-auto-wrap::after {
+    position: absolute;
+    content: '↲';
+    left: 0;
+    line-height: 1;
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-contrast-40pct);
+    pointer-events: none;
 }
 
 /* --- Ruler Styles --- */

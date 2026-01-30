@@ -90,11 +90,17 @@ public class TabStopPrototypeView extends VerticalLayout {
         Code deltaOut = new Code(/*Json.parse(INITIAL_VALUE).toJson()*/);
         deltaOut.getStyle().setOverflow(Style.Overflow.AUTO);
 
-        Checkbox showTabs = new Checkbox("Show tabs");
-        showTabs.addValueChangeListener(event -> getClassNames().set("debug", event.getValue()));
-        showTabs.setValue(true);
+        // Checkbox for whitespace indicators (→ for tabs, ↵ for soft-breaks, ¶ for paragraphs)
+        Checkbox showWhitespace = new Checkbox("Show Whitespace");
+        showWhitespace.addValueChangeListener(event -> getClassNames().set("show-whitespace", event.getValue()));
+        showWhitespace.setValue(true);
 
-        add(showTabs, editorContainer, deltaOut);
+        // Checkbox for tab debug background highlighting
+        Checkbox tabDebug = new Checkbox("Tab Debug");
+        tabDebug.addValueChangeListener(event -> getClassNames().set("tab-debug", event.getValue()));
+        tabDebug.setValue(false);
+
+        add(showWhitespace, tabDebug, editorContainer, deltaOut);
 
         getElement().executeJs("window._nativeQuill.init($0, $1)", editorPlaceholder, /*INITIAL_VALUE*/"");
         getElement().addEventListener("change", event -> {

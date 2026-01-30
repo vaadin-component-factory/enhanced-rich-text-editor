@@ -446,6 +446,13 @@ window._nativeQuill = {
             // Line wrap detection
             const isWrappedLine = this._isWrappedLine(tab, tabRect, parentBlock, parentRect);
 
+            // Mark wrapped tabs with CSS class for visual indicator
+            if (isWrappedLine) {
+                tab.classList.add('ql-auto-wrap');
+            } else {
+                tab.classList.remove('ql-auto-wrap');
+            }
+
             // Measure content width
             const contentWidth = this._measureContentWidth(tab);
 

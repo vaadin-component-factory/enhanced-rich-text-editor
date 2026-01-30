@@ -30,3 +30,4 @@ rebel.xml
 .devcontainer
 .mcp.json
 .playwright-mcp
+test-results
