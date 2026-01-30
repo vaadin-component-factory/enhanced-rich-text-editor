@@ -1809,6 +1809,26 @@ test.describe('TabStop Prototype', () => {
       expect(isChecked).toBe(false);
     });
 
+    test('Legend is visible when Show Whitespace enabled and hidden when disabled', async ({ page }) => {
+      // Legend should be visible by default (Show Whitespace is checked)
+      const legend = page.getByText('→ Tab   ↵ Soft-Break   ¶ Paragraph   ↲ Auto-Wrap');
+      await expect(legend).toBeVisible();
+
+      // Disable Show Whitespace
+      await page.locator('vaadin-checkbox:has-text("Show Whitespace") label').click();
+      await page.waitForTimeout(200);
+
+      // Legend should be hidden
+      await expect(legend).not.toBeVisible();
+
+      // Re-enable Show Whitespace
+      await page.locator('vaadin-checkbox:has-text("Show Whitespace") label').click();
+      await page.waitForTimeout(200);
+
+      // Legend should be visible again
+      await expect(legend).toBeVisible();
+    });
+
     test('Tab indicator (→) visible when Show Whitespace enabled', async ({ page }) => {
       const editor = page.locator('.ql-editor');
       await editor.click();

@@ -91,7 +91,7 @@ npx playwright test --ui
 1. Build with `mvn clean package -DskipTests`
 2. Start server with `mvn -pl enhanced-rich-text-editor-demo spring-boot:run`
 
-### Test Summary (74 Tests)
+### Test Summary (75 Tests)
 
 | Category | Tests | Description |
 |----------|-------|-------------|
@@ -117,7 +117,7 @@ npx playwright test --ui
 | **Focus/Blur** | 1 | Tab visibility after focus changes |
 | **Tab at Tabstop Boundary** | 1 | Consecutive tabs positioning |
 | **Empty Visual Line** | 1 | Soft-break on empty visual line |
-| **Whitespace Indicators** | 11 | Show/hide whitespace symbols (→↵¶↲) |
+| **Whitespace Indicators** | 12 | Show/hide whitespace symbols (→↵¶↲), legend |
 
 ### Key Soft-Break Behavior
 - Soft-break inserts at end of visual line (line stays intact)

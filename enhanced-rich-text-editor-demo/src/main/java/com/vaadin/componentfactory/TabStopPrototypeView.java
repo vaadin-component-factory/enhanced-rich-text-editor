@@ -95,12 +95,24 @@ public class TabStopPrototypeView extends VerticalLayout {
         showWhitespace.addValueChangeListener(event -> getClassNames().set("show-whitespace", event.getValue()));
         showWhitespace.setValue(true);
 
+        // Legend for whitespace indicators
+        Div legend = new Div();
+        legend.setText("→ Tab   ↵ Soft-Break   ¶ Paragraph   ↲ Auto-Wrap");
+        legend.getStyle()
+                .setFontSize("var(--lumo-font-size-s)")
+                .setColor("var(--lumo-secondary-text-color)")
+                .setMarginLeft("var(--lumo-space-l)");
+        legend.setVisible(true);
+
+        // Toggle legend visibility with checkbox
+        showWhitespace.addValueChangeListener(event -> legend.setVisible(event.getValue()));
+
         // Checkbox for tab debug background highlighting
         Checkbox tabDebug = new Checkbox("Tab Debug");
         tabDebug.addValueChangeListener(event -> getClassNames().set("tab-debug", event.getValue()));
         tabDebug.setValue(false);
 
-        add(showWhitespace, tabDebug, editorContainer, deltaOut);
+        add(showWhitespace, legend, tabDebug, editorContainer, deltaOut);
 
         getElement().executeJs("window._nativeQuill.init($0, $1)", editorPlaceholder, /*INITIAL_VALUE*/"");
         getElement().addEventListener("change", event -> {
