@@ -26,14 +26,20 @@ span.ql-soft-break {
    ========================================== */
 
 /* Tab indicator: → (right arrow) */
-.show-whitespace span.ql-tab::before {
+.show-whitespace span.ql-tab::after {
     position: absolute;
     content: '→';
-    right: 0;
-    line-height: 1;
+    right: 2px;
+    top: 0;
+    line-height: 1rem;
     font-size: var(--lumo-font-size-m);
     color: var(--lumo-contrast-40pct);
     pointer-events: none;
+}
+
+/* Auto-wrap indicator: ⮐ (return left) - prepended to the → */
+.show-whitespace span.ql-tab.ql-auto-wrap-start::after {
+    content: '⮐→';
 }
 
 /* Soft-break indicator: ↵ (return symbol) */
@@ -46,6 +52,7 @@ span.ql-soft-break {
 }
 
 /* Paragraph/Hard-break indicator: ¶ (pilcrow) at end of each paragraph (except last) */
+/* Use inline display to prevent extra line height on empty paragraphs */
 .show-whitespace .ql-editor p:not(:last-child)::after,
 .show-whitespace .ql-editor h1:not(:last-child)::after,
 .show-whitespace .ql-editor h2:not(:last-child)::after,
@@ -53,21 +60,12 @@ span.ql-soft-break {
 .show-whitespace .ql-editor li:not(:last-child)::after,
 .show-whitespace .ql-editor blockquote:not(:last-child)::after {
     content: '¶';
+    display: inline;
     font-size: var(--lumo-font-size-s);
     color: var(--lumo-contrast-30pct);
     margin-left: 2px;
     pointer-events: none;
-}
-
-/* Auto-wrap indicator: ⮐ (return left) - only on first element of wrapped line */
-.show-whitespace span.ql-tab.ql-auto-wrap-start::before {
-    position: absolute;
-    content: '⮐';
-    left: -0.8em;
-    line-height: 1;
-    font-size: var(--lumo-font-size-s);
-    color: var(--lumo-contrast-40pct);
-    pointer-events: none;
+    line-height: inherit;
 }
 
 /* ==========================================
@@ -89,14 +87,19 @@ span.ql-soft-break {
     border-right: 1px dotted var(--lumo-contrast-20pct);
 }
 
-.debug span.ql-tab::before {
+.debug span.ql-tab::after {
     position: absolute;
     content: '→';
-    right: 0;
-    line-height: 1;
+    right: 2px;
+    top: 0;
+    line-height: 1rem;
     font-size: var(--lumo-font-size-m);
     color: var(--lumo-contrast-40pct);
     pointer-events: none;
+}
+
+.debug span.ql-tab.ql-auto-wrap-start::after {
+    content: '⮐→';
 }
 
 .debug span.ql-soft-break::before {
@@ -114,20 +117,12 @@ span.ql-soft-break {
 .debug .ql-editor li:not(:last-child)::after,
 .debug .ql-editor blockquote:not(:last-child)::after {
     content: '¶';
+    display: inline;
     font-size: var(--lumo-font-size-s);
     color: var(--lumo-contrast-30pct);
     margin-left: 2px;
     pointer-events: none;
-}
-
-.debug span.ql-tab.ql-auto-wrap-start::before {
-    position: absolute;
-    content: '⮐';
-    left: -0.8em;
-    line-height: 1;
-    font-size: var(--lumo-font-size-s);
-    color: var(--lumo-contrast-40pct);
-    pointer-events: none;
+    line-height: inherit;
 }
 
 /* --- Ruler Styles --- */

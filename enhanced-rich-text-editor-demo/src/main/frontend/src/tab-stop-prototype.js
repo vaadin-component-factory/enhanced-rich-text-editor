@@ -513,24 +513,13 @@ window._nativeQuill = {
 
     /**
      * Improved line wrap detection
-     * Uses parent line-height instead of tab height (which is 0 due to CSS font-size: 0)
+     * Returns true ONLY for automatic browser text wrapping.
+     * Returns false for:
+     * - First line of paragraph
+     * - Lines after soft-break (these should use tabstops)
      */
     _isWrappedLine: function(tab, tabRect, parentBlock, parentRect) {
         if (!parentRect || !parentBlock) return false;
-
-        // Check if a soft-break exists before this tab (in the same visual line)
-        // If yes, it's NOT an automatic wrap - tabs should use tabstops
-        let prevSibling = tab.previousSibling;
-        while (prevSibling) {
-            if (prevSibling.classList && prevSibling.classList.contains('ql-soft-break')) {
-                // Soft-break found - check if it's on the same vertical position
-                const softBreakRect = prevSibling.getBoundingClientRect();
-                if (Math.abs(softBreakRect.top - tabRect.top) < 5) {
-                    return false;  // Soft-break on same line -> not an automatic wrap
-                }
-            }
-            prevSibling = prevSibling.previousSibling;
-        }
 
         // Use parent line-height instead of tab height (tab has font-size: 0)
         const computedStyle = this._getCachedStyle(parentBlock);
@@ -541,7 +530,31 @@ window._nativeQuill = {
         const verticalOffset = tabRect.top - parentRect.top;
         const threshold = lineHeight * CONSTANTS.WRAP_DETECTION_MULTIPLIER;
 
-        return verticalOffset > threshold;
+        // If on first line (no vertical offset), not a wrapped line
+        if (verticalOffset <= threshold) {
+            return false;
+        }
+
+        // We're on a subsequent line - check if it's after a soft-break
+        // If a soft-break exists immediately before this tab (or chain of tabs),
+        // then this is NOT an auto-wrap - tabs should use tabstops
+        let prevSibling = tab.previousSibling;
+        while (prevSibling) {
+            if (prevSibling.classList && prevSibling.classList.contains('ql-soft-break')) {
+                // Soft-break found before this tab - NOT an auto-wrap
+                return false;
+            }
+            // If we hit another tab, continue checking (we might be in a chain of tabs after soft-break)
+            if (prevSibling.classList && prevSibling.classList.contains('ql-tab')) {
+                prevSibling = prevSibling.previousSibling;
+                continue;
+            }
+            // If we hit any other element, stop looking
+            break;
+        }
+
+        // No soft-break found before this tab chain - it's an auto-wrap
+        return true;
     },
 
     /**
