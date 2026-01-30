@@ -97,7 +97,7 @@ public class TabStopPrototypeView extends VerticalLayout {
 
         // Legend for whitespace indicators
         Div legend = new Div();
-        legend.setText("→ Tab   ↵ Soft-Break   ¶ Paragraph   ↲ Auto-Wrap");
+        legend.setText("→ Tab   ↵ Soft-Break   ¶ Paragraph   ⮐ Auto-Wrap");
         legend.getStyle()
                 .setFontSize("var(--lumo-font-size-s)")
                 .setColor("var(--lumo-secondary-text-color)")

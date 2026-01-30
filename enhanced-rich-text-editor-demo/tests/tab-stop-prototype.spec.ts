@@ -1811,7 +1811,7 @@ test.describe('TabStop Prototype', () => {
 
     test('Legend is visible when Show Whitespace enabled and hidden when disabled', async ({ page }) => {
       // Legend should be visible by default (Show Whitespace is checked)
-      const legend = page.getByText('→ Tab   ↵ Soft-Break   ¶ Paragraph   ↲ Auto-Wrap');
+      const legend = page.getByText('→ Tab   ↵ Soft-Break   ¶ Paragraph   ⮐ Auto-Wrap');
       await expect(legend).toBeVisible();
 
       // Disable Show Whitespace
@@ -2005,7 +2005,7 @@ test.describe('TabStop Prototype', () => {
       await page.waitForTimeout(300);
 
       // Check if any tab has the auto-wrap class
-      const wrappedTabs = await page.locator('.ql-tab.ql-auto-wrap').all();
+      const wrappedTabs = await page.locator('.ql-tab.ql-auto-wrap-start').all();
 
       // Note: This test checks that the class mechanism works
       // The actual wrapping depends on viewport width and text length
@@ -2028,7 +2028,7 @@ test.describe('TabStop Prototype', () => {
       expect(tabs.length).toBe(1);
 
       // Check the tab doesn't have auto-wrap class
-      const hasAutoWrap = await tabs[0].evaluate(el => el.classList.contains('ql-auto-wrap'));
+      const hasAutoWrap = await tabs[0].evaluate(el => el.classList.contains('ql-auto-wrap-start'));
       expect(hasAutoWrap).toBe(false);
     });
   });

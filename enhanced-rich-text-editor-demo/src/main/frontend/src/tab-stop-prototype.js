@@ -434,6 +434,10 @@ window._nativeQuill = {
         const charWidth8 = this.measureTextWidth("0".repeat(CONSTANTS.DEFAULT_TAB_CHARS), editorNode);
         const fixedTabWidth = charWidth8 > 0 ? charWidth8 : CONSTANTS.FIXED_TAB_FALLBACK;
 
+        // Track visual lines per block to detect auto-wrap starts
+        // Key: parentBlock, Value: Set of top positions already seen
+        const blockVisualLines = new Map();
+
         // Process each tab iteratively - measure → calculate → set → next
         tabs.forEach(tab => {
             // Measure position AFTER previous tabs have been sized
@@ -446,11 +450,25 @@ window._nativeQuill = {
             // Line wrap detection
             const isWrappedLine = this._isWrappedLine(tab, tabRect, parentBlock, parentRect);
 
-            // Mark wrapped tabs with CSS class for visual indicator
-            if (isWrappedLine) {
-                tab.classList.add('ql-auto-wrap');
-            } else {
-                tab.classList.remove('ql-auto-wrap');
+            // Remove old auto-wrap class
+            tab.classList.remove('ql-auto-wrap-start');
+
+            // Check if this is the FIRST element on a new auto-wrapped line
+            if (isWrappedLine && parentBlock) {
+                // Round top position to handle sub-pixel differences
+                const topPos = Math.round(tabRect.top);
+
+                if (!blockVisualLines.has(parentBlock)) {
+                    blockVisualLines.set(parentBlock, new Set());
+                }
+
+                const seenTops = blockVisualLines.get(parentBlock);
+
+                // If this top position is new, this tab starts a new visual line
+                if (!seenTops.has(topPos)) {
+                    seenTops.add(topPos);
+                    tab.classList.add('ql-auto-wrap-start');
+                }
             }
 
             // Measure content width

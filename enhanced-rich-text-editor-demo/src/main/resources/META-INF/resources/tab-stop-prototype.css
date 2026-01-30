@@ -45,13 +45,13 @@ span.ql-soft-break {
     pointer-events: none;
 }
 
-/* Paragraph/Hard-break indicator: ¶ (pilcrow) at end of each paragraph */
-.show-whitespace .ql-editor p::after,
-.show-whitespace .ql-editor h1::after,
-.show-whitespace .ql-editor h2::after,
-.show-whitespace .ql-editor h3::after,
-.show-whitespace .ql-editor li::after,
-.show-whitespace .ql-editor blockquote::after {
+/* Paragraph/Hard-break indicator: ¶ (pilcrow) at end of each paragraph (except last) */
+.show-whitespace .ql-editor p:not(:last-child)::after,
+.show-whitespace .ql-editor h1:not(:last-child)::after,
+.show-whitespace .ql-editor h2:not(:last-child)::after,
+.show-whitespace .ql-editor h3:not(:last-child)::after,
+.show-whitespace .ql-editor li:not(:last-child)::after,
+.show-whitespace .ql-editor blockquote:not(:last-child)::after {
     content: '¶';
     font-size: var(--lumo-font-size-s);
     color: var(--lumo-contrast-30pct);
@@ -59,11 +59,11 @@ span.ql-soft-break {
     pointer-events: none;
 }
 
-/* Auto-wrap indicator: ↲ (downward arrow with leftward tip) */
-.show-whitespace span.ql-tab.ql-auto-wrap::after {
+/* Auto-wrap indicator: ⮐ (return left) - only on first element of wrapped line */
+.show-whitespace span.ql-tab.ql-auto-wrap-start::before {
     position: absolute;
-    content: '↲';
-    left: 0;
+    content: '⮐';
+    left: -0.8em;
     line-height: 1;
     font-size: var(--lumo-font-size-s);
     color: var(--lumo-contrast-40pct);
@@ -107,12 +107,12 @@ span.ql-soft-break {
     pointer-events: none;
 }
 
-.debug .ql-editor p::after,
-.debug .ql-editor h1::after,
-.debug .ql-editor h2::after,
-.debug .ql-editor h3::after,
-.debug .ql-editor li::after,
-.debug .ql-editor blockquote::after {
+.debug .ql-editor p:not(:last-child)::after,
+.debug .ql-editor h1:not(:last-child)::after,
+.debug .ql-editor h2:not(:last-child)::after,
+.debug .ql-editor h3:not(:last-child)::after,
+.debug .ql-editor li:not(:last-child)::after,
+.debug .ql-editor blockquote:not(:last-child)::after {
     content: '¶';
     font-size: var(--lumo-font-size-s);
     color: var(--lumo-contrast-30pct);
@@ -120,10 +120,10 @@ span.ql-soft-break {
     pointer-events: none;
 }
 
-.debug span.ql-tab.ql-auto-wrap::after {
+.debug span.ql-tab.ql-auto-wrap-start::before {
     position: absolute;
-    content: '↲';
-    left: 0;
+    content: '⮐';
+    left: -0.8em;
     line-height: 1;
     font-size: var(--lumo-font-size-s);
     color: var(--lumo-contrast-40pct);
