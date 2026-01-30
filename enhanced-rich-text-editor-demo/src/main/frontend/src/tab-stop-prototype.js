@@ -7,13 +7,13 @@ const Embed = Quill.import('blots/embed');
  * Constants for TabStop behavior
  */
 const CONSTANTS = {
-    /** Threshold-Multiplikator für Zeilenumbruch-Erkennung (0.8 = 80% der Zeilenhöhe) */
+    /** Threshold multiplier for line wrap detection (0.8 = 80% of line height) */
     WRAP_DETECTION_MULTIPLIER: 0.8,
     /** Standard-Tab-Breite in Zeichen (wie MS Word) */
     DEFAULT_TAB_CHARS: 8,
     /** Minimale Tab-Breite in Pixeln (verhindert Verschwinden) */
     MIN_TAB_WIDTH: 2,
-    /** Fallback-Breite wenn Zeichenmessung fehlschlägt */
+    /** Fallback width when character measurement fails */
     FIXED_TAB_FALLBACK: 50,
     /** Zero-Width-Space als Tab-Inhalt */
     ZERO_WIDTH_SPACE: '\u200B'
@@ -142,19 +142,57 @@ window._nativeQuill = {
                             shiftKey: true,
                             handler: function(range) {
                                 const quill = this.quill;
-                                const [line] = quill.getLine(range.index);
-                                let leadingTabsCount = 0;
-                                let currentBlot = line.children.head;
+                                const [line, offset] = quill.getLine(range.index);
+                                const lineStartIndex = quill.getIndex(line);
 
-                                while (currentBlot && currentBlot.statics.blotName === 'tab') {
-                                    leadingTabsCount++;
+                                // Find boundaries of the VISUAL line (between soft-breaks)
+                                let currentBlot = line.children.head;
+                                let posInLine = 0;
+                                let visualLineStart = 0;  // Position after the last soft-break BEFORE cursor
+                                let visualLineEnd = line.length() - 1;  // Block end (without \n)
+
+                                // Traverse all blots to find visual line boundaries
+                                while (currentBlot) {
+                                    if (currentBlot.statics.blotName === 'soft-break') {
+                                        if (posInLine < offset) {
+                                            // Soft-break BEFORE cursor -> start of visual line
+                                            visualLineStart = posInLine + 1;
+                                        } else {
+                                            // First soft-break AFTER cursor -> end of visual line
+                                            visualLineEnd = posInLine;
+                                            break;
+                                        }
+                                    }
+                                    posInLine += currentBlot.length();
                                     currentBlot = currentBlot.next;
                                 }
 
-                                quill.insertEmbed(range.index, 'soft-break', true, Quill.sources.USER);
+                                // Count tabs between visualLineStart and offset (cursor position)
+                                currentBlot = line.children.head;
+                                posInLine = 0;
+                                let tabsBeforeCursor = 0;
 
-                                let insertPos = range.index + 1;
-                                for (let i = 0; i < leadingTabsCount; i++) {
+                                while (currentBlot && posInLine < offset) {
+                                    if (posInLine >= visualLineStart && currentBlot.statics.blotName === 'tab') {
+                                        tabsBeforeCursor++;
+                                    }
+                                    posInLine += currentBlot.length();
+                                    currentBlot = currentBlot.next;
+                                }
+
+                                // Insert soft-break at end of VISUAL line (not at cursor position!)
+                                // This keeps the current visual line intact
+                                const insertIndex = lineStartIndex + visualLineEnd;
+                                quill.insertEmbed(insertIndex, 'soft-break', true, Quill.sources.USER);
+
+                                // Limit tabs to copy: max = number of defined tabstops
+                                // If cursor is at an "overflow" tab position, only copy up to tabstop count
+                                const maxTabstops = window._nativeQuill.EXTERNAL_TAB_STOPS.length;
+                                const tabsToCopy = Math.min(tabsBeforeCursor, maxTabstops);
+
+                                // Insert tabs after the soft-break
+                                let insertPos = insertIndex + 1;
+                                for (let i = 0; i < tabsToCopy; i++) {
                                     quill.insertEmbed(insertPos, 'tab', true, Quill.sources.USER);
                                     insertPos++;
                                 }
@@ -454,6 +492,20 @@ window._nativeQuill = {
      */
     _isWrappedLine: function(tab, tabRect, parentBlock, parentRect) {
         if (!parentRect || !parentBlock) return false;
+
+        // Check if a soft-break exists before this tab (in the same visual line)
+        // If yes, it's NOT an automatic wrap - tabs should use tabstops
+        let prevSibling = tab.previousSibling;
+        while (prevSibling) {
+            if (prevSibling.classList && prevSibling.classList.contains('ql-soft-break')) {
+                // Soft-break found - check if it's on the same vertical position
+                const softBreakRect = prevSibling.getBoundingClientRect();
+                if (Math.abs(softBreakRect.top - tabRect.top) < 5) {
+                    return false;  // Soft-break on same line -> not an automatic wrap
+                }
+            }
+            prevSibling = prevSibling.previousSibling;
+        }
 
         // Use parent line-height instead of tab height (tab has font-size: 0)
         const computedStyle = this._getCachedStyle(parentBlock);
