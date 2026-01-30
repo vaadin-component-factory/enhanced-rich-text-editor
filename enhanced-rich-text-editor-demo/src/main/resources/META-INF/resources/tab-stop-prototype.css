@@ -52,7 +52,16 @@ span.ql-soft-break {
 }
 
 /* Paragraph/Hard-break indicator: ¶ (pilcrow) at end of each paragraph (except last) */
-/* Use inline display to prevent extra line height on empty paragraphs */
+/* Use absolute positioning to prevent extra line height on empty paragraphs */
+.show-whitespace .ql-editor p:not(:last-child),
+.show-whitespace .ql-editor h1:not(:last-child),
+.show-whitespace .ql-editor h2:not(:last-child),
+.show-whitespace .ql-editor h3:not(:last-child),
+.show-whitespace .ql-editor li:not(:last-child),
+.show-whitespace .ql-editor blockquote:not(:last-child) {
+    position: relative;
+}
+
 .show-whitespace .ql-editor p:not(:last-child)::after,
 .show-whitespace .ql-editor h1:not(:last-child)::after,
 .show-whitespace .ql-editor h2:not(:last-child)::after,
@@ -60,12 +69,12 @@ span.ql-soft-break {
 .show-whitespace .ql-editor li:not(:last-child)::after,
 .show-whitespace .ql-editor blockquote:not(:last-child)::after {
     content: '¶';
-    display: inline;
+    position: absolute;
+    bottom: 0;
     font-size: var(--lumo-font-size-s);
     color: var(--lumo-contrast-30pct);
-    margin-left: 2px;
     pointer-events: none;
-    line-height: inherit;
+    margin-left: 2px;
 }
 
 /* ==========================================
@@ -110,6 +119,15 @@ span.ql-soft-break {
     pointer-events: none;
 }
 
+.debug .ql-editor p:not(:last-child),
+.debug .ql-editor h1:not(:last-child),
+.debug .ql-editor h2:not(:last-child),
+.debug .ql-editor h3:not(:last-child),
+.debug .ql-editor li:not(:last-child),
+.debug .ql-editor blockquote:not(:last-child) {
+    position: relative;
+}
+
 .debug .ql-editor p:not(:last-child)::after,
 .debug .ql-editor h1:not(:last-child)::after,
 .debug .ql-editor h2:not(:last-child)::after,
@@ -117,12 +135,12 @@ span.ql-soft-break {
 .debug .ql-editor li:not(:last-child)::after,
 .debug .ql-editor blockquote:not(:last-child)::after {
     content: '¶';
-    display: inline;
+    position: absolute;
+    bottom: 0;
     font-size: var(--lumo-font-size-s);
     color: var(--lumo-contrast-30pct);
-    margin-left: 2px;
     pointer-events: none;
-    line-height: inherit;
+    margin-left: 2px;
 }
 
 /* --- Ruler Styles --- */
