@@ -180,9 +180,9 @@ window._nativeQuill = {
                                     currentBlot = currentBlot.next;
                                 }
 
-                                // Insert soft-break at end of VISUAL line (not at cursor position!)
-                                // This keeps the current visual line intact
-                                const insertIndex = lineStartIndex + visualLineEnd;
+                                // Insert soft-break at CURSOR position
+                                // Content after cursor moves to the new visual line
+                                const insertIndex = lineStartIndex + offset;
                                 quill.insertEmbed(insertIndex, 'soft-break', true, Quill.sources.USER);
 
                                 // Limit tabs to copy: max = number of defined tabstops
@@ -536,24 +536,27 @@ window._nativeQuill = {
         }
 
         // We're on a subsequent line - check if it's after a soft-break
-        // If a soft-break exists immediately before this tab (or chain of tabs),
-        // then this is NOT an auto-wrap - tabs should use tabstops
+        // Traverse ALL previous siblings looking for a soft-break on the same visual line.
+        // If we find an element on a different visual line first, it's genuine auto-wrap.
         let prevSibling = tab.previousSibling;
         while (prevSibling) {
-            if (prevSibling.classList && prevSibling.classList.contains('ql-soft-break')) {
-                // Soft-break found before this tab - NOT an auto-wrap
-                return false;
+            if (prevSibling.nodeType === 1) { // Element node
+                if (prevSibling.classList && prevSibling.classList.contains('ql-soft-break')) {
+                    // Soft-break found - this line started from a soft-break, NOT auto-wrap
+                    return false;
+                }
+                // Check if this element is on a different visual line
+                const siblingRect = prevSibling.getBoundingClientRect();
+                if (Math.abs(siblingRect.top - tabRect.top) > threshold) {
+                    // Crossed to a different visual line without finding soft-break → auto-wrap
+                    return true;
+                }
             }
-            // If we hit another tab, continue checking (we might be in a chain of tabs after soft-break)
-            if (prevSibling.classList && prevSibling.classList.contains('ql-tab')) {
-                prevSibling = prevSibling.previousSibling;
-                continue;
-            }
-            // If we hit any other element, stop looking
-            break;
+            // Continue through text nodes and same-line elements
+            prevSibling = prevSibling.previousSibling;
         }
 
-        // No soft-break found before this tab chain - it's an auto-wrap
+        // Reached start of block without finding soft-break → auto-wrap
         return true;
     },
 
