@@ -72,7 +72,6 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
   const TAB_DEFAULT_TAB_CHARS = 8;
   const TAB_MIN_TAB_WIDTH = 2;
   const TAB_FIXED_TAB_FALLBACK = 50;
-  const TAB_ZERO_WIDTH_SPACE = '\u200B';
   const TAB_BLOCK_ELEMENTS = ['P', 'DIV', 'LI', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
                               'BLOCKQUOTE', 'PRE', 'OL', 'UL', 'TABLE', 'TR', 'TD', 'TH'];
   const TAB_BLOCK_SELECTOR = TAB_BLOCK_ELEMENTS.map(t => t.toLowerCase()).join(', ');
@@ -400,6 +399,13 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
             <slot name="toolbar-before-group-format"></slot>
 
             <span part="toolbar-group toolbar-group-format" style="display: [[_buttonGroupDisplay(toolbarButtons, 'format')]];">
+              <!-- Show Whitespace -->
+              <button type="button" class="rte-whitespace" part="toolbar-button toolbar-button-whitespace" title$="[[i18n.whitespace]]" style="display: [[_buttonDisplay(toolbarButtons, 'whitespace')]];" on-click="_onWhitespaceClick">
+                <slot name="whitespace">
+                  <vaadin-icon icon="vcf-erte-extra-icons:whitespace-icon" part="toolbar-button-whitespace-icon"></vaadin-icon>
+                </slot>
+              </button>
+
               <!-- Read-only -->
               <button type="button" class="rte-readonly" part="toolbar-button toolbar-button-readonly" title$="[[i18n.readonly]]" style="display: [[_buttonDisplay(toolbarButtons, 'readonly')]];" on-click="_onReadonlyClick">
                 <slot name="readonly">
@@ -568,6 +574,7 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
               link: 'link',
               blockquote: 'blockquote',
               codeBlock: 'code block',
+              whitespace: 'show whitespace',
               readonly: 'readonly',
               placeholder: 'placeholder',
               placeholderAppearance: 'toggle placeholder appearance',
@@ -605,6 +612,7 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
         showWhitespace: {
           type: Boolean,
           value: false,
+          reflectToAttribute: true,
           observer: '_showWhitespaceChanged'
         },
 
@@ -808,8 +816,12 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
 
       const blockVisualLines = new Map();
 
+      // Editor rect is hoisted outside the loop since the editor's outer dimensions
+      // don't change during iteration. Per-tab rects must be read inside the loop because
+      // each tab's position depends on the previous tab's width (iterative algorithm).
+      let editorRect = editorNode.getBoundingClientRect();
+
       tabs.forEach(tab => {
-        const editorRect = editorNode.getBoundingClientRect();
         const tabRect = tab.getBoundingClientRect();
         const parentBlock = tab.closest(TAB_BLOCK_SELECTOR) || tab.parentElement;
         const parentRect = parentBlock ? parentBlock.getBoundingClientRect() : null;
@@ -873,7 +885,7 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
     _isWrappedLine(tab, tabRect, parentBlock, parentRect) {
       if (!parentRect || !parentBlock) return false;
 
-      const computedStyle = this._getCachedStyle(parentBlock);
+      const computedStyle = this._getComputedStyleFor(parentBlock);
       const lineHeight = parseFloat(computedStyle.lineHeight) ||
                          parseFloat(computedStyle.fontSize) * 1.2;
 
@@ -902,13 +914,12 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
     }
 
     /**
-     * Get cached computed style for an element.
+     * Get computed style for an element.
+     * Note: getComputedStyle() returns a live CSSStyleDeclaration that always reflects
+     * current values, so caching the object provides no benefit.
      */
-    _getCachedStyle(element) {
-      if (!this._styleCache.has(element)) {
-        this._styleCache.set(element, window.getComputedStyle(element));
-      }
-      return this._styleCache.get(element);
+    _getComputedStyleFor(element) {
+      return window.getComputedStyle(element);
     }
 
     /**
@@ -975,8 +986,8 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
     _measureTextWidth(text, referenceNode) {
       if (!text) return 0;
 
-      const computedStyle = this._getCachedStyle(referenceNode);
-      const cacheKey = `${text}|${computedStyle.fontFamily}|${computedStyle.fontSize}|${computedStyle.fontWeight}`;
+      const computedStyle = this._getComputedStyleFor(referenceNode);
+      const cacheKey = `${text}|${computedStyle.fontFamily}|${computedStyle.fontSize}|${computedStyle.fontWeight}|${computedStyle.fontStyle}|${computedStyle.letterSpacing}`;
 
       if (this._textWidthCache.has(cacheKey)) {
         const value = this._textWidthCache.get(cacheKey);
@@ -1010,6 +1021,85 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
     _showWhitespaceChanged(show) {
       const editor = this.shadowRoot.querySelector('.ql-editor');
       if (editor) editor.classList.toggle('show-whitespace', show);
+      const btn = this.shadowRoot.querySelector('[part~="toolbar-button-whitespace"]');
+      if (btn) {
+        btn.classList.toggle('ql-active', show);
+        if (show) {
+          btn.setAttribute('on', '');
+        } else {
+          btn.removeAttribute('on');
+        }
+      }
+    }
+
+    /**
+     * Handle ArrowUp/ArrowDown through tab-filled lines.
+     * Tab blots are inline-block with tiny/zero font-size, which confuses
+     * the browser's vertical cursor navigation (it skips intermediate lines).
+     * This method manually computes the target line and positions the cursor.
+     * @param {Object} range - current Quill selection
+     * @param {number} direction - -1 for ArrowUp, +1 for ArrowDown
+     * @returns {boolean} false to prevent default browser handling
+     */
+    _handleArrowNavigation(range, direction) {
+      const quill = this._editor;
+      if (!quill) return true;
+
+      const allLines = quill.getLines(0, quill.getLength());
+      if (allLines.length <= 1) return true;
+
+      // Find current line index
+      const [currentLine] = quill.getLine(range.index);
+      if (!currentLine) return true;
+      let currentLineIdx = -1;
+      for (let i = 0; i < allLines.length; i++) {
+        if (allLines[i] === currentLine) { currentLineIdx = i; break; }
+      }
+      if (currentLineIdx < 0) return true;
+
+      // Check if adjacent line contains tab blots (the problematic case)
+      const targetLineIdx = currentLineIdx + direction;
+      if (targetLineIdx < 0 || targetLineIdx >= allLines.length) return true;
+
+      const targetLine = allLines[targetLineIdx];
+      const targetLineStart = quill.getIndex(targetLine);
+      const targetLineLen = targetLine.length() - 1; // exclude trailing newline
+
+      // Check if target line or current line has tabs
+      const lineHasTabs = (line) => {
+        if (!line.children) return false;
+        let child = line.children.head;
+        while (child) {
+          if (child.statics && child.statics.blotName === 'tab') return true;
+          child = child.next;
+        }
+        return false;
+      };
+
+      if (!lineHasTabs(targetLine) && !lineHasTabs(currentLine)) {
+        // Neither line has tabs - let browser handle normally
+        return true;
+      }
+
+      // Get current cursor X position
+      const currentBounds = quill.getBounds(range.index);
+      const targetX = currentBounds.left;
+
+      // Find the position on the target line closest to the current X
+      let bestIndex = targetLineStart;
+      let bestDist = Infinity;
+
+      for (let i = targetLineStart; i <= targetLineStart + targetLineLen; i++) {
+        const b = quill.getBounds(i);
+        const dist = Math.abs(b.left - targetX);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestIndex = i;
+        }
+      }
+
+      quill.setSelection(bestIndex, 0, Quill.sources.SILENT);
+      return false;
     }
 
     static get observers() {
@@ -1029,6 +1119,14 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
       this._toolbar = toolbarConfig.container;
 
       this._addToolbarListeners();
+
+      // Tab engine: initialize caches and measure span BEFORE Quill creation.
+      // Setting this._editor triggers the _tabStopsChanged observer which writes
+      // to _tabStopsArray, so these must exist before that happens.
+      this._textWidthCache = new Map();
+      this._tabStopsArray = [];
+      this._tabUpdateRafId = null;
+      this._createMeasureSpan();
 
       let options = {
         modules: {
@@ -1093,17 +1191,8 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
         this._requestTabUpdate();
       });
 
-      // Tab engine: initialize caches and measure span
-      this._textWidthCache = new Map();
-      this._styleCache = new WeakMap();
-      this._tabStopsArray = [];
-      this._tabUpdateRafId = null;
-      this._createMeasureSpan();
-
-      // Resize handler: invalidate caches and recalculate tabs
+      // Resize handler: recalculate tabs (text width cache is viewport-independent, no need to clear)
       this._resizeHandler = () => {
-        this._textWidthCache.clear();
-        this._styleCache = new WeakMap();
         this._requestTabUpdate();
       };
       window.addEventListener('resize', this._resizeHandler);
@@ -1142,6 +1231,13 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
       });
 
       this._editor.on('selection-change', this._announceFormatting.bind(this));
+
+      // Ensure tabStopsArray is populated if tabStops was set before _editor was ready.
+      // The Polymer complex observer _tabStopsChanged(tabStops, _editor) may not fire if
+      // tabStops was set before _editor, so we explicitly initialize here.
+      if (this.tabStops && this.tabStops.length > 0) {
+        this._tabStopsChanged(this.tabStops, this._editor);
+      }
 
       this._requestTabUpdate();
 
@@ -1368,6 +1464,21 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
     connectedCallback() {
       super.connectedCallback();
       this._updateToolbarButtons();
+
+      // Re-initialize tab engine resources after reconnection
+      if (this._editor && !this._measureSpan) {
+        this._createMeasureSpan();
+      }
+      if (!this._textWidthCache) {
+        this._textWidthCache = new Map();
+      }
+      if (this._editor && !this._resizeHandler) {
+        this._resizeHandler = () => {
+          this._requestTabUpdate();
+        };
+        window.addEventListener('resize', this._resizeHandler);
+        this._requestTabUpdate();
+      }
     }
 
     disconnectedCallback() {
@@ -1386,7 +1497,6 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
       }
       this._measureSpan = null;
       if (this._textWidthCache) this._textWidthCache.clear();
-      this._styleCache = new WeakMap();
     }
 
     _updateToolbarButtons() {
@@ -1746,6 +1856,20 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
         }
       ];
 
+      // ArrowUp/ArrowDown correction for tab-filled lines.
+      // Tab blots confuse browser's vertical cursor navigation, causing line skipping.
+      // We intercept and handle manually, returning false to prevent browser default.
+      const ARROW_UP = 38;
+      const ARROW_DOWN = 40;
+      const arrowUpHandler = function(range) {
+        return self._handleArrowNavigation(range, -1);
+      };
+      const arrowDownHandler = function(range) {
+        return self._handleArrowNavigation(range, +1);
+      };
+      keyboard.bindings[ARROW_UP] = [{ key: ARROW_UP, shiftKey: false, handler: arrowUpHandler }, ...(keyboard.bindings[ARROW_UP] || [])];
+      keyboard.bindings[ARROW_DOWN] = [{ key: ARROW_DOWN, shiftKey: false, handler: arrowDownHandler }, ...(keyboard.bindings[ARROW_DOWN] || [])];
+
       // alt-f10 focuses a toolbar button
       keyboard.addBinding({ key: 121, altKey: true, handler: focusToolbar });
 
@@ -1843,6 +1967,20 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
       if (this._lastCommittedChange !== this.value) {
         this.dispatchEvent(new CustomEvent('change', { bubbles: true, cancelable: false }));
         this._lastCommittedChange = this.value;
+      }
+    }
+
+    _onWhitespaceClick() {
+      this._markToolbarClicked();
+      this.showWhitespace = !this.showWhitespace;
+      const btn = this.shadowRoot.querySelector('[part~="toolbar-button-whitespace"]');
+      if (btn) {
+        btn.classList.toggle('ql-active', this.showWhitespace);
+        if (this.showWhitespace) {
+          btn.setAttribute('on', '');
+        } else {
+          btn.removeAttribute('on');
+        }
       }
     }
 

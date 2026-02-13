@@ -52,10 +52,10 @@ class TabBlot extends Embed {
       e.stopPropagation();
 
       // Multi-editor safe: find Quill instance via DOM traversal
-      const editorEl = node.closest('.ql-editor');
-      if (!editorEl) return;
-      const quill = Quill.find(editorEl);
-      if (!quill) return;
+      // Quill stores itself on .ql-container.__quill (not on .ql-editor)
+      const containerEl = node.closest('.ql-container');
+      if (!containerEl || !containerEl.__quill) return;
+      const quill = containerEl.__quill;
 
       const blot = Quill.find(node);
       if (!blot) return;

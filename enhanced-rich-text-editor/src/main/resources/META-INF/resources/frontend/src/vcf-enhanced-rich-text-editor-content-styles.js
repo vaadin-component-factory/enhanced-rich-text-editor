@@ -402,7 +402,7 @@ documentContainer.innerHTML = `
           position: relative;
           cursor: default;
           font-size: 0;
-          line-height: 0;
+          line-height: 1rem;
           overflow: hidden;
           will-change: width;
           transform: translateZ(0);
@@ -417,7 +417,7 @@ documentContainer.innerHTML = `
            WHITESPACE INDICATORS (Show Whitespace)
            Shows special characters for tabs, soft-breaks, and paragraph ends.
            Activated by adding 'show-whitespace' class on .ql-editor.
-           CRITICAL: ::after on .ql-tab inherits font-size:0, line-height:0, overflow:hidden
+           CRITICAL: ::after on .ql-tab inherits font-size:0, overflow:hidden
            from parent. Must explicitly override to make indicators visible.
            ========================================== */
 
