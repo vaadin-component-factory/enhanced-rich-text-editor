@@ -44,20 +44,20 @@ public class EnhancedRichTextEditorView extends SpringDemoView {
 
     @Override
     protected void initView() {
-//        createDefaultEditor();
+        createDefaultEditor();
         createEditorWithTabstops();
-//        createGetValue();
-//        createGetHtmlValue();
-//        createEditorWithLimitedToolbar();
-//        createEditorWithReadonlySections();
-//        createEditorWithPlaceholders();
-//        createEditorWithCustomButtons();
-//        createEditorWithCustomButtonsExtended();
-//        createEditorWithCustomShortcutsForStandardButtons();
-//        createEditorWithIconReplacementForStandardButtons();
-//        createEditorWithNoRules();
-//        createEditorWithTableSample();
-//        createEditorWithTableI18nSample();
+        createGetValue();
+        createGetHtmlValue();
+        createEditorWithLimitedToolbar();
+        createEditorWithReadonlySections();
+        createEditorWithPlaceholders();
+        createEditorWithCustomButtons();
+        createEditorWithCustomButtonsExtended();
+        createEditorWithCustomShortcutsForStandardButtons();
+        createEditorWithIconReplacementForStandardButtons();
+        createEditorWithNoRules();
+        createEditorWithTableSample();
+        createEditorWithTableI18nSample();
     }
 
     private void createDefaultEditor() {
