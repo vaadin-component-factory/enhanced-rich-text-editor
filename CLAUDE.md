@@ -36,6 +36,7 @@ Multi-module Maven project with Java 17, Vaadin 24.9.7, Spring Boot 3.5.9:
 
 ## Architecture
 
+
 ### Web Component Layer (JavaScript)
 The editor is a Polymer-based web component in `enhanced-rich-text-editor/src/main/resources/META-INF/resources/frontend/src/`:
 
