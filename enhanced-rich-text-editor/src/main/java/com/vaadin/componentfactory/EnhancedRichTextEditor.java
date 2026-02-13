@@ -256,7 +256,7 @@ public class EnhancedRichTextEditor
     }
 
     String sanitize(String html) {
-        return org.jsoup.Jsoup.clean(html,
+        String cleaned = org.jsoup.Jsoup.clean(html,
                 org.jsoup.safety.Safelist.basic()
                         .addTags("img", "h1", "h2", "h3", "s", "span", "br")
                         .addAttributes("img", "align", "alt", "height", "src",
@@ -264,6 +264,34 @@ public class EnhancedRichTextEditor
                         .addAttributes("span", "class", "contenteditable")
                         .addAttributes(":all", "style")
                         .addProtocols("img", "src", "data"));
+
+        // Post-sanitization: restrict span class values to known safe classes
+        // and contenteditable to only "false", to prevent CSS injection and
+        // unintended editing behavior in contexts where HTML output is reused.
+        org.jsoup.nodes.Document doc = org.jsoup.Jsoup.parse(cleaned);
+        java.util.Set<String> allowedClasses = java.util.Set.of(
+                "ql-tab", "ql-soft-break", "ql-readonly", "ql-placeholder");
+        for (org.jsoup.nodes.Element span : doc.select("span[class]")) {
+            String[] classes = span.attr("class").split("\\s+");
+            StringBuilder filtered = new StringBuilder();
+            for (String cls : classes) {
+                if (allowedClasses.contains(cls)) {
+                    if (filtered.length() > 0) filtered.append(' ');
+                    filtered.append(cls);
+                }
+            }
+            if (filtered.length() > 0) {
+                span.attr("class", filtered.toString());
+            } else {
+                span.removeAttr("class");
+            }
+        }
+        for (org.jsoup.nodes.Element span : doc.select("span[contenteditable]")) {
+            if (!"false".equals(span.attr("contenteditable"))) {
+                span.removeAttr("contenteditable");
+            }
+        }
+        return doc.body().html();
     }
 
     /**
@@ -1286,7 +1314,7 @@ public class EnhancedRichTextEditor
     }
 
     public enum ToolbarButton {
-        UNDO, REDO, BOLD, ITALIC, UNDERLINE, STRIKE, H1, H2, H3, SUBSCRIPT, SUPERSCRIPT, LIST_ORDERED, LIST_BULLET, DEINDENT, INDENT, ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT, ALIGN_JUSTIFY, IMAGE, LINK, BLOCKQUOTE, CODE_BLOCK, READONLY, CLEAN, PLACEHOLDER, PLACEHOLDER_APPEARANCE;
+        UNDO, REDO, BOLD, ITALIC, UNDERLINE, STRIKE, H1, H2, H3, SUBSCRIPT, SUPERSCRIPT, LIST_ORDERED, LIST_BULLET, DEINDENT, INDENT, ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT, ALIGN_JUSTIFY, IMAGE, LINK, BLOCKQUOTE, CODE_BLOCK, WHITESPACE, READONLY, CLEAN, PLACEHOLDER, PLACEHOLDER_APPEARANCE;
 
         @Override
         public String toString() {

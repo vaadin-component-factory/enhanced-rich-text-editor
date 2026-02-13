@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -403,5 +405,62 @@ class TabConverterTest {
             ]}
             """;
         assertJsonEquals(expected, TabConverter.convertToNewFormat(input));
+    }
+
+    // ---- Tests for convertIfNeeded() ----
+
+    @Test
+    void convertIfNeeded_newFormatPassthrough() {
+        // New-format delta should pass through unchanged
+        String newFormat = "{\"ops\":[{\"insert\":{\"tab\":true}},{\"insert\":\"Hello\"},{\"insert\":\"\\n\"}]}";
+        String result = TabConverter.convertIfNeeded(newFormat);
+        assertEquals(newFormat, result);
+    }
+
+    @Test
+    void convertIfNeeded_oldFormatObjectConverted() {
+        // Old-format object {"ops":[...]} should be detected and converted
+        String input = "{\"ops\":[{\"attributes\":{\"tab\":\"1\"},\"insert\":\"\\uFEFF\"},{\"attributes\":{\"line-part\":true},\"insert\":\"Hello\"},{\"attributes\":{\"tabs-cont\":\"TABS-CONT\"},\"insert\":\"\\n\"}]}";
+        String result = TabConverter.convertIfNeeded(input);
+        assertTrue(result.contains("\"tab\":true"), "Should contain new tab format");
+        assertFalse(result.contains("\"tabs-cont\""), "Should not contain old tabs-cont");
+        assertFalse(result.contains("\"line-part\""), "Should not contain old line-part");
+    }
+
+    @Test
+    void convertIfNeeded_oldFormatArrayConverted() {
+        // Old-format array [{...}] should be detected, wrapped, converted, and unwrapped
+        String input = "[{\"attributes\":{\"tab\":\"2\"},\"insert\":\"\\uFEFF\"},{\"attributes\":{\"line-part\":true},\"insert\":\"text\"},{\"attributes\":{\"tabs-cont\":\"TABS-CONT\"},\"insert\":\"\\n\"}]";
+        String result = TabConverter.convertIfNeeded(input);
+        // Result should be an array (starts with [)
+        assertTrue(result.trim().startsWith("["), "Should return array format");
+        assertTrue(result.contains("\"tab\":true"), "Should contain new tab format");
+        // Two tabs from tab level 2
+        int firstTab = result.indexOf("\"tab\":true");
+        int secondTab = result.indexOf("\"tab\":true", firstTab + 1);
+        assertTrue(secondTab > firstTab, "Should have two tab embeds for level 2");
+    }
+
+    @Test
+    void convertIfNeeded_nullAndEmpty() {
+        assertNull(TabConverter.convertIfNeeded(null));
+        assertEquals("", TabConverter.convertIfNeeded(""));
+        assertEquals("  ", TabConverter.convertIfNeeded("  "));
+    }
+
+    @Test
+    void convertIfNeeded_plainTextPassthrough() {
+        // Plain text without any tab markers should pass through unchanged
+        String plain = "{\"ops\":[{\"insert\":\"Hello world\\n\"}]}";
+        String result = TabConverter.convertIfNeeded(plain);
+        assertEquals(plain, result);
+    }
+
+    @Test
+    void convertIfNeeded_preTabDetected() {
+        // pre-tab marker should trigger conversion
+        String input = "{\"ops\":[{\"attributes\":{\"pre-tab\":true},\"insert\":\"\\uFEFF\"},{\"insert\":\"\\n\"}]}";
+        String result = TabConverter.convertIfNeeded(input);
+        assertTrue(result.contains("\"tab\":true"), "pre-tab should be converted to tab embed");
     }
 }
