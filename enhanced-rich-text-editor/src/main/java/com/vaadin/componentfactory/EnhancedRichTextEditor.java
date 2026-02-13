@@ -199,6 +199,9 @@ public class EnhancedRichTextEditor
      * value is not equal to {@code getValue()}, fires a value change event.
      * Throws {@code NullPointerException}, if the value is null.
      * <p>
+     * Automatically detects and converts old-format deltas (containing
+     * tabs-cont, pre-tab, line-part blots) to the new embed-based tab format.
+     * <p>
      * Note: {@link Binder} will take care of the {@code null} conversion when
      * integrates with the editor, as long as no new converter is defined.
      *
@@ -207,7 +210,7 @@ public class EnhancedRichTextEditor
      */
     @Override
     public void setValue(String value) {
-        super.setValue(value);
+        super.setValue(TabConverter.convertIfNeeded(value));
     }
 
     /**
@@ -232,12 +235,33 @@ public class EnhancedRichTextEditor
         return sanitize(getHtmlValueString());
     }
 
+    /**
+     * Sets whether whitespace indicators are shown in the editor.
+     * When true, special characters are displayed: → (tab), ↵ (soft-break),
+     * ¶ (paragraph), ⮐ (auto-wrap).
+     *
+     * @param show true to show whitespace indicators
+     */
+    public void setShowWhitespace(boolean show) {
+        getElement().setProperty("showWhitespace", show);
+    }
+
+    /**
+     * Returns whether whitespace indicators are currently shown.
+     *
+     * @return true if whitespace indicators are visible
+     */
+    public boolean isShowWhitespace() {
+        return getElement().getProperty("showWhitespace", false);
+    }
+
     String sanitize(String html) {
         return org.jsoup.Jsoup.clean(html,
                 org.jsoup.safety.Safelist.basic()
-                        .addTags("img", "h1", "h2", "h3", "s")
+                        .addTags("img", "h1", "h2", "h3", "s", "span", "br")
                         .addAttributes("img", "align", "alt", "height", "src",
                                 "title", "width")
+                        .addAttributes("span", "class", "contenteditable")
                         .addAttributes(":all", "style")
                         .addProtocols("img", "src", "data"));
     }

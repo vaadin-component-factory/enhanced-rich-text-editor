@@ -73,6 +73,33 @@ Content is stored as Quill Delta JSON. Tables encode cell metadata in a pipe-sep
 - `EnhancedRichTextEditorTables.java` - Tables extension
 - `TemplateParser.java` - Converts JSON style templates to CSS for tables
 
+## Custom Agents
+
+Custom Claude Code agents in `.claude/agents/`. The **agents-manager** orchestrates them (tech stack discovery, project-specific injection, task delegation).
+
+| Agent | Purpose |
+|-------|---------|
+| **agents-manager** | Delegates tasks to agents, discovers tech stack, injects project patterns |
+| **fullstack-developer** | End-to-end feature implementation (backend + frontend) |
+| **code-reviewer** | Quick code review during development (no builds/tests) |
+| **qa-tester** | Comprehensive QA: code review + build + tests + responsive checks |
+| **ui-explorer** | Playwright-based visual verification of running app |
+| **ui-designer** | UI design review: styling, accessibility, responsiveness |
+| **docs-engineer** | Documentation creation, updates, and review |
+| **security-reviewer** | Security audit: auth, injection, access control, secrets |
+| **architecture-guard** | Architectural compliance, import violations, structural patterns |
+| **performance-auditor** | Performance issues: N+1 queries, memory leaks, rendering |
+| **dependency-auditor** | Dependency vulnerabilities, outdated versions, licenses |
+| **migration-auditor** | Database migration safety and backward compatibility |
+| **devcontainer-auditor** | Devcontainer/Docker setup review |
+| **requirements-reviewer** | Requirements review before implementation |
+| **housekeeper** | Cleanup: servers, Docker, temp files, screenshots |
+
+**Usage:** Agents are launched via the `Task` tool with `subagent_type`. The agents-manager has three modes:
+- **Update mode:** Run after CLAUDE.md changes or `/init` to inject project-specific patterns
+- **Review mode:** Evaluate whether the agent suite fits the project
+- **Task assignment (default):** Delegate a task to the right agent(s)
+
 ## Playwright Tests (Tab-Stop Prototype)
 
 The demo module includes Playwright tests for the tab-stop prototype feature.

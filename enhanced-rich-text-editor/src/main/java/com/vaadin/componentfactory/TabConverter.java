@@ -1,5 +1,22 @@
 package com.vaadin.componentfactory;
 
+/*
+ * #%L
+ * EnhancedRichTextEditor for Vaadin 10
+ * %%
+ * Copyright (C) 2017 - 2019 Vaadin Ltd
+ * %%
+ * This program is available under Commercial Vaadin Add-On License 3.0
+ * (CVALv3).
+ *
+ * See the file license.html distributed with this software for more
+ * information about licensing.
+ *
+ * You should have received a copy of the CVALv3 along with this program.
+ * If not, see <http://vaadin.com/license/cval-3>.
+ * #L%
+ */
+
 import elemental.json.Json;
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
@@ -15,6 +32,38 @@ import elemental.json.JsonValue;
 public class TabConverter {
 
     private static final String ZERO_WIDTH_SPACE = "\uFEFF";
+
+    /**
+     * Detects whether a delta JSON string contains old-format tab blots and converts if needed.
+     * Returns the value unchanged if it does not contain old-format markers.
+     * Handles both array format ([{...}]) and object format ({"ops":[{...}]}).
+     *
+     * @param deltaJson the delta JSON string (may be old or new format)
+     * @return the converted delta JSON string, or the original if no conversion needed
+     */
+    public static String convertIfNeeded(String deltaJson) {
+        if (deltaJson == null || deltaJson.isBlank()) {
+            return deltaJson;
+        }
+        // Quick string check for old-format markers before parsing JSON
+        if (deltaJson.contains("\"tabs-cont\"") || deltaJson.contains("\"pre-tab\"")
+                || deltaJson.contains("\"line-part\"")
+                || (deltaJson.contains("\"tab\"") && deltaJson.contains("\"tab\":\""))
+        ) {
+            String trimmed = deltaJson.trim();
+            if (trimmed.startsWith("[")) {
+                // Array format: wrap in {"ops":...}, convert, unwrap
+                String wrapped = "{\"ops\":" + trimmed + "}";
+                String converted = convertToNewFormat(wrapped);
+                // Extract the ops array back out
+                JsonObject obj = Json.parse(converted);
+                return obj.getArray("ops").toJson();
+            } else {
+                return convertToNewFormat(deltaJson);
+            }
+        }
+        return deltaJson;
+    }
 
     /**
      * Converts a delta JSON string from the old ERTE tab format to the new prototype format.

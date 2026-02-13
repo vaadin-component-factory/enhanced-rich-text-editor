@@ -23,12 +23,13 @@ import './vendor/vaadin-quill';
 import './vcf-enhanced-rich-text-editor-styles';
 import './vcf-enhanced-rich-text-editor-toolbar-styles';
 import './vcf-enhanced-rich-text-editor-extra-icons';
-import { ReadOnlyBlot, LinePartBlot, TabBlot, PreTabBlot, TabsContBlot, PlaceholderBlot } from './vcf-enhanced-rich-text-editor-blots';
+import { ReadOnlyBlot, TabBlot, SoftBreakBlot, PlaceholderBlot } from './vcf-enhanced-rich-text-editor-blots';
 
 const Quill = window.Quill;
 const Inline = Quill.import('blots/inline');
 
-Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.blotName, TabBlot.blotName, PreTabBlot.blotName);
+// Only Inline blots go in Inline.order; Embeds (TabBlot, SoftBreakBlot) must NOT be listed here
+Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
 
 (function() {
   'use strict';
@@ -65,6 +66,16 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
   const BACKSPACE_KEY = 8;
   const TAB_KEY = 9;
   const QL_EDITOR_PADDING_LEFT = 16;
+
+  // Tab engine constants (from prototype)
+  const TAB_WRAP_DETECTION_MULTIPLIER = 0.8;
+  const TAB_DEFAULT_TAB_CHARS = 8;
+  const TAB_MIN_TAB_WIDTH = 2;
+  const TAB_FIXED_TAB_FALLBACK = 50;
+  const TAB_ZERO_WIDTH_SPACE = '\u200B';
+  const TAB_BLOCK_ELEMENTS = ['P', 'DIV', 'LI', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+                              'BLOCKQUOTE', 'PRE', 'OL', 'UL', 'TABLE', 'TR', 'TD', 'TH'];
+  const TAB_BLOCK_SELECTOR = TAB_BLOCK_ELEMENTS.map(t => t.toLowerCase()).join(', ');
 
   /**
    * `<vcf-enhanced-rich-text-editor>` is a Web Component for rich text editing.
@@ -589,6 +600,15 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
         },
 
         /**
+         * When true, whitespace indicators are shown (→ tab, ↵ soft-break, ¶ paragraph, ⮐ auto-wrap).
+         */
+        showWhitespace: {
+          type: Boolean,
+          value: false,
+          observer: '_showWhitespaceChanged'
+        },
+
+        /**
          * An array of strings or a `Placeholder` objects. Here is the syntax for a `Placeholder` object:
          * ```
          * {
@@ -746,56 +766,250 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
       return visible ? '' : 'none';
     }
 
-    _cleanUpLineParts() {
-      const lineParts = this.shadowRoot.querySelectorAll(LinePartBlot.tagName);
-      lineParts.forEach(line => {
-        if (!line.previousElementSibling || line.previousElementSibling.nodeName != TabBlot.tagName.toUpperCase()) {
-          line.style.paddingLeft = '0px';
-        }
-        if (line.nextElementSibling && line.nextElementSibling.nodeName != TabBlot.tagName.toUpperCase() && line.textContent.trim().length == 0) {
-          line.remove();
-        }
+    // ============================================
+    // Tab Width Calculation Engine (from prototype)
+    // ============================================
+
+    /**
+     * Create reusable measure span for text width calculation.
+     */
+    _createMeasureSpan() {
+      if (this._measureSpan) return;
+      this._measureSpan = document.createElement('span');
+      this._measureSpan.style.cssText = 'visibility:hidden;position:absolute;white-space:pre;left:-9999px;top:-9999px';
+      this.shadowRoot.appendChild(this._measureSpan);
+    }
+
+    /**
+     * RAF-based coalescing for tab width updates.
+     */
+    _requestTabUpdate() {
+      if (this._tabUpdateRafId) return;
+      this._tabUpdateRafId = requestAnimationFrame(() => {
+        this._updateTabWidths();
+        this._tabUpdateRafId = null;
       });
     }
 
-    _simulateTabs() {
-      const allTabsConts = this.shadowRoot.querySelectorAll(TabsContBlot.tagName);
-      allTabsConts.forEach(tabsCont => {
-        const tabElements = tabsCont.querySelectorAll(TabBlot.tagName);
-        let tabNumber = 0;
-        tabElements.forEach(tabElement => {
-          let el = tabElement.nextSibling;
-          if (el) {
-            if (el.nodeName == '#text') {
-              const linePart = document.createElement('line-part');
-              linePart.innerText = el.wholeText;
-              el.replaceWith(linePart);
-              el = linePart;
-            }
-            tabNumber += tabElement.getAttribute('level') ? parseInt(tabElement.getAttribute('level')) : 1;
-            const tabInfo = this.tabStops[tabNumber - 1];
-            if (tabInfo) {
-              let newPadding = tabInfo.position - QL_EDITOR_PADDING_LEFT - (el.offsetLeft - tabsCont.offsetLeft);
+    /**
+     * Core iterative tab width calculation engine.
+     * Processes tabs one by one: measure position -> calculate width -> set width -> next.
+     */
+    _updateTabWidths() {
+      if (!this._editor) return;
 
-              if (tabInfo.direction == 'right' || tabInfo.direction == 'middle') {
-                const prevPadding = el.style.paddingLeft ? parseInt(el.style.paddingLeft.split('px')[0]) : 0;
-                let elWidth = el.offsetWidth - prevPadding;
+      const editorNode = this._editor.root;
+      const tabs = Array.from(editorNode.querySelectorAll('.ql-tab'));
 
-                if (tabInfo.direction == 'middle') {
-                  elWidth /= 2;
-                }
-                newPadding -= elWidth;
-              }
+      if (tabs.length === 0) return;
 
-              el.style.paddingLeft = newPadding + 'px';
-            } else {
-              const strTab = document.createElement('line-part');
-              strTab.innerHTML = String.fromCharCode(9);
-              tabElement.replaceWith(strTab);
-            }
+      const charWidth8 = this._measureTextWidth("0".repeat(TAB_DEFAULT_TAB_CHARS), editorNode);
+      const fixedTabWidth = charWidth8 > 0 ? charWidth8 : TAB_FIXED_TAB_FALLBACK;
+
+      const blockVisualLines = new Map();
+
+      tabs.forEach(tab => {
+        const editorRect = editorNode.getBoundingClientRect();
+        const tabRect = tab.getBoundingClientRect();
+        const parentBlock = tab.closest(TAB_BLOCK_SELECTOR) || tab.parentElement;
+        const parentRect = parentBlock ? parentBlock.getBoundingClientRect() : null;
+        const startPos = tabRect.left - editorRect.left;
+
+        const isWrappedLine = this._isWrappedLine(tab, tabRect, parentBlock, parentRect);
+
+        tab.classList.remove('ql-auto-wrap-start');
+
+        if (isWrappedLine && parentBlock) {
+          const topPos = Math.round(tabRect.top);
+          if (!blockVisualLines.has(parentBlock)) {
+            blockVisualLines.set(parentBlock, new Set());
           }
-        });
+          const seenTops = blockVisualLines.get(parentBlock);
+          if (!seenTops.has(topPos)) {
+            seenTops.add(topPos);
+            tab.classList.add('ql-auto-wrap-start');
+          }
+        }
+
+        const contentWidth = this._measureContentWidth(tab);
+
+        let targetStop = null;
+        if (!isWrappedLine && this._tabStopsArray) {
+          targetStop = this._tabStopsArray.find(
+            stop => stop.pos > (startPos + TAB_MIN_TAB_WIDTH)
+          );
+        }
+
+        let widthNeeded = 0;
+
+        if (targetStop) {
+          const stopPos = targetStop.pos;
+          const alignment = targetStop.align || 'left';
+          const rawDistance = stopPos - startPos;
+
+          if (alignment === 'right') {
+            widthNeeded = rawDistance - contentWidth;
+          } else if (alignment === 'center') {
+            widthNeeded = rawDistance - (contentWidth / 2);
+          } else {
+            widthNeeded = rawDistance;
+          }
+        } else {
+          widthNeeded = fixedTabWidth;
+        }
+
+        if (widthNeeded < TAB_MIN_TAB_WIDTH) {
+          widthNeeded = TAB_MIN_TAB_WIDTH;
+        }
+
+        tab.style.width = widthNeeded + 'px';
       });
+    }
+
+    /**
+     * Line wrap detection: returns true ONLY for automatic browser text wrapping.
+     * Returns false for first line and for lines after soft-break.
+     */
+    _isWrappedLine(tab, tabRect, parentBlock, parentRect) {
+      if (!parentRect || !parentBlock) return false;
+
+      const computedStyle = this._getCachedStyle(parentBlock);
+      const lineHeight = parseFloat(computedStyle.lineHeight) ||
+                         parseFloat(computedStyle.fontSize) * 1.2;
+
+      const verticalOffset = tabRect.top - parentRect.top;
+      const threshold = lineHeight * TAB_WRAP_DETECTION_MULTIPLIER;
+
+      if (verticalOffset <= threshold) {
+        return false;
+      }
+
+      let prevSibling = tab.previousSibling;
+      while (prevSibling) {
+        if (prevSibling.nodeType === 1) {
+          if (prevSibling.classList && prevSibling.classList.contains('ql-soft-break')) {
+            return false;
+          }
+          const siblingRect = prevSibling.getBoundingClientRect();
+          if (Math.abs(siblingRect.top - tabRect.top) > threshold) {
+            return true;
+          }
+        }
+        prevSibling = prevSibling.previousSibling;
+      }
+
+      return true;
+    }
+
+    /**
+     * Get cached computed style for an element.
+     */
+    _getCachedStyle(element) {
+      if (!this._styleCache.has(element)) {
+        this._styleCache.set(element, window.getComputedStyle(element));
+      }
+      return this._styleCache.get(element);
+    }
+
+    /**
+     * Measure content width after a tab (until next tab/soft-break/block).
+     */
+    _measureContentWidth(tab) {
+      let contentWidth = 0;
+      let nextNode = tab.nextSibling;
+
+      while (nextNode) {
+        if (this._isBreakingNode(nextNode)) break;
+
+        const textNodes = this._getTextNodes(nextNode);
+        for (const { text, element } of textNodes) {
+          contentWidth += this._measureTextWidth(text, element);
+        }
+
+        nextNode = nextNode.nextSibling;
+      }
+
+      return contentWidth;
+    }
+
+    /**
+     * Check if a node breaks the content measurement.
+     */
+    _isBreakingNode(node) {
+      if (!node) return true;
+
+      if (node.classList && (
+        node.classList.contains('ql-tab') ||
+        node.classList.contains('ql-soft-break')
+      )) {
+        return true;
+      }
+
+      if (node.tagName && TAB_BLOCK_ELEMENTS.includes(node.tagName)) {
+        return true;
+      }
+
+      return false;
+    }
+
+    /**
+     * Recursively get all text nodes with their parent elements for style measurement.
+     */
+    _getTextNodes(node) {
+      const result = [];
+
+      if (node.nodeType === 3) {
+        result.push({ text: node.nodeValue, element: node.parentNode });
+      } else if (node.childNodes && node.childNodes.length > 0) {
+        for (const child of node.childNodes) {
+          result.push(...this._getTextNodes(child));
+        }
+      }
+
+      return result;
+    }
+
+    /**
+     * Cached text width measurement with LRU eviction.
+     */
+    _measureTextWidth(text, referenceNode) {
+      if (!text) return 0;
+
+      const computedStyle = this._getCachedStyle(referenceNode);
+      const cacheKey = `${text}|${computedStyle.fontFamily}|${computedStyle.fontSize}|${computedStyle.fontWeight}`;
+
+      if (this._textWidthCache.has(cacheKey)) {
+        const value = this._textWidthCache.get(cacheKey);
+        this._textWidthCache.delete(cacheKey);
+        this._textWidthCache.set(cacheKey, value);
+        return value;
+      }
+
+      const measureSpan = this._measureSpan;
+      measureSpan.style.fontFamily = computedStyle.fontFamily;
+      measureSpan.style.fontSize = computedStyle.fontSize;
+      measureSpan.style.fontWeight = computedStyle.fontWeight;
+      measureSpan.style.fontStyle = computedStyle.fontStyle;
+      measureSpan.style.letterSpacing = computedStyle.letterSpacing;
+      measureSpan.textContent = text;
+
+      const width = measureSpan.getBoundingClientRect().width;
+
+      if (this._textWidthCache.size >= 500) {
+        const firstKey = this._textWidthCache.keys().next().value;
+        this._textWidthCache.delete(firstKey);
+      }
+      this._textWidthCache.set(cacheKey, width);
+
+      return width;
+    }
+
+    /**
+     * Observer for showWhitespace property.
+     */
+    _showWhitespaceChanged(show) {
+      const editor = this.shadowRoot.querySelector('.ql-editor');
+      if (editor) editor.classList.toggle('show-whitespace', show);
     }
 
     static get observers() {
@@ -874,9 +1088,42 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
         });
       });
 
+      // Tab engine: update tab widths on every text change
       this._editor.on('text-change', () => {
-        this._cleanUpLineParts();
-        this._simulateTabs();
+        this._requestTabUpdate();
+      });
+
+      // Tab engine: initialize caches and measure span
+      this._textWidthCache = new Map();
+      this._styleCache = new WeakMap();
+      this._tabStopsArray = [];
+      this._tabUpdateRafId = null;
+      this._createMeasureSpan();
+
+      // Resize handler: invalidate caches and recalculate tabs
+      this._resizeHandler = () => {
+        this._textWidthCache.clear();
+        this._styleCache = new WeakMap();
+        this._requestTabUpdate();
+      };
+      window.addEventListener('resize', this._resizeHandler);
+
+      // Register clipboard matchers for old-format HTML tags (paste migration)
+      this._editor.clipboard.addMatcher('TAB', (node, delta) => {
+        const Delta = Quill.imports.delta;
+        return new Delta().insert({ tab: true });
+      });
+      this._editor.clipboard.addMatcher('PRE-TAB', (node, delta) => {
+        const Delta = Quill.imports.delta;
+        return new Delta().insert({ tab: true });
+      });
+      this._editor.clipboard.addMatcher('TABS-CONT', (node, delta) => {
+        // Let Quill process children normally; the tabs-cont wrapper is just stripped
+        return delta;
+      });
+      this._editor.clipboard.addMatcher('LINE-PART', (node, delta) => {
+        // Let Quill process children normally; the line-part wrapper is just stripped
+        return delta;
       });
 
       editorContent.addEventListener('focusout', () => {
@@ -896,7 +1143,7 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
 
       this._editor.on('selection-change', this._announceFormatting.bind(this));
 
-      this._editor.emitter.emit('text-change');
+      this._requestTabUpdate();
 
       this._editor.on('selection-change', opt => {
         if (opt !== null) {
@@ -1123,6 +1370,25 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
       this._updateToolbarButtons();
     }
 
+    disconnectedCallback() {
+      super.disconnectedCallback();
+      // Cleanup tab engine resources
+      if (this._tabUpdateRafId) {
+        cancelAnimationFrame(this._tabUpdateRafId);
+        this._tabUpdateRafId = null;
+      }
+      if (this._resizeHandler) {
+        window.removeEventListener('resize', this._resizeHandler);
+        this._resizeHandler = null;
+      }
+      if (this._measureSpan && this._measureSpan.parentNode) {
+        this._measureSpan.parentNode.removeChild(this._measureSpan);
+      }
+      this._measureSpan = null;
+      if (this._textWidthCache) this._textWidthCache.clear();
+      this._styleCache = new WeakMap();
+    }
+
     _updateToolbarButtons() {
       this._allToolbarButtons = this._toolbarButtons;
       // Disable tabbing to all buttons but the first one
@@ -1314,31 +1580,99 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
       const originalBindings = bindings.filter(b => !b.shiftKey || (b.format && b.format['code-block']));
       const moveFocusBinding = { key: TAB_KEY, shiftKey: true, handler: focusToolbar };
       const self = this;
-      // Binding for tabstop functionality.
+      // Binding for tabstop functionality (new embed-based tabs).
       const tabStopBinding = {
         key: TAB_KEY,
-        handler: function() {
-          const selection = self._getSelection();
-          if (self.tabStops.length > 0 && selection) {
-            self._editor.format(PreTabBlot.blotName, true);
-            self._editor.format(TabsContBlot.blotName, true);
-            setTimeout(() => {
-              selection.length = 0;
-              selection.index += 2;
-              self._editor.focus();
-              self._editor.setSelection(selection, 'user');
-            }, 0);
-
-            // If we have tabstops defined in the component, the default tab functionality should be overriden.
+        handler: function(range) {
+          if (self.tabStops.length > 0 && range) {
+            self._editor.insertEmbed(range.index, 'tab', true, Quill.sources.USER);
+            Promise.resolve().then(() => {
+              self._editor.setSelection(range.index + 1, 0, Quill.sources.API);
+            });
+            self._requestTabUpdate();
             return false;
           } else {
-            // In case we have no tabstops, go ahead with the default functionality.
             return true;
           }
         }
       };
 
+      // Soft-break binding (Shift+Enter): insert visual line break with tab copying
+      const softBreakBinding = {
+        key: 13,
+        shiftKey: true,
+        handler: function(range) {
+          const quill = self._editor;
+          const [line, offset] = quill.getLine(range.index);
+          const lineStartIndex = quill.getIndex(line);
+
+          // Find boundaries of the VISUAL line (between soft-breaks)
+          let currentBlot = line.children.head;
+          let posInLine = 0;
+          let visualLineStart = 0;
+          let visualLineEnd = line.length() - 1;
+
+          while (currentBlot) {
+            if (currentBlot.statics.blotName === 'soft-break') {
+              if (posInLine < offset) {
+                visualLineStart = posInLine + 1;
+              } else {
+                visualLineEnd = posInLine;
+                break;
+              }
+            }
+            posInLine += currentBlot.length();
+            currentBlot = currentBlot.next;
+          }
+
+          // Count tabs between visualLineStart and offset (cursor position)
+          currentBlot = line.children.head;
+          posInLine = 0;
+          let tabsBeforeCursor = 0;
+
+          while (currentBlot && posInLine < offset) {
+            if (posInLine >= visualLineStart && currentBlot.statics.blotName === 'tab') {
+              tabsBeforeCursor++;
+            }
+            posInLine += currentBlot.length();
+            currentBlot = currentBlot.next;
+          }
+
+          // Insert soft-break at cursor position
+          const insertIndex = lineStartIndex + offset;
+          quill.insertEmbed(insertIndex, 'soft-break', true, Quill.sources.USER);
+
+          // Limit tabs to copy: max = number of defined tabstops
+          const maxTabstops = self._tabStopsArray ? self._tabStopsArray.length : 0;
+          const tabsToCopy = Math.min(tabsBeforeCursor, maxTabstops);
+
+          // Insert tabs after the soft-break
+          let insertPos = insertIndex + 1;
+          for (let i = 0; i < tabsToCopy; i++) {
+            quill.insertEmbed(insertPos, 'tab', true, Quill.sources.USER);
+            insertPos++;
+          }
+
+          Promise.resolve().then(() => {
+            quill.setSelection(insertPos, Quill.sources.SILENT);
+            self._requestTabUpdate();
+          });
+          return false;
+        }
+      };
+
+      // Ensure normal Enter still works (hard break)
+      const hardBreakBinding = {
+        key: 13,
+        shiftKey: false,
+        handler: function() { return true; }
+      };
+
       keyboard.bindings[TAB_KEY] = [tabStopBinding, ...originalBindings, moveFocusBinding];
+
+      // Add soft-break and hard-break bindings for Enter key
+      const enterBindings = keyboard.bindings[13] || [];
+      keyboard.bindings[13] = [softBreakBinding, hardBreakBinding, ...enterBindings];
 
       // Backspace key bindings
       const backspaceKeyBindings = keyboard.bindings[BACKSPACE_KEY];
@@ -1611,8 +1945,8 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
       // Remove style-scoped classes that are appended when ShadyDOM is enabled
       Array.from(editor.classList).forEach(c => (content = content.replace(new RegExp('\\s*' + c, 'g'), '')));
 
-      // Remove Quill classes, e.g. ql-syntax, except for align
-      content = content.replace(/\s*ql-(?!align||indent)[\w\-]*\s*/g, '');
+      // Remove Quill classes, e.g. ql-syntax, except for align, indent, tab, soft-break
+      content = content.replace(/\s*ql-(?!align|indent|tab|soft-break)[\w\-]*\s*/g, '');
 
       // Replace Quill align classes with inline styles
       ['right', 'center', 'justify'].forEach(align => {
@@ -1748,8 +2082,15 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
       tabStops.forEach(stop => {
         this._addTabStopIcon(stop);
       });
+
+      // Convert external {direction, position} format to internal {pos, align} format
+      this._tabStopsArray = (tabStops || []).map(stop => ({
+        pos: stop.position,
+        align: stop.direction === 'middle' ? 'center' : (stop.direction || 'left')
+      }));
+
       if (_editor) {
-        _editor.emitter.emit('text-change');
+        this._requestTabUpdate();
       }
     }
 
@@ -1795,8 +2136,8 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
       // suppress text-change event to prevent infinite loop
       if (JSON.stringify(editor.getContents()) !== JSON.stringify(delta)) {
         editor.setContents(delta, SOURCE.SILENT);
-        // in case we have tabstops, they will be rendered in on text-change, so we need to trigger it
-        editor.emitter.emit('text-change');
+        // Recalculate tab widths after content change
+        this._requestTabUpdate();
       }
       this._updateHtmlValue();
 
@@ -1852,7 +2193,6 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
         self.tabStops = Object.assign([], self.tabStops);
 
         iconEvent.stopPropagation();
-        self._editor.emitter.emit('text-change');
       };
     }
 
@@ -1861,7 +2201,6 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName, LinePartBlot.
       this.tabStops.push(tabStop);
       this.tabStops.sort((a, b) => a['position'] - b['position']);
       this.tabStops = Object.assign([], this.tabStops);
-      this._editor.emitter.emit('text-change');
     }
 
     _placeholderEditingChanged(value) {

@@ -35,202 +35,82 @@ ReadOnlyBlot.allowedChildren = [Block, BlockEmbed, Inline, TextBlot, ListItem, L
 Quill.register(ReadOnlyBlot);
 
 /**
- * @class TabStopBlot
- * @extends {BlockEmbed}
- */
-class TabStopBlot extends BlockEmbed {
-  static create(data) {
-    const node = super.create(data);
-    node.style.left = '100px';
-    node.textContent = data;
-
-    return node;
-  }
-}
-
-TabStopBlot.blotName = 'tabstop';
-TabStopBlot.tagName = 'span';
-TabStopBlot.className = 'v-block';
-TabStopBlot.allowedChildren = [Text];
-
-Quill.register(TabStopBlot);
-
-/**
+ * Tab Blot (Embed) - New format using inline-block span with iterative width calculation.
+ * Replaces old Inline-based TabBlot + PreTabBlot + TabsContBlot + LinePartBlot system.
  * @class TabBlot
- * @extends {Inline}
+ * @extends {Embed}
  */
-class TabBlot extends Inline {
-  static create(level) {
+class TabBlot extends Embed {
+  static create(value) {
     const node = super.create();
+    node.setAttribute('contenteditable', 'false');
+    node.innerText = '\u200B'; // Zero-width space
 
-    node.innerHTML = '&#65279;';
-    node.style.width = `1px`;
-    node.setAttribute('contenteditable', false);
+    // Smart cursor placement on click
+    const mouseHandler = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    node.setAttribute('level', level);
+      // Multi-editor safe: find Quill instance via DOM traversal
+      const editorEl = node.closest('.ql-editor');
+      if (!editorEl) return;
+      const quill = Quill.find(editorEl);
+      if (!quill) return;
+
+      const blot = Quill.find(node);
+      if (!blot) return;
+
+      const index = quill.getIndex(blot);
+      const rect = node.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+
+      if (clickX < rect.width / 2) {
+        quill.setSelection(index, 0, Quill.sources.USER);
+      } else {
+        quill.setSelection(index + 1, 0, Quill.sources.USER);
+      }
+    };
+
+    node._mouseHandler = mouseHandler;
+    node.addEventListener('mousedown', mouseHandler);
+
     return node;
   }
 
-  static formats(node) {
-    return node.getAttribute('level');
+  detach() {
+    if (this.domNode._mouseHandler) {
+      this.domNode.removeEventListener('mousedown', this.domNode._mouseHandler);
+      delete this.domNode._mouseHandler;
+    }
+    super.detach();
   }
 }
 
 TabBlot.blotName = 'tab';
-TabBlot.tagName = 'tab';
+TabBlot.tagName = 'span';
+TabBlot.className = 'ql-tab';
 
 Quill.register(TabBlot);
 
 /**
- * @class PreTabBlot
- * @extends {Inline}
+ * Soft Break Blot (Embed) - Visual line break within a paragraph.
+ * Inserted via Shift+Enter. Contains a <br> for visual line breaking.
+ * @class SoftBreakBlot
+ * @extends {Embed}
  */
-class PreTabBlot extends Inline {
-  static create() {
-    const node = super.create();
-
-    node.innerHTML = '&#65279;';
-    node.style.width = `1px`;
-    node.setAttribute('contenteditable', false);
+class SoftBreakBlot extends Embed {
+  static create(value) {
+    const node = super.create(value);
+    node.innerHTML = '<br>';
     return node;
   }
 }
 
-PreTabBlot.blotName = 'pre-tab';
-PreTabBlot.tagName = 'pre-tab';
+SoftBreakBlot.blotName = 'soft-break';
+SoftBreakBlot.tagName = 'span';
+SoftBreakBlot.className = 'ql-soft-break';
 
-Quill.register(PreTabBlot);
-
-/**
- * @class LinePartBlot
- * @extends {Inline}
- */
-class LinePartBlot extends Inline {
-  static create() {
-    const node = super.create();
-    return node;
-  }
-}
-
-LinePartBlot.blotName = 'line-part';
-LinePartBlot.tagName = 'line-part';
-
-Quill.register(LinePartBlot);
-
-const emptyRegEx = new RegExp('\uFEFF', 'g');
-
-/**
- * @class TabsContBlot
- * @extends {Block}
- */
-class TabsContBlot extends Block {
-  static create() {
-    const node = super.create();
-
-    return node;
-  }
-
-  static getPrevTab(preTab) {
-    if (!preTab.previousElementSibling) {
-      return null;
-    }
-
-    if (preTab.previousElementSibling.nodeName == TabBlot.tagName.toUpperCase()) {
-      return preTab.previousElementSibling;
-    }
-
-    if (!preTab.previousElementSibling.previousElementSibling) {
-      return null;
-    }
-
-    if (preTab.previousElementSibling.innerText.trim() === '' && preTab.previousElementSibling.previousElementSibling.nodeName == TabBlot.tagName.toUpperCase()) {
-      return preTab.previousElementSibling.previousElementSibling;
-    }
-
-    return null;
-  }
-
-  static convertPreTabs(node) {
-    const preTab = node.querySelector(PreTabBlot.tagName);
-    if (preTab) {
-      const tab = this.getPrevTab(preTab);
-      if (tab) {
-        if (!preTab.getAttribute('locked')) {
-          preTab.setAttribute('locked', true);
-
-          let level = parseInt(tab.getAttribute('level')) || 1;
-          tab.setAttribute('level', ++level);
-        }
-        preTab.remove();
-      } else {
-        const tab = document.createElement(TabBlot.tagName);
-        tab.innerHTML = preTab.innerHTML;
-        tab.style.width = `1px`;
-        tab.setAttribute('contenteditable', false);
-        tab.setAttribute('level', 1);
-
-        preTab.parentElement.replaceChild(tab, preTab);
-      }
-    }
-  }
-
-  static formats(node) {
-    this.convertPreTabs(node);
-    const separators = node.querySelectorAll(TabBlot.tagName);
-
-    if (node.getAttribute('tabs-count') != separators.length) {
-      node.setAttribute('tabs-count', separators.length);
-      separators.forEach(separator => {
-        const prev = separator.previousSibling;
-        if (prev != null && prev.nodeName != LinePartBlot.tagName.toUpperCase()) {
-          const leftEl = document.createElement('line-part');
-          if (prev.nodeName == '#text') {
-            leftEl.textContent = prev.textContent.replace(emptyRegEx, '');
-          } else {
-            const prevClone = prev.cloneNode(true);
-            prevClone.innerHTML = prevClone.innerHTML.replace(emptyRegEx, '');
-            leftEl.appendChild(prevClone);
-          }
-
-          separator.parentElement.replaceChild(leftEl, prev);
-        }
-
-        const next = separator.nextSibling;
-        if (next != null) {
-          if (next.nodeName != LinePartBlot.tagName.toUpperCase()) {
-            const rightEl = document.createElement('line-part');
-
-            if (next.nodeName == '#text') {
-              rightEl.innerHTML = separator.textContent.replace(emptyRegEx, '') + next.textContent.replace(emptyRegEx, '');
-            } else {
-              const nextClone = next.cloneNode(true);
-              // TODO check if not ZERO WIDTH NO-BREAK SPACE
-              nextClone.innerHTML = separator.textContent.replace(emptyRegEx, '') + nextClone.innerHTML.replace(emptyRegEx, '');
-              rightEl.appendChild(nextClone);
-            }
-            separator.parentElement.replaceChild(rightEl, next);
-          }
-        } else {
-          const rightEl = document.createElement('line-part');
-          rightEl.innerHTML = '&#65279;';
-          if (separator.parentElement) {
-            separator.parentElement.appendChild(rightEl);
-          }
-        }
-
-        // TODO fix cursor shifting
-        separator.innerHTML = '&#65279;';
-      });
-    }
-
-    return TabsContBlot.tagName;
-  }
-}
-
-TabsContBlot.blotName = 'tabs-cont';
-TabsContBlot.tagName = 'tabs-cont';
-
-Quill.register(TabsContBlot);
+Quill.register(SoftBreakBlot);
 
 /**
  * Non-breaking space
@@ -370,4 +250,4 @@ PlaceholderBlot.tagName = 'SPAN';
 
 Quill.register(PlaceholderBlot);
 
-export { ReadOnlyBlot, LinePartBlot, TabBlot, PreTabBlot, TabsContBlot, PlaceholderBlot };
+export { ReadOnlyBlot, TabBlot, SoftBreakBlot, PlaceholderBlot };
