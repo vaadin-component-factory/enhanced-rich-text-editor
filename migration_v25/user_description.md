@@ -1,54 +1,49 @@
-# migrate the erte to Vaadin 25
+# Migrating ERTE to Vaadin 25
 
-## wording
-erte = enhanced rich text editor - this project basically
-rte = vaadin's built-in "core" rich text editor (commercial component)
-rte 1 = the old version of the rte. in 24 or less. uses quill 1.
-rte 2 or rte 25 = the new version of the rte. starting from Vaadin 25. uses quill 2
-erte 1 = the old / unmigrated erte, based on rte 1
-erte 2 = the new / migrated erte, based on rte 2
+## Terminology
 
-## description
-the erte 1 is a fork of the rte 1 from some while ago now. due to the fork nature, the code base gap between erte 1 and rte 1 has
-grown and new features from the rte 1 have not been moved into the erte 1. also quill 1 is outdated and rte 2 uses quill 2 now.
+| Term | Meaning |
+|------|---------|
+| **ERTE** | Enhanced Rich Text Editor — this project |
+| **RTE** | Vaadin's built-in Rich Text Editor (commercial component) |
+| **RTE 1** | The RTE in Vaadin 24 and earlier, based on Quill 1 |
+| **RTE 2** | The RTE starting from Vaadin 25, based on Quill 2 |
+| **ERTE 1** | The current (unmigrated) ERTE, built on top of RTE 1 |
+| **ERTE 2** | The target: migrated ERTE, built on top of RTE 2 |
 
-target of this document is to describe the migration from erte 1 to erte 2, using rte 2 as its new base.
+## Background
 
-## migration
-there are multiple steps, that we have to accomplish for a migration
-- update the project base to vaadin 25 (vaadin 25.0.x, no prereleases or anything unstable)
-- recreate the erte from scratch using the latest version of the rte 2 
-- migrating any additional features from the erte 1 to the erte 2, that are not already included in the rte 2
-- migrating the table extension
+ERTE 1 was originally forked from RTE 1. Over time, the codebase gap between the two has grown — new features and fixes added to RTE 1 were never ported back into ERTE 1. Additionally, Quill 1 is now outdated and RTE 2 has moved to Quill 2.
 
-### features
-I cannot say for sure, which features of the erte 1 are maybe available in rte 2. at least list indention should be built in in quill 2.
-So to ensure non duplicates, it has to be analysed in quill 2 and the rte 2, which features of the erte are not to be migrated.
+The goal of this document is to describe the migration from ERTE 1 to ERTE 2, using RTE 2 as the new base.
 
-### table extension
-the source of the table addon is a bit tricky. the base was a fork of a quill 2 addon for quill 1, which has then be modified to work with the
-erte 1. therefore it would make sense to not simply migrate that extension code, but instead use the original addon for quill 2 and work the
-vaadin / erte modifications into that addon. But I am not sure, if that works, so that has to be analyized carefully before hand. 
+## Migration Steps
 
-## ensure non regression / use cases
-any features, that are available in the erte have to be available in the rte. 
+The migration involves several workstreams:
 
-to accomplish this, before any plans are done regarding migration a full description of all use cases of the erte has to be worked out
-and written down, so that agents can compare the migration result with the use cases.
+1. **Update the project base** to Vaadin 25 (stable 25.0.x release, no pre-releases)
+2. **Rebuild ERTE from scratch** on top of the latest RTE 2
+3. **Migrate custom features** from ERTE 1 to ERTE 2 that are not already provided by RTE 2
+4. **Migrate the table extension** to Quill 2 / Parchment 3
 
-## ensure updatability
-we do not want to make the same mistake as before by having
-a pure copy of the rte, on which the erte is based. Instead we will try to extend the rte 2, so that future updates / fixes / new features,
-that are made for the rte 2 are automatically available for the erte 2.
+### Feature Migration
 
-this means, that we will not simply copy all the code and merge in the features of the erte. instead the erte should check, where it can
-hook into existing code base at runtime. 
+Some ERTE 1 features may already be available in RTE 2 — for instance, list indentation is built into Quill 2. Before migrating anything, each ERTE feature must be checked against Quill 2 and RTE 2 to avoid duplicating functionality that already exists.
 
-For instance the toolbar of the rte is not dynamically modifiable with new items. the erte instead provides slots for each category.
-These slots are currently hardcoded in the erte toolbar, which is a full copy of the rte toolbar. when the rte toolbar gets new content,
-the erte toolbar does not. So an alternative solution would be to inject those erte slots at runtime into the toolbar of the rte by using
-selectors and js code (just an idea, has to be checked or come up with a better one).
+### Table Extension
 
-in a similar way i would imagine the erte updatability and new architecture. This will be the hardest part, since it means a lot of
-working around the inflexibility of the rte 2. 
+The table addon has a complex lineage: it originated as a fork of a Quill 2 addon that was backported to Quill 1, then further modified to work with ERTE 1. Rather than migrating this adapted code directly, the preferred approach is to evaluate whether the original Quill 2 addon can be used as a starting point, with ERTE-specific modifications applied on top. However, feasibility needs to be carefully assessed first.
 
+## Non-Regression
+
+All features currently available in ERTE 1 must remain available in ERTE 2. To ensure this, a complete description of all ERTE use cases must be documented before any migration work begins, so that results can be validated against these requirements.
+
+## Updatability
+
+A key goal is to avoid repeating the mistake of maintaining a full copy of the RTE codebase. Instead of forking, ERTE 2 should **extend** RTE 2, so that future updates, fixes, and new features in RTE 2 are automatically inherited by ERTE 2.
+
+This means ERTE 2 will not copy and modify the RTE source code. Instead, it should hook into the existing codebase at runtime wherever possible.
+
+For example: the RTE toolbar does not support dynamic modification or custom items. ERTE 1 solved this by maintaining a full copy of the toolbar with hardcoded slots — but this means toolbar updates in RTE never reach ERTE. A better approach would be to inject ERTE's toolbar slots at runtime using DOM selectors and JavaScript, rather than duplicating the entire toolbar template.
+
+This runtime-extension approach will be the most challenging part of the migration, as it requires working around the limited extensibility of RTE 2. But it is essential for long-term maintainability.
