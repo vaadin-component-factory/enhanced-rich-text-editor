@@ -154,6 +154,50 @@ npx playwright test --ui
 - Multiple soft-breaks maintain consistent tab count per visual line
 - Works correctly with more tabs than defined tabstops
 
+## V25 Migration (v25 branch)
+
+Migration spike for Vaadin 25 / Quill 2. Documents and spike project in `migration_v25/`.
+
+### Spike Status: COMPLETE (all 22 items + Table Spike PASS)
+
+Results in `migration_v25/spike/SPIKE_RESULTS.md`. Key architecture decisions validated:
+
+- **JS architecture**: Extend RTE 2 Lit class via `render()` override (toolbar) + `ready()` hook (Quill access)
+- **Java**: Extend `RichTextEditor` in package `com.vaadin.flow.component.richtexteditor` (package-private access)
+- **Tag**: `<vcf-enhanced-rich-text-editor>` (custom tag, `@Tag` override works)
+- **Value format**: HTML-primary + `asDelta()` wrapper (RTE 2 default)
+- **Tables**: Rewrite blots for Quill 2/Parchment 3 (delta format preserved, Java code untouched)
+
+### Spike Module
+
+```bash
+# Build spike
+cd migration_v25/spike && mvn clean package -DskipTests
+
+# Start/stop spike server (port 8081)
+bash migration_v25/spike/server-start.sh
+bash migration_v25/spike/server-stop.sh
+bash migration_v25/spike/print-server-logs.sh [-f|-state|-errors]
+```
+
+### Parchment 3 Breaking Changes (Table Blots)
+
+5 critical API changes required when porting Container-based blots from Quill 1 to Quill 2:
+
+1. `Parchment.create()` → `this.scroll.create()` (global factory removed)
+2. `newBlot.replace(oldBlot)` → `oldBlot.replaceWith(newBlot)` (semantics reversed)
+3. `static defaultChild = 'block'` → `static defaultChild = Block` (must be class ref, not string)
+4. Override `checkMerge()` on TD/TR/Table (default only checks blotName, merges all adjacent same-type)
+5. Use `while` loops in optimize() merge logic (single merge insufficient for 4+ cells)
+
+### Key Vaadin 25 Changes
+
+- Requires **Spring Boot 4.x** (not 3.x)
+- RTE is now a **Pro component** (`vaadin` artifact, not `vaadin-core`)
+- Lumo **not auto-loaded** — requires `@StyleSheet(Lumo.STYLESHEET)`
+- `ThemableMixin`/`registerStyles()` deprecated — use Lit `static get styles()` or `::part()`
+- HTML sanitizer strips `class` attribute — must override or use Delta API
+
 ## License
 
 CVALv3 (Commercial Vaadin Add-On License). License headers are enforced on Java files.

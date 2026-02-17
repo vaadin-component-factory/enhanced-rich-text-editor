@@ -1,0 +1,18 @@
+Total messages: 191 (Errors: 0, Warnings: 0)
+Returning 15 messages for level "info"
+
+[LOG] [ERTE Lifecycle] +183364ms: willUpdate -- changed=[disabled] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +183364ms: updated -- changed=[disabled], _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +189801ms: willUpdate -- changed=[value] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +189802ms: updated -- changed=[value], _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +189802ms: willUpdate -- changed=[__oldValue, htmlValue, __lastCommittedChange] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +189803ms: updated -- changed=[__oldValue, htmlValue, __lastCommittedChange], _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE] Whitespace button clicked @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155568
+[LOG] [ERTE Lifecycle] +203197ms: willUpdate -- changed=[__effectiveI18n] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +203198ms: updated -- changed=[__effectiveI18n], _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +203198ms: willUpdate -- changed=[i18n] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +203198ms: updated -- changed=[i18n], _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +218040ms: willUpdate -- changed=[value] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +218041ms: updated -- changed=[value], _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +218041ms: willUpdate -- changed=[__oldValue, htmlValue] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +218041ms: updated -- changed=[__oldValue, htmlValue], _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038

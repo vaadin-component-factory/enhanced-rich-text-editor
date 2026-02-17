@@ -1,0 +1,121 @@
+Total messages: 139 (Errors: 1, Warnings: 0)
+Returning 97 messages for level "info"
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8081/VAADIN/build/indexhtml-BtmxBdNx.js:62273
+[ERROR] Failed to load resource: the server responded with a status of 404 () @ http://localhost:8081/favicon.ico:0
+[LOG] [ERTE Lifecycle] +0ms: module-top-level -- JS module evaluation begins @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +0ms: imports-done -- RTE 2 + Lit imports resolved @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE] Quill available: true 2.0.3 @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155043
+[LOG] [ERTE] RichTextEditor class: true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155045
+[LOG] [ERTE] Embed base class: true o @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155047
+[LOG] [ERTE Lifecycle] +1ms: blot-registered -- TabBlot registered with Quill @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +1ms: element-defined -- Custom element registered @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +165ms: constructor-before-super -- About to call super() @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +166ms: constructor-after-super -- _editor=false @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +168ms: connectedCallback-before-super -- _editor=false, isConnected=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +168ms: willUpdate -- changed=[dir, value, disabled, readonly, colorOptions, __lastCommittedChange, _linkEditing, _linkRange, _linkIndex, _linkUrl, _colorEditing, _colorValue, _backgroundEditing, _backgroundValue, __effectiveI18n, i18n] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +174ms: firstUpdated-before-super -- changed=[dir, value, disabled, readonly, colorOptions, __lastCommittedChange, _linkEditing, _linkRange, _linkIndex, _linkUrl, _colorEditing, _colorValue, _backgroundEditing, _backgroundValue, __effectiveI18n, i18n], _editor=false @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +174ms: firstUpdated-after-super -- _editor=false @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +174ms: updated -- changed=[dir, value, disabled, readonly, colorOptions, __lastCommittedChange, _linkEditing, _linkRange, _linkIndex, _linkUrl, _colorEditing, _colorValue, _backgroundEditing, _backgroundValue, __effectiveI18n, i18n], _editor=false @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +175ms: ready-before-super -- _editor=false @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +179ms: willUpdate -- changed=[_editor] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +179ms: updated -- changed=[_editor], _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +183ms: ready-after-super -- _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE] Quill instance version (if available): 2.0.3 @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155376
+[LOG] [ERTE Lifecycle] +185ms: first-text-change -- source=api, ops=[{"insert":"Hello"},{"insert":{"tab":true}},{"insert":"Tab1"}] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE] Content with tabs inserted successfully @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155389
+[LOG] 
+[ERTE Item 6] === KEYBOARD MODULE ANALYSIS === @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155411
+[LOG] [ERTE Item 6] keyboard exists: true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155412
+[LOG] [ERTE Item 6] keyboard constructor name: u @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155413
+[LOG] [ERTE Item 6] keyboard typeof: object @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155414
+[LOG] [ERTE Item 6] Own properties: [quill, options, bindings] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155417
+[LOG] [ERTE Item 6] Prototype methods: [addBinding, listen, handleBackspace, handleDelete, handleDeleteRange, handleEnter] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155422
+[LOG] [ERTE Item 6] addBinding exists: true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155423
+[LOG] [ERTE Item 6] addBinding: addBinding(t3) {
+              let e3 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {}, n3 = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : {};
+              con @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155424
+[LOG] [ERTE Item 6] bindings type: object @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155425
+[LOG] [ERTE Item 6] bindings is Map: false @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155426
+[LOG] [ERTE Item 6] bindings is object: true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155427
+[LOG] [ERTE Item 6] bindings keys (object): [b, i, u, Tab, Backspace, Enter, Delete,  , ArrowLeft, ArrowRight, ArrowDown, ArrowUp, z, Z, F10] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155449
+[LOG] [ERTE Item 6] Binding key="b" (string): {handlersCount: 1, firstHandler: Object} @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155452
+[LOG] [ERTE Item 6] Binding key="i" (string): {handlersCount: 1, firstHandler: Object} @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155452
+[LOG] [ERTE Item 6] Binding key="u" (string): {handlersCount: 1, firstHandler: Object} @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155452
+[LOG] [ERTE Item 6] Binding key="Tab" (string): {handlersCount: 8, firstHandler: Object} @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155452
+[LOG] [ERTE Item 6] Binding key="Backspace" (string): {handlersCount: 5, firstHandler: Object} @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155452
+[LOG] [ERTE Item 6] listen exists: true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155463
+[LOG] [ERTE Item 6] options: [bindings] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155464
+[LOG] [ERTE Item 6] === END KEYBOARD ANALYSIS ===
+ @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155466
+[LOG] 
+[ERTE Item 7] === CUSTOM KEYBOARD BINDINGS === @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155477
+[LOG] [ERTE Item 7] Tab binding added successfully (string key) @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155485
+[LOG] [ERTE Item 7] Shift+Enter binding added successfully @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155494
+[LOG] [ERTE Item 7] Numeric key binding added (but may not fire) @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155503
+[LOG] [ERTE Item 7] Bindings after additions (obj keys): [9, b, i, u, Tab, Backspace, Enter, Delete,  , ArrowLeft, ArrowRight, ArrowDown, ArrowUp, z, Z, F10] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155519
+[LOG] [ERTE Item 7] Tab bindings: 9 entries @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155521
+[LOG] [ERTE Item 7]   Tab binding 0: {key: Tab, shiftKey: undefined, handler: handler(t3, e3) {
+            return !(!e3.collapsed || 0 === e3.offset) || (thi} @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155523
+[LOG] [ERTE Item 7]   Tab binding 1: {key: Tab, shiftKey: true, handler: handler(t3, e3) {
+            return !(!e3.collapsed || 0 === e3.offset) || (thi} @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155523
+[LOG] [ERTE Item 7]   Tab binding 2: {key: Tab, shiftKey: false, handler: handler(e3, n3) {
+              let { event: s3 } = n3;
+              const i2 =} @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155523
+[LOG] [ERTE Item 7]   Tab binding 3: {key: Tab, shiftKey: true, handler: handler(e3, n3) {
+              let { event: s3 } = n3;
+              const i2 =} @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155523
+[LOG] [ERTE Item 7]   Tab binding 4: {key: Tab, shiftKey: true, handler: handler(t3) {
+            this.quill.deleteText(t3.index - 1, 1, r.Ay.sources.US} @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155523
+[LOG] [ERTE Item 7]   Tab binding 5: {key: Tab, shiftKey: undefined, handler: handler(t3, e3) {
+            if (e3.format.table) return true;
+            this} @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155523
+[LOG] [ERTE Item 7]   Tab binding 6: {key: Tab, shiftKey: null, handler: handler(t3, e3) {
+            const { event: n3, line: s3 } = e3, i2 = s3.offset} @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155523
+[LOG] [ERTE Item 7]   Tab binding 7: {key: Tab, shiftKey: true, handler: () => {
+      this._markToolbarFocused();
+      this._toolbar.querySelector("but} @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155523
+[LOG] [ERTE Item 7]   Tab binding 8: {key: Tab, shiftKey: undefined, handler: (range2, context) => {
+        console.log("[ERTE Item 7] Tab pressed! range:", } @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155523
+[LOG] [ERTE Item 7] Testing binding removal... @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155530
+[LOG] [ERTE Item 7] Removed binding: before=9, after=8 @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155552
+[LOG] [ERTE Item 7] Re-added Tab binding @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155559
+[LOG] [ERTE Item 7] === END CUSTOM KEYBOARD BINDINGS ===
+ @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155562
+[LOG] [ERTE Lifecycle] +188ms: connectedCallback-after-super -- _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +204ms: willUpdate -- changed=[htmlValue] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +204ms: updated -- changed=[htmlValue], _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +403ms: willUpdate -- changed=[value] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +403ms: updated -- changed=[value], _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +403ms: willUpdate -- changed=[value] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Lifecycle] +403ms: updated -- changed=[value], _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] [ERTE Guard Analysis] Found 0 tab elements @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155606
+[LOG] [ERTE Lifecycle] +688ms: analysis-complete -- All ready() analysis done @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155038
+[LOG] 
+[ERTE Lifecycle] === FULL TIMELINE === @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155398
+[LOG] [ERTE Lifecycle] +0ms: module-top-level -- JS module evaluation begins @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +0ms: imports-done -- RTE 2 + Lit imports resolved @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +1ms: blot-registered -- TabBlot registered with Quill @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +1ms: element-defined -- Custom element registered @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +165ms: constructor-before-super -- About to call super() @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +166ms: constructor-after-super -- _editor=false @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +168ms: connectedCallback-before-super -- _editor=false, isConnected=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +168ms: willUpdate -- changed=[dir, value, disabled, readonly, colorOptions, __lastCommittedChange, _linkEditing, _linkRange, _linkIndex, _linkUrl, _colorEditing, _colorValue, _backgroundEditing, _backgroundValue, __effectiveI18n, i18n] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +174ms: firstUpdated-before-super -- changed=[dir, value, disabled, readonly, colorOptions, __lastCommittedChange, _linkEditing, _linkRange, _linkIndex, _linkUrl, _colorEditing, _colorValue, _backgroundEditing, _backgroundValue, __effectiveI18n, i18n], _editor=false @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +174ms: firstUpdated-after-super -- _editor=false @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +174ms: updated -- changed=[dir, value, disabled, readonly, colorOptions, __lastCommittedChange, _linkEditing, _linkRange, _linkIndex, _linkUrl, _colorEditing, _colorValue, _backgroundEditing, _backgroundValue, __effectiveI18n, i18n], _editor=false @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +175ms: ready-before-super -- _editor=false @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +179ms: willUpdate -- changed=[_editor] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +179ms: updated -- changed=[_editor], _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +183ms: ready-after-super -- _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +185ms: first-text-change -- source=api, ops=[{"insert":"Hello"},{"insert":{"tab":true}},{"insert":"Tab1"}] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +188ms: connectedCallback-after-super -- _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +204ms: willUpdate -- changed=[htmlValue] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +204ms: updated -- changed=[htmlValue], _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +403ms: willUpdate -- changed=[value] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +403ms: updated -- changed=[value], _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +403ms: willUpdate -- changed=[value] @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +403ms: updated -- changed=[value], _editor=true @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] +688ms: analysis-complete -- All ready() analysis done @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155399
+[LOG] [ERTE Lifecycle] === END TIMELINE ===
+ @ http://localhost:8081/VAADIN/build/generated-flow-imports-r0bjwEBn.js:155400
