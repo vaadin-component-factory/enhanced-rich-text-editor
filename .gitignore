@@ -32,3 +32,15 @@ rebel.xml
 .playwright-mcp
 test-results
 migration_v25/spike/target/
+
+# V25 demo module (Vaadin-generated)
+enhanced-rich-text-editor-demo-25/package.json
+enhanced-rich-text-editor-demo-25/tsconfig.json
+enhanced-rich-text-editor-demo-25/types.d.ts
+enhanced-rich-text-editor-demo-25/vite.config.ts
+enhanced-rich-text-editor-demo-25/vite.generated.ts
+
+# Convenience scripts (local dev only)
+v24-*.sh
+v25-*.sh
+enhanced-rich-text-editor-demo-25/build-*.sh
