@@ -346,6 +346,37 @@ class EnhancedRichTextEditor extends RichTextEditor {
   }
 
   // ============================================================
+  // HTML value override
+  // ============================================================
+
+  /**
+   * Overrides RTE 2's __updateHtmlValue to preserve ERTE-specific
+   * ql-* CSS classes in the htmlValue output.
+   *
+   * The parent strips ALL ql-* classes except ql-align and ql-indent.
+   * ERTE needs ql-tab, ql-soft-break, ql-readonly, and ql-placeholder
+   * preserved for HTML round-trip (getValue/setValue).
+   */
+  __updateHtmlValue() {
+    if (!this._editor) return;
+    const erteClasses = new Set([
+      'ql-tab', 'ql-soft-break', 'ql-readonly', 'ql-placeholder'
+    ]);
+    let content = this._editor.getSemanticHTML();
+    content = content.replace(/class="([^"]*)"/gu, (_match, group1) => {
+      const classes = group1.split(' ').filter((cls) => {
+        return !cls.startsWith('ql-') ||
+               cls.startsWith('ql-align') ||
+               cls.startsWith('ql-indent') ||
+               erteClasses.has(cls);
+      });
+      return `class="${classes.join(' ')}"`;
+    });
+    content = this.__processQuillClasses(content);
+    this._setHtmlValue(content);
+  }
+
+  // ============================================================
   // Lifecycle
   // ============================================================
 
@@ -1434,19 +1465,38 @@ class EnhancedRichTextEditor extends RichTextEditor {
 
   /**
    * Confirm insertion of placeholders.
+   * Inserts the placeholder embeds into Quill and dispatches the placeholder-insert event.
+   * When eventsOnly=true (e.g. from paste/undo), only fires the event without inserting.
+   * Called from Java via executeJs after PlaceholderButtonClickedEvent.insert().
    */
-  _confirmInsertPlaceholders(placeholders, skipEvent, fromPaste) {
+  _confirmInsertPlaceholders(placeholders, skipEvent, eventsOnly) {
+    if (!this._editor) return;
+
+    const detail = { placeholders: placeholders.map(i => i.placeholder || i) };
+    let selectIndex = 0;
+
+    if (!eventsOnly) {
+      placeholders.forEach(({ placeholder, index }) => {
+        const data = typeof placeholder === 'string' ? JSON.parse(placeholder) : placeholder;
+        if (this.placeholderAltAppearance && data) data.altAppearance = true;
+        this._editor.insertEmbed(index, 'placeholder', data, Quill.sources.USER);
+        selectIndex = index;
+      });
+      this._editor.setSelection(selectIndex + 1, 0);
+    }
+
     if (!skipEvent) {
       this.dispatchEvent(new CustomEvent('placeholder-insert', {
         bubbles: true,
-        detail: { placeholders, fromPaste }
+        detail
       }));
     }
   }
 
   /**
    * Insert placeholders at specified positions.
-   * Called from Java via executeJs.
+   * Lower-level method that only inserts embeds, no events.
+   * Called from Java via executeJs for programmatic insertion.
    */
   _insertPlaceholders(placeholders) {
     if (!this._editor || !placeholders) return;

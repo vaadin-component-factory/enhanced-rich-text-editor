@@ -72,6 +72,7 @@ public class EnhancedRichTextEditor extends RichTextEditor {
     private EnhancedRichTextEditorI18n enhancedI18n;
     private Map<ToolbarButton, Boolean> toolbarButtonsVisibility;
     private Collection<Placeholder> placeholders;
+    private boolean pendingHtmlUpdate;
 
     // ================================================================
     // Constructors
@@ -161,18 +162,63 @@ public class EnhancedRichTextEditor extends RichTextEditor {
     // ================================================================
 
     /**
+     * Returns the current editor value as sanitized HTML.
+     * <p>
+     * Overrides the parent's {@code getValue()} to use ERTE's extended
+     * sanitizer that preserves ERTE-specific CSS classes (ql-tab,
+     * ql-soft-break, ql-readonly, ql-placeholder) on span elements.
+     * The parent's sanitizer strips all class attributes.
+     *
+     * @return the sanitized HTML value with ERTE classes preserved
+     */
+    @Override
+    public String getValue() {
+        String raw = getHtmlValueString();
+        if (raw == null || raw.isEmpty()) {
+            return getEmptyValue();
+        }
+        return sanitizeErte(raw);
+    }
+
+    /**
+     * Sends the HTML value to the client, using ERTE's extended sanitizer
+     * instead of the parent's default sanitizer.
+     * <p>
+     * The parent's {@code modelToPresentation} strips ERTE-specific CSS
+     * classes (ql-tab, ql-placeholder, etc.) which prevents Quill from
+     * reconstructing ERTE-specific blots from HTML. This override ensures
+     * those classes are preserved in the round-trip.
+     *
+     * @param newPresentationValue the value to send to the client
+     */
+    @Override
+    protected void setPresentationValue(String newPresentationValue) {
+        String presentationValue = newPresentationValue == null
+                ? "" : sanitizeErte(newPresentationValue);
+        getElement().setProperty("htmlValue", presentationValue);
+        if (!pendingHtmlUpdate) {
+            pendingHtmlUpdate = true;
+            runBeforeClientResponse(ui -> {
+                getElement().callJsFunction("dangerouslySetHtmlValue",
+                        getElement().getProperty("htmlValue"));
+                pendingHtmlUpdate = false;
+            });
+        }
+    }
+
+    /**
      * Value of the editor presented as sanitized HTML string.
      * <p>
      * Uses ERTE's extended sanitizer that whitelists ERTE-specific CSS classes
      * (ql-tab, ql-soft-break, ql-readonly, ql-placeholder) on span elements.
      *
      * @return the sanitized HTML value
-     * @deprecated RTE 2 uses {@link #getValue()} for HTML values. This method
-     *             is provided for backwards compatibility.
+     * @deprecated Use {@link #getValue()} instead. This method is provided
+     *             for backwards compatibility with ERTE v1.
      */
     @Deprecated
     public String getHtmlValue() {
-        return sanitizeErte(getHtmlValueString());
+        return getValue();
     }
 
     /**
@@ -212,6 +258,8 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      *   <li>{@code span} elements with ERTE-specific class values
      *       (ql-tab, ql-soft-break, ql-readonly, ql-placeholder)</li>
      *   <li>{@code contenteditable="false"} on span elements</li>
+     *   <li>Table elements ({@code table}, {@code tr}, {@code td},
+     *       {@code colgroup}, {@code col}) with table metadata attributes</li>
      * </ul>
      *
      * @param html the HTML string to sanitize
@@ -222,10 +270,15 @@ public class EnhancedRichTextEditor extends RichTextEditor {
         settings.prettyPrint(false);
         String cleaned = org.jsoup.Jsoup.clean(html, "",
                 org.jsoup.safety.Safelist.basic()
-                        .addTags("img", "h1", "h2", "h3", "s", "span", "br")
+                        .addTags("img", "h1", "h2", "h3", "s", "span", "br",
+                                "table", "tr", "td", "colgroup", "col")
                         .addAttributes("img", "align", "alt", "height", "src",
                                 "title", "width")
                         .addAttributes("span", "class", "contenteditable")
+                        .addAttributes("table", "table_id", "class")
+                        .addAttributes("tr", "row_id")
+                        .addAttributes("td", "table_id", "row_id", "cell_id",
+                                "merge_id", "colspan", "rowspan", "class")
                         .addAttributes(":all", "style")
                         .addProtocols("img", "src", "data"),
                 settings);
@@ -1612,7 +1665,7 @@ public class EnhancedRichTextEditor extends RichTextEditor {
         public void insert(Placeholder placeholder, int position) {
             Objects.requireNonNull(placeholder, "Placeholder cannot be null");
             ((EnhancedRichTextEditor) source).getElement().executeJs(
-                    "this._confirmInsertPlaceholders([{$0,index: $1}])",
+                    "this._confirmInsertPlaceholders([{placeholder: $0, index: $1}])",
                     placeholder.toJson(), position);
         }
     }

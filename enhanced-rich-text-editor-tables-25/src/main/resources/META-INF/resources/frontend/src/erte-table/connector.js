@@ -2,6 +2,9 @@
 // Changes from V1:
 // 1. Removed vendor import (Quill 2 globally available)
 // 2. __blot.blot -> Quill.find(domNode) in setTemplate
+// 3. V25: Register blots at top-level + init TableModule on existing Quill instance
+//    (V24 used extendOptions callback consumed by ERTE's own Quill constructor;
+//     V25's RTE 2 parent creates Quill, so extendOptions is never consumed)
 
 // Import RTE 2 first to ensure window.Quill is set before any blot files access it.
 // Without this, the Vite bundler may load this module before the ERTE core module,
@@ -14,33 +17,20 @@ import TableSelection from "./js/TableSelection.js";
 
 const Quill = window.Quill;
 
+// V25: Register table blots globally at module top-level, BEFORE any Quill instance
+// is created. This ensures the Quill registry (and scroll.create()) knows about
+// table/tr/td/contain blots when TableTrick.insertTable() is called.
+if (!Quill.__tablesRegistered) {
+    console.info("Register Quill Table Module for Enhanced Rich Text Editor");
+    TableModule.register(); // Registers TableCell, TableRow, Table, Contain blots
+    Quill.register('modules/table', TableModule);
+    Quill.__tablesRegistered = true;
+}
+
 (function () {
     if (typeof window.Vaadin.Flow.vcfEnhancedRichTextEditor !== "object") {
         window.Vaadin.Flow.vcfEnhancedRichTextEditor = {};
     }
-
-    // update the options passed into the new Quill instance
-    if (!Array.isArray(window.Vaadin.Flow.vcfEnhancedRichTextEditor.extendOptions)) {
-        window.Vaadin.Flow.vcfEnhancedRichTextEditor.extendOptions = [];
-    }
-
-    window.Vaadin.Flow.vcfEnhancedRichTextEditor.extendOptions.push((options, Quill) => {
-        // extend quill with your module - since Quill is a global object, assure to only register it once
-        if (!Quill.__tablesRegistered) {
-            console.info("Register Quill Table Module for Enhanced Rich Text Editor");
-            Quill.register('modules/table', TableModule);
-            Quill.__tablesRegistered = true;
-        }
-
-        options.modules = {
-            ...options.modules,
-            table: true,
-            keyboard: {
-                ...options.modules?.keyboard,
-                bindings: TableModule.keyBindings
-            }
-        }
-    });
 
     if (!window.Vaadin.Flow.vcfEnhancedRichTextEditor.extensions) {
         window.Vaadin.Flow.vcfEnhancedRichTextEditor.extensions = {};
@@ -54,6 +44,55 @@ const Quill = window.Quill;
                 this._createStyleElement('table-template-custom-styles-2')
             );
 
+            // V25: Initialize table module on the existing Quill instance.
+            // In V24, this happened via extendOptions before Quill construction.
+            // In V25, RTE 2 creates Quill, so we initialize the module manually.
+            const quill = rte._editor;
+            if (quill && !quill.__tableModuleInitialized) {
+                // Instantiate the table module (sets up mouse events, clipboard
+                // matchers, selection handling, history stack)
+                new TableModule(quill, {});
+
+                // Prepend table keyboard bindings BEFORE ERTE's bindings.
+                // Table Tab must run first: if cursor is in a table cell,
+                // Tab navigates to next cell instead of inserting a tab-stop.
+                const keyboard = quill.keyboard;
+                const bindings = TableModule.keyBindings;
+
+                for (const [name, binding] of Object.entries(bindings)) {
+                    // Get the key string that Quill uses for the bindings map
+                    const keyStr = binding.key;
+
+                    if (name === 'tab' || name === 'shiftTab') {
+                        // For Tab/Shift+Tab: prepend to run before ERTE's tab handler.
+                        // Do NOT use the table module's fallback \t insertion --
+                        // return true to delegate to ERTE's tabStopBinding when outside a table.
+                        const tableKeyName = name === 'tab' ? 'tab' : 'shiftTab';
+                        const tableBinding = {
+                            key: binding.key,
+                            shiftKey: name === 'shiftTab' ? true : false,
+                            handler: function(range, keycontext) {
+                                return TableModule.keyboardHandler(quill, tableKeyName, range, keycontext);
+                            }
+                        };
+                        if (keyboard.bindings[keyStr]) {
+                            keyboard.bindings[keyStr].unshift(tableBinding);
+                        } else {
+                            keyboard.addBinding(tableBinding);
+                        }
+                    } else {
+                        // For other keys (Backspace, Delete, SelectAll, Undo, Redo, Copy):
+                        // prepend to the existing bindings so table handling runs first
+                        if (keyboard.bindings[keyStr]) {
+                            keyboard.bindings[keyStr].unshift(binding);
+                        } else {
+                            keyboard.addBinding(binding);
+                        }
+                    }
+                }
+
+                quill.__tableModuleInitialized = true;
+            }
         },
 
         _createStyleElement(id) {
