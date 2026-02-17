@@ -11,7 +11,7 @@ target/
 .settings
 **/.DS_Store
 .vscode
-enhanced-rich-text-editor-demo/node_modules
+**/node_modules
 enhanced-rich-text-editor-demo/webpack.generated.js
 enhanced-rich-text-editor-demo/webpack.config.js
 enhanced-rich-text-editor-demo/package.json
@@ -31,3 +31,4 @@ rebel.xml
 .mcp.json
 .playwright-mcp
 test-results
+migration_v25/spike/target/
