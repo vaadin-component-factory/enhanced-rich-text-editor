@@ -1,14 +1,16 @@
 package com.vaadin.componentfactory.demo25;
 
+import com.vaadin.componentfactory.TabStop;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Pre;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.richtexteditor.EnhancedRichTextEditor;
 import com.vaadin.flow.router.Route;
+
+import java.util.List;
 
 /**
  * V25 Demo view for the Enhanced Rich Text Editor.
@@ -32,6 +34,13 @@ public class EnhancedRichTextEditorDemo25View extends VerticalLayout {
         EnhancedRichTextEditor editor = new EnhancedRichTextEditor();
         editor.setWidthFull();
         editor.setMaxHeight("400px");
+
+        // --- Tab stops ---
+        editor.setTabStops(List.of(
+            new TabStop(TabStop.Direction.LEFT, 150),
+            new TabStop(TabStop.Direction.LEFT, 300),
+            new TabStop(TabStop.Direction.RIGHT, 450)
+        ));
 
         // --- Result area ---
         resultArea = new Pre();
@@ -70,7 +79,18 @@ public class EnhancedRichTextEditorDemo25View extends VerticalLayout {
             log("Value: " + editor.getValue())
         );
 
-        Div buttons = new Div(checkTagButton, toggleReadOnly, setValueButton, getValueButton);
+        Button toggleWhitespace = new Button("Toggle Whitespace", e -> {
+            boolean current = editor.isShowWhitespace();
+            editor.setShowWhitespace(!current);
+            log("Whitespace: " + !current);
+        });
+
+        Button checkTabStops = new Button("Check TabStops", e ->
+            log("TabStops: " + editor.getTabStops().size() + " defined")
+        );
+
+        Div buttons = new Div(checkTagButton, toggleReadOnly, setValueButton,
+                getValueButton, toggleWhitespace, checkTabStops);
         buttons.getStyle().set("display", "flex").set("gap", "8px").set("flex-wrap", "wrap");
 
         add(buttons, editor, resultArea);

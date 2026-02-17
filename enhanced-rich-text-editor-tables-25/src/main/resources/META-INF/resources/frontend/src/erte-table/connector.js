@@ -3,6 +3,11 @@
 // 1. Removed vendor import (Quill 2 globally available)
 // 2. __blot.blot -> Quill.find(domNode) in setTemplate
 
+// Import RTE 2 first to ensure window.Quill is set before any blot files access it.
+// Without this, the Vite bundler may load this module before the ERTE core module,
+// causing a fatal TypeError: Cannot read properties of undefined (reading 'import').
+import '@vaadin/rich-text-editor/src/vaadin-rich-text-editor.js';
+
 import TableModule from "./index";
 import TableTrick from "./js/TableTrick.js";
 import TableSelection from "./js/TableSelection.js";

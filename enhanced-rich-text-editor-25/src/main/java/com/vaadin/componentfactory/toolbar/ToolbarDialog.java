@@ -1,6 +1,7 @@
 package com.vaadin.componentfactory.toolbar;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.ModalityMode;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.dialog.DialogVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -61,7 +62,7 @@ public class ToolbarDialog extends Dialog {
         // default settings
         setCloseOnOutsideClick(false);
         setCloseOnEsc(true); // not sure?
-        setModal(false);
+        setModality(ModalityMode.MODELESS);
         setResizable(true);
         setDraggable(true);
         addThemeVariants(DialogVariant.LUMO_NO_PADDING);

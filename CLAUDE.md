@@ -198,6 +198,10 @@ bash migration_v25/spike/print-server-logs.sh [-f|-state|-errors]
 - `ThemableMixin`/`registerStyles()` deprecated — use Lit `static get styles()` or `::part()`
 - HTML sanitizer strips `class` attribute — must override or use Delta API
 
+## Important Rules
+
+- **NEVER scan, decompile, or inspect JAR files** for API lookups. Use Vaadin MCP tools (`mcp__vaadin__search_vaadin_docs`, `mcp__vaadin__get_component_java_api`, `mcp__vaadin__get_full_document`, etc.) or GitHub source repositories instead.
+
 ## License
 
 CVALv3 (Commercial Vaadin Add-On License). License headers are enforced on Java files.

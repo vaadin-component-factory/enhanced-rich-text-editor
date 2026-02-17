@@ -28,7 +28,6 @@ import com.vaadin.flow.component.DomEvent;
 import com.vaadin.flow.component.EventData;
 import com.vaadin.flow.component.Synchronize;
 import com.vaadin.flow.component.Tag;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.icon.Icon;
@@ -289,7 +288,6 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      *
      * @return list of tab stop definitions
      */
-    @Synchronize(property = "tabStops", value = "tab-stops-changed")
     public List<TabStop> getTabStops() {
         List<TabStop> tabStops = new ArrayList<>();
         JsonNode rawNode = (JsonNode) getElement()
@@ -385,9 +383,12 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      * component. This includes all standard RTE 2 i18n properties plus
      * ERTE-specific ones (readonly, placeholder, etc.).
      * <p>
-     * The standard properties are delegated to the parent
-     * {@link RichTextEditor#setI18n(RichTextEditorI18n)}.
-     * ERTE-specific properties are sent via JS execution.
+     * Delegates to the parent
+     * {@link RichTextEditor#setI18n(RichTextEditorI18n)} which serializes
+     * the full bean (including ERTE-specific fields) via
+     * {@code JacksonUtils.beanToJson()} and sets it as the {@code i18n}
+     * JSON property. The {@code I18nMixin} on the JS side merges all keys
+     * (including ERTE-specific extras) into {@code __effectiveI18n}.
      *
      * @param i18n
      *            the internationalized properties, not {@code null}
@@ -397,40 +398,12 @@ public class EnhancedRichTextEditor extends RichTextEditor {
                 "The I18N properties object should not be null");
         this.enhancedI18n = i18n;
 
-        // Delegate standard properties to parent
+        // Delegate to parent -- setI18n uses JacksonUtils.beanToJson(i18n)
+        // which serializes ALL getters, including ERTE-specific fields
+        // (alignJustify, deindent, readonly, placeholder*, etc.).
+        // The I18nMixin on the JS side merges these into __effectiveI18n,
+        // preserving extra keys beyond the standard RTE 2 defaults.
         super.setI18n(i18n);
-
-        // Send ERTE-specific i18n properties via JS
-        runBeforeClientResponse(ui -> {
-            if (i18n == this.enhancedI18n) {
-                // Send each ERTE-specific key individually
-                sendI18nProperty(ui, "alignJustify", i18n.getAlignJustify());
-                sendI18nProperty(ui, "deindent", i18n.getDeindent());
-                sendI18nProperty(ui, "readonly", i18n.getReadonly());
-                sendI18nProperty(ui, "placeholder", i18n.getPlaceholder());
-                sendI18nProperty(ui, "placeholderAppearance",
-                        i18n.getPlaceholderAppearance());
-                sendI18nProperty(ui, "placeholderComboBoxLabel",
-                        i18n.getPlaceholderComboBoxLabel());
-                sendI18nProperty(ui, "placeholderAppearanceLabel1",
-                        i18n.getPlaceholderAppearanceLabel1());
-                sendI18nProperty(ui, "placeholderAppearanceLabel2",
-                        i18n.getPlaceholderAppearanceLabel2());
-                sendI18nProperty(ui, "placeholderDialogTitle",
-                        i18n.getPlaceholderDialogTitle());
-            }
-        });
-    }
-
-    /**
-     * Helper to send an individual i18n property to the client.
-     */
-    private void sendI18nProperty(UI ui, String key, String value) {
-        if (value != null) {
-            ui.getPage().executeJs(
-                    "$0.set('i18n." + key + "', $1)",
-                    getElement(), value);
-        }
     }
 
     // ================================================================
@@ -456,12 +429,15 @@ public class EnhancedRichTextEditor extends RichTextEditor {
     public void setToolbarButtonsVisibility(
             Map<ToolbarButton, Boolean> toolbarButtonsVisibility) {
         this.toolbarButtonsVisibility = toolbarButtonsVisibility;
-        runBeforeClientResponse(ui -> {
-            String str = toolbarButtonsVisibility.toString();
-            str = str.replaceAll("=", ":");
-            ui.getPage().executeJs("setToolbarButtons($0, $1)",
-                    getElement(), str);
-        });
+        ObjectNode json = JacksonUtils.createObjectNode();
+        if (toolbarButtonsVisibility != null) {
+            for (Map.Entry<ToolbarButton, Boolean> entry :
+                    toolbarButtonsVisibility.entrySet()) {
+                json.put(entry.getKey().getButtonName(),
+                        entry.getValue());
+            }
+        }
+        getElement().setPropertyJson("toolbarButtons", json);
     }
 
     // ================================================================
@@ -491,7 +467,6 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      *
      * @return collection of Placeholder objects
      */
-    @Synchronize(property = "placeholders", value = "placeholders-changed")
     public Collection<Placeholder> getPlaceholders() {
         ArrayList<Placeholder> result = new ArrayList<>();
         JsonNode rawNode = (JsonNode) getElement()
@@ -529,7 +504,6 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      *
      * @return the regex pattern
      */
-    @Synchronize(property = "placeholderAltAppearancePattern", value = "placeholder-alt-appearance-pattern-changed")
     public String getPlaceholderAltAppearancePattern() {
         return getElement().getProperty("placeholderAltAppearancePattern");
     }
@@ -539,7 +513,7 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      *
      * @param altAppearance {@code true} for alternative appearance
      */
-    public void setPlacehoderAltAppearance(boolean altAppearance) {
+    public void setPlaceholderAltAppearance(boolean altAppearance) {
         getElement().setProperty("placeholderAltAppearance", altAppearance);
     }
 
@@ -548,8 +522,8 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      *
      * @return {@code true} if alternative appearance is active
      */
-    @Synchronize(property = "placeholderAltAppearance", value = "placeholder-alt-appearance-changed")
-    public boolean isPlacehoderAltAppearance() {
+    @Synchronize(property = "placeholderAltAppearance", value = "placeholder-appearance-change")
+    public boolean isPlaceholderAltAppearance() {
         return getElement().getProperty("placeholderAltAppearance", false);
     }
 
@@ -804,7 +778,7 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      * @param shiftKey True if modifier shift is part of the shortcut.
      * @param altKey True if modifier alt is part of the shortcut.
      */
-    public void addToobarFocusShortcut(Number keyCode, Boolean shortKey,
+    public void addToolbarFocusShortcut(Number keyCode, Boolean shortKey,
             Boolean shiftKey, Boolean altKey) {
         getElement().executeJs(
                 "$0.addToolbarFocusBinding($1, $2, $3, $4)",
