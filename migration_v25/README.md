@@ -30,4 +30,5 @@ Runnable Vaadin 25 project to validate all architecture decisions.
 
 | File | Description |
 |------|-------------|
-| `MEMORY_2026-02-16T165113.md` | Snapshot of Claude Code working memory (context backup) |
+| `MEMORY_2026-02-16T165113.md` | Claude Code memory snapshot (Feb 16 — after table spike) |
+| `MEMORY_2026-02-17T053143.md` | Claude Code memory snapshot (Feb 17 — after docs cleanup) |
