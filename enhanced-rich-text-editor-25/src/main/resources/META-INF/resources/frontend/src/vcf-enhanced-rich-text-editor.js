@@ -946,7 +946,7 @@ class EnhancedRichTextEditor extends RichTextEditor {
           let nextPlaceholder = false;
           if (sel && sel.length === 0) {
             const index = sel.index;
-            const ops = this._editor.getContents(index).ops || [];
+            const ops = this._editor.getContents(index, 1).ops || [];
             nextPlaceholder = ops[0] && ops[0].insert && ops[0].insert.placeholder;
             if (nextPlaceholder) this._editor.setSelection(index, 1);
           }
@@ -1011,6 +1011,7 @@ class EnhancedRichTextEditor extends RichTextEditor {
     ];
 
     // === V KEY: Paste removes placeholders ===
+    const vBindings = keyboard.bindings['v'] || [];
     keyboard.bindings['v'] = [
       {
         key: 'v',
@@ -1020,7 +1021,8 @@ class EnhancedRichTextEditor extends RichTextEditor {
           if (placeholders.length) self._confirmRemovePlaceholders(placeholders, false, true);
           return true;
         }
-      }
+      },
+      ...vBindings
     ];
   }
 
@@ -1141,7 +1143,10 @@ class EnhancedRichTextEditor extends RichTextEditor {
 
           if (readonlySectionsCount !== newReadonlySectionsCount) {
             quill.setContents(oldDelta);
-            quill.setSelection(delta.ops[0].retain + 1, 0);
+            const retainOp = delta.ops.find(o => o.retain != null);
+            if (retainOp) {
+              quill.setSelection(retainOp.retain + 1, 0);
+            }
           }
         }
       }
