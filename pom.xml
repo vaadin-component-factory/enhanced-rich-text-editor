@@ -59,6 +59,9 @@
         <module>enhanced-rich-text-editor</module>
         <module>enhanced-rich-text-editor-tables</module>
         <module>enhanced-rich-text-editor-demo</module>
+        <module>enhanced-rich-text-editor-25</module>
+        <module>enhanced-rich-text-editor-tables-25</module>
+        <module>enhanced-rich-text-editor-demo-25</module>
     </modules>
 
 </project>
