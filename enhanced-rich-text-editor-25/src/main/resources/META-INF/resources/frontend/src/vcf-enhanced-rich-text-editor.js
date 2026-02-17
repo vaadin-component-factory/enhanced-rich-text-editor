@@ -1469,10 +1469,11 @@ class EnhancedRichTextEditor extends RichTextEditor {
    * When eventsOnly=true (e.g. from paste/undo), only fires the event without inserting.
    * Called from Java via executeJs after PlaceholderButtonClickedEvent.insert().
    */
-  _confirmInsertPlaceholders(placeholders, skipEvent, eventsOnly) {
+  _confirmInsertPlaceholders(placeholders = this._insertPlaceholdersList, skipEvent, eventsOnly) {
     if (!this._editor) return;
+    if (placeholders) this._insertPlaceholdersList = placeholders;
 
-    const detail = { placeholders: placeholders.map(i => i.placeholder || i) };
+    const detail = { placeholders };
     let selectIndex = 0;
 
     if (!eventsOnly) {
