@@ -115,4 +115,45 @@ export const erteContentStyles = css`
     pointer-events: none;
     margin-left: 2px;
   }
+
+  /* ==========================================
+     TABLE STYLES (base layout for ERTE tables)
+     ========================================== */
+  [part="content"] table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  [part="content"] table td {
+    border: 1px solid black;
+    padding: 2px 5px;
+    height: 25px;
+    vertical-align: top;
+    white-space: pre-wrap;
+  }
+
+  [part="content"] table td.ql-cell-selected {
+    background-color: #cce0f8;
+  }
+
+  [part="content"] table td[merge_id] {
+    display: none;
+  }
+
+  [part="content"] .ql-editor__table--hideBorder td {
+    border: none !important;
+  }
+
+  /* ==========================================
+     READONLY BLOT
+     ========================================== */
+  .ql-readonly {
+    display: inline;
+    background-color: var(--lumo-contrast-5pct, rgba(0, 0, 0, 0.05));
+    border-radius: var(--lumo-border-radius-s, 0.25em);
+    padding: 0 var(--lumo-space-xs, 0.25rem);
+  }
 `;

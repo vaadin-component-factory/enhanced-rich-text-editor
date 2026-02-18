@@ -68,6 +68,10 @@ const STATE = {
   CLICKED: 2
 };
 
+// Ruler background images (base64 encoded graduation marks)
+const RULER_HORI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAV4AAAAPBAMAAABeoLrPAAAAA3NCSVQICAjb4U/gAAAAHlBMVEXS0tLR0dHQ0NCerLmfq7eeqrafqbOdqbWcqLT///9ePaWcAAAACnRSTlP///////////8AsswszwAAAAlwSFlzAAALEgAACxIB0t1+/AAAACB0RVh0U29mdHdhcmUATWFjcm9tZWRpYSBGaXJld29ya3MgTVi7kSokAAAAFnRFWHRDcmVhdGlvbiBUaW1lADA1LzEwLzEyhpCxGgAAAKtJREFUeJztksENgCAMRXt1BEZgICdwBvco3NxWqwYDFGMrajT2QOD/0v8kwvCugqcBhPXzXluf4XViA+uNKmfIeX09Q5Eh5y0+o9xQZFT8H24xINgXLwmMdtl4fVjcruYO9nEans6YeA2NMSQaEtedYzQMx0RLbkTzbHmeImPibWhrY8cy2to3IyRalM7P89ldVQZk39ksPZhpXJ9hUHfeDanlVAZ0ffumGgEWlrgeDxx/xAAAAABJRU5ErkJggg==';
+const RULER_VERT = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAyBAMAAABxHJwKAAAAA3NCSVQICAjb4U/gAAAAG1BMVEXS0tLR0dHQ0NCfq7eeqradq7idqbWcqLT///+TeDeAAAAACXRSTlP//////////wBTT3gSAAAACXBIWXMAAAsSAAALEgHS3X78AAAAIHRFWHRTb2Z0d2FyZQBNYWNyb21lZGlhIEZpcmV3b3JrcyBNWLuRKiQAAAAWdEVYdENyZWF0aW9uIFRpbWUAMDUvMTAvMTKGkLEaAAAATklEQVR4nGPogIAABijDAMZwQGM0CqKLYGNAtDcK4lOcgGGyAS4pDF1NgoIJuJ2KLtKIUIxpcgKGmzHV4AkNTClc2pFDo4Bq4awoCAYOAKbZvafXusxYAAAAAElFTkSuQmCC';
+
 // Tab engine constants (from prototype)
 const TAB_WRAP_DETECTION_MULTIPLIER = 0.8;
 const TAB_DEFAULT_TAB_CHARS = 8;
@@ -333,7 +337,18 @@ class EnhancedRichTextEditor extends RichTextEditor {
             @change="${this._uploadImage}" />
         </div>
 
-        <div part="content"></div>
+        <!-- Horizontal ruler -->
+        <div style="overflow: hidden; box-sizing: content-box; width: 100% !important; height: 15px !important; flex-shrink: 0; display: ${this.noRulers ? 'none' : 'flex'};">
+          <div style="overflow: hidden; box-sizing: content-box; border-color: rgb(158, 170, 182); border-style: solid; border-width: 0 1px 1px 0; width: 14px !important; height: 14px !important; display: ${this.noRulers ? 'none' : 'block'};"></div>
+          <div style="position:relative; overflow: hidden; box-sizing: content-box; background: url('${RULER_HORI}') repeat-x; flex-grow: 1; height: 15px !important; padding: 0; display: ${this.noRulers ? 'none' : 'block'};"
+               @click="${this._addTabStop}" part="horizontalRuler"></div>
+        </div>
+
+        <!-- Editor with optional vertical ruler -->
+        <div style="display: flex; flex-grow: 1; overflow: auto;">
+          <div style="overflow: hidden; box-sizing: content-box; background: url('${RULER_VERT}') repeat-y; width: 15px !important; flex-shrink: 0; display: ${this.noRulers ? 'none' : 'block'};" part="verticalRuler"></div>
+          <div part="content"></div>
+        </div>
 
         <div class="announcer" aria-live="polite"></div>
       </div>
@@ -1230,6 +1245,9 @@ class EnhancedRichTextEditor extends RichTextEditor {
    * Internal: [{pos: number, align: 'left'|'center'|'right'}]
    */
   _tabStopsChanged(tabStops) {
+    // Update ruler icons
+    this._updateRulerIcons(tabStops);
+
     this._tabStopsArray = (tabStops || []).map(stop => ({
       pos: stop.position,
       align: stop.direction === 'middle' ? 'center' : (stop.direction || 'left')
@@ -1238,6 +1256,84 @@ class EnhancedRichTextEditor extends RichTextEditor {
     if (this._editor) {
       this._requestTabUpdate();
     }
+  }
+
+  // ============================================================
+  // Ruler System
+  // ============================================================
+
+  /**
+   * Update ruler icons to match current tabStops.
+   * Clears existing icons and recreates them.
+   */
+  _updateRulerIcons(tabStops) {
+    const ruler = this.shadowRoot?.querySelector('[part="horizontalRuler"]');
+    if (!ruler) return;
+
+    // Remove existing tabstop icons
+    ruler.querySelectorAll('vaadin-icon').forEach(icon => icon.remove());
+
+    // Add icon for each tabstop
+    (tabStops || []).forEach(stop => this._addTabStopIcon(stop));
+  }
+
+  /**
+   * Add a tabstop icon on the horizontal ruler.
+   * Click cycles: left → right → middle → remove.
+   */
+  _addTabStopIcon(tabStop) {
+    const ruler = this.shadowRoot?.querySelector('[part="horizontalRuler"]');
+    if (!ruler) return;
+
+    const icon = document.createElement('vaadin-icon');
+    let iconName;
+    if (tabStop.direction === 'left') {
+      iconName = 'vaadin:caret-right';
+    } else if (tabStop.direction === 'right') {
+      iconName = 'vaadin:caret-left';
+    } else {
+      iconName = 'vaadin:dot-circle';
+    }
+
+    icon.setAttribute('icon', iconName);
+    icon.style.width = '15px';
+    icon.style.height = '15px';
+    icon.style.position = 'absolute';
+    icon.style.top = '0px';
+    icon.style.left = (tabStop.position - 7) + 'px';
+    icon.style.cursor = 'pointer';
+    ruler.appendChild(icon);
+    icon.tabStop = tabStop;
+
+    icon.onclick = (e) => {
+      const idx = this.tabStops.indexOf(icon.tabStop);
+      if (idx < 0) return;
+
+      if (icon.getAttribute('icon') === 'vaadin:caret-right') {
+        icon.setAttribute('icon', 'vaadin:caret-left');
+        icon.tabStop.direction = 'right';
+        this.tabStops[idx] = icon.tabStop;
+      } else if (icon.getAttribute('icon') === 'vaadin:caret-left') {
+        icon.setAttribute('icon', 'vaadin:dot-circle');
+        icon.tabStop.direction = 'middle';
+        this.tabStops[idx] = icon.tabStop;
+      } else {
+        this.tabStops.splice(idx, 1);
+        icon.remove();
+      }
+
+      // Trigger reactive update
+      this.tabStops = [...this.tabStops];
+      e.stopPropagation();
+    };
+  }
+
+  /**
+   * Click on horizontal ruler adds a new left-aligned tabstop at the click position.
+   */
+  _addTabStop(event) {
+    const tabStop = { direction: 'left', position: event.offsetX };
+    this.tabStops = [...this.tabStops, tabStop].sort((a, b) => a.position - b.position);
   }
 
   /**

@@ -13,7 +13,7 @@ fi
 sleep 2
 
 # Start server
-SERVER_PORT=8080 ./mvnw spring-boot:run > /tmp/claude-server.log 2>&1 &
+SERVER_PORT=8080 mvn -f "$(dirname "$0")/pom.xml" spring-boot:run > /tmp/claude-server.log 2>&1 &
 echo $! > /tmp/claude-server.pid
 echo "Server starting on port 8080 (PID: $(cat /tmp/claude-server.pid))"
 echo "Waiting 25 seconds for startup..."

@@ -76,7 +76,7 @@ class TableRow extends ContainBlot {
     } else if (this.parent) {
       table_id = this.parent.domNode.getAttribute('table_id');
     } else {
-      table_id = this.domNode.parent.getAttribute('table_id');
+      table_id = this.domNode.parentNode ? this.domNode.parentNode.getAttribute('table_id') : null;
     }
 
     // Change 1+3: this.scroll.create() with defaultChild.blotName

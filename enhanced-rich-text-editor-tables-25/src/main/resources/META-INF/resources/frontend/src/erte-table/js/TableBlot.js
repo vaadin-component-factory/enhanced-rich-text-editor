@@ -77,6 +77,7 @@ class Table extends ContainBlot {
     }
 
     if (
+      quill.table && quill.table.tables &&
       typeof quill.table.tables[table_id] !== 'undefined' &&
       quill.table.tables[table_id].cell_counter === this.domNode.querySelectorAll('td').length &&
       quill.table.tables[table_id].row_counter === this.domNode.querySelectorAll('tr').length

@@ -19,40 +19,40 @@ const BlockEmbed = Quill.import('blots/block/embed');
 const TextBlot = Quill.import('blots/text');
 
 // ============================================================
-// ReadOnlyBlot (Inline)
+// ReadOnlyBlot (Embed)
 // ============================================================
 
 /**
  * Read-only section blot.
- * Wraps content in a non-editable span via contenteditable="false".
+ * Renders as a non-editable span via contenteditable="false".
+ *
+ * In Quill 2, the delta format {"insert":{"readonly":"text"}} requires an
+ * Embed blot (Quill 1 was tolerant with Inline). The text value is stored
+ * in a data-value attribute for HTML round-trip preservation.
  *
  * @class ReadOnlyBlot
- * @extends {Inline}
+ * @extends {Embed}
  */
-class ReadOnlyBlot extends Inline {
+class ReadOnlyBlot extends Embed {
   static blotName = 'readonly';
   static tagName = 'SPAN';
   static className = 'ql-readonly';
 
   static create(value) {
     const node = super.create(value);
-    if (value) {
-      node.setAttribute('contenteditable', 'false');
-    } else {
-      node.removeAttribute('contenteditable');
-    }
+    node.setAttribute('contenteditable', 'false');
+    // Store value for round-trip (data-value survives sanitizer)
+    const text = typeof value === 'string' ? value : '';
+    node.setAttribute('data-value', text);
+    // Set visible text -- Embed constructor will move it into contentNode
+    node.textContent = text.replace(/\n$/, '');
     return node;
   }
 
-  static formats() {
-    return true;
+  static value(domNode) {
+    return domNode.getAttribute('data-value') || domNode.textContent || '';
   }
 }
-
-// In Quill 2, allowedChildren on Inline is not typically needed for
-// content-editable toggling, but we preserve the ERTE 1 setting for
-// completeness in case nested structures are used.
-ReadOnlyBlot.allowedChildren = [Block, BlockEmbed, Inline, TextBlot];
 
 Quill.register(ReadOnlyBlot);
 
@@ -233,7 +233,13 @@ class PlaceholderBlot extends Embed {
   }
 
   static loadValue(node) {
-    return JSON.parse(node.dataset.placeholder) || true;
+    const raw = node.dataset.placeholder;
+    if (!raw || raw === 'undefined') return { text: '' };
+    try {
+      return JSON.parse(raw) || { text: '' };
+    } catch (e) {
+      return { text: '' };
+    }
   }
 
   static storeValue(node, placeholder) {

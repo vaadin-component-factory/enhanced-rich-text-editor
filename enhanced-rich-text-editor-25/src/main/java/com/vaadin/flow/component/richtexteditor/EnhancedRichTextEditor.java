@@ -21,11 +21,15 @@ import com.vaadin.componentfactory.Placeholder;
 import com.vaadin.componentfactory.SlotUtil;
 import com.vaadin.componentfactory.TabStop;
 import com.vaadin.componentfactory.toolbar.ToolbarSlot;
+import com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.DomEvent;
 import com.vaadin.flow.component.EventData;
+import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.HasValue.ValueChangeEvent;
+import com.vaadin.flow.component.HasValue.ValueChangeListener;
 import com.vaadin.flow.component.Synchronize;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.button.Button;
@@ -73,6 +77,8 @@ public class EnhancedRichTextEditor extends RichTextEditor {
     private Map<ToolbarButton, Boolean> toolbarButtonsVisibility;
     private Collection<Placeholder> placeholders;
     private boolean pendingHtmlUpdate;
+    private boolean isDeltaSync;
+    private HasValue<ValueChangeEvent<String>, String> erteDelta;
 
     // ================================================================
     // Constructors
@@ -127,6 +133,110 @@ public class EnhancedRichTextEditor extends RichTextEditor {
         this();
         setValue(initialValue);
         addValueChangeListener(listener);
+    }
+
+    // ================================================================
+    // Delta value handling
+    // ================================================================
+
+    /**
+     * Returns a {@link HasValue} wrapper for reading and writing the editor
+     * value in Quill Delta format.
+     * <p>
+     * Overrides the parent's {@code asDelta()} to prevent the HTML sync-back
+     * from calling {@code dangerouslySetHtmlValue}, which would overwrite the
+     * correctly loaded Delta content with sanitized HTML that loses custom
+     * blot information (tabs, placeholders, readonly sections).
+     * <p>
+     * The parent's {@code AsDelta.setValue()} flow is:
+     * <ol>
+     *   <li>Set {@code value} property → JS loads Delta into Quill</li>
+     *   <li>Read back {@code htmlValue} from JS</li>
+     *   <li>Call {@code setValue(html)} to sync the model</li>
+     * </ol>
+     * Step 3 triggers {@code setPresentationValue}, which normally schedules
+     * {@code dangerouslySetHtmlValue}. This wrapper sets a flag so that
+     * {@code setPresentationValue} skips the client push during Delta sync.
+     *
+     * @return a Delta-format value wrapper
+     */
+    @Override
+    public HasValue<ValueChangeEvent<String>, String> asDelta() {
+        if (erteDelta == null) {
+            HasValue<ValueChangeEvent<String>, String> parentDelta =
+                    super.asDelta();
+            erteDelta = new ErteDeltaValue(parentDelta);
+        }
+        return erteDelta;
+    }
+
+    /**
+     * Wrapper around the parent's Delta value accessor that sets
+     * {@link #isDeltaSync} during the HTML sync-back callback.
+     */
+    private class ErteDeltaValue
+            implements HasValue<ValueChangeEvent<String>, String> {
+
+        private final HasValue<ValueChangeEvent<String>, String> delegate;
+
+        ErteDeltaValue(
+                HasValue<ValueChangeEvent<String>, String> delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public void setValue(String value) {
+            // Set the delta on the element -- JS loads it into Quill
+            getElement().setProperty("value",
+                    value != null ? value : "");
+
+            // Read back HTML and sync the model. The isDeltaSync flag
+            // prevents setPresentationValue from calling
+            // dangerouslySetHtmlValue, since Quill already has the
+            // correct content from the delta.
+            getElement().executeJs("return this.htmlValue")
+                    .then(String.class, html -> {
+                        isDeltaSync = true;
+                        try {
+                            EnhancedRichTextEditor.this.setValue(
+                                    html != null ? html : "");
+                        } finally {
+                            isDeltaSync = false;
+                        }
+                    });
+        }
+
+        @Override
+        public String getValue() {
+            return delegate.getValue();
+        }
+
+        @Override
+        public Registration addValueChangeListener(
+                ValueChangeListener<
+                        ? super ValueChangeEvent<String>> listener) {
+            return delegate.addValueChangeListener(listener);
+        }
+
+        @Override
+        public void setReadOnly(boolean readOnly) {
+            delegate.setReadOnly(readOnly);
+        }
+
+        @Override
+        public boolean isReadOnly() {
+            return delegate.isReadOnly();
+        }
+
+        @Override
+        public void setRequiredIndicatorVisible(boolean visible) {
+            delegate.setRequiredIndicatorVisible(visible);
+        }
+
+        @Override
+        public boolean isRequiredIndicatorVisible() {
+            return delegate.isRequiredIndicatorVisible();
+        }
     }
 
     // ================================================================
@@ -196,7 +306,9 @@ public class EnhancedRichTextEditor extends RichTextEditor {
         String presentationValue = newPresentationValue == null
                 ? "" : sanitizeErte(newPresentationValue);
         getElement().setProperty("htmlValue", presentationValue);
-        if (!pendingHtmlUpdate) {
+        // When isDeltaSync is true, Quill already has the correct content
+        // loaded from a Delta -- skip the client push to avoid overwriting it.
+        if (!isDeltaSync && !pendingHtmlUpdate) {
             pendingHtmlUpdate = true;
             runBeforeClientResponse(ui -> {
                 getElement().callJsFunction("dangerouslySetHtmlValue",
@@ -274,7 +386,8 @@ public class EnhancedRichTextEditor extends RichTextEditor {
                                 "table", "tr", "td", "colgroup", "col")
                         .addAttributes("img", "align", "alt", "height", "src",
                                 "title", "width")
-                        .addAttributes("span", "class", "contenteditable")
+                        .addAttributes("span", "class", "contenteditable",
+                                "data-value", "data-placeholder")
                         .addAttributes("table", "table_id", "class")
                         .addAttributes("tr", "row_id")
                         .addAttributes("td", "table_id", "row_id", "cell_id",

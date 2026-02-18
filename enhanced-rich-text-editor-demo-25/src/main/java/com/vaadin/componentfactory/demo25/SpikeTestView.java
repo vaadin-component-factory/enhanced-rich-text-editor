@@ -26,14 +26,14 @@ import java.util.Map;
  * <p>
  * Comprehensive feature verification view for V25 migration Phase 3.
  */
-@Route("")
-public class EnhancedRichTextEditorDemo25View extends VerticalLayout {
+@Route("test")
+public class SpikeTestView extends VerticalLayout {
 
     private final Pre resultArea;
     private final EnhancedRichTextEditor editor;
     private EnhancedRichTextEditorTables tables;
 
-    public EnhancedRichTextEditorDemo25View() {
+    public SpikeTestView() {
         setSizeFull();
         setPadding(true);
 
