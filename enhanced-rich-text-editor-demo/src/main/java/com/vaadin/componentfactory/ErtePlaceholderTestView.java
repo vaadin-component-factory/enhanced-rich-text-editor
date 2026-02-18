@@ -69,6 +69,8 @@ public class ErtePlaceholderTestView extends VerticalLayout {
         // Register placeholder event listeners
         editor.addPlaceholderButtonClickedListener(event -> {
             logEvent("PlaceholderButtonClicked: position=" + event.getPosition());
+            // Re-open the built-in JS dialog (preventDefault() in @DomEvent cancels it)
+            editor.getElement().executeJs("this._placeholderEditing = true");
         });
 
         editor.addPlaceholderBeforeInsertListener(event -> {

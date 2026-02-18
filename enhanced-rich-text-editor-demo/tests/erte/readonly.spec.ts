@@ -116,9 +116,7 @@ test.describe('ERTE Readonly Sections', () => {
   // 3. Cannot delete readonly section (Backspace)
   // ==========================================================================
   // FIXME: Backspace adjacent to contenteditable=false span may delete it in some browsers.
-  // This is a known browser behavior issue with non-editable islands in contenteditable.
-  // The ERTE readonly protection may need hardening.
-  test.fixme('Cannot delete readonly section with Backspace', async ({ page }) => {
+  test('Cannot delete readonly section with Backspace', async ({ page }) => {
     const deltaBefore = await getEditorDelta(page);
     const readonlyCountBefore = countReadonly(deltaBefore);
 
@@ -166,9 +164,7 @@ test.describe('ERTE Readonly Sections', () => {
   // ==========================================================================
   // 5. Select-all + Delete prevented
   // ==========================================================================
-  // FIXME: Select-all + Delete removes readonly sections. The ERTE readonly
-  // protection needs to intercept delete operations that include readonly content.
-  test.fixme('Select-all + Delete does not remove readonly sections', async ({ page }) => {
+  test('Select-all + Delete does not remove readonly sections', async ({ page }) => {
     const deltaBefore = await getEditorDelta(page);
     const readonlyCountBefore = countReadonly(deltaBefore);
     expect(readonlyCountBefore).toBeGreaterThan(0);

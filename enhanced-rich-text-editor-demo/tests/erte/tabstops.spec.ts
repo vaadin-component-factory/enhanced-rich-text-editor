@@ -13,6 +13,7 @@ import {
   getRulerMarkerDirection,
   enableShowWhitespace,
   disableShowWhitespace,
+  isShowWhitespaceActive,
   ERTE_TEST_BASE,
 } from './helpers';
 
@@ -1710,18 +1711,13 @@ test.describe('ERTE Tabstops', () => {
   // ============================================
 
   test.describe('Whitespace Indicators', () => {
-    test('Show Whitespace checkbox is present and unchecked by default', async ({ page }) => {
-      const checkbox = page.locator('#whitespace-toggle');
-      await expect(checkbox).toBeVisible();
+    test('Show Whitespace toolbar button is present and not active by default', async ({ page }) => {
+      const btn = page.locator('#test-editor').locator('[part~="toolbar-button-whitespace"]');
+      await expect(btn).toBeVisible();
 
-      // Should be unchecked by default (no initial value set in Java view)
-      const isChecked = await checkbox.locator('input').isChecked();
-      expect(isChecked).toBe(false);
-    });
-
-    // Tab Debug checkbox only exists in the prototype view, not the ERTE test view
-    test.skip('Tab Debug checkbox is present and unchecked by default', async ({ page }) => {
-      // Prototype-only feature
+      // Should not be active by default
+      const active = await isShowWhitespaceActive(page);
+      expect(active).toBe(false);
     });
 
     test('Show Whitespace can be toggled and controls the show-whitespace class', async ({ page }) => {
@@ -1821,16 +1817,6 @@ test.describe('ERTE Tabstops', () => {
 
       // show-whitespace class should be removed
       await expect(page.locator('.show-whitespace')).toHaveCount(0, { timeout: 5000 });
-    });
-
-    // Tab Debug only exists in the prototype view, not the ERTE test view
-    test.skip('Tab Debug shows background color for tabs', async ({ page }) => {
-      // Prototype-only feature
-    });
-
-    // Tab Debug only exists in the prototype view, not the ERTE test view
-    test.skip('Show Whitespace and Tab Debug work independently', async ({ page }) => {
-      // Prototype-only feature
     });
 
     test('Indicators visible for all whitespace types simultaneously', async ({ page }) => {

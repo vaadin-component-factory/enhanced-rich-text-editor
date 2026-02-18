@@ -8,31 +8,49 @@ Enhanced Rich Text Editor (ERTE) for Vaadin — a rich text editor component ext
 
 **Active work:** Migrating from Vaadin 24 / Quill 1 (ERTE 1) to Vaadin 25 / Quill 2 (ERTE 2). The old V24 modules remain in the repo as dead reference code (excluded from build). New V25 modules are created from scratch, using the old code as context.
 
+## Root Scripts
+
+Convenience scripts in the repo root for build, server, and test operations. **Always use these instead of running Maven/server commands manually.**
+
+| Script | Purpose |
+|--------|---------|
+| `v24-build.sh [-q]` | `mvn clean install -DskipTests` for V24 modules |
+| `v24-build-clean.sh [-q]` | Same + `vaadin:clean-frontend` (wipes dev bundle) |
+| `v24-server-start.sh [port]` | Start V24 demo on port 8080 (default) |
+| `v24-server-stop.sh` | Stop V24 demo server |
+| `v24-server-logs.sh [-f\|-errors]` | Print V24 server logs |
+| `v24-server-status.sh` | Check V24 server status |
+| `v25-build.sh [-q]` | Build V25 modules |
+| `v25-build-clean.sh [-q]` | Same + `vaadin:clean-frontend` |
+| `v25-server-start.sh [port]` | Start V25 demo on port 8082 (default) |
+| `v25-server-stop.sh` | Stop V25 demo server |
+
+**Workflow:** After changing addon code (ERTE JS/Java), always `v24-build.sh` before `v24-server-start.sh`. Tests require a running server.
+
+**Tests should run as background tasks** (`run_in_background: true`) to avoid blocking.
+
 ## Build Commands
 
 ```bash
-# Full build (skip tests for faster iteration)
-mvn clean install -DskipTests
-
-# Run demo locally (Spring Boot)
-mvn -pl enhanced-rich-text-editor-demo spring-boot:run
-# Then visit: http://127.0.0.1:8080/enhanced-rich-text-editor
-
-# Run tests
-mvn verify
-
-# Run single test class
-mvn -pl enhanced-rich-text-editor test -Dtest=RichTextEditorTest
-
-# Production build
-mvn clean package -Pproduction -DskipTests
+# V24 build + server (preferred — use root scripts)
+bash v24-build.sh
+bash v24-server-start.sh
 
 # Run Playwright tests (server must be running first)
 cd enhanced-rich-text-editor-demo
 npx playwright test
 
+# Run only ERTE tests
+npx playwright test tests/erte/
+
 # Playwright with UI for debugging
 npx playwright test --ui
+
+# Maven commands (fallback if scripts unavailable)
+mvn clean install -DskipTests
+mvn -pl enhanced-rich-text-editor-demo spring-boot:run
+mvn verify
+mvn clean package -Pproduction -DskipTests
 ```
 
 ## Project Structure
@@ -131,48 +149,52 @@ Use these as needed, do NOT try to load all of them as context simultaneously.
 | `implementation_notes.md` | JS/Java architecture, shadow DOM structure, pre-spike design notes |
 | `quill_v1_to_v2_api_diff.md` | When touching any Quill API — keyboard bindings, blots, history, clipboard |
 | `SECURITY.md` | When implementing blots, sanitization, or any DOM manipulation |
+| `migration_v25/progress/` | **Always update** after completing a task — one file per phase (e.g., `0_use_cases_tests.md`, `1_project_base.md`) |
+| `migration_v25/USE_CASE_ANALYSIS.md` | Feature inventory with migration paths for all 20 ERTE features |
+| `tests/TEST_INVENTORY.md` | Full test listing grouped by feature (update when adding/removing tests) |
 
 ## Playwright Tests
 
-75 existing Playwright tests for the tab-stop prototype. See [prototype_tests.md](enhanced-rich-text-editor-demo/prototype_tests.md) for detailed documentation.
+252 total tests: 75 prototype + 177 ERTE. Full listing in [TEST_INVENTORY.md](enhanced-rich-text-editor-demo/tests/TEST_INVENTORY.md).
 
-**Important:** Before running Playwright tests:
-1. Build with `mvn clean package -DskipTests`
-2. Start server with `mvn -pl enhanced-rich-text-editor-demo spring-boot:run`
+**Running tests:**
+```bash
+# Build first
+mvn clean package -DskipTests
+# Start server (from demo dir)
+cd enhanced-rich-text-editor-demo && bash server-start.sh
+# Run all tests
+npx playwright test
+# Run only ERTE tests
+npx playwright test tests/erte/
+# Stop server
+bash server-stop.sh
+```
 
-### Test Summary (75 Tests)
+### ERTE Test Suite (177 tests in `tests/erte/`)
 
-| Category | Tests | Description |
-|----------|-------|-------------|
-| Hard-Break (Enter) | 2 | New paragraph creation, tabs don't copy |
-| Soft-Break (Shift+Enter) | 6 | Tab copying based on cursor position |
-| Automatic Wrap | 2 | Fixed width for wrapped lines |
-| Combined Scenarios | 3 | Mixed hard/soft breaks with tabs |
-| Tab Alignment | 5 | L/C/R tabstops + overflow tabs (fixed width) |
-| Overflow Tabs + Soft-Break | 3 | More tabs than tabstops with soft-breaks |
-| Ruler/Tabstop Manipulation | 4 | Add/remove/cycle tabstops via ruler |
-| Edge Cases | 5 | Empty lines, many tabs, alternating patterns |
-| Mixed Break Types | 4 | Complex break sequences, copy-paste |
-| Stress Tests | 2 | Rapid operations, all tabstops removed |
-| Undo/Redo | 4 | Undo operations for tabs and soft-breaks |
-| Selection Operations | 3 | Select, delete, replace across soft-breaks |
-| Backspace/Delete | 3 | Delete at boundaries and tab characters |
-| Tab After Soft-Break | 2 | Tab insertion on new visual lines |
-| Formatted Text | 2 | Bold/italic preserved with tabs |
-| Cursor Navigation | 3 | Arrow keys and selection around tabs |
-| Multiple Paragraphs | 2 | Independent soft-breaks per paragraph |
-| Overflow Tab Limit | 4 | Limit copies to tabstop count |
-| Browser Resize | 1 | Tab recalculation after viewport change |
-| Focus/Blur | 1 | Tab visibility after focus changes |
-| Tab at Tabstop Boundary | 1 | Consecutive tabs positioning |
-| Empty Visual Line | 1 | Soft-break on empty visual line |
-| Whitespace Indicators | 12 | Show/hide whitespace symbols (→↵¶↲), legend |
+| Spec File | Tests | Covers |
+|-----------|-------|--------|
+| `tabstops.spec.ts` | 78 | Tabstops, rulers, soft-break, whitespace indicators |
+| `placeholders.spec.ts` | 32 | Placeholder dialog, events, appearance, keyboard |
+| `readonly.spec.ts` | 18 | Readonly sections, protection, whole-editor readonly |
+| `toolbar.spec.ts` | 24 | Slot system, visibility, shortcuts, icons, keyboard nav |
+| `features.spec.ts` | 25 | NBSP, addText, align, indent, i18n, sanitizer, focus |
 
-### Key Soft-Break Behavior
-- Soft-break inserts at end of visual line (line stays intact)
-- Tabs are copied from visual line start to cursor position
-- Tabs copied are limited to the number of defined tabstops (customer requirement)
-- Multiple soft-breaks maintain consistent tab count per visual line
+**Test views** (Java, in `com.vaadin.componentfactory`): `ErteTabStopTestView`, `ErtePlaceholderTestView`, `ErteReadonlyTestView`, `ErteToolbarTestView`, `ErteFeatureTestView`. Each provides a single editor (`id="test-editor"`), delta/HTML output elements, event log, and a ready indicator.
+
+**Shared helpers** (`tests/erte/helpers.ts`): `waitForEditor()`, `getDelta()`, `getDeltaFromEditor()`, `getRuler()`, `getRulerMarkers()`, etc.
+
+### Prototype Tests (75 tests in `tab-stop-prototype.spec.ts`)
+
+Original tabstop tests against the prototype view at `/tab-stop`. See [prototype_tests.md](enhanced-rich-text-editor-demo/prototype_tests.md).
+
+### Key Test Patterns
+- Shadow DOM: Playwright locators pierce it, but `page.evaluate()`/`waitForFunction` do NOT — use `el.shadowRoot.querySelector()`
+- Ready indicator (`#test-ready`) has `display:none` — use `state: 'attached'`
+- Readonly blot is a FORMAT attribute `{"attributes":{"readonly":true}}`, NOT an embed
+- Placeholder dialog: use `[aria-label="Placeholders"]` to disambiguate from Link dialog
+- Ruler markers are `vaadin-icon` elements inside `[part~="horizontalRuler"]`
 
 ## Custom Agents
 

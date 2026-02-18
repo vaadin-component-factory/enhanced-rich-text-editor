@@ -1,5 +1,4 @@
 package com.vaadin.componentfactory;
-import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Pre;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -53,11 +52,6 @@ public class ErteTabStopTestView extends VerticalLayout {
         eventLog.setId("event-log");
         eventLog.getStyle().set("display", "none");
 
-        // Whitespace toggle
-        Checkbox showWhitespace = new Checkbox("Show Whitespace");
-        showWhitespace.setId("whitespace-toggle");
-        showWhitespace.addValueChangeListener(e -> editor.setShowWhitespace(e.getValue()));
-
         // Client-side listener to update delta output on every change
         editor.getElement().executeJs(
             "const el = $0;" +
@@ -82,6 +76,6 @@ public class ErteTabStopTestView extends VerticalLayout {
         readyIndicator.getElement().setAttribute("data-ready", "true");
         readyIndicator.getStyle().set("display", "none");
 
-        add(showWhitespace, editor, deltaOutput, htmlOutput, eventLog, readyIndicator);
+        add(editor, deltaOutput, htmlOutput, eventLog, readyIndicator);
     }
 }

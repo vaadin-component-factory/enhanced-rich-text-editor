@@ -115,9 +115,9 @@ Quill.register(SoftBreakBlot);
 /**
  * Non-breaking space
  * @class Nbsp
- * @extends {Inline}
+ * @extends {Embed}
  */
-class Nbsp extends Inline {
+class Nbsp extends Embed {
   static create(value) {
     const node = super.create(value);
     node.innerHTML = '&nbsp;';
@@ -127,6 +127,7 @@ class Nbsp extends Inline {
 
 Nbsp.blotName = 'nbsp';
 Nbsp.tagName = 'SPAN';
+Nbsp.className = 'ql-nbsp';
 
 Quill.register({ 'formats/nbsp': Nbsp });
 

@@ -1148,10 +1148,10 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
         if (source === 'user' && delta.ops.some(o => !!o.delete)) {
           // Prevent user to delete a readonly Blot
           const currentDelta = _editor.getContents().ops;
-          if (oldDelta.ops.some(v => !!v.insert && v.insert.readonly)) {
-            // There were sections in the previous value. Check for them in the new value.
-            const readonlySectionsCount = oldDelta.ops.filter(v => !!v.insert && v.insert.readonly).length;
-            const newReadonlySectionsCount = currentDelta.filter(v => !!v.insert && v.insert.readonly).length;
+          if (oldDelta.ops.some(v => !!v.insert && v.attributes && v.attributes.readonly)) {
+            // There were readonly sections in the previous value. Check for them in the new value.
+            const readonlySectionsCount = oldDelta.ops.filter(v => !!v.insert && v.attributes && v.attributes.readonly).length;
+            const newReadonlySectionsCount = currentDelta.filter(v => !!v.insert && v.attributes && v.attributes.readonly).length;
 
             if (readonlySectionsCount != newReadonlySectionsCount) {
               _editor.setContents(oldDelta);
@@ -1874,10 +1874,20 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
       keyboard.addBinding({ key: 121, altKey: true, handler: focusToolbar });
 
       // Shift+Space inserts a non-breaking space.
-      keyboard.addBinding({ key: ' ', shiftKey: true }, () => {
-        var index = this.quill.getSelection().index;
-        this.quill.insertEmbed(index, 'nbsp', '');
-      });
+      // Prepend before Quill's default space handler so ERTE handler fires first.
+      const SPACE_KEY = 32;
+      keyboard.bindings[SPACE_KEY] = [
+        {
+          key: SPACE_KEY,
+          shiftKey: true,
+          handler: function() {
+            const index = this.quill.getSelection().index;
+            this.quill.insertEmbed(index, 'nbsp', true);
+            return false;
+          }
+        },
+        ...(keyboard.bindings[SPACE_KEY] || [])
+      ];
 
       // Ctrl + P inserts placeholder.
       keyboard.addBinding({ key: 80, shortKey: true }, () => this._onPlaceholderClick());

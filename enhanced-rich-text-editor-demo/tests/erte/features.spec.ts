@@ -30,8 +30,7 @@ test.describe('ERTE Feature Tests', () => {
   // ============================================
 
   test.describe('Non-Breaking Space (Shift+Space)', () => {
-    test.fixme('1 - Shift+Space inserts a non-breaking space', async ({ page }) => {
-      // FIXME: Shift+Space causes TypeError in vaadin-quill.js - ERTE bug, not test issue
+    test('1 - Shift+Space inserts a non-breaking space', async ({ page }) => {
       await focusEditor(page);
       await typeInEditor(page, 'Hello');
       await pressKey(page, 'Shift+Space');
@@ -50,8 +49,7 @@ test.describe('ERTE Feature Tests', () => {
       expect(hasNbsp).toBe(true);
     });
 
-    test.fixme('2 - Multiple consecutive NBSPs are all preserved', async ({ page }) => {
-      // FIXME: Shift+Space causes TypeError in vaadin-quill.js - ERTE bug, not test issue
+    test('2 - Multiple consecutive NBSPs are all preserved', async ({ page }) => {
       await focusEditor(page);
       await typeInEditor(page, 'A');
       await pressKey(page, 'Shift+Space');
@@ -71,8 +69,7 @@ test.describe('ERTE Feature Tests', () => {
       expect(nbspCharCount + nbspSpanCount).toBeGreaterThanOrEqual(3);
     });
 
-    test.fixme('3 - NBSP survives copy-paste round-trip', async ({ page }) => {
-      // FIXME: Shift+Space causes TypeError in vaadin-quill.js - ERTE bug, not test issue
+    test('3 - NBSP survives copy-paste round-trip', async ({ page }) => {
       await focusEditor(page);
       await typeInEditor(page, 'Before');
       await pressKey(page, 'Shift+Space');

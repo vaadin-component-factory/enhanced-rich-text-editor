@@ -36,9 +36,9 @@ function getComboBox(page: Page): Locator {
   return getDialog(page).locator('vaadin-combo-box');
 }
 
-/** Get all placeholder blot spans inside the editor. */
+/** Get all placeholder blot spans inside the editor content area. */
 function getPlaceholderBlots(page: Page, id = 'test-editor'): Locator {
-  return page.locator(`#${id}`).locator('.ql-placeholder');
+  return page.locator(`#${id}`).locator('.ql-editor .ql-placeholder');
 }
 
 /** Click the OK / confirm button inside the dialog. */

@@ -376,6 +376,66 @@ Cross-reference of every ERTE 1 feature with RTE 2 (Vaadin 25). Sources: V24 sou
 - **Tier 2 (Must Have — Important):** Features 4, 5, 9, 10
 - **Tier 3 (Nice to Have):** Features 6, 7, 11, 12, 14, 17, 18, 19, 20
 
+---
+
+## V25 Migration Risk: Overlay/Popup Parent Re-Attachment
+
+### Problem
+
+Several ERTE toolbar popup components manually manipulate overlay DOM positioning via `getElement().executeJs()` and `Element.appendChild()`. In Vaadin 25, the overlay architecture changed — overlays no longer use the same `this.$.overlay.$.overlay` internal structure, and manual `appendChild` of Vaadin components into arbitrary parents may break.
+
+### Affected Components (all in `com.vaadin.componentfactory.toolbar`)
+
+#### 1. `ToolbarPopover` (extends `Popover`)
+**File:** `enhanced-rich-text-editor/src/.../toolbar/ToolbarPopover.java`
+**Pattern:** On attach, appends itself as child of the switch's **parent** element:
+```java
+referencedSwitch.addAttachListener(event -> {
+    event.getSource().getParent().orElseThrow().getElement().appendChild(getElement());
+});
+```
+Also sets `restoreFocusOnClose` via direct property access (commented-out API: `setRestoreFocusOnClose()` — already broken in V24).
+**Used by:** `EnhancedRichTextEditorTables` — "Add Table" popup (rows x cols input).
+
+#### 2. `ToolbarDialog` (extends `Dialog`)
+**File:** `enhanced-rich-text-editor/src/.../toolbar/ToolbarDialog.java`
+**Pattern:** Positions overlay absolutely relative to switch via direct `$.overlay.$.overlay.style` manipulation:
+```java
+getElement().executeJs("""
+    const {left, top, width, height} = $0.getBoundingClientRect();
+    this.$.overlay.$.overlay.style.position = 'absolute';
+    this.$.overlay.$.overlay.style.left = left + 'px';
+    this.$.overlay.$.overlay.style.top = top + height + 'px';""",
+    getToolbarSwitch());
+```
+**Used by:** `TemplateDialog` (table styling).
+
+#### 3. `ToolbarSelectPopup` (extends `ContextMenu`)
+**File:** `enhanced-rich-text-editor/src/.../toolbar/ToolbarSelectPopup.java`
+**Pattern:** Uses `ContextMenu(target)` + `setOpenOnClick(true)`. ContextMenu internally creates `vaadin-context-menu-overlay` which teleports to body.
+**Used by:** `EnhancedRichTextEditorTables` — "Modify Table" dropdown (row/column/merge operations).
+
+#### 4. `TemplateDialog` (extends `ToolbarDialog`)
+**File:** `enhanced-rich-text-editor-tables/src/.../templates/TemplateDialog.java`
+**Pattern:** Additional `$.overlay.$.overlay.style` positioning on open (same as ToolbarDialog, but with `left + width` for side-by-side placement).
+
+### V25 Breaking Changes Expected
+
+1. **`this.$.overlay.$.overlay`** — Vaadin 25 Dialog/Overlay internal structure may differ. The `$` ID-based lookup is Polymer; Lit-based components in V25 may use different internal structure.
+2. **`Element.appendChild(getElement())`** — Re-parenting a Vaadin server-side component's element to an arbitrary parent can break Flow's component tree tracking.
+3. **`Popover` API** — `restoreFocusOnClose` was already broken in V24 (manually set via property). V25 Popover may have different API.
+4. **`ContextMenu` overlay** — V25 may change how context menu overlays are positioned/attached.
+
+### Recommendation
+
+These 4 classes must be **rewritten for V25** using the new overlay/popover APIs. Investigate:
+- V25 `Popover` target/positioning API (may natively support anchor-based positioning)
+- V25 `Dialog` positioning API (may replace manual `$.overlay` manipulation)
+- V25 `ContextMenu` — check if `setOpenOnClick` + target pattern still works
+- Whether `Element.appendChild` for re-parenting is still valid in Flow 7 / Vaadin 25
+
+**Priority:** Critical for tables extension migration (Step 4). Also affects ERTE core (link dialog, placeholder dialog use `vaadin-confirm-dialog` in the JS template — different pattern but worth verifying).
+
 ### Spike Validation Cross-Reference
 
 | Spike Item | Feature(s) | Key Finding |

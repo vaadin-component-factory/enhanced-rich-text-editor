@@ -1,6 +1,12 @@
 #!/bin/bash
-# Build all V25 modules (clean install)
-# Usage: bash v25-build.sh [-f] [-q]
-#   -f    Also clean Vaadin frontend caches
+# Build V25 modules (mvn clean install -DskipTests)
+# Usage: bash v25-build.sh [-q]
 #   -q    Quiet mode
-exec bash "$(dirname "$0")/enhanced-rich-text-editor-demo-25/build-install.sh" "$@"
+QUIET=""
+[ "$1" = "-q" ] && QUIET="-q"
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$ROOT_DIR"
+echo "=== ERTE V25 Build ==="
+mvn clean install -DskipTests $QUIET \
+    -pl enhanced-rich-text-editor-v25,enhanced-rich-text-editor-tables-v25,enhanced-rich-text-editor-demo \
+    -am

@@ -148,24 +148,36 @@ export async function getRulerMarkerDirection(marker: Locator): Promise<string> 
 }
 
 /**
- * Enable the Show Whitespace checkbox (click it if currently unchecked).
+ * Get the Show Whitespace toolbar button.
  */
-export async function enableShowWhitespace(page: Page): Promise<void> {
-  const checkbox = page.locator('#whitespace-toggle');
-  const isChecked = await checkbox.locator('input').isChecked();
-  if (!isChecked) {
-    await checkbox.locator('label').click();
+function getWhitespaceButton(page: Page, id = 'test-editor'): Locator {
+  return page.locator(`#${id}`).locator('[part~="toolbar-button-whitespace"]');
+}
+
+/**
+ * Check whether the Show Whitespace toolbar button is currently active.
+ */
+export async function isShowWhitespaceActive(page: Page, id = 'test-editor'): Promise<boolean> {
+  const btn = getWhitespaceButton(page, id);
+  const cls = await btn.getAttribute('class') ?? '';
+  return cls.includes('ql-active');
+}
+
+/**
+ * Enable Show Whitespace via the toolbar button (click it if not already active).
+ */
+export async function enableShowWhitespace(page: Page, id = 'test-editor'): Promise<void> {
+  if (!(await isShowWhitespaceActive(page, id))) {
+    await getWhitespaceButton(page, id).click();
   }
 }
 
 /**
- * Disable the Show Whitespace checkbox (click it if currently checked).
+ * Disable Show Whitespace via the toolbar button (click it if currently active).
  */
-export async function disableShowWhitespace(page: Page): Promise<void> {
-  const checkbox = page.locator('#whitespace-toggle');
-  const isChecked = await checkbox.locator('input').isChecked();
-  if (isChecked) {
-    await checkbox.locator('label').click();
+export async function disableShowWhitespace(page: Page, id = 'test-editor'): Promise<void> {
+  if (await isShowWhitespaceActive(page, id)) {
+    await getWhitespaceButton(page, id).click();
   }
 }
 
