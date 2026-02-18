@@ -396,6 +396,7 @@ referencedSwitch.addAttachListener(event -> {
 ```
 Also sets `restoreFocusOnClose` via direct property access (commented-out API: `setRestoreFocusOnClose()` — already broken in V24).
 **Used by:** `EnhancedRichTextEditorTables` — "Add Table" popup (rows x cols input).
+**V25 fix:** Simply remove the `appendChild` call — V25 `Popover` natively positions at its target.
 
 #### 2. `ToolbarDialog` (extends `Dialog`)
 **File:** `enhanced-rich-text-editor/src/.../toolbar/ToolbarDialog.java`
