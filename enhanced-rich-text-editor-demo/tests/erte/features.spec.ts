@@ -527,22 +527,30 @@ test.describe('ERTE Feature Tests', () => {
   // ============================================
 
   test.describe('TabConverter', () => {
-    test.fixme('21 - Old format tab delta auto-converts on load', async ({ page }) => {
-      // FIXME: This test needs an old-format delta (tabs-cont/pre-tab/line-part blots)
-      // to actually verify TabConverter auto-conversion. Currently it loads new-format
-      // tab delta which is the same as test 18. Needs a dedicated #load-old-tab-delta
-      // button in the Java view that provides old-format delta data.
-      await page.locator('#load-tab-delta').click();
+    test('21 - Old format tab delta auto-converts on load', async ({ page }) => {
+      // Load old-format delta with tabs-cont/line-part/tab attributes
+      await page.locator('#load-old-tab-delta').click();
       await page.waitForTimeout(500);
 
-      // The tab should render properly regardless of format
+      // Old format: tab"1" + line-part"Position" + tab"1" + line-part"Beschreibung" + tabs-cont\n
+      // Should auto-convert to: {tab:true} + "Position" + {tab:true} + "Beschreibung" + \n
       const tabs = getErte(page).locator('.ql-tab');
-      await expect(tabs).toHaveCount(1);
+      await expect(tabs).toHaveCount(2);
 
-      // Verify the delta output contains the tab in correct format
+      // Verify text content survived conversion
+      const editorText = await getErte(page).locator('.ql-editor').innerText();
+      expect(editorText).toContain('Position');
+      expect(editorText).toContain('Beschreibung');
+
+      // Verify the delta output contains tabs in new format
       const delta = await getDeltaFromEditor(page);
       const tabOps = delta.ops.filter((op: any) => op.insert && op.insert.tab !== undefined);
-      expect(tabOps.length).toBe(1);
+      expect(tabOps.length).toBe(2);
+
+      // Verify old-format markers are gone
+      const deltaStr = JSON.stringify(delta);
+      expect(deltaStr).not.toContain('tabs-cont');
+      expect(deltaStr).not.toContain('line-part');
     });
   });
 

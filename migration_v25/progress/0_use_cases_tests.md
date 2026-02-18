@@ -42,26 +42,34 @@
 - **Test 28 (PlaceholderSelectedEvent):** Cursor already at placeholder → no new selection-change event. Added cursor-away-then-back pattern.
 - **Test 31 (Batch insert):** Async event log timing (1 of 3 events logged) → simplified to check blot count and delta only.
 
+#### Tab Insert Without Tabstops — FIXED
+- **Root cause:** Tab keyboard handler had `if (self.tabStops.length > 0 && range)` guard — when all tabstops removed, Tab key fell through to browser default (focus away) instead of inserting tab blot.
+- **Fix (editor.js):** Changed to `if (range)`. The width calculation already had a `fixedTabWidth` fallback for tabs without matching tabstops.
+
+#### TabConverter Test — ENABLED
+- **Change:** Added `#load-old-tab-delta` button to `ErteFeatureTestView.java` with old-format delta (tab/line-part/tabs-cont attributes from `TabConverterTest.java`).
+- **Fix (features.spec.ts):** Test 21 un-fixme'd — verifies 2 tab blots rendered, text preserved, old markers removed from delta.
+
 ### Test Results (current)
-| Suite | Passed | Failed | Skipped/Fixme | Total |
-|-------|--------|--------|---------------|-------|
-| tabstops.spec.ts | 73 | 0 | 1 | 74 |
+| Suite | Passed | Failed | Fixme | Total |
+|-------|--------|--------|-------|-------|
+| tabstops.spec.ts | 75 | 0 | 0 | 75 |
 | placeholders.spec.ts | 30 | 0 | 2 | 32 |
 | readonly.spec.ts | 17 | 0 | 1 | 18 |
 | toolbar.spec.ts | 24 | 0 | 0 | 24 |
-| features.spec.ts | 25 | 0 | 1 | 26 |
-| **ERTE Total** | **169** | **0** | **5** | **174** |
+| features.spec.ts | 26 | 0 | 0 | 26 |
+| **ERTE Total** | **172** | **0** | **3** | **175** |
 | tab-stop-prototype.spec.ts | 74 | 0 | 1 (flaky) | 75 |
 
-**0 failures across all 174 ERTE tests.**
+**0 failures across all 175 ERTE tests.**
 
-### Skipped/Fixme Tests (5)
-| Test | Suite | Reason | Component limitation? |
-|------|-------|--------|-----------------------|
-| TabConverter | features | Needs old-format delta test setup | No — test view change |
-| All tabstops removed | tabstops | Tab blots not inserted when all tabstops removed | Yes |
-| Copy-paste placeholder | placeholders | Embed doesn't survive HTML→delta clipboard roundtrip | Yes |
-| Undo placeholder remove | placeholders | Quill history doesn't restore embed blots | Yes |
-| Readonly undo | readonly | Quill history removes readonly attributes | Yes |
+### Fixme Tests (3) — all Quill 1 limitations
+| Test | Suite | Reason |
+|------|-------|--------|
+| Copy-paste placeholder | placeholders | Embed doesn't survive HTML→delta clipboard roundtrip |
+| Undo placeholder remove | placeholders | Quill history doesn't restore embed blots |
+| Readonly survive undo/redo | readonly | Quill history removes readonly attributes |
+
+All marked `TODO(post-migration)` — to be re-attempted with Quill 2.
 
 ## Phase 1-4: Not started

@@ -1649,10 +1649,7 @@ test.describe('ERTE Tabstops', () => {
       await expect(getSoftBreaks(page)).toHaveCount(10, { timeout: 5000 });
     });
 
-    // FIXME: When all tabstops are removed from the ruler, Tab key no longer inserts
-    // tab blots. This may be by design (Tab navigates away) or a component issue.
-    // Needs investigation: does ERTE require at least one tabstop for Tab to insert blots?
-    test.fixme('All tabstops removed - tabs use fixed width', async ({ page }) => {
+    test('All tabstops removed - tabs use fixed width', async ({ page }) => {
       const editor = getEditor(page);
 
       // Remove all 3 tabstops one by one.

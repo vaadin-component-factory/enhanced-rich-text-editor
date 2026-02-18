@@ -123,6 +123,18 @@ public class ErteFeatureTestView extends VerticalLayout {
             "[{\"insert\":\"Hello \"},{\"insert\":{\"placeholder\":{\"text\":\"TestPlaceholder\"}}},{\"insert\":\"!\\n\"}]"
         ));
 
+        // Load old-format delta (tabs-cont/line-part/tab attributes) for TabConverter test
+        Button loadOldTabDelta = new Button("Load Old Tab Delta");
+        loadOldTabDelta.setId("load-old-tab-delta");
+        loadOldTabDelta.addClickListener(e -> editor.setValue(
+            "[{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},"
+            + "{\"attributes\":{\"line-part\":true},\"insert\":\"﻿\"},"
+            + "{\"attributes\":{\"line-part\":true},\"insert\":\"Position\"},"
+            + "{\"attributes\":{\"tab\":\"1\"},\"insert\":\"﻿\"},"
+            + "{\"attributes\":{\"line-part\":true},\"insert\":\"Beschreibung\"},"
+            + "{\"attributes\":{\"tabs-cont\":\"TABS-CONT\"},\"insert\":\"\\n\"}]"
+        ));
+
         // Get HTML value
         Button getHtml = new Button("Get HTML");
         getHtml.setId("get-html");
@@ -181,7 +193,7 @@ public class ErteFeatureTestView extends VerticalLayout {
 
         HorizontalLayout controls1 = new HorizontalLayout(addTextAtCursor, addTextAtPos, getTextLength, focusEditor);
         HorizontalLayout controls2 = new HorizontalLayout(toggleDisabled, toggleReadonly, toggleNoRulers);
-        HorizontalLayout controls3 = new HorizontalLayout(loadTabDelta, loadReadonlyDelta, loadPlaceholderDelta, getHtml);
+        HorizontalLayout controls3 = new HorizontalLayout(loadTabDelta, loadOldTabDelta, loadReadonlyDelta, loadPlaceholderDelta, getHtml);
         HorizontalLayout controls4 = new HorizontalLayout(setGermanI18n);
 
         add(controls1, controls2, controls3, controls4, editor, deltaOutput, eventLog, htmlOutput, readyIndicator);

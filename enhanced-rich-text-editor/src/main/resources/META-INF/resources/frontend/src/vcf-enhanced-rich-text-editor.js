@@ -1694,7 +1694,7 @@ Inline.order.push(PlaceholderBlot.blotName, ReadOnlyBlot.blotName);
       const tabStopBinding = {
         key: TAB_KEY,
         handler: function(range) {
-          if (self.tabStops.length > 0 && range) {
+          if (range) {
             self._editor.insertEmbed(range.index, 'tab', true, Quill.sources.USER);
             Promise.resolve().then(() => {
               self._editor.setSelection(range.index + 1, 0, Quill.sources.API);

@@ -344,6 +344,7 @@ test.describe('Placeholder functionality', () => {
 
   test.fixme('18 - Copy-paste placeholder', async ({ page }) => {
     // FIXME: Placeholder embed doesn't survive clipboard HTML→delta roundtrip
+    // TODO(post-migration): Re-attempt with Quill 2 clipboard module — may handle embeds better.
     await focusEditor(page);
     await insertPlaceholder(page, 'N-1=Company Name');
     await expect(getPlaceholderBlots(page)).toHaveCount(1);
@@ -377,6 +378,7 @@ test.describe('Placeholder functionality', () => {
 
   test.fixme('20 - Undo placeholder remove', async ({ page }) => {
     // FIXME: Quill history doesn't properly restore placeholder embed blots after undo
+    // TODO(post-migration): Re-attempt with Quill 2 history module — embed undo may work differently.
     await focusEditor(page);
     await insertPlaceholder(page, 'N-1=Company Name');
     await expect(getPlaceholderBlots(page)).toHaveCount(1);

@@ -1,11 +1,11 @@
 # ERTE Test Suite Inventory
 
-Total: 252 tests (75 prototype + 177 ERTE)
-Status: 163 passed, 11 skipped/fixme, 0 failures
+Total: 249 tests (75 prototype + 174 ERTE)
+Status: 171 passed, 3 fixme, 0 failures
 
 ---
 
-## Tabstops (78 tests) — `erte/tabstops.spec.ts`
+## Tabstops (75 tests) — `erte/tabstops.spec.ts`
 
 ### Hard-Break (Enter)
 - Tab in new paragraph aligns to first tabstop
@@ -115,15 +115,12 @@ Status: 163 passed, 11 skipped/fixme, 0 failures
 - All tabstops removed - tabs use fixed width
 
 ### Whitespace Indicators
-- Show Whitespace checkbox is present and checked by default
-- Tab Debug checkbox is present and unchecked by default
-- Legend is visible when Show Whitespace enabled and hidden when disabled
+- Show Whitespace toolbar button is present and not active by default
+- Show Whitespace can be toggled and controls the show-whitespace class
 - Tab indicator visible when Show Whitespace enabled
 - Soft-break indicator visible when Show Whitespace enabled
 - Paragraph indicator visible at end of paragraphs
 - Disabling Show Whitespace removes indicators
-- Tab Debug shows background color for tabs
-- Show Whitespace and Tab Debug work independently
 - Indicators visible for all whitespace types simultaneously
 - Auto-wrap indicator shown for wrapped tabs
 - Auto-wrap class removed when tab not on wrapped line
@@ -153,10 +150,10 @@ Status: 163 passed, 11 skipped/fixme, 0 failures
 - Placeholder altFormat
 - Placeholder format with link
 - Keyboard insert (Ctrl+P)
-- Type over selected placeholder
-- Copy-paste placeholder
+- Delete selected placeholder via keyboard
+- ~~Copy-paste placeholder~~ *(fixme: embed doesn't survive clipboard roundtrip)*
 - Undo placeholder insert
-- Undo placeholder remove
+- ~~Undo placeholder remove~~ *(fixme: Quill history can't restore embeds)*
 - PlaceholderButtonClickedEvent
 - PlaceholderBeforeInsertEvent (confirm)
 - PlaceholderBeforeInsertEvent (cancel)
@@ -184,7 +181,7 @@ Status: 163 passed, 11 skipped/fixme, 0 failures
 - Toggle readonly via toolbar button applies and removes format
 - Cursor navigation with arrow keys around readonly boundary
 - Click inside readonly places cursor at boundary, not inside
-- Readonly sections survive undo and redo
+- ~~Readonly sections survive undo and redo~~ *(fixme: Quill history removes readonly attributes)*
 - Whole-editor readonly mode hides toolbar and prevents editing
 - Whole-editor readonly toggle back restores toolbar and editing
 - Bold and italic formatting preserved inside readonly sections
@@ -224,7 +221,7 @@ Status: 163 passed, 11 skipped/fixme, 0 failures
 
 ---
 
-## Features (25 tests) — `erte/features.spec.ts`
+## Features (26 tests) — `erte/features.spec.ts`
 
 ### Non-Breaking Space (Shift+Space)
 - Shift+Space inserts a non-breaking space
