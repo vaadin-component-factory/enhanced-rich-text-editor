@@ -64,14 +64,6 @@ public class ToolbarPopover extends Popover {
         getElement().setProperty("restoreFocusOnClose", true);
 
         addOpenedChangeListener(event -> referencedSwitch.setActive(event.isOpened()));
-
-        referencedSwitch.addAttachListener(event -> {
-            event.getSource().getParent().orElseThrow(IllegalStateException::new).getElement().appendChild(getElement());
-        });
-
-        referencedSwitch.addDetachListener(event -> {
-            getElement().removeFromParent();
-        });
     }
 
     /**
