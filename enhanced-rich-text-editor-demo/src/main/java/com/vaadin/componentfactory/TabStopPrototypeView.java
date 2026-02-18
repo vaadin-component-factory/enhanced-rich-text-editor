@@ -10,7 +10,7 @@ import com.vaadin.flow.router.Route;
 import elemental.json.Json;
 import elemental.json.JsonObject;
 
-//@Route("tab-stop")
+@Route("tab-stop")
 @NpmPackage(value = "quill", version = "1.3.6")
 @CssImport("quill/dist/quill.snow.css") // Loads CSS directly from the npm package
 @StyleSheet("tab-stop-prototype.css")
