@@ -126,6 +126,14 @@ These patterns were validated in the spike (`SPIKE_RESULTS.md`). Use them as-is.
 - Do not use Polymer patterns — this is Lit
 - Do not set content in `ready()` — it gets overwritten by Java value sync
 
+## MCP Tools — Use Before Asking
+
+**Always use available MCP tools to look things up instead of guessing or asking the user.**
+
+- **Vaadin:** `search_vaadin_docs`, `get_component_java_api`, `get_component_web_component_api`, `get_component_styling`, `get_full_document` — for component APIs, docs, styling, internals
+- **Playwright:** `browser_snapshot`, `browser_navigate`, `browser_evaluate`, etc. — for verifying UI state, testing interactions, inspecting DOM
+- **General:** `WebSearch`, `WebFetch` — for any external docs, Quill/Parchment APIs, npm packages
+
 ## Tech Stack (V25)
 
 - Java 21+
