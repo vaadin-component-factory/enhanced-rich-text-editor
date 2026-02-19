@@ -134,10 +134,9 @@ class TabBlot extends Embed {
   constructor(scroll, node) {
     super(scroll, node);
     // Wrap Quill 2's guard TextNodes (\uFEFF) in named <span> elements.
-    // Without wrapping, guard TextNodes become anonymous flex items (0px wide)
-    // inside the inline-flex .ql-tab. Chrome cannot reliably render a caret
-    // inside a 0px anonymous flex item — visibility depends on sub-pixel alignment.
-    // Wrapping creates named flex items with min-width 2px for reliable caret rendering.
+    // Without wrapping, bare TextNodes with zero-width \uFEFF collapse to 0px,
+    // making the caret invisible at tab positions. Wrapping in inline-block spans
+    // with min-width 2px ensures reliable caret rendering.
     // TextNode object identity is preserved (reparenting, not copying), so Quill's
     // index(), restore(), and update() methods continue to work correctly.
     this._wrapGuardNodes();
@@ -158,6 +157,33 @@ class TabBlot extends Embed {
       this.domNode.insertBefore(w, this.rightGuard);
       w.appendChild(this.rightGuard);
     }
+  }
+
+  /**
+   * Override Embed.position() for the "after tab" case (index > 0).
+   * With inline-block, guard nodes render at the left edge of the tab,
+   * causing the native caret to appear at the wrong X position.
+   * For "after tab", we return the first text descendant of the next DOM
+   * sibling, which is physically at the tab's right edge (= the tabstop).
+   * This fixes caret rendering for setSelection() and typing insertion.
+   */
+  position(index, inclusive) {
+    if (index <= 0) {
+      return super.position(index, inclusive);
+    }
+    const nextNode = this.domNode.nextSibling;
+    if (nextNode) {
+      if (nextNode.nodeType === Node.TEXT_NODE) {
+        return [nextNode, 0];
+      }
+      // Next sibling is an element (e.g., another .ql-tab) — use its first text node
+      const walker = document.createTreeWalker(nextNode, NodeFilter.SHOW_TEXT);
+      const firstText = walker.firstChild();
+      if (firstText) {
+        return [firstText, 0];
+      }
+    }
+    return super.position(index, inclusive);
   }
 
   detach() {
@@ -227,22 +253,24 @@ class VcfEnhancedRichTextEditor extends RteBase {
           outline-offset: -1px;
         }
 
-        /* Tab stops — inline-flex spans with calculated width.
+        /* Tab stops — inline-block spans with calculated width.
            Quill 2 Embed structure after guard wrapping:
              [span.ql-tab-guard > guard \uFEFF] [contentNode span] [span.ql-tab-guard > guard \uFEFF]
            Guard TextNodes are wrapped in named <span> elements by TabBlot constructor.
            Guards need min 2px width — Chrome cannot render a caret in a 0px element.
            The \uFEFF glyph has zero advance width, so without explicit sizing the guards
-           collapse to 0px even as named flex items. 2×2px = 4px total overhead per tab,
-           imperceptible at typical tab widths (100-200px). 1px works but 2px provides a
-           DPR/zoom safety margin. Tab width engine sets outer .ql-tab width, so guards
+           collapse to 0px. 2×2px = 4px total overhead per tab, imperceptible at typical
+           tab widths (100-200px). Tab width engine sets outer .ql-tab width, so guards
            are included and ruler alignment is unaffected.
+           CRITICAL: Must use inline-block, NOT inline-flex. Chrome treats inline-flex
+           elements as atomic inlines for vertical navigation — ArrowUp/ArrowDown gets
+           trapped in guard nodes instead of moving between lines.
            overflow:visible — tab is invisible spacing; hidden/clip clips the caret
            (Lumo line-height 1.625 makes caret ~26px, taller than 1rem box).
            No height/line-height — inherit from paragraph so caret matches text.
            No will-change/translateZ — compositor layers break caret in Chrome. */
         .ql-tab {
-          display: inline-flex;
+          display: inline-block;
           min-width: 2px;
           white-space: pre;
           vertical-align: baseline;
@@ -251,15 +279,13 @@ class VcfEnhancedRichTextEditor extends RteBase {
           cursor: default;
         }
         .ql-tab-guard {
-          flex: 0 0 2px;
+          display: inline-block;
           min-width: 2px;
           font-size: inherit;
           line-height: inherit;
           pointer-events: none;
         }
         .ql-tab > span[contenteditable="false"] {
-          flex: 1 1 0px;
-          min-width: 0;
           font-size: 0;
           line-height: 0;
           overflow: hidden;
@@ -924,6 +950,70 @@ class VcfEnhancedRichTextEditor extends RteBase {
     // Add soft-break and hard-break bindings for Enter key
     const enterBindings = keyboard.bindings['Enter'] || [];
     keyboard.bindings['Enter'] = [softBreakBinding, hardBreakBinding, ...enterBindings];
+
+    // ArrowUp/ArrowDown: Custom vertical navigation that uses Quill's getBounds()
+    // for precise targeting. Chrome's native vertical navigation uses DOM text node
+    // positions, which are wrong for tab embeds with inline-block display (guard
+    // nodes are at the left edge, not at the tabstop position). This override
+    // computes the correct target using Quill's accurate bounds information.
+    const arrowHandler = function(direction, range) {
+      const quill = self._editor;
+      const currentBounds = quill.getBounds(range.index);
+      const currentLeft = currentBounds.left;
+      const docLength = quill.getLength();
+
+      // Scan for the target line
+      const step = direction === 'up' ? -1 : 1;
+      let targetLineTop = null;
+      let bestIndex = range.index;
+      let bestDist = Infinity;
+
+      for (let i = range.index + step; i >= 0 && i < docLength; i += step) {
+        const bounds = quill.getBounds(i);
+        // Detect line change (top differs by more than 5px from current)
+        const isNewLine = direction === 'up'
+          ? bounds.top < currentBounds.top - 5
+          : bounds.top > currentBounds.top + 5;
+
+        if (!isNewLine) continue;
+
+        // First position on the target line — record its top
+        if (targetLineTop === null) {
+          targetLineTop = bounds.top;
+        }
+
+        // Still on the same target line? (within 5px of its top)
+        if (Math.abs(bounds.top - targetLineTop) > 5) break;
+
+        // Track closest horizontal match
+        const dist = Math.abs(bounds.left - currentLeft);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestIndex = i;
+        }
+      }
+
+      if (bestIndex !== range.index) {
+        quill.setSelection(bestIndex, 0, Quill.sources.USER);
+        return false;
+      }
+      return true; // no target found — let browser handle (e.g., first/last line)
+    };
+
+    const arrowUpBinding = {
+      key: 'ArrowUp',
+      handler: function(range) { return arrowHandler('up', range); }
+    };
+    const arrowDownBinding = {
+      key: 'ArrowDown',
+      handler: function(range) { return arrowHandler('down', range); }
+    };
+
+    // Prepend to existing bindings so ERTE handler fires first
+    const arrowUpBindings = keyboard.bindings['ArrowUp'] || [];
+    keyboard.bindings['ArrowUp'] = [arrowUpBinding, ...arrowUpBindings];
+    const arrowDownBindings = keyboard.bindings['ArrowDown'] || [];
+    keyboard.bindings['ArrowDown'] = [arrowDownBinding, ...arrowDownBindings];
   }
 
   // ==========================================================================
