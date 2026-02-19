@@ -10,12 +10,12 @@ export default defineConfig({
     },
   },
   use: {
-    baseURL: 'http://127.0.0.1:8080',
+    baseURL: process.env.BASE_URL || 'http://127.0.0.1:8080',
     headless: true,
   },
   webServer: {
     command: 'mvn spring-boot:run',
-    url: 'http://127.0.0.1:8080',
+    url: process.env.BASE_URL || 'http://127.0.0.1:8080',
     reuseExistingServer: true,
     timeout: 120000,
   },

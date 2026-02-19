@@ -16,6 +16,9 @@
  */
 package com.vaadin.flow.component.richtexteditor;
 
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.function.SerializableConsumer;
+
 /**
  * Bridge class that lives in RTE 2's package to access package-private members.
  * <p>
@@ -27,4 +30,16 @@ package com.vaadin.flow.component.richtexteditor;
  */
 public abstract class RteExtensionBase extends RichTextEditor {
 
+    /**
+     * Visibility-widening override: package-private → protected.
+     * {@code RichTextEditor.runBeforeClientResponse()} is package-private,
+     * invisible to {@code EnhancedRichTextEditor} in
+     * {@code com.vaadin.componentfactory}. This override widens it to
+     * {@code protected} so subclasses in other packages can use it.
+     */
+    @Override
+    protected void runBeforeClientResponse(
+            SerializableConsumer<UI> command) {
+        super.runBeforeClientResponse(command);
+    }
 }

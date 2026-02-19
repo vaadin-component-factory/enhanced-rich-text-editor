@@ -1,7 +1,7 @@
 import { Page, Locator, expect } from '@playwright/test';
 
 /** Base URL for ERTE test views */
-export const ERTE_TEST_BASE = 'http://127.0.0.1:8080/erte-test';
+export const ERTE_TEST_BASE = `${process.env.BASE_URL || 'http://127.0.0.1:8080'}/erte-test`;
 
 /**
  * Wait for the ERTE editor to be fully ready.

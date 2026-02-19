@@ -16,6 +16,8 @@
  */
 package com.vaadin.componentfactory;
 
+import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.richtexteditor.RteExtensionBase;
 
 /**
@@ -24,8 +26,10 @@ import com.vaadin.flow.component.richtexteditor.RteExtensionBase;
  * Extends {@link RteExtensionBase} which bridges package-private access to
  * RTE 2. All ERTE-specific logic lives in this class and package.
  * <p>
- * Phase 1 stub — features added in Phase 2+.
+ * Phase 2: shell — features added in Phase 3+.
  */
+@Tag("vcf-enhanced-rich-text-editor")
+@JsModule("./vcf-enhanced-rich-text-editor.js")
 public class EnhancedRichTextEditor extends RteExtensionBase {
 
 }
