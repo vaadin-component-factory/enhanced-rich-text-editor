@@ -6,15 +6,12 @@ import { test, expect } from '@playwright/test';
  * custom tag, toolbar, editing, Java API, Quill instance, Delta round-trip.
  *
  * Uses V25DemoView at route "/" — no #test-ready indicator needed.
- * Run with: BASE_URL=http://127.0.0.1:8082 npx playwright test tests/erte/erte-shell.spec.ts
  */
-
-const V25_BASE = process.env.BASE_URL || 'http://127.0.0.1:8082';
 
 test.describe('ERTE Shell (Phase 2)', () => {
 
   test.beforeEach(async ({ page }) => {
-    await page.goto(V25_BASE + '/');
+    await page.goto('/');
     // Wait for the ERTE custom element to be defined and ready
     await page.waitForFunction(() => {
       const el = document.querySelector('vcf-enhanced-rich-text-editor');

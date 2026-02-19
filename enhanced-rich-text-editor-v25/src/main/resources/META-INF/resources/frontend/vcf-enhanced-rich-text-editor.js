@@ -44,6 +44,15 @@ class VcfEnhancedRichTextEditor extends RteBase {
     return super.styles ? [...super.styles] : [];
   }
 
+  static get lumoInjector() {
+    // Reuse the parent tag name so that the LumoInjector injects the same
+    // Lumo theme styles (toolbar icons, colors, spacing) as vaadin-rich-text-editor.
+    // Without this, the injector looks for --_lumo-vcf-enhanced-rich-text-editor-inject
+    // which doesn't exist in any Lumo CSS file, leaving ERTE with base SVG icons
+    // instead of the Lumo text-based/font icons.
+    return { ...super.lumoInjector, is: 'vaadin-rich-text-editor' };
+  }
+
   /** @protected */
   render() {
     return super.render();

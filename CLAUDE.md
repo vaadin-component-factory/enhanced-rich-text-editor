@@ -8,33 +8,31 @@ Enhanced Rich Text Editor (ERTE) for Vaadin — a rich text editor component ext
 
 **Active work:** Migrating from Vaadin 24 / Quill 1 (ERTE 1) to Vaadin 25 / Quill 2 (ERTE 2). The old V24 modules remain in the repo as dead reference code (excluded from build). New V25 modules are created from scratch, using the old code as context.
 
+**Transfer folder:** `~/transfer/erte` — shared folder for screenshots and file exchange between user and Claude.
+
 ## Root Scripts
 
 Convenience scripts in the repo root for build, server, and test operations. **Always use these instead of running Maven/server commands manually.**
 
 | Script | Purpose |
 |--------|---------|
-| `v24-build.sh [-q]` | `mvn clean install -DskipTests` for V24 modules |
-| `v24-build-clean.sh [-q]` | Same + `vaadin:clean-frontend` (wipes dev bundle) |
-| `v24-server-start.sh [port]` | Start V24 demo on port 8080 (default) |
-| `v24-server-stop.sh` | Stop V24 demo server |
-| `v24-server-logs.sh [-f\|-errors]` | Print V24 server logs |
-| `v24-server-status.sh` | Check V24 server status |
-| `v25-build.sh [-q]` | Build V25 modules |
-| `v25-build-clean.sh [-q]` | Same + `vaadin:clean-frontend` |
-| `v25-server-start.sh [port]` | Start V25 demo on port 8082 (default) |
-| `v25-server-stop.sh` | Stop V25 demo server |
+| `v25-build.sh [-q]` | Build V25 modules (`mvn clean install -DskipTests`) |
+| `v25-build-clean.sh [-q]` | Same + `vaadin:clean-frontend` (wipes dev bundle) |
+| `v25-server-start.sh [port]` | Start demo on port 8080 (default) |
+| `v25-server-stop.sh` | Stop demo server |
+| `v25-server-logs.sh [-f\|-errors]` | Print server logs |
+| `v25-server-status.sh` | Check server status |
 
-**Workflow:** After changing addon code (ERTE JS/Java), always `v24-build.sh` before `v24-server-start.sh`. Tests require a running server.
+**Workflow:** After changing addon code (ERTE JS/Java), always `v25-build.sh` before `v25-server-start.sh`. Tests require a running server.
 
 **Tests should run as background tasks** (`run_in_background: true`) to avoid blocking.
 
 ## Build Commands
 
 ```bash
-# V24 build + server (preferred — use root scripts)
-bash v24-build.sh
-bash v24-server-start.sh
+# Build + server (preferred — use root scripts)
+bash v25-build.sh
+bash v25-server-start.sh
 
 # Run Playwright tests (server must be running first)
 cd enhanced-rich-text-editor-demo

@@ -1,8 +1,8 @@
 #!/bin/bash
 # Check V25 demo server status
 # Usage: bash v25-server-status.sh [port]
-PID_FILE="/tmp/claude-server-v25.pid"
-PORT=${1:-8082}
+PID_FILE="/tmp/claude-server.pid"
+PORT=${1:-8080}
 
 echo "=== ERTE V25 Demo Server Status ==="
 

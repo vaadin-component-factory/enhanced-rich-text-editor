@@ -1,7 +1,7 @@
 #!/bin/bash
 # Stop V25 demo server
-PID_FILE="/tmp/claude-server-v25.pid"
-PORT=${1:-8082}
+PID_FILE="/tmp/claude-server.pid"
+PORT=${1:-8080}
 
 if [ -f "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")

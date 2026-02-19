@@ -1,10 +1,10 @@
 #!/bin/bash
-# Start V25 demo server on port 8082
+# Start V25 demo server on port 8080
 # Usage: bash v25-server-start.sh [port]
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PORT=${1:-8082}
-PID_FILE="/tmp/claude-server-v25.pid"
-LOG_FILE="/tmp/claude-server-v25.log"
+PORT=${1:-8080}
+PID_FILE="/tmp/claude-server.pid"
+LOG_FILE="/tmp/claude-server.log"
 
 # Stop any existing server first
 if [ -f "$PID_FILE" ]; then
@@ -32,7 +32,7 @@ for i in $(seq 1 90); do
         exit 0
     fi
     if ! kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
-        echo "ERROR: Server process died. Check logs: bash v25-server-logs.sh"
+        echo "ERROR: Server process died. Check logs:"
         tail -20 "$LOG_FILE"
         exit 1
     fi
