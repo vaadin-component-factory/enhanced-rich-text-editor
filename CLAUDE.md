@@ -25,7 +25,7 @@ Convenience scripts in the repo root for build, server, and test operations. **A
 
 **Workflow:** After changing addon code (ERTE JS/Java), always `v25-build.sh` before `v25-server-start.sh`. Tests require a running server.
 
-**Tests should run as background tasks** (`run_in_background: true`) to avoid blocking.
+**Background tasks** (`run_in_background: true`): Use for complex, longer-running operations like plan reviews, feature implementation, and test runs. Do NOT use for quick, simple tasks (e.g., a single file read, a status check, a small edit).
 
 ## Build Commands
 
