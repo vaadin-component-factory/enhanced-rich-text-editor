@@ -8,7 +8,8 @@
 > - Toolbar `[on]` attribute replaced by `::part(toolbar-button-pressed)`
 
 Total: 248 tests (75 prototype + 173 ERTE)
-Status: 170 passed, 3 fixme, 0 failures
+V24 baseline: 170 passed, 3 fixme, 0 failures — minimum target after V25 migration
+Status: Non-functional (V24 views in src-v24/, restored in Phase 2+)
 
 ---
 

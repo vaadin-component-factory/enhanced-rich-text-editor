@@ -81,7 +81,7 @@ The V25 primary value format is HTML (matching RTE 2), with Delta access via `as
 ### Architecture Decisions (confirmed by spike — all PASS)
 
 - **JS extension strategy:** ES class extension of RTE 2's web component (not composition, not prototype patching). See `implementation_notes.md` section 6.
-- **Java package:** `com.vaadin.flow.component.richtexteditor` (same package as RTE 2, for access to package-private methods).
+- **Java packages:** `RteExtensionBase` in `com.vaadin.flow.component.richtexteditor` (bridge lifting package-private → protected), `EnhancedRichTextEditor` in `com.vaadin.componentfactory` (all ERTE logic). Only the bridge class lives in the foreign package.
 - **Tag:** `vcf-enhanced-rich-text-editor` (own tag, own web component registration).
 - **Value format:** HTML-primary (matching RTE 2). Delta access via `asDelta()` wrapper. Clean break from ERTE 1's Delta-primary API.
 - **Theme:** Lumo. Use `--vaadin-*` custom properties where they exist. Loads via `@StyleSheet(Lumo.STYLESHEET)` on host app.
@@ -155,7 +155,7 @@ Use these as needed, do NOT try to load all of them as context simultaneously.
 
 ## Playwright Tests
 
-252 total tests: 75 prototype + 177 ERTE. Full listing in [TEST_INVENTORY.md](enhanced-rich-text-editor-demo/tests/TEST_INVENTORY.md).
+248 total tests: 75 prototype + 173 ERTE. Full listing in [TEST_INVENTORY.md](enhanced-rich-text-editor-demo/tests/TEST_INVENTORY.md).
 
 **Running tests:**
 ```bash
@@ -171,15 +171,15 @@ npx playwright test tests/erte/
 bash server-stop.sh
 ```
 
-### ERTE Test Suite (177 tests in `tests/erte/`)
+### ERTE Test Suite (173 tests in `tests/erte/`)
 
 | Spec File | Tests | Covers |
 |-----------|-------|--------|
-| `tabstops.spec.ts` | 78 | Tabstops, rulers, soft-break, whitespace indicators |
+| `tabstops.spec.ts` | 75 | Tabstops, rulers, soft-break, whitespace indicators |
 | `placeholders.spec.ts` | 32 | Placeholder dialog, events, appearance, keyboard |
 | `readonly.spec.ts` | 18 | Readonly sections, protection, whole-editor readonly |
 | `toolbar.spec.ts` | 24 | Slot system, visibility, shortcuts, icons, keyboard nav |
-| `features.spec.ts` | 25 | NBSP, addText, align, indent, i18n, sanitizer, focus |
+| `features.spec.ts` | 24 | NBSP, addText, align, indent, i18n, sanitizer, focus |
 
 **Test views** (Java, in `com.vaadin.componentfactory`): `ErteTabStopTestView`, `ErtePlaceholderTestView`, `ErteReadonlyTestView`, `ErteToolbarTestView`, `ErteFeatureTestView`. Each provides a single editor (`id="test-editor"`), delta/HTML output elements, event log, and a ready indicator.
 
