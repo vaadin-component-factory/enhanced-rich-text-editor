@@ -4,6 +4,7 @@ import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Pre;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.richtexteditor.RichTextEditor;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
@@ -12,11 +13,16 @@ import com.vaadin.flow.router.Route;
 public class V25DemoView extends VerticalLayout {
 
     public V25DemoView() {
+        setSizeFull();
+        setAlignItems(Alignment.STRETCH);
+
+        // Note: setValue() accepts HTML. Use asDelta().setValue() for Delta JSON.
+
+        var rte = new RichTextEditor();
+        rte.setValue("<p>Original <b>RTE</b> from Vaadin 25</p>");
+
         var erte = new EnhancedRichTextEditor();
-        erte.setWidthFull();
-        erte.setMaxHeight("400px");
-        // setValue() accepts HTML. Use asDelta().setValue() for Delta JSON.
-        erte.setValue("<p>ERTE V25 — Phase 2 (Shell)</p>");
+        erte.setValue("<p><b>ERTE V25</b> — Phase 2 (Shell)</p>");
 
         // Delta output — verifies asDelta() round-trip (AC #4)
         var deltaOutput = new Pre();
@@ -32,10 +38,17 @@ public class V25DemoView extends VerticalLayout {
 
         add(
             new H2("ERTE V25 — Phase 2 (ERTE Shell)"),
+            new H3("RTE"),
+            rte,
+            new H3("ERTE"),
             erte,
             new H3("Delta Output"),
             deltaOutput
         );
+
+        setFlexGrow(1, rte, erte);
+
+
     }
 
 }
