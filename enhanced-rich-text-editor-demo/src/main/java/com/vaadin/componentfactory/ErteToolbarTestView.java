@@ -26,6 +26,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteAlias;
 
 /**
  * Test view for toolbar slot system (Phase 3.1a).
@@ -38,7 +39,8 @@ import com.vaadin.flow.router.Route;
  *   <li>Delta output, event log, ready indicator</li>
  * </ul>
  */
-@Route("erte-test/toolbar")
+@Route("erte-test")
+@RouteAlias("erte-test/toolbar")
 public class ErteToolbarTestView extends VerticalLayout {
 
     private final EnhancedRichTextEditor editor;

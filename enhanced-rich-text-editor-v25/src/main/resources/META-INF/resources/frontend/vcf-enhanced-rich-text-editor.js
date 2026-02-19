@@ -16,14 +16,16 @@
  */
 
 /**
- * ERTE V25 shell — extends RTE 2's web component with ERTE's own tag.
- * Phase 2: pure passthrough. Features added in Phase 3+.
+ * ERTE V25 — extends RTE 2's web component with ERTE features.
  *
  * Import path: package entry point (@vaadin/rich-text-editor), NOT the
  * internal /src/ path. customElements.get() decouples from internal module
  * structure. Import path is stable as of Vaadin 25.0.5.
  */
 import '@vaadin/rich-text-editor';
+import { css } from 'lit';
+
+const Quill = window.Quill;
 
 const RteBase = customElements.get('vaadin-rich-text-editor');
 if (!RteBase) {
@@ -33,6 +35,38 @@ if (!RteBase) {
   );
 }
 
+// ============================================================================
+// ReadOnlyBlot — Inline format: <span class="ql-readonly" contenteditable="false">
+// Registered globally before element creation (proven pattern, used by RTE 2).
+// ============================================================================
+const Inline = Quill.import('blots/inline');
+
+class ReadOnlyBlot extends Inline {
+  static blotName = 'readonly';
+  static className = 'ql-readonly';
+
+  static create(value) {
+    const node = super.create(value);
+    if (value) {
+      node.setAttribute('contenteditable', 'false');
+      node.setAttribute('aria-readonly', 'true');
+    }
+    return node;
+  }
+
+  static formats(domNode) {
+    return domNode.classList.contains('ql-readonly');
+  }
+}
+
+Quill.register('formats/readonly', ReadOnlyBlot, true);
+
+/**
+ * ERTE CSS classes to preserve in htmlValue (not stripped by __updateHtmlValue).
+ * Each phase adds its classes here.
+ */
+const ERTE_PRESERVED_CLASSES = ['ql-readonly'];
+
 class VcfEnhancedRichTextEditor extends RteBase {
 
   static get is() {
@@ -40,8 +74,21 @@ class VcfEnhancedRichTextEditor extends RteBase {
   }
 
   static get styles() {
-    // Defensive: guard against undefined (shouldn't happen, RTE 2 has 5 sheets)
-    return super.styles ? [...super.styles] : [];
+    const base = super.styles ? [...super.styles] : [];
+    return [
+      ...base,
+      css`
+        /* Readonly sections — Lumo design tokens for light/dark compatibility */
+        .ql-readonly {
+          color: var(--lumo-secondary-text-color);
+          background-color: var(--lumo-contrast-5pct);
+          border-radius: var(--lumo-border-radius-s);
+          padding-inline: 0.125em;
+          outline: 1px solid var(--lumo-contrast-10pct);
+          outline-offset: -1px;
+        }
+      `,
+    ];
   }
 
   static get lumoInjector() {
@@ -69,7 +116,9 @@ class VcfEnhancedRichTextEditor extends RteBase {
   ready() {
     super.ready();
     this._injectToolbarSlots();
-    console.debug('[ERTE] ready, _editor:', !!this._editor, 'slots injected');
+    this._injectReadonlyButton();
+    this._initReadonlyProtection();
+    console.debug('[ERTE] ready, _editor:', !!this._editor, 'readonly protection active');
   }
 
   /**
@@ -136,6 +185,144 @@ class VcfEnhancedRichTextEditor extends RteBase {
     toolbar.insertBefore(customGroupSpan, anchor);
     toolbar.insertBefore(_slot('after-group-custom'), anchor);
     toolbar.insertBefore(_slot('end'), anchor);
+  }
+
+  // ==========================================================================
+  // Readonly: toolbar button
+  // ==========================================================================
+
+  /**
+   * Injects a readonly toggle button into the toolbar, placed in the
+   * format group (last standard group). Lock icon via vaadin-icon.
+   * @protected
+   */
+  _injectReadonlyButton() {
+    const toolbar = this.shadowRoot.querySelector('[part="toolbar"]');
+    if (!toolbar) return;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.setAttribute('part', 'toolbar-button toolbar-button-readonly');
+    btn.setAttribute('aria-label', 'Readonly');
+    btn.addEventListener('click', () => this._onReadonlyClick());
+
+    // Lock icon — using inline SVG to avoid dependency on vaadin-icon in shadow DOM
+    btn.innerHTML = `<svg viewBox="0 0 16 16" width="1em" height="1em" style="fill:currentColor">
+      <path d="M12 7h-1V5c0-1.7-1.3-3-3-3S5 3.3 5 5v2H4c-.6 0-1 .4-1 1v5c0 .6.4 1 1 1h8c.6 0 1-.4 1-1V8c0-.6-.4-1-1-1zM6 5c0-1.1.9-2 2-2s2 .9 2 2v2H6V5z"/>
+    </svg>`;
+
+    // Place in format group (last standard group)
+    const formatGroup = toolbar.querySelector('[part~="toolbar-group-format"]');
+    if (formatGroup) {
+      // Insert before the clean button (last button in format group)
+      const cleanBtn = formatGroup.querySelector('[part~="toolbar-button-clean"]');
+      if (cleanBtn) {
+        formatGroup.insertBefore(btn, cleanBtn);
+      } else {
+        formatGroup.appendChild(btn);
+      }
+    } else {
+      // Fallback: append to toolbar
+      const fileInput = toolbar.querySelector('#fileInput');
+      toolbar.insertBefore(btn, fileInput || null);
+    }
+
+    this.__readonlyButton = btn;
+
+    // Track active state via editor-change
+    this._editor.on('editor-change', () => {
+      const selection = this._editor.getSelection();
+      if (selection && selection.length > 0) {
+        const format = this._editor.getFormat(selection.index, selection.length);
+        if (format.readonly) {
+          btn.classList.add('ql-active');
+        } else {
+          btn.classList.remove('ql-active');
+        }
+      } else if (selection) {
+        const format = this._editor.getFormat(selection.index);
+        if (format.readonly) {
+          btn.classList.add('ql-active');
+        } else {
+          btn.classList.remove('ql-active');
+        }
+      }
+    });
+  }
+
+  /**
+   * Toggle readonly format on the current selection.
+   * @protected
+   */
+  _onReadonlyClick() {
+    const selection = this._editor.getSelection();
+    if (!selection || selection.length === 0) return;
+    const format = this._editor.getFormat(selection.index, selection.length);
+    this._editor.formatText(
+      selection.index, selection.length,
+      'readonly', !format.readonly, 'user'
+    );
+  }
+
+  // ==========================================================================
+  // Readonly: delete protection
+  // ==========================================================================
+
+  /**
+   * Installs a text-change handler that reverts any user edit that
+   * decreases the number of readonly sections. This prevents deletion
+   * of readonly blots via Backspace, Delete, Cut, Select-All+Delete, etc.
+   * @protected
+   */
+  _initReadonlyProtection() {
+    const editor = this._editor;
+    editor.on('text-change', (delta, oldDelta, source) => {
+      if (source !== 'user') return;
+      // Only check if the change includes a delete op
+      if (!delta.ops.some((op) => op.delete != null)) return;
+
+      const oldOps = oldDelta.ops;
+      const newOps = editor.getContents().ops;
+
+      // Count readonly sections (ops with attributes.readonly === true)
+      const oldCount = oldOps.filter(
+        (op) => op.attributes && op.attributes.readonly === true
+      ).length;
+      const newCount = newOps.filter(
+        (op) => op.attributes && op.attributes.readonly === true
+      ).length;
+
+      if (newCount < oldCount) {
+        // Revert: restore the old contents
+        editor.setContents(oldDelta, 'silent');
+        // Try to restore cursor position
+        if (delta.ops[0] && delta.ops[0].retain != null) {
+          editor.setSelection(delta.ops[0].retain, 0, 'silent');
+        }
+      }
+    });
+  }
+
+  // ==========================================================================
+  // __updateHtmlValue override: preserve ERTE classes in htmlValue
+  // ==========================================================================
+
+  /** @private */
+  __updateHtmlValue() {
+    let content = this._editor.getSemanticHTML();
+    // Remove Quill classes, except for align, indent, and ERTE-specific classes
+    content = content.replace(/class="([^"]*)"/gu, (_match, group1) => {
+      const classes = group1.split(' ').filter((className) => {
+        if (!className.startsWith('ql-')) return true;
+        if (className.startsWith('ql-align') || className.startsWith('ql-indent')) return true;
+        if (ERTE_PRESERVED_CLASSES.includes(className)) return true;
+        return false;
+      });
+      return `class="${classes.join(' ')}"`;
+    });
+    // Process align and indent classes (parent's method)
+    content = this.__processQuillClasses(content);
+    this._setHtmlValue(content);
   }
 }
 
