@@ -8,14 +8,12 @@
     <groupId>com.vaadin.componentfactory</groupId>
     <artifactId>enhanced-rich-text-editor-root</artifactId>
     <packaging>pom</packaging>
-    <version>5.2.0-SNAPSHOT</version>
+    <version>6.0.0-SNAPSHOT</version>
     <name>EnhancedRich Text Editor Root</name>
     <inceptionYear>2018</inceptionYear>
 
     <properties>
-        <maven.compiler.release>17</maven.compiler.release>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
     </properties>
 
     <organization>
@@ -44,20 +42,9 @@
     </licenses>
 
 
-    <!--<properties>-->
-        <!--<flow.version>1.3.0</flow.version>-->
-        <!--<testbench.version>6.0.1</testbench.version>-->
-        <!--<jetty.plugin.version>9.4.11.v20180605</jetty.plugin.version>-->
-        <!--<maven.compiler.source>1.8</maven.compiler.source>-->
-        <!--<maven.compiler.target>1.8</maven.compiler.target>-->
-        <!--<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>-->
-        <!--<project.reporting.outputEncoding>UTF-8-->
-        <!--</project.reporting.outputEncoding>-->
-    <!--</properties>-->
-
     <modules>
-        <module>enhanced-rich-text-editor</module>
-        <module>enhanced-rich-text-editor-tables</module>
+        <module>enhanced-rich-text-editor-v25</module>
+        <module>enhanced-rich-text-editor-tables-v25</module>
         <module>enhanced-rich-text-editor-demo</module>
     </modules>
 

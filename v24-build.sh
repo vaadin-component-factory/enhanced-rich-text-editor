@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build V24 modules (mvn clean install -DskipTests)
+# Build V24 modules (standalone, not part of root reactor)
 # Usage: bash v24-build.sh [-q]
 #   -q    Quiet mode
 QUIET=""
@@ -7,6 +7,5 @@ QUIET=""
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT_DIR"
 echo "=== ERTE V24 Build ==="
-mvn clean install -DskipTests $QUIET \
-    -pl enhanced-rich-text-editor,enhanced-rich-text-editor-tables,enhanced-rich-text-editor-demo \
-    -am
+mvn -f enhanced-rich-text-editor/pom.xml clean install -DskipTests $QUIET && \
+mvn -f enhanced-rich-text-editor-tables/pom.xml clean install -DskipTests $QUIET

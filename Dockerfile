@@ -1,9 +1,9 @@
 # DOCKERFILE TO BUILD THE DEMO
-# Builds the addon and tables extension from local sources, then builds the demo.
+# Builds the V25 addon and tables extension from local sources, then builds the demo.
 
 FROM ghcr.io/jqlang/jq:latest AS jq-stage
 
-FROM eclipse-temurin:17-jdk AS build
+FROM eclipse-temurin:21-jdk AS build
 COPY --from=jq-stage /jq /usr/bin/jq
 RUN jq --version
 
@@ -11,8 +11,8 @@ WORKDIR /build
 
 # Copy the full multi-module project
 COPY pom.xml ./
-COPY enhanced-rich-text-editor/ enhanced-rich-text-editor/
-COPY enhanced-rich-text-editor-tables/ enhanced-rich-text-editor-tables/
+COPY enhanced-rich-text-editor-v25/ enhanced-rich-text-editor-v25/
+COPY enhanced-rich-text-editor-tables-v25/ enhanced-rich-text-editor-tables-v25/
 COPY enhanced-rich-text-editor-demo/ enhanced-rich-text-editor-demo/
 
 # If you have a Vaadin Pro key, pass it as a secret with id "proKey":
@@ -32,9 +32,9 @@ RUN --mount=type=cache,target=/root/.m2 \
     sh -c 'PRO_KEY=$(jq -r ".proKey // empty" /run/secrets/proKey 2>/dev/null || echo "") && \
     OFFLINE_KEY=$(cat /run/secrets/offlineKey 2>/dev/null || echo "") && \
     cd enhanced-rich-text-editor-demo && \
-    ./mvnw -f /build/pom.xml clean install -pl enhanced-rich-text-editor,enhanced-rich-text-editor-tables -DskipTests && \
+    ./mvnw -f /build/pom.xml clean install -pl enhanced-rich-text-editor-v25,enhanced-rich-text-editor-tables-v25 -DskipTests && \
     ./mvnw clean package -Pproduction -DskipTests -Dvaadin.proKey=${PRO_KEY} -Dvaadin.offlineKey=${OFFLINE_KEY}'
 
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 COPY --from=build /build/enhanced-rich-text-editor-demo/target/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "/app.jar"]

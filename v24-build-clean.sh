@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build V24 modules with full Vaadin frontend cleanup
+# Build V24 modules with full Vaadin frontend cleanup (standalone, not part of root reactor)
 # Usage: bash v24-build-clean.sh [-q]
 #   -q    Quiet mode
 QUIET=""
@@ -8,15 +8,11 @@ ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT_DIR"
 echo "=== ERTE V24 Build (clean frontend) ==="
 echo "--- Cleaning Vaadin frontend caches ---"
-for MOD in enhanced-rich-text-editor enhanced-rich-text-editor-tables enhanced-rich-text-editor-demo; do
+for MOD in enhanced-rich-text-editor enhanced-rich-text-editor-tables; do
     MOD_DIR="$ROOT_DIR/$MOD"
     rm -rf "$MOD_DIR/node_modules" "$MOD_DIR/frontend/generated" "$MOD_DIR/target/frontend" "$MOD_DIR/target/dev-bundle" 2>/dev/null
     echo "  Cleaned $MOD"
 done
-echo "--- vaadin:clean-frontend ---"
-mvn vaadin:clean-frontend $QUIET \
-    -pl enhanced-rich-text-editor,enhanced-rich-text-editor-tables,enhanced-rich-text-editor-demo || true
 echo "--- mvn clean install -DskipTests ---"
-mvn clean install -DskipTests $QUIET \
-    -pl enhanced-rich-text-editor,enhanced-rich-text-editor-tables,enhanced-rich-text-editor-demo \
-    -am
+mvn -f enhanced-rich-text-editor/pom.xml clean install -DskipTests $QUIET && \
+mvn -f enhanced-rich-text-editor-tables/pom.xml clean install -DskipTests $QUIET

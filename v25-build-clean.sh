@@ -14,7 +14,7 @@ for MOD in enhanced-rich-text-editor-v25 enhanced-rich-text-editor-tables-v25 en
     echo "  Cleaned $MOD"
 done
 echo "--- vaadin:clean-frontend ---"
-mvn vaadin:clean-frontend $QUIET \
+mvn com.vaadin:vaadin-maven-plugin:clean-frontend $QUIET \
     -pl enhanced-rich-text-editor-v25,enhanced-rich-text-editor-tables-v25,enhanced-rich-text-editor-demo || true
 echo "--- mvn clean install -DskipTests ---"
 mvn clean install -DskipTests $QUIET \
