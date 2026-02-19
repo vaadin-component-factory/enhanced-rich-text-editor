@@ -463,4 +463,47 @@ class TabConverterTest {
         String result = TabConverter.convertIfNeeded(input);
         assertTrue(result.contains("\"tab\":true"), "pre-tab should be converted to tab embed");
     }
+
+    @Test
+    void convertIfNeeded_demoViewOldFormatArray() {
+        // Exact delta from the standard demo view (array format, as passed by setValue)
+        // Previously tested only via Playwright (features.spec.ts test 21)
+        String input = "[{\"attributes\":{\"tab\":\"1\"},\"insert\":\"\\uFEFF\"},"
+            + "{\"attributes\":{\"line-part\":true},\"insert\":\"\\uFEFF\"},"
+            + "{\"attributes\":{\"line-part\":true},\"insert\":\"Position\"},"
+            + "{\"attributes\":{\"tab\":\"1\"},\"insert\":\"\\uFEFF\"},"
+            + "{\"attributes\":{\"line-part\":true},\"insert\":\"Beschreibung\"},"
+            + "{\"attributes\":{\"tabs-cont\":\"TABS-CONT\"},\"insert\":\"\\n\"}]";
+
+        String result = TabConverter.convertIfNeeded(input);
+
+        // Must return array format (starts with [)
+        assertTrue(result.trim().startsWith("["), "Should return array format");
+
+        // Parse via wrapping (elemental Json.parse only handles objects)
+        JsonObject wrapped = Json.parse("{\"ops\":" + result + "}");
+        JsonArray ops = wrapped.getArray("ops");
+
+        // Count tab embeds — should be exactly 2
+        int tabCount = 0;
+        for (int i = 0; i < ops.length(); i++) {
+            JsonObject op = ops.getObject(i);
+            JsonValue insert = op.get("insert");
+            if (insert.getType() == elemental.json.JsonType.OBJECT) {
+                JsonObject insertObj = (JsonObject) insert;
+                if (insertObj.hasKey("tab")) {
+                    tabCount++;
+                }
+            }
+        }
+        assertEquals(2, tabCount, "Should have exactly 2 tab embeds");
+
+        // Verify text content survived
+        assertTrue(result.contains("Position"), "Should preserve 'Position' text");
+        assertTrue(result.contains("Beschreibung"), "Should preserve 'Beschreibung' text");
+
+        // Verify old-format markers are gone
+        assertFalse(result.contains("tabs-cont"), "Should not contain old tabs-cont");
+        assertFalse(result.contains("line-part"), "Should not contain old line-part");
+    }
 }

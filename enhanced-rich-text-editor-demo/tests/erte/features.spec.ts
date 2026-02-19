@@ -523,38 +523,6 @@ test.describe('ERTE Feature Tests', () => {
   });
 
   // ============================================
-  // TabConverter / Old Format Test
-  // ============================================
-
-  test.describe('TabConverter', () => {
-    test('21 - Old format tab delta auto-converts on load', async ({ page }) => {
-      // Load old-format delta with tabs-cont/line-part/tab attributes
-      await page.locator('#load-old-tab-delta').click();
-      await page.waitForTimeout(500);
-
-      // Old format: tab"1" + line-part"Position" + tab"1" + line-part"Beschreibung" + tabs-cont\n
-      // Should auto-convert to: {tab:true} + "Position" + {tab:true} + "Beschreibung" + \n
-      const tabs = getErte(page).locator('.ql-tab');
-      await expect(tabs).toHaveCount(2);
-
-      // Verify text content survived conversion
-      const editorText = await getErte(page).locator('.ql-editor').innerText();
-      expect(editorText).toContain('Position');
-      expect(editorText).toContain('Beschreibung');
-
-      // Verify the delta output contains tabs in new format
-      const delta = await getDeltaFromEditor(page);
-      const tabOps = delta.ops.filter((op: any) => op.insert && op.insert.tab !== undefined);
-      expect(tabOps.length).toBe(2);
-
-      // Verify old-format markers are gone
-      const deltaStr = JSON.stringify(delta);
-      expect(deltaStr).not.toContain('tabs-cont');
-      expect(deltaStr).not.toContain('line-part');
-    });
-  });
-
-  // ============================================
   // Sanitizer Tests
   // ============================================
 

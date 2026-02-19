@@ -1,7 +1,7 @@
 # ERTE Test Suite Inventory
 
-Total: 249 tests (75 prototype + 174 ERTE)
-Status: 171 passed, 3 fixme, 0 failures
+Total: 248 tests (75 prototype + 173 ERTE)
+Status: 170 passed, 3 fixme, 0 failures
 
 ---
 
@@ -221,7 +221,7 @@ Status: 171 passed, 3 fixme, 0 failures
 
 ---
 
-## Features (26 tests) — `erte/features.spec.ts`
+## Features (24 tests) — `erte/features.spec.ts`
 
 ### Non-Breaking Space (Shift+Space)
 - Shift+Space inserts a non-breaking space
@@ -258,9 +258,6 @@ Status: 171 passed, 3 fixme, 0 failures
 - Load Delta with tab blot and verify round-trip
 - Load Delta with readonly blot and verify it renders
 - Load Delta with placeholder blot and verify it renders
-
-### TabConverter
-- Old format tab delta auto-converts on load
 
 ### Sanitizer
 - Sanitizer preserves ERTE-specific classes in HTML output

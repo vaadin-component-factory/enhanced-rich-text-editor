@@ -46,9 +46,8 @@
 - **Root cause:** Tab keyboard handler had `if (self.tabStops.length > 0 && range)` guard — when all tabstops removed, Tab key fell through to browser default (focus away) instead of inserting tab blot.
 - **Fix (editor.js):** Changed to `if (range)`. The width calculation already had a `fixedTabWidth` fallback for tabs without matching tabstops.
 
-#### TabConverter Test — ENABLED
-- **Change:** Added `#load-old-tab-delta` button to `ErteFeatureTestView.java` with old-format delta (tab/line-part/tabs-cont attributes from `TabConverterTest.java`).
-- **Fix (features.spec.ts):** Test 21 un-fixme'd — verifies 2 tab blots rendered, text preserved, old markers removed from delta.
+#### TabConverter Test — REFACTORED TO JUNIT
+- **Change:** Removed Playwright test 21 and `#load-old-tab-delta` button from `ErteFeatureTestView.java`. TabConverter is a pure Java class — testing via browser was unnecessary overhead. The exact demo delta is now covered by `convertIfNeeded_demoViewOldFormatArray` in `TabConverterTest.java` (28 JUnit tests total).
 
 ### Test Results (current)
 | Suite | Passed | Failed | Fixme | Total |
@@ -57,11 +56,11 @@
 | placeholders.spec.ts | 30 | 0 | 2 | 32 |
 | readonly.spec.ts | 17 | 0 | 1 | 18 |
 | toolbar.spec.ts | 24 | 0 | 0 | 24 |
-| features.spec.ts | 26 | 0 | 0 | 26 |
-| **ERTE Total** | **172** | **0** | **3** | **175** |
+| features.spec.ts | 24 | 0 | 0 | 24 |
+| **ERTE Total** | **170** | **0** | **3** | **173** |
 | tab-stop-prototype.spec.ts | 74 | 0 | 1 (flaky) | 75 |
 
-**0 failures across all 175 ERTE tests.**
+**0 failures across all 173 ERTE tests.** TabConverter additionally covered by 28 JUnit tests.
 
 ### Fixme Tests (3) — all Quill 1 limitations
 | Test | Suite | Reason |
