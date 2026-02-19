@@ -93,12 +93,38 @@ Follow this exact sequence. Do not skip ahead. Full spec in `user_description.md
 1. **Step 0: Use Case Analysis** — Cross-reference each ERTE 1 feature with `feature_comparison.md`
 2. **Step 1: Project Base** — Vaadin 25.0.x, all dependencies, Maven profiles, Dockerfile
 3. **Step 2: ERTE Shell** — JS subclass + Java subclass, `render()` override, verify Lit lifecycle
-4. **Step 3: Feature Migration** (in order):
-    1. Custom Slots / Custom Components
-    2. Readonly Mode
-    3. Tabstops (+ Rulers, Soft Wraps)
-    4. Placeholders
-    5. Remaining features (any order)
+4. **Step 3: Feature Migration** — one subphase per feature, lettered 3a–3q:
+    **Work through subphases sequentially (one at a time).** Complete and verify
+    each subphase before starting the next. Tier 1 → Tier 2 → Tier 3.
+
+    **Tier 1 — Core Differentiators (fixed order):**
+    - **3.1a** Custom Slots / Toolbar Slot System (Feature 8)
+    - **3.1b** Readonly Sections (Feature 4) — *also establishes sanitizer override structure*
+    - **3.1c** Tabstops (Feature 1)
+    - **3.1d** Rulers (Feature 2)
+    - **3.1e** Soft-Break + Tab Copying (Feature 3)
+    - **3.1f** Placeholders (Feature 5)
+    - **3.1g** extendOptions Hook (Feature 16)
+
+    **Tier 2 — Important (fixed order):**
+    - **3.2a** Toolbar Button Visibility (Feature 9)
+    - **3.2b** Custom Keyboard Shortcuts (Feature 10)
+
+    **Tier 3 — Remaining (any order):**
+    - **3.3a** Non-Breaking Space (Feature 6)
+    - **3.3b** Whitespace Indicators (Feature 7)
+    - **3.3c** Security Hardening — Sanitization (Feature 11)
+    - **3.3d** I18n (Feature 12)
+    - **3.3e** Programmatic Text Insertion (Feature 14)
+    - **3.3f** Align Justify (Feature 18)
+    - **3.3g** Replace Toolbar Button Icons (Feature 19)
+    - **3.3h** Arrow Navigation (Feature 20)
+
+    *Tier 0 (Features 13, 15, 17) — inherited, no migration needed.*
+
+    **Sanitizer strategy:** Basic override structure in 3.1b, each feature adds its classes
+    to the whitelist incrementally. Phase 3.3c = security hardening only.
+
 5. **Step 4: Table Extension** (last) — Rewrite blots for Quill 2 / Parchment 3
 
 ### Confirmed Patterns (from Spike)
