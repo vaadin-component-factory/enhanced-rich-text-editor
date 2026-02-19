@@ -31,3 +31,4 @@ rebel.xml
 .mcp.json
 .playwright-mcp
 test-results
+migration_v25/reference/
