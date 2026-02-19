@@ -131,6 +131,35 @@ class TabBlot extends Embed {
     return node;
   }
 
+  constructor(scroll, node) {
+    super(scroll, node);
+    // Wrap Quill 2's guard TextNodes (\uFEFF) in named <span> elements.
+    // Without wrapping, guard TextNodes become anonymous flex items (0px wide)
+    // inside the inline-flex .ql-tab. Chrome cannot reliably render a caret
+    // inside a 0px anonymous flex item — visibility depends on sub-pixel alignment.
+    // Wrapping creates named flex items with min-width 2px for reliable caret rendering.
+    // TextNode object identity is preserved (reparenting, not copying), so Quill's
+    // index(), restore(), and update() methods continue to work correctly.
+    this._wrapGuardNodes();
+  }
+
+  _wrapGuardNodes() {
+    if (this.leftGuard?.nodeType === Node.TEXT_NODE &&
+        this.leftGuard.parentNode === this.domNode) {
+      const w = document.createElement('span');
+      w.className = 'ql-tab-guard';
+      this.domNode.insertBefore(w, this.leftGuard);
+      w.appendChild(this.leftGuard);
+    }
+    if (this.rightGuard?.nodeType === Node.TEXT_NODE &&
+        this.rightGuard.parentNode === this.domNode) {
+      const w = document.createElement('span');
+      w.className = 'ql-tab-guard';
+      this.domNode.insertBefore(w, this.rightGuard);
+      w.appendChild(this.rightGuard);
+    }
+  }
+
   detach() {
     if (this.domNode._mouseHandler) {
       this.domNode.removeEventListener('mousedown', this.domNode._mouseHandler);
@@ -199,30 +228,41 @@ class VcfEnhancedRichTextEditor extends RteBase {
         }
 
         /* Tab stops — inline-flex spans with calculated width.
-           Quill 2 Embed structure: [guard \uFEFF] [contentNode span] [guard \uFEFF]
-           Guard nodes are zero-width text nodes for cursor placement.
-           Using inline-flex so the contentNode (flex:1) pushes the trailing
-           guard node to the RIGHT edge — otherwise both guards render at
-           left:0 inside the inline-block and the "after tab" cursor appears
-           at the same position as the "before tab" cursor.
-           overflow:clip (not hidden) — hidden creates a BFC that isolates
-           the caret, preventing cursor placement in guard nodes. */
+           Quill 2 Embed structure after guard wrapping:
+             [span.ql-tab-guard > guard \uFEFF] [contentNode span] [span.ql-tab-guard > guard \uFEFF]
+           Guard TextNodes are wrapped in named <span> elements by TabBlot constructor.
+           Guards need min 2px width — Chrome cannot render a caret in a 0px element.
+           The \uFEFF glyph has zero advance width, so without explicit sizing the guards
+           collapse to 0px even as named flex items. 2×2px = 4px total overhead per tab,
+           imperceptible at typical tab widths (100-200px). 1px works but 2px provides a
+           DPR/zoom safety margin. Tab width engine sets outer .ql-tab width, so guards
+           are included and ruler alignment is unaffected.
+           overflow:visible — tab is invisible spacing; hidden/clip clips the caret
+           (Lumo line-height 1.625 makes caret ~26px, taller than 1rem box).
+           No height/line-height — inherit from paragraph so caret matches text.
+           No will-change/translateZ — compositor layers break caret in Chrome. */
         .ql-tab {
           display: inline-flex;
           min-width: 2px;
-          height: 1rem;
           white-space: pre;
           vertical-align: baseline;
           position: relative;
+          overflow: visible;
           cursor: default;
-          line-height: 1rem;
-          overflow: clip;
-          will-change: width;
-          transform: translateZ(0);
         }
-        .ql-tab > span {
-          flex: 1;
+        .ql-tab-guard {
+          flex: 0 0 2px;
+          min-width: 2px;
+          font-size: inherit;
+          line-height: inherit;
+          pointer-events: none;
+        }
+        .ql-tab > span[contenteditable="false"] {
+          flex: 1 1 0px;
+          min-width: 0;
           font-size: 0;
+          line-height: 0;
+          overflow: hidden;
         }
 
         /* Soft breaks — inline line break */
@@ -602,7 +642,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
         widthNeeded = TAB_MIN_TAB_WIDTH;
       }
 
-      tab.style.width = widthNeeded + 'px';
+      tab.style.width = Math.round(widthNeeded) + 'px';
     });
   }
 
@@ -904,8 +944,12 @@ class VcfEnhancedRichTextEditor extends RteBase {
     }
 
     if (tabStops) {
-      tabStops.forEach(stop => {
-        this._addTabStopIcon(stop);
+      // Defer icon placement to next frame — getBoundingClientRect() in
+      // _getRulerEditorOffset() returns zeros if called before first layout.
+      requestAnimationFrame(() => {
+        tabStops.forEach(stop => {
+          this._addTabStopIcon(stop);
+        });
       });
     }
 

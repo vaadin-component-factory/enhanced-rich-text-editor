@@ -1465,6 +1465,132 @@ test.describe('ERTE Tabstops', () => {
       expect(caretAfter!.left).toBeGreaterThan(caretBefore!.left + 100);
     });
 
+    test('ArrowDown/ArrowUp navigates between lines containing tabs', async ({ page }) => {
+      // Regression test: vertical arrow navigation must work with lines containing tabs.
+      const editor = getEditor(page);
+      await editor.click();
+
+      // Line 1: text + Tab + text
+      await page.keyboard.type('AAA');
+      await page.keyboard.press('Tab');
+      await page.keyboard.type('Line1');
+      await page.keyboard.press('Enter');
+      // Line 2: text + Tab + text
+      await page.keyboard.type('BBB');
+      await page.keyboard.press('Tab');
+      await page.keyboard.type('Line2');
+
+      // Cursor is at end of line 2 after typing — get its position
+      const caretLine2End = await getNativeCaretRect(page);
+
+      // Go to end of line 1 via Ctrl+Home then End
+      await page.keyboard.press('Control+Home');
+      await page.keyboard.press('End');
+      const caretLine1End = await getNativeCaretRect(page);
+
+      expect(caretLine1End, 'Caret on line 1 should exist').not.toBeNull();
+      expect(caretLine2End, 'Caret on line 2 should exist').not.toBeNull();
+      // Verify we're on different lines
+      expect(caretLine1End!.top, 'Lines should be at different heights')
+        .toBeLessThan(caretLine2End!.top - 5);
+
+      // ArrowDown from end of line 1 should move to line 2
+      await page.keyboard.press('ArrowDown');
+      const caretAfterDown = await getNativeCaretRect(page);
+      expect(caretAfterDown, 'Caret after ArrowDown should exist').not.toBeNull();
+      expect(caretAfterDown!.top, 'ArrowDown should move cursor to next line')
+        .toBeGreaterThan(caretLine1End!.top + 5);
+
+      // ArrowUp should move back to line 1
+      await page.keyboard.press('ArrowUp');
+      const caretAfterUp = await getNativeCaretRect(page);
+      expect(caretAfterUp, 'Caret after ArrowUp should exist').not.toBeNull();
+      expect(caretAfterUp!.top, 'ArrowUp should return to original line')
+        .toBeLessThan(caretAfterDown!.top - 5);
+    });
+
+    test('Cursor is visible (non-zero height) at every tab position', async ({ page }) => {
+      // Regression test: overflow:clip + height:1rem clipped the caret to
+      // invisibility at tab positions 1 and 2 (Lumo line-height 1.625 makes
+      // the caret ~26px, taller than the 16px box). The fix uses
+      // overflow:visible and removes the height constraint.
+      const editor = getEditor(page);
+      await editor.click();
+
+      // Insert 3 tabs: the bug was tabs 1+2 invisible, tab 3 visible
+      await page.keyboard.press('Tab');
+      await page.keyboard.press('Tab');
+      await page.keyboard.press('Tab');
+
+      // Check caret visibility at each tab position (after each tab)
+      // Navigate: Home, then ArrowRight through each tab
+      await page.keyboard.press('Home');
+
+      for (let tabIdx = 0; tabIdx < 3; tabIdx++) {
+        await page.keyboard.press('ArrowRight'); // move past tab
+
+        const caret = await getNativeCaretRect(page);
+
+        // Caret must exist (non-null = browser reports a rect for the selection)
+        expect(caret, `Caret at tab ${tabIdx + 1} should not be null`).not.toBeNull();
+
+        // Caret must have visible height (> 0 means not clipped to invisibility)
+        expect(caret!.height, `Caret at tab ${tabIdx + 1} should have height > 0`).toBeGreaterThan(0);
+
+        // Caret height should match surrounding text (~14-26px, definitely > 10px)
+        expect(caret!.height, `Caret at tab ${tabIdx + 1} should be at least 10px tall`).toBeGreaterThanOrEqual(10);
+      }
+    });
+
+    test('Tab right edges align with ruler markers within 2px', async ({ page }) => {
+      // Regression test: fractional pixel accumulation in iterative
+      // getBoundingClientRect() caused tabs to drift left of ruler markers.
+      // Fix: Math.round(widthNeeded) eliminates sub-pixel accumulation.
+      const editor = getEditor(page);
+      await editor.click();
+
+      // Insert 3 tabs to reach all 3 configured tabstops (L@150, R@350, M@550)
+      await page.keyboard.press('Tab');
+      await page.keyboard.press('Tab');
+      await page.keyboard.press('Tab');
+
+      // Get tab right edges and ruler marker positions in editor-relative coords
+      const alignment = await page.evaluate(() => {
+        const el = document.getElementById('test-editor') as any;
+        const root = el.shadowRoot;
+        const editorEl = root.querySelector('.ql-editor');
+        const editorRect = editorEl.getBoundingClientRect();
+        const tabs = root.querySelectorAll('.ql-editor .ql-tab');
+        // Markers are sorted by CSS left position — collect and sort them
+        const markerEls = Array.from(root.querySelectorAll('[part~="horizontalRuler"] vaadin-icon')) as HTMLElement[];
+        markerEls.sort((a, b) => parseFloat(a.style.left) - parseFloat(b.style.left));
+
+        const results: Array<{ tabRight: number; markerCenter: number; diff: number; debug: string }> = [];
+
+        for (let i = 0; i < Math.min(tabs.length, markerEls.length); i++) {
+          const tabRect = tabs[i].getBoundingClientRect();
+          const markerRect = markerEls[i].getBoundingClientRect();
+          // Both in absolute coordinates
+          const tabRight = tabRect.right;
+          const markerCenter = markerRect.left + markerRect.width / 2;
+          results.push({
+            tabRight: Math.round(tabRight * 10) / 10,
+            markerCenter: Math.round(markerCenter * 10) / 10,
+            diff: Math.abs(tabRight - markerCenter),
+            debug: `editorLeft=${editorRect.left} tabLeft=${tabRect.left.toFixed(1)} tabWidth=${tabRect.width.toFixed(1)} tabStyleW=${(tabs[i] as HTMLElement).style.width} markerLeft=${markerRect.left.toFixed(1)} markerW=${markerRect.width.toFixed(1)} markerStyleLeft=${markerEls[i].style.left}`
+          });
+        }
+        return results;
+      });
+
+      expect(alignment.length).toBe(3);
+      for (let i = 0; i < alignment.length; i++) {
+        expect(alignment[i].diff,
+          `Tab ${i + 1} right=${alignment[i].tabRight} marker=${alignment[i].markerCenter} [${alignment[i].debug}]`
+        ).toBeLessThanOrEqual(2); // 2px tolerance for rounding
+      }
+    });
+
     test('End key moves to end of visual line', async ({ page }) => {
       const editor = getEditor(page);
       await editor.click();
