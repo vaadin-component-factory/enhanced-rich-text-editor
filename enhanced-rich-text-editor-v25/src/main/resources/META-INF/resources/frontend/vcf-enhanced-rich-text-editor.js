@@ -68,9 +68,74 @@ class VcfEnhancedRichTextEditor extends RteBase {
    */
   ready() {
     super.ready();
-    // _editor (Quill instance) is now available.
-    // Phase 3+ will initialize ERTE features here.
-    console.debug('[ERTE] Shell ready, _editor:', !!this._editor);
+    this._injectToolbarSlots();
+    console.debug('[ERTE] ready, _editor:', !!this._editor, 'slots injected');
+  }
+
+  /**
+   * Injects 25 named <slot> elements into the toolbar DOM produced by
+   * super.render(). Slots are placed: START before first group, BEFORE/AFTER
+   * around each of the 11 standard groups, a custom group span with
+   * BEFORE_CUSTOM/GROUP_CUSTOM/AFTER_CUSTOM, and END at the end.
+   *
+   * Proven: injected DOM nodes survive all Lit re-renders (i18n, readonly,
+   * requestUpdate) because Lit's template diffing ignores nodes inserted
+   * between its comment marker boundaries.
+   * @protected
+   */
+  _injectToolbarSlots() {
+    const toolbar = this.shadowRoot.querySelector('[part="toolbar"]');
+    if (!toolbar) return;
+
+    // Group part names in toolbar order (matches RTE 2 V25.0.x)
+    const groupNames = [
+      'history', 'emphasis', 'style', 'heading',
+      'glyph-transformation', 'list', 'indent',
+      'alignment', 'rich-text', 'block', 'format',
+    ];
+
+    const _slot = (name) => {
+      const s = document.createElement('slot');
+      s.setAttribute('name', `toolbar-${name}`);
+      return s;
+    };
+
+    // Discover groups by part attribute
+    const groups = groupNames.map((name) =>
+      toolbar.querySelector(`[part~="toolbar-group-${name}"]`)
+    ).filter(Boolean);
+
+    // START slot — before the first group
+    if (groups.length > 0) {
+      toolbar.insertBefore(_slot('start'), groups[0]);
+    }
+
+    // BEFORE / AFTER each group
+    for (const group of groups) {
+      const name = group.getAttribute('part')
+        .split(/\s+/)
+        .find((p) => p.startsWith('toolbar-group-'))
+        ?.replace('toolbar-group-', '');
+      if (!name) continue;
+      group.parentNode.insertBefore(_slot(`before-group-${name}`), group);
+      group.after(_slot(`after-group-${name}`));
+    }
+
+    // Custom group: BEFORE_CUSTOM, group span with GROUP_CUSTOM slot, AFTER_CUSTOM, END
+    // Insert before the #fileInput (hidden file input at end of toolbar)
+    const fileInput = toolbar.querySelector('#fileInput');
+    const customGroupSpan = document.createElement('span');
+    customGroupSpan.setAttribute('part', 'toolbar-group toolbar-group-custom');
+    // GROUP_CUSTOM slot has name="toolbar" (legacy compatibility)
+    const customSlot = document.createElement('slot');
+    customSlot.setAttribute('name', 'toolbar');
+    customGroupSpan.appendChild(customSlot);
+
+    const anchor = fileInput || null;
+    toolbar.insertBefore(_slot('before-group-custom'), anchor);
+    toolbar.insertBefore(customGroupSpan, anchor);
+    toolbar.insertBefore(_slot('after-group-custom'), anchor);
+    toolbar.insertBefore(_slot('end'), anchor);
   }
 }
 

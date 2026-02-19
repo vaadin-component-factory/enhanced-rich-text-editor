@@ -13,8 +13,8 @@ import {
 const TOOLBAR_URL = `${ERTE_TEST_BASE}/toolbar`;
 
 /**
- * All 24 slot names defined in ToolbarSlot.java, in the order they appear
- * in the shadow DOM render() method.
+ * All 25 slot names injected by _injectToolbarSlots(), in DOM order.
+ * Does NOT include GROUP_CUSTOM's "toolbar" slot (tested separately).
  */
 const ALL_SLOT_NAMES = [
   'toolbar-start',
@@ -22,6 +22,8 @@ const ALL_SLOT_NAMES = [
   'toolbar-after-group-history',
   'toolbar-before-group-emphasis',
   'toolbar-after-group-emphasis',
+  'toolbar-before-group-style',
+  'toolbar-after-group-style',
   'toolbar-before-group-heading',
   'toolbar-after-group-heading',
   'toolbar-before-group-glyph-transformation',
@@ -45,6 +47,7 @@ const ALL_SLOT_NAMES = [
 
 /**
  * A representative set of standard toolbar button part names that must exist.
+ * V25: deindent → outdent
  */
 const STANDARD_BUTTON_PARTS = [
   'toolbar-button-bold',
@@ -60,7 +63,7 @@ const STANDARD_BUTTON_PARTS = [
   'toolbar-button-superscript',
   'toolbar-button-list-ordered',
   'toolbar-button-list-bullet',
-  'toolbar-button-deindent',
+  'toolbar-button-outdent',
   'toolbar-button-indent',
   'toolbar-button-align-left',
   'toolbar-button-align-center',
@@ -97,13 +100,18 @@ test.describe('ERTE Toolbar', () => {
   // SLOT STRUCTURE
   // ============================================
 
-  test('All 24 slots present in DOM', async ({ page }) => {
+  test('All 25 named slots present in DOM', async ({ page }) => {
     for (const slotName of ALL_SLOT_NAMES) {
       const slot = shadowSlot(page, slotName);
       await expect(slot).toHaveCount(1, {
         timeout: 5000,
       });
     }
+  });
+
+  test('GROUP_CUSTOM "toolbar" slot present in DOM', async ({ page }) => {
+    const slot = shadowSlot(page, 'toolbar');
+    await expect(slot).toHaveCount(1, { timeout: 5000 });
   });
 
   // ============================================
@@ -193,16 +201,11 @@ test.describe('ERTE Toolbar', () => {
     await expect(customBtn).toBeVisible();
     await expect(switchBtn).toBeVisible();
 
-    // custom-group-btn was added via addCustomToolbarComponents (which uses GROUP_CUSTOM)
-    // toolbar-switch was added after it to GROUP_CUSTOM
-    // They should both render, with the first one at a smaller or equal x position
     const customBox = await customBtn.boundingBox();
     const switchBox = await switchBtn.boundingBox();
     expect(customBox).not.toBeNull();
     expect(switchBox).not.toBeNull();
 
-    // If on the same row, the first-added should be left or equal
-    // (they might wrap to different rows on small viewports, so just verify both exist)
     expect(customBox!.x + customBox!.width).toBeGreaterThan(0);
     expect(switchBox!.x + switchBox!.width).toBeGreaterThan(0);
   });
@@ -220,14 +223,11 @@ test.describe('ERTE Toolbar', () => {
   // ============================================
 
   test('Remove component from slot by reference', async ({ page }) => {
-    // Verify the button exists first
     const startBtn = page.locator('#slot-start-btn');
     await expect(startBtn).toBeVisible();
 
-    // Click the control button that removes it
     await page.locator('#remove-start-btn').click();
 
-    // Wait for the button to disappear
     await expect(startBtn).toHaveCount(0, { timeout: 5000 });
   });
 
@@ -248,73 +248,60 @@ test.describe('ERTE Toolbar', () => {
   });
 
   // ============================================
-  // HIDE / SHOW BUTTONS
+  // HIDE / SHOW BUTTONS — Phase 3.2a
   // ============================================
 
-  test('Hide standard toolbar buttons', async ({ page }) => {
-    // Verify buttons are initially visible
+  test.fixme('Hide standard toolbar buttons — Phase 3.2a', async ({ page }) => {
     const cleanBtn = shadowButton(page, 'toolbar-button-clean');
     const blockquoteBtn = shadowButton(page, 'toolbar-button-blockquote');
     await expect(cleanBtn).toBeVisible();
     await expect(blockquoteBtn).toBeVisible();
 
-    // Click the hide control
     await page.locator('#hide-buttons').click();
 
-    // Wait for the buttons to become hidden (display: none)
     await expect(cleanBtn).toBeHidden({ timeout: 5000 });
     await expect(blockquoteBtn).toBeHidden({ timeout: 5000 });
   });
 
-  test('Hide ERTE-specific buttons', async ({ page }) => {
+  test.fixme('Hide ERTE-specific buttons — Phase 3.2a', async ({ page }) => {
     const whitespaceBtn = shadowButton(page, 'toolbar-button-whitespace');
     const readonlyBtn = shadowButton(page, 'toolbar-button-readonly');
 
-    // Verify initially visible
     await expect(whitespaceBtn).toBeVisible();
     await expect(readonlyBtn).toBeVisible();
 
-    // Hide them
     await page.locator('#hide-erte-buttons').click();
 
-    // Should become hidden
     await expect(whitespaceBtn).toBeHidden({ timeout: 5000 });
     await expect(readonlyBtn).toBeHidden({ timeout: 5000 });
   });
 
-  test('Show hidden buttons again', async ({ page }) => {
+  test.fixme('Show hidden buttons again — Phase 3.2a', async ({ page }) => {
     const cleanBtn = shadowButton(page, 'toolbar-button-clean');
     const blockquoteBtn = shadowButton(page, 'toolbar-button-blockquote');
 
-    // Hide first
     await page.locator('#hide-buttons').click();
     await expect(cleanBtn).toBeHidden({ timeout: 5000 });
     await expect(blockquoteBtn).toBeHidden({ timeout: 5000 });
 
-    // Show again
     await page.locator('#show-buttons').click();
     await expect(cleanBtn).toBeVisible({ timeout: 5000 });
     await expect(blockquoteBtn).toBeVisible({ timeout: 5000 });
   });
 
   // ============================================
-  // KEYBOARD SHORTCUT
+  // KEYBOARD SHORTCUT — Phase 3.2b
   // ============================================
 
-  test('Custom keyboard shortcut fires — Shift+F9 applies align center', async ({ page }) => {
+  test.fixme('Custom keyboard shortcut fires — Shift+F9 applies align center — Phase 3.2b', async ({ page }) => {
     await focusEditor(page);
 
-    // Type some text first
     await page.keyboard.type('Aligned text');
-
-    // Press Shift+F9 (bound to ALIGN_CENTER)
     await page.keyboard.press('Shift+F9');
 
-    // Wait for delta update, then verify alignment
     await page.waitForTimeout(500);
     const delta = await getDelta(page);
 
-    // Delta should contain an align: center attribute on the line format
     const alignOps = delta.ops.filter(
       (op: any) => op.attributes && op.attributes.align === 'center'
     );
@@ -322,32 +309,22 @@ test.describe('ERTE Toolbar', () => {
   });
 
   // ============================================
-  // REPLACE ICON
+  // REPLACE ICON — Phase 3.3g
   // ============================================
 
-  test('Replace standard button icon', async ({ page }) => {
-    // Click the replace icon control
+  test.fixme('Replace standard button icon — Phase 3.3g', async ({ page }) => {
     await page.locator('#replace-icon').click();
-
-    // Wait for the DOM to update
     await page.waitForTimeout(500);
 
-    // The undo button should now contain a vaadin-icon with the new icon
-    // The replacement icon is a red ARROW_BACKWARD
     const undoBtn = shadowButton(page, 'toolbar-button-undo');
     await expect(undoBtn).toBeVisible();
 
-    // Check that there is a vaadin-icon element inside the undo button slot area
-    // The new icon is placed in the light DOM slot
     const newIcon = page.locator('#test-editor vaadin-icon[icon="vaadin:arrow-backward"]');
-    // If the icon is found via attribute, great. Otherwise check by color style.
     const iconCount = await newIcon.count();
 
     if (iconCount > 0) {
       await expect(newIcon.first()).toBeVisible();
     } else {
-      // Fallback: check that the undo slot has an element with red color
-      // The icon replacement should have placed something in the undo slot
       const slotContent = page.locator('#test-editor [slot="undo"]');
       await expect(slotContent).toHaveCount(1, { timeout: 5000 });
     }
@@ -363,17 +340,13 @@ test.describe('ERTE Toolbar', () => {
     const switchBtn = page.locator('#toolbar-switch');
     await expect(switchBtn).toBeVisible();
 
-    // Initially should NOT have the "on" attribute
     const initialOn = await switchBtn.getAttribute('on');
     expect(initialOn).toBeNull();
 
-    // Click to activate
     await switchBtn.click();
 
-    // Should now have the "on" attribute
     await expect(switchBtn).toHaveAttribute('on', 'on', { timeout: 5000 });
 
-    // Event log should contain the change event
     await waitForEvent(page, 'ToolbarSwitchChanged');
     const events = await getEventLog(page);
     const activeEvent = events.find((e) => e.includes('active=true'));
@@ -385,22 +358,17 @@ test.describe('ERTE Toolbar', () => {
 
     const switchBtn = page.locator('#toolbar-switch');
 
-    // First click: activate
     await switchBtn.click();
     await expect(switchBtn).toHaveAttribute('on', 'on', { timeout: 5000 });
 
-    // Clear log so we can check the deactivation event separately
     await clearEventLog(page);
 
-    // Second click: deactivate
     await switchBtn.click();
 
-    // "on" attribute should be removed
     await page.waitForTimeout(500);
     const onAttr = await switchBtn.getAttribute('on');
     expect(onAttr).toBeNull();
 
-    // Event log should contain the deactivation event
     await waitForEvent(page, 'ToolbarSwitchChanged');
     const events = await getEventLog(page);
     const inactiveEvent = events.find((e) => e.includes('active=false'));
@@ -436,15 +404,11 @@ test.describe('ERTE Toolbar', () => {
   // ============================================
 
   test('Toolbar keyboard navigation — arrow keys move focus', async ({ page }) => {
-    // Focus the first visible toolbar button (undo)
     const undoBtn = shadowButton(page, 'toolbar-button-undo');
     await undoBtn.focus();
 
-    // Press ArrowRight to move to the next button
     await page.keyboard.press('ArrowRight');
 
-    // After pressing ArrowRight, focus should have moved.
-    // We verify by checking which element is focused inside the shadow DOM.
     const focusedPart = await page.evaluate((editorId) => {
       const el = document.getElementById(editorId) as any;
       if (!el || !el.shadowRoot) return null;
@@ -452,10 +416,6 @@ test.describe('ERTE Toolbar', () => {
       return focused ? focused.getAttribute('part') : null;
     }, 'test-editor');
 
-    // The focused element should be a toolbar button (not null, and not the undo button)
-    // Note: exact behavior depends on implementation; we just verify focus moved
-    // to some element within the shadow root.
-    // If no arrow-key navigation is implemented, the focus may stay on undo — that is still valid.
     expect(focusedPart).not.toBeNull();
   });
 
@@ -466,18 +426,13 @@ test.describe('ERTE Toolbar', () => {
   test('Toolbar survives re-render after i18n change — custom components still exist', async ({
     page,
   }) => {
-    // Verify custom components exist before i18n change
     await expect(page.locator('#slot-start-btn')).toBeVisible();
     await expect(page.locator('#custom-group-btn')).toBeVisible();
     await expect(page.locator('#toolbar-switch')).toBeVisible();
 
-    // Set German i18n (triggers toolbar re-render)
     await page.locator('#set-german-i18n').click();
-
-    // Wait for the re-render to settle
     await page.waitForTimeout(1000);
 
-    // Custom components should still be visible after re-render
     await expect(page.locator('#slot-start-btn')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('#custom-group-btn')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('#toolbar-switch')).toBeVisible({ timeout: 5000 });
@@ -487,22 +442,19 @@ test.describe('ERTE Toolbar', () => {
   });
 
   test('I18n labels updated — German tooltips applied', async ({ page }) => {
-    // Set German i18n
     await page.locator('#set-german-i18n').click();
     await page.waitForTimeout(1000);
 
-    // Check the bold button title is now "Fett"
+    // V25 RTE 2 uses aria-label (not title) for i18n button labels
     const boldBtn = shadowButton(page, 'toolbar-button-bold');
-    await expect(boldBtn).toHaveAttribute('title', 'Fett', { timeout: 5000 });
+    await expect(boldBtn).toHaveAttribute('aria-label', 'Fett', { timeout: 5000 });
 
-    // Check the italic button title is now "Kursiv"
     const italicBtn = shadowButton(page, 'toolbar-button-italic');
-    await expect(italicBtn).toHaveAttribute('title', 'Kursiv', { timeout: 5000 });
+    await expect(italicBtn).toHaveAttribute('aria-label', 'Kursiv', { timeout: 5000 });
 
-    // Check the undo button title is now "Ruckgangig" (or similar)
     const undoBtn = shadowButton(page, 'toolbar-button-undo');
-    const undoTitle = await undoBtn.getAttribute('title');
-    expect(undoTitle).toContain('ckgängig');
+    const undoLabel = await undoBtn.getAttribute('aria-label');
+    expect(undoLabel).toContain('ckgängig');
   });
 
   // ============================================
@@ -512,7 +464,6 @@ test.describe('ERTE Toolbar', () => {
   test('All standard toolbar button parts exist', async ({ page }) => {
     for (const partName of STANDARD_BUTTON_PARTS) {
       const btn = shadowButton(page, partName);
-      // Each standard button should exist in the DOM (may be hidden, but the element must be present)
       await expect(btn).toHaveCount(1, {
         timeout: 5000,
       });
@@ -524,7 +475,6 @@ test.describe('ERTE Toolbar', () => {
   // ============================================
 
   test('Screenshot: Toolbar with custom components', async ({ page }) => {
-    // Wait a bit for all toolbar slot components to render fully
     await page.waitForTimeout(500);
 
     await expect(getToolbar(page)).toHaveScreenshot('toolbar-custom.png');

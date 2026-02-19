@@ -84,7 +84,7 @@ The V25 primary value format is HTML (matching RTE 2), with Delta access via `as
 - **Value format:** HTML-primary (matching RTE 2). Delta access via `asDelta()` wrapper. Clean break from ERTE 1's Delta-primary API.
 - **Theme:** Lumo. Use `--vaadin-*` custom properties where they exist. Loads via `@StyleSheet(Lumo.STYLESHEET)` on host app.
 - **Blot registration:** Global `Quill.register()` before element creation (proven pattern, used by RTE 2 itself).
-- **Toolbar:** `render()` override in JS subclass. Standard RTE 2 groups + ERTE-specific groups + `<slot>` elements for custom components. No MutationObserver hacks.
+- **Toolbar:** `super.render()` passthrough + DOM injection of `<slot>` elements in `ready()`. CONFIRMED: injected slots survive all Lit re-renders (i18n change, readonly toggle, requestUpdate). No template copy — updatability preserved. See `migration_v25/progress/3.1a_custom_slots.md` for investigation results.
 
 ### Migration Order
 
@@ -96,6 +96,16 @@ Follow this exact sequence. Do not skip ahead. Full spec in `user_description.md
 4. **Step 3: Feature Migration** — one subphase per feature, lettered 3a–3q:
     **Work through subphases sequentially (one at a time).** Complete and verify
     each subphase before starting the next. Tier 1 → Tier 2 → Tier 3.
+
+    **Phase 3 execution: always per subphase.** Each subphase (3.1a–3.3h) is planned,
+    implemented, tested, and committed independently. Do NOT create a "masterplan" for
+    all of Phase 3. Start each session by reading the next NOT STARTED progress file and
+    planning just that subphase. This keeps context small and allows learnings from one
+    subphase to inform the next.
+
+    **Cross-cutting concerns:** When implementing a subphase, if something is discovered
+    that affects later subphases, document it in the respective progress file(s) under a
+    "Cross-cutting notes from phase X.Y" section.
 
     **Tier 1 — Core Differentiators (fixed order):**
     - **3.1a** Custom Slots / Toolbar Slot System (Feature 8)
