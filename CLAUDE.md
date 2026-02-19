@@ -191,6 +191,7 @@ Use these as needed, do NOT try to load all of them as context simultaneously.
 | `implementation_notes.md` | JS/Java architecture, shadow DOM structure, pre-spike design notes |
 | `quill_v1_to_v2_api_diff.md` | When touching any Quill API — keyboard bindings, blots, history, clipboard |
 | `SECURITY.md` | When implementing blots, sanitization, or any DOM manipulation |
+| `migration_v25/STATUS.md` | **Start here** — single-file dashboard showing which phase is next |
 | `migration_v25/progress/` | **Always update** after completing a task — one file per phase (e.g., `0_use_cases_tests.md`, `1_project_base.md`) |
 | `migration_v25/USE_CASE_ANALYSIS.md` | Feature inventory with migration paths for all 20 ERTE features |
 | `tests/TEST_INVENTORY.md` | Full test listing grouped by feature (update when adding/removing tests) |
