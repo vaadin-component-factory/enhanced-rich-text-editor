@@ -276,23 +276,25 @@ class VcfEnhancedRichTextEditor extends RteBase {
    */
   _initReadonlyProtection() {
     const editor = this._editor;
+
+    // Serialize all readonly text content for comparison.
+    // Catches both full deletion (count change) and partial deletion
+    // (text within a readonly op changes).
+    const readonlySignature = (ops) =>
+      ops
+        .filter((op) => op.attributes && op.attributes.readonly === true)
+        .map((op) => (typeof op.insert === 'string' ? op.insert : JSON.stringify(op.insert)))
+        .join('\0');
+
     editor.on('text-change', (delta, oldDelta, source) => {
       if (source !== 'user') return;
       // Only check if the change includes a delete op
       if (!delta.ops.some((op) => op.delete != null)) return;
 
-      const oldOps = oldDelta.ops;
-      const newOps = editor.getContents().ops;
+      const oldSig = readonlySignature(oldDelta.ops);
+      const newSig = readonlySignature(editor.getContents().ops);
 
-      // Count readonly sections (ops with attributes.readonly === true)
-      const oldCount = oldOps.filter(
-        (op) => op.attributes && op.attributes.readonly === true
-      ).length;
-      const newCount = newOps.filter(
-        (op) => op.attributes && op.attributes.readonly === true
-      ).length;
-
-      if (newCount < oldCount) {
+      if (newSig !== oldSig) {
         // Revert: restore the old contents
         editor.setContents(oldDelta, 'silent');
         // Try to restore cursor position
