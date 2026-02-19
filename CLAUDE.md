@@ -107,6 +107,34 @@ Follow this exact sequence. Do not skip ahead. Full spec in `user_description.md
     that affects later subphases, document it in the respective progress file(s) under a
     "Cross-cutting notes from phase X.Y" section.
 
+    **Mandatory plan review:** Every plan created for a migration (sub)phase MUST be
+    automatically reviewed by the `agents-manager` before implementation begins. The
+    review MUST include at minimum the `fullstack-developer` and `ui-designer` agents.
+    Do NOT start implementing until the review feedback has been incorporated.
+
+## Implementation Delegation
+
+**Plan execution and presumably non-trivial tasks** MUST be delegated to the
+`agents-manager` (default/task-assignment mode). The agents-manager selects the
+appropriate agents for each step. Examples: implementing a reviewed plan, fixing a bug,
+adding a feature. Counter-examples: creating a commit, updating a status file, answering
+a question.
+
+- **Parallel execution preferred:** Independent steps (e.g., Java backend + JS frontend,
+  or test view + test spec) SHOULD be delegated to separate agents running concurrently.
+- **Background tasks:** Use `run_in_background: true` for agents where possible, so
+  multiple workstreams proceed simultaneously. The orchestrator monitors progress and
+  coordinates results.
+- **Sequential only when required:** Only truly dependent steps (e.g., build before test,
+  blot registration before keyboard bindings that use the blot) should block on each other.
+
+    **Phase plan files:** Before starting a phase, check if a plan file exists at
+    `migration_v25/progress/PHASE__plan.md` (e.g., `3.1c__plan.md`). If present, use
+    it as the **primary basis** for implementation — it was previously prepared and
+    reviewed. No additional review necessary, unless the user explicitly asks for it.
+    After successful implementation and verification of the phase, **delete**
+    the plan file. Plan files are working documents, not permanent records.
+
     **Tier 1 — Core Differentiators (fixed order):**
     - **3.1a** Custom Slots / Toolbar Slot System (Feature 8)
     - **3.1b** Readonly Sections (Feature 4) — *also establishes sanitizer override structure*
@@ -159,6 +187,7 @@ These patterns were validated in the spike (`SPIKE_RESULTS.md`). Use them as-is.
 - Do not copy RTE 2 toolbar HTML — override `render()` in the JS subclass
 - Do not use Polymer patterns — this is Lit
 - Do not set content in `ready()` — it gets overwritten by Java value sync
+- Do not set `contenteditable="false"` on Embed blot outer `domNode` — Quill 2's guard nodes (zero-width text inside the domNode) must remain editable for cursor placement. The inner `contentNode` already has `contenteditable="false"`. V24 pattern was safe (no guard nodes), V25 pattern breaks cursor.
 
 ## MCP Tools — Use Before Asking
 

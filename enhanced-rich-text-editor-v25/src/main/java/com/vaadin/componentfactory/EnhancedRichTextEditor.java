@@ -16,6 +16,8 @@
  */
 package com.vaadin.componentfactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import com.vaadin.componentfactory.toolbar.ToolbarSlot;
@@ -24,6 +26,10 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.richtexteditor.RteExtensionBase;
+import com.vaadin.flow.internal.JacksonUtils;
+
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Enhanced Rich Text Editor — V25 / Quill 2.
@@ -114,5 +120,61 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
      */
     public void replaceStandardButtonIcon(Icon icon, String iconSlotName) {
         SlotUtil.replaceStandardButtonIcon(this, icon, iconSlotName);
+    }
+
+    // ---- TabStop API ----
+
+    /**
+     * Sets tabstop positions and alignments on the ruler.
+     *
+     * @param tabStops the list of tab stops to set
+     */
+    public void setTabStops(List<TabStop> tabStops) {
+        ArrayNode array = JacksonUtils.getMapper().createArrayNode();
+        for (TabStop ts : tabStops) {
+            ObjectNode obj = array.addObject();
+            obj.put("direction", ts.getDirection().name().toLowerCase());
+            obj.put("position", ts.getPosition());
+        }
+        getElement().setPropertyJson("tabStops", array);
+    }
+
+    /**
+     * Returns the current tabstop configuration.
+     *
+     * @return list of tab stops, never null
+     */
+    public List<TabStop> getTabStops() {
+        ArrayNode raw = (ArrayNode) getElement().getPropertyRaw("tabStops");
+        if (raw == null) {
+            return List.of();
+        }
+        List<TabStop> result = new ArrayList<>();
+        for (int i = 0; i < raw.size(); i++) {
+            var obj = raw.get(i);
+            result.add(new TabStop(
+                    TabStop.Direction.valueOf(
+                            obj.get("direction").asText().toUpperCase()),
+                    obj.get("position").asDouble()));
+        }
+        return result;
+    }
+
+    /**
+     * When true, the rulers are not visible.
+     *
+     * @param noRulers true to hide rulers, false to show them
+     */
+    public void setNoRulers(boolean noRulers) {
+        getElement().setProperty("noRulers", noRulers);
+    }
+
+    /**
+     * Returns whether rulers are hidden.
+     *
+     * @return true if rulers are hidden
+     */
+    public boolean isNoRulers() {
+        return getElement().getProperty("noRulers", false);
     }
 }

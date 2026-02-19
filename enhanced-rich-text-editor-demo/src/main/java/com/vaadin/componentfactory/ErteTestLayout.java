@@ -67,14 +67,9 @@ public class ErteTestLayout extends AppLayout {
                 "erte-test/readonly",
                 VaadinIcon.LOCK.create()));
 
-        tier1.addItem(disabled("3.1c Tabstops",
+        tier1.addItem(new SideNavItem("3.1c Tabstops",
+                "erte-test/tabstops",
                 VaadinIcon.ELLIPSIS_DOTS_H.create()));
-
-        tier1.addItem(disabled("3.1d Rulers",
-                VaadinIcon.LINE_H.create()));
-
-        tier1.addItem(disabled("3.1e Soft-Break",
-                VaadinIcon.ENTER.create()));
 
         tier1.addItem(disabled("3.1f Placeholders",
                 VaadinIcon.INPUT.create()));

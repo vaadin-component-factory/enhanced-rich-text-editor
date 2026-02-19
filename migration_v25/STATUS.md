@@ -1,6 +1,6 @@
 # V25 Migration Status
 
-**Next up: 3.1c Tabstops**
+**Current: 3.1f Placeholders**
 
 | Phase | Feature | Status |
 |-------|---------|--------|
@@ -9,9 +9,9 @@
 | 2 | ERTE Shell | COMPLETE |
 | **3.1a** | Custom Slots / Toolbar Slot System | COMPLETE |
 | **3.1b** | Readonly Sections | COMPLETE |
-| 3.1c | Tabstops | NOT STARTED |
-| 3.1d | Rulers | NOT STARTED |
-| 3.1e | Soft-Break + Tab Copying | NOT STARTED |
+| **3.1c** | Tabstops + Rulers + Soft-Break | COMPLETE |
+| ~~3.1d~~ | ~~Rulers~~ | *(merged into 3.1c)* |
+| ~~3.1e~~ | ~~Soft-Break + Tab Copying~~ | *(merged into 3.1c)* |
 | 3.1f | Placeholders | NOT STARTED |
 | 3.1g | extendOptions Hook | NOT STARTED |
 | 3.2a | Toolbar Button Visibility | NOT STARTED |

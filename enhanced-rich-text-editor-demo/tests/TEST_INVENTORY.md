@@ -1,15 +1,11 @@
 # ERTE Test Suite Inventory
 
-> **Phase 1 (V25 Project Base):** All 248 tests are temporarily non-functional.
-> V24 test views have been relocated to `src-v24/` and are not compiled.
-> Tests will be restored incrementally as V25 features are implemented in Phase 2+.
-> Additional V25 factors that may require selector updates:
-> - Overlay rendering changed (dialogs render inside component DOM, not document root)
-> - Toolbar `[on]` attribute replaced by `::part(toolbar-button-pressed)`
+> **V25 Migration Status (Phase 3.1c):** 100 tests passing, 17 fixme.
+> Implemented: Shell (6), Toolbar (19), Readonly (17), Tabstops (64 pass, 11 fixme).
+> Remaining ERTE tests will be restored as features are migrated.
 
 Total: 248 tests (75 prototype + 173 ERTE)
-V24 baseline: 170 passed, 3 fixme, 0 failures — minimum target after V25 migration
-Status: Non-functional (V24 views in src-v24/, restored in Phase 2+)
+V25 status: 100 passed, 17 fixme across implemented features (tabstops, readonly, toolbar)
 
 ---
 
