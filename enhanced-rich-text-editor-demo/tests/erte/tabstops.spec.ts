@@ -1268,6 +1268,203 @@ test.describe('ERTE Tabstops', () => {
       expect(allText).toContain('X');
     });
 
+    // Helper: get the NATIVE browser caret rect (not Quill's getBounds).
+    // Uses getClientRects() on the native Selection range, which reflects
+    // the actual visual position of the blinking cursor.
+    async function getNativeCaretRect(page: any) {
+      return page.evaluate(() => {
+        const el = document.getElementById('test-editor') as any;
+        const root = el.shadowRoot;
+        const sel = root.getSelection ? root.getSelection() : document.getSelection();
+        if (!sel || sel.rangeCount === 0) return null;
+        const rects = sel.getRangeAt(0).getClientRects();
+        if (rects.length === 0) return null;
+        return { left: Math.round(rects[0].left), top: Math.round(rects[0].top),
+                 height: Math.round(rects[0].height), width: Math.round(rects[0].width) };
+      });
+    }
+
+    test('Native caret visually positioned AFTER tab via ArrowRight', async ({ page }) => {
+      // This is the critical regression test for the guard-node positioning bug:
+      // In Quill 2, the trailing guard node (\uFEFF) must be at the RIGHT edge
+      // of the tab so the native browser caret renders there, not at the left.
+      const editor = getEditor(page);
+      await editor.click();
+
+      // Type "abc", insert tab — gives us text before the tab for reference
+      await page.keyboard.type('abc');
+      await page.keyboard.press('Tab');
+
+      // Get the tab element's bounding rect
+      const tabRect = await page.evaluate(() => {
+        const el = document.getElementById('test-editor') as any;
+        const tab = el.shadowRoot.querySelector('.ql-editor .ql-tab');
+        if (!tab) return null;
+        const r = tab.getBoundingClientRect();
+        return { left: Math.round(r.left), right: Math.round(r.right), width: Math.round(r.width) };
+      });
+      expect(tabRect).not.toBeNull();
+      expect(tabRect!.width).toBeGreaterThan(50); // tab has real width
+
+      // Cursor is already after tab (Tab handler places it there).
+      // Verify the native caret is at the RIGHT edge of the tab, not the left.
+      const caretAfterInsert = await getNativeCaretRect(page);
+      expect(caretAfterInsert).not.toBeNull();
+      // Caret must be within 5px of the tab's right edge
+      expect(caretAfterInsert!.left).toBeGreaterThanOrEqual(tabRect!.right - 5);
+      expect(caretAfterInsert!.left).toBeLessThanOrEqual(tabRect!.right + 5);
+
+      // Also verify via Home + ArrowRight navigation
+      await page.keyboard.press('Home');
+      // ArrowRight 3x through "abc", then 1x through tab
+      for (let i = 0; i < 4; i++) {
+        await page.keyboard.press('ArrowRight');
+      }
+
+      const caretAfterNav = await getNativeCaretRect(page);
+      expect(caretAfterNav).not.toBeNull();
+      // Caret must be at the right edge of the tab
+      expect(caretAfterNav!.left).toBeGreaterThanOrEqual(tabRect!.right - 5);
+      expect(caretAfterNav!.left).toBeLessThanOrEqual(tabRect!.right + 5);
+
+      // Functional check: typing after navigation inserts text AFTER the tab
+      await page.keyboard.type('X');
+      const delta = await getDelta(page);
+      expect(delta.ops[0].insert).toBe('abc');
+      expect(delta.ops[1].insert).toEqual({ tab: true });
+      expect(delta.ops[2].insert).toContain('X');
+    });
+
+    test('Native caret before tab is at tab left edge', async ({ page }) => {
+      const editor = getEditor(page);
+      await editor.click();
+
+      // "abc" + tab + "def" — cursor positions are well-defined
+      await page.keyboard.type('abc');
+      await page.keyboard.press('Tab');
+      await page.keyboard.type('def');
+
+      // Get tab rect
+      const tabRect = await page.evaluate(() => {
+        const el = document.getElementById('test-editor') as any;
+        const tab = el.shadowRoot.querySelector('.ql-editor .ql-tab');
+        const r = tab.getBoundingClientRect();
+        return { left: Math.round(r.left), right: Math.round(r.right) };
+      });
+
+      // Position cursor just before the tab (after "c", index 3)
+      await page.keyboard.press('Home');
+      await page.keyboard.press('ArrowRight'); // after "a"
+      await page.keyboard.press('ArrowRight'); // after "b"
+      await page.keyboard.press('ArrowRight'); // after "c" = before tab
+
+      const caretBeforeTab = await getNativeCaretRect(page);
+      expect(caretBeforeTab).not.toBeNull();
+      // Caret should be near the tab's left edge (within 5px)
+      expect(caretBeforeTab!.left).toBeGreaterThanOrEqual(tabRect!.left - 5);
+      expect(caretBeforeTab!.left).toBeLessThanOrEqual(tabRect!.left + 5);
+
+      // Now ArrowRight: cursor moves to AFTER tab
+      await page.keyboard.press('ArrowRight');
+      const caretAfterTab = await getNativeCaretRect(page);
+      expect(caretAfterTab).not.toBeNull();
+      // Caret must jump to the right edge — difference must be > tab width - 10px
+      expect(caretAfterTab!.left - caretBeforeTab!.left).toBeGreaterThan(tabRect!.right - tabRect!.left - 10);
+    });
+
+    test('Click after tab positions cursor correctly', async ({ page }) => {
+      const editor = getEditor(page);
+      await editor.click();
+
+      // Insert tab + text so there's a clickable area after the tab
+      await page.keyboard.press('Tab');
+      await page.keyboard.type('A');
+
+      // Get the tab's bounding rect to click just after it
+      const tabRight = await page.evaluate(() => {
+        const el = document.getElementById('test-editor') as any;
+        const tab = el.shadowRoot.querySelector('.ql-editor .ql-tab');
+        if (!tab) return null;
+        const rect = tab.getBoundingClientRect();
+        return { x: rect.right + 2, y: rect.top + rect.height / 2 };
+      });
+
+      expect(tabRight).not.toBeNull();
+
+      // Click just after the tab (before the "A")
+      await page.mouse.click(tabRight!.x, tabRight!.y);
+
+      // Type a marker — should appear between tab and "A"
+      await page.keyboard.type('Z');
+
+      const delta = await getDelta(page);
+      const textOps = delta.ops.filter((op: any) => typeof op.insert === 'string' && op.insert !== '\n');
+      const allText = textOps.map((op: any) => op.insert).join('');
+      expect(allText).toContain('ZA');
+    });
+
+    test('Cursor height and vertical position consistent around tab', async ({ page }) => {
+      const editor = getEditor(page);
+      await editor.click();
+
+      // "AB" + tab + "CD" — measure cursor height/top at various positions
+      await page.keyboard.type('AB');
+      await page.keyboard.press('Tab');
+      await page.keyboard.type('CD');
+
+      // Cursor after "B" (before tab)
+      await page.keyboard.press('Home');
+      await page.keyboard.press('ArrowRight');
+      await page.keyboard.press('ArrowRight');
+      const caretInText = await getNativeCaretRect(page);
+
+      // Cursor after tab (before "C")
+      await page.keyboard.press('ArrowRight');
+      const caretAfterTab = await getNativeCaretRect(page);
+
+      expect(caretInText).not.toBeNull();
+      expect(caretAfterTab).not.toBeNull();
+
+      // Vertical position must be identical (same line)
+      expect(caretAfterTab!.top).toEqual(caretInText!.top);
+      // Height must be identical (no vertical offset from tab CSS)
+      expect(caretAfterTab!.height).toEqual(caretInText!.height);
+    });
+
+    test('Cursor height unchanged after tab insertion', async ({ page }) => {
+      const editor = getEditor(page);
+      await editor.click();
+
+      // Type a character first so we have a measurable caret position
+      await page.keyboard.type('A');
+
+      // Measure native caret BEFORE tab insertion (after "A")
+      const caretBefore = await getNativeCaretRect(page);
+
+      // Screenshot before
+      const erteEl = getErte(page);
+      await erteEl.screenshot({ path: 'test-results/cursor-before-tab.png' });
+
+      // Insert a tab after "A"
+      await page.keyboard.press('Tab');
+
+      // Measure native caret AFTER tab insertion (after "A" + tab)
+      const caretAfter = await getNativeCaretRect(page);
+
+      // Screenshot after
+      await erteEl.screenshot({ path: 'test-results/cursor-after-tab.png' });
+
+      expect(caretBefore).not.toBeNull();
+      expect(caretAfter).not.toBeNull();
+
+      // Cursor height must be identical
+      expect(caretAfter!.height).toEqual(caretBefore!.height);
+      // Cursor top must be identical (same line)
+      expect(caretAfter!.top).toEqual(caretBefore!.top);
+      // Cursor must have moved right by at least 100px (to the first tabstop)
+      expect(caretAfter!.left).toBeGreaterThan(caretBefore!.left + 100);
+    });
+
     test('End key moves to end of visual line', async ({ page }) => {
       const editor = getEditor(page);
       await editor.click();

@@ -198,20 +198,31 @@ class VcfEnhancedRichTextEditor extends RteBase {
           outline-offset: -1px;
         }
 
-        /* Tab stops — inline-block spans with calculated width */
+        /* Tab stops — inline-flex spans with calculated width.
+           Quill 2 Embed structure: [guard \uFEFF] [contentNode span] [guard \uFEFF]
+           Guard nodes are zero-width text nodes for cursor placement.
+           Using inline-flex so the contentNode (flex:1) pushes the trailing
+           guard node to the RIGHT edge — otherwise both guards render at
+           left:0 inside the inline-block and the "after tab" cursor appears
+           at the same position as the "before tab" cursor.
+           overflow:clip (not hidden) — hidden creates a BFC that isolates
+           the caret, preventing cursor placement in guard nodes. */
         .ql-tab {
-          display: inline-block;
+          display: inline-flex;
           min-width: 2px;
           height: 1rem;
           white-space: pre;
-          vertical-align: bottom;
+          vertical-align: baseline;
           position: relative;
           cursor: default;
-          font-size: 0;
           line-height: 1rem;
-          overflow: hidden;
+          overflow: clip;
           will-change: width;
           transform: translateZ(0);
+        }
+        .ql-tab > span {
+          flex: 1;
+          font-size: 0;
         }
 
         /* Soft breaks — inline line break */
@@ -787,8 +798,10 @@ class VcfEnhancedRichTextEditor extends RteBase {
       handler: function(range) {
         if (range) {
           self._editor.insertEmbed(range.index, 'tab', true, Quill.sources.USER);
+          // Sync width calculation BEFORE cursor move — RAF would defer
+          // the width update, leaving the cursor at the old (0-width) position.
+          self._updateTabWidths();
           self._editor.setSelection(range.index + 1, 0, Quill.sources.USER);
-          self._requestTabUpdate();
           return false;
         } else {
           return true;
@@ -962,6 +975,20 @@ class VcfEnhancedRichTextEditor extends RteBase {
   }
 
   /**
+   * Returns the pixel offset between the editor's border-box left
+   * and the ruler's left edge. Used to convert between editor
+   * coordinate space (used by tab stop positions) and ruler
+   * coordinate space (used for marker display).
+   * @protected
+   */
+  _getRulerEditorOffset() {
+    const editor = this.shadowRoot.querySelector('.ql-editor');
+    const ruler = this.shadowRoot.querySelector('[part="horizontalRuler"]');
+    if (!editor || !ruler) return 0;
+    return editor.getBoundingClientRect().left - ruler.getBoundingClientRect().left;
+  }
+
+  /**
    * Add a tabstop icon to the horizontal ruler.
    * LEFT -> caret-right, RIGHT -> caret-left, MIDDLE -> dot-circle.
    * Click cycles: LEFT -> RIGHT -> MIDDLE -> remove.
@@ -983,7 +1010,9 @@ class VcfEnhancedRichTextEditor extends RteBase {
     icon.style.height = '15px';
     icon.style.position = 'absolute';
     icon.style.top = '0px';
-    icon.style.left = tabStop.position - 7 + 'px';
+    // Convert editor coordinate space to ruler coordinate space
+    const offset = this._getRulerEditorOffset();
+    icon.style.left = (tabStop.position + offset - 7) + 'px';
 
     const horizontalRuler = this.shadowRoot.querySelector('[part="horizontalRuler"]');
     if (!horizontalRuler) return;
@@ -1021,7 +1050,9 @@ class VcfEnhancedRichTextEditor extends RteBase {
    * @protected
    */
   _addTabStop(event) {
-    const tabStop = { direction: 'left', position: event.offsetX };
+    // Convert ruler click position to editor coordinate space
+    const offset = this._getRulerEditorOffset();
+    const tabStop = { direction: 'left', position: event.offsetX - offset };
     if (!this.tabStops) {
       this.tabStops = [];
     }
