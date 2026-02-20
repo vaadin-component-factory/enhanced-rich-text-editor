@@ -16,6 +16,7 @@
  */
 package com.vaadin.componentfactory;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -641,6 +642,277 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
 
         public String getAppearanceLabel() {
             return appearanceLabel;
+        }
+    }
+
+    // ========================================================================
+    // I18n
+    // ========================================================================
+
+    /**
+     * Extended i18n for ERTE — adds labels for ERTE-specific toolbar
+     * buttons and the placeholder dialog.
+     * <p>
+     * Inherits all standard RTE 2 labels. Only set ERTE-specific fields
+     * if you need to translate them; defaults are English.
+     * <p>
+     * Usage:
+     * <pre>
+     * editor.setI18n(new EnhancedRichTextEditorI18n()
+     *     .setBold("Fett")
+     *     .setReadonly("Schreibschutz")
+     *     .setPlaceholder("Platzhalter"));
+     * </pre>
+     */
+    public static class EnhancedRichTextEditorI18n
+            extends com.vaadin.flow.component.richtexteditor
+                    .RichTextEditor.RichTextEditorI18n
+            implements Serializable {
+
+        private String readonly;
+        private String whitespace;
+        private String placeholder;
+        private String placeholderAppearance;
+        private String placeholderDialogTitle;
+        private String placeholderComboBoxLabel;
+        private String placeholderAppearanceLabel1;
+        private String placeholderAppearanceLabel2;
+
+        public String getReadonly() {
+            return readonly;
+        }
+
+        public EnhancedRichTextEditorI18n setReadonly(String readonly) {
+            this.readonly = readonly;
+            return this;
+        }
+
+        public String getWhitespace() {
+            return whitespace;
+        }
+
+        public EnhancedRichTextEditorI18n setWhitespace(String whitespace) {
+            this.whitespace = whitespace;
+            return this;
+        }
+
+        public String getPlaceholder() {
+            return placeholder;
+        }
+
+        public EnhancedRichTextEditorI18n setPlaceholder(
+                String placeholder) {
+            this.placeholder = placeholder;
+            return this;
+        }
+
+        public String getPlaceholderAppearance() {
+            return placeholderAppearance;
+        }
+
+        public EnhancedRichTextEditorI18n setPlaceholderAppearance(
+                String placeholderAppearance) {
+            this.placeholderAppearance = placeholderAppearance;
+            return this;
+        }
+
+        public String getPlaceholderDialogTitle() {
+            return placeholderDialogTitle;
+        }
+
+        public EnhancedRichTextEditorI18n setPlaceholderDialogTitle(
+                String placeholderDialogTitle) {
+            this.placeholderDialogTitle = placeholderDialogTitle;
+            return this;
+        }
+
+        public String getPlaceholderComboBoxLabel() {
+            return placeholderComboBoxLabel;
+        }
+
+        public EnhancedRichTextEditorI18n setPlaceholderComboBoxLabel(
+                String placeholderComboBoxLabel) {
+            this.placeholderComboBoxLabel = placeholderComboBoxLabel;
+            return this;
+        }
+
+        public String getPlaceholderAppearanceLabel1() {
+            return placeholderAppearanceLabel1;
+        }
+
+        public EnhancedRichTextEditorI18n setPlaceholderAppearanceLabel1(
+                String placeholderAppearanceLabel1) {
+            this.placeholderAppearanceLabel1 = placeholderAppearanceLabel1;
+            return this;
+        }
+
+        public String getPlaceholderAppearanceLabel2() {
+            return placeholderAppearanceLabel2;
+        }
+
+        public EnhancedRichTextEditorI18n setPlaceholderAppearanceLabel2(
+                String placeholderAppearanceLabel2) {
+            this.placeholderAppearanceLabel2 = placeholderAppearanceLabel2;
+            return this;
+        }
+
+        // Covariant return type overrides for fluent chaining
+
+        @Override
+        public EnhancedRichTextEditorI18n setUndo(String undo) {
+            super.setUndo(undo);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setRedo(String redo) {
+            super.setRedo(redo);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setBold(String bold) {
+            super.setBold(bold);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setItalic(String italic) {
+            super.setItalic(italic);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setUnderline(String underline) {
+            super.setUnderline(underline);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setStrike(String strike) {
+            super.setStrike(strike);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setH1(String h1) {
+            super.setH1(h1);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setH2(String h2) {
+            super.setH2(h2);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setH3(String h3) {
+            super.setH3(h3);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setColor(String color) {
+            super.setColor(color);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setBackground(
+                String background) {
+            super.setBackground(background);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setSubscript(String subscript) {
+            super.setSubscript(subscript);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setSuperscript(
+                String superscript) {
+            super.setSuperscript(superscript);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setListOrdered(
+                String listOrdered) {
+            super.setListOrdered(listOrdered);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setListBullet(
+                String listBullet) {
+            super.setListBullet(listBullet);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setOutdent(String outdent) {
+            super.setOutdent(outdent);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setIndent(String indent) {
+            super.setIndent(indent);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setAlignLeft(String alignLeft) {
+            super.setAlignLeft(alignLeft);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setAlignCenter(
+                String alignCenter) {
+            super.setAlignCenter(alignCenter);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setAlignRight(
+                String alignRight) {
+            super.setAlignRight(alignRight);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setImage(String image) {
+            super.setImage(image);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setLink(String link) {
+            super.setLink(link);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setBlockquote(
+                String blockquote) {
+            super.setBlockquote(blockquote);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setCodeBlock(String codeBlock) {
+            super.setCodeBlock(codeBlock);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setClean(String clean) {
+            super.setClean(clean);
+            return this;
         }
     }
 }

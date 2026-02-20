@@ -316,11 +316,26 @@ test.describe('ERTE Feature Tests', () => {
       await page.locator('#set-german-i18n').click();
       await page.waitForTimeout(500);
 
-      // Verify the bold button title changed to "Fett"
+      // V25 RTE 2 uses aria-label (not title) for i18n button labels
       const erte = getErte(page);
       const boldBtn = erte.locator('button.ql-bold');
-      const title = await boldBtn.getAttribute('title');
-      expect(title).toBe('Fett');
+      const ariaLabel = await boldBtn.getAttribute('aria-label');
+      expect(ariaLabel).toBe('Fett');
+    });
+
+    test('12b - German I18n labels are applied to ERTE-specific buttons', async ({ page }) => {
+      await page.locator('#set-german-i18n').click();
+      await page.waitForTimeout(500);
+
+      const erte = getErte(page);
+
+      // Verify ERTE readonly button
+      const readonlyBtn = erte.locator('button[part~="toolbar-button-readonly"]');
+      await expect(readonlyBtn).toHaveAttribute('aria-label', 'Schreibschutz');
+
+      // Verify ERTE whitespace button
+      const wsBtn = erte.locator('button[part~="toolbar-button-whitespace"]');
+      await expect(wsBtn).toHaveAttribute('aria-label', 'Leerzeichen anzeigen');
     });
   });
 

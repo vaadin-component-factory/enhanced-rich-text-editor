@@ -1,6 +1,6 @@
 # V25 Migration Status
 
-**Current: 3.3d I18n**
+**Current: 3.3e Programmatic Text Insertion**
 
 | Phase    | Feature                            | Status |
 |----------|------------------------------------|--------|
@@ -19,7 +19,7 @@
 | **3.3a** | Non-Breaking Space                 | COMPLETE |
 | **3.3b** | Whitespace Indicators              | COMPLETE |
 | **3.3c** | Security Hardening — Sanitization  | COMPLETE |
-| 3.3d     | I18n                               | NOT STARTED |
+| **3.3d** | I18n                               | COMPLETE |
 | 3.3e     | Programmatic Text Insertion        | NOT STARTED |
 | 3.3f     | Align Justify                      | NOT STARTED |
 | 3.3g     | Replace Toolbar Button Icons       | NOT STARTED |

@@ -108,17 +108,27 @@ public class ErteFeatureTestView extends VerticalLayout {
         getTextLength.addClickListener(e ->
                 logEvent("getTextLength: NOT YET IMPLEMENTED (Phase 3.3e)"));
 
-        // Set German I18n
+        // Set German I18n (with ERTE-specific labels)
         Button setGermanI18n = new Button("Set German I18n");
         setGermanI18n.setId("set-german-i18n");
         setGermanI18n.addClickListener(e -> {
-            RichTextEditor.RichTextEditorI18n i18n =
-                    new RichTextEditor.RichTextEditorI18n();
+            EnhancedRichTextEditor.EnhancedRichTextEditorI18n i18n =
+                    new EnhancedRichTextEditor.EnhancedRichTextEditorI18n();
+            // Standard RTE 2 labels
             i18n.setBold("Fett");
             i18n.setItalic("Kursiv");
             i18n.setUnderline("Unterstreichen");
             i18n.setUndo("Rückgängig");
             i18n.setRedo("Wiederholen");
+            // ERTE-specific labels
+            i18n.setReadonly("Schreibschutz");
+            i18n.setWhitespace("Leerzeichen anzeigen");
+            i18n.setPlaceholder("Platzhalter");
+            i18n.setPlaceholderAppearance("Platzhalter-Darstellung");
+            i18n.setPlaceholderDialogTitle("Platzhalter");
+            i18n.setPlaceholderComboBoxLabel("Platzhalter wählen");
+            i18n.setPlaceholderAppearanceLabel1("Normal");
+            i18n.setPlaceholderAppearanceLabel2("Wert");
             editor.setI18n(i18n);
         });
 

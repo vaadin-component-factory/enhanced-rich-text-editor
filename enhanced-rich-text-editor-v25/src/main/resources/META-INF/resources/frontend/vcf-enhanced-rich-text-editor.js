@@ -387,6 +387,22 @@ Quill.register('formats/nbsp', NbspBlot, true);
  */
 const ERTE_PRESERVED_CLASSES = ['ql-readonly', 'ql-tab', 'ql-soft-break', 'ql-placeholder', 'ql-nbsp'];
 
+/**
+ * Default English labels for ERTE-specific buttons and dialogs.
+ * These augment RTE 2's standard i18n. Values are used as fallback
+ * when the Java side sends an i18n object without ERTE keys.
+ */
+const ERTE_I18N_DEFAULTS = {
+  readonly: 'Readonly',
+  whitespace: 'Show whitespace',
+  placeholder: 'Placeholder',
+  placeholderAppearance: 'Toggle placeholder appearance',
+  placeholderDialogTitle: 'Placeholders',
+  placeholderComboBoxLabel: 'Select a placeholder',
+  placeholderAppearanceLabel1: 'Plain',
+  placeholderAppearanceLabel2: 'Value',
+};
+
 class VcfEnhancedRichTextEditor extends RteBase {
 
   static get is() {
@@ -558,6 +574,64 @@ class VcfEnhancedRichTextEditor extends RteBase {
     return super.render();
   }
 
+  // ==========================================================================
+  // I18n: extend RTE 2's i18n with ERTE-specific labels
+  // ==========================================================================
+
+  get i18n() { return super.i18n; }
+
+  set i18n(value) {
+    super.i18n = value;
+    this._applyErteI18n();
+  }
+
+  /**
+   * Applies ERTE-specific i18n labels to custom toolbar buttons and the
+   * placeholder dialog. Reads from __effectiveI18n (populated by I18nMixin
+   * after the setter), falls back to ERTE_I18N_DEFAULTS.
+   * @protected
+   */
+  _applyErteI18n() {
+    const i18n = this.__effectiveI18n || {};
+    const d = ERTE_I18N_DEFAULTS;
+
+    // Toolbar buttons
+    if (this.__readonlyButton) {
+      this.__readonlyButton.setAttribute('aria-label', i18n.readonly || d.readonly);
+    }
+    if (this.__whitespaceBtn) {
+      this.__whitespaceBtn.setAttribute('aria-label', i18n.whitespace || d.whitespace);
+    }
+    if (this.__placeholderBtn) {
+      this.__placeholderBtn.setAttribute('aria-label', i18n.placeholder || d.placeholder);
+    }
+    if (this.__placeholderAppearanceBtn) {
+      this.__placeholderAppearanceBtn.setAttribute('aria-label',
+        i18n.placeholderAppearance || d.placeholderAppearance);
+    }
+
+    // Placeholder dialog
+    if (this.__placeholderDialog) {
+      this.__placeholderDialog.header = i18n.placeholderDialogTitle || d.placeholderDialogTitle;
+      this.__placeholderDialog.setAttribute('aria-label',
+        i18n.placeholderDialogTitle || d.placeholderDialogTitle);
+    }
+    if (this.__placeholderComboBox) {
+      this.__placeholderComboBox.label = i18n.placeholderComboBoxLabel || d.placeholderComboBoxLabel;
+    }
+
+    // Store appearance labels for use in placeholderAltAppearance setter
+    const label1 = i18n.placeholderAppearanceLabel1 || d.placeholderAppearanceLabel1;
+    const label2 = i18n.placeholderAppearanceLabel2 || d.placeholderAppearanceLabel2;
+    this.__erteI18nLabels = { label1, label2 };
+
+    // Update appearance button text if it exists
+    if (this.__placeholderAppearanceBtn) {
+      this.__placeholderAppearanceBtn.textContent =
+        this.placeholderAltAppearance ? label2 : label1;
+    }
+  }
+
   /**
    * Vaadin-specific lifecycle hook (inherited from Polymer compat layer,
    * NOT a standard Lit lifecycle method). Called from within the Lit update
@@ -678,6 +752,9 @@ class VcfEnhancedRichTextEditor extends RteBase {
     if (extNs && Array.isArray(extNs.extendEditor)) {
       extNs.extendEditor.forEach(cb => cb(this._editor, Quill));
     }
+
+    // Apply ERTE i18n labels to custom buttons/dialog (initial defaults)
+    this._applyErteI18n();
 
     console.debug('[ERTE] ready, _editor:', !!this._editor, 'readonly protection active, tab engine initialized');
   }
@@ -1076,9 +1153,10 @@ class VcfEnhancedRichTextEditor extends RteBase {
   _onPlaceholderAltAppearanceChanged(altAppearance) {
     if (!this._editor) return;
 
-    // Update button label
+    // Update button label (use i18n labels if available)
     if (this.__placeholderAppearanceBtn) {
-      this.__placeholderAppearanceBtn.textContent = altAppearance ? 'Value' : 'Plain';
+      const labels = this.__erteI18nLabels || ERTE_I18N_DEFAULTS;
+      this.__placeholderAppearanceBtn.textContent = altAppearance ? labels.label2 : labels.label1;
       if (altAppearance) {
         this.__placeholderAppearanceBtn.classList.add('ql-active');
       } else {
@@ -1099,11 +1177,12 @@ class VcfEnhancedRichTextEditor extends RteBase {
       this._editor.setContents(delta, Quill.sources.SILENT);
     }
 
-    // Fire appearance-change event
-    const label = altAppearance ? 'Value' : 'Plain';
+    // Fire appearance-change event (use i18n labels)
+    const labels = this.__erteI18nLabels || ERTE_I18N_DEFAULTS;
+    const appearanceLabel = altAppearance ? labels.label2 : labels.label1;
     this.dispatchEvent(new CustomEvent('placeholder-appearance-change', {
       bubbles: true, composed: true, cancelable: false,
-      detail: { altAppearance, appearanceLabel: label }
+      detail: { altAppearance, appearanceLabel }
     }));
   }
 

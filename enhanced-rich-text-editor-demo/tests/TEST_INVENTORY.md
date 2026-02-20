@@ -1,11 +1,11 @@
 # ERTE Test Suite Inventory
 
-> **V25 Migration Status (Phase 3.3b complete):** 157 tests passing, 11 fixme.
-> Implemented: Shell (6), Toolbar (27), Readonly (18), Tabstops (67 pass, 14 fixme), Placeholders (30 pass, 2 fixme), extendOptions (4), Whitespace (7 pass, 2 fixme).
-> Features.spec.ts: 18 pass, 6 fail (addText/getTextLength=3.3e, align justify=3.3f, i18n=3.3d, focus=3.3e).
+> **V25 Migration Status (Phase 3.3d complete):** 185 tests passing, 11 fixme.
+> Implemented: Shell (6), Toolbar (27), Readonly (18), Tabstops (67 pass, 14 fixme), Placeholders (30 pass, 2 fixme), extendOptions (4), Whitespace (7 pass, 2 fixme), Sanitizer (11), I18n (2).
+> Features.spec.ts: 28 pass, 5 fail (addText/getTextLength=3.3e, align justify=3.3f, focus=3.3e).
 
-Total: 258 tests (75 prototype + 183 ERTE)
-V25 status: 181 passed, 11 skipped across all feature specs
+Total: 268 tests (75 prototype + 193 ERTE)
+V25 status: 185 passed, 11 skipped across all feature specs
 
 ---
 
@@ -243,7 +243,7 @@ V25 status: 181 passed, 11 skipped across all feature specs
 
 ---
 
-## Features (24 tests) — `erte/features.spec.ts`
+## Features (33 tests) — `erte/features.spec.ts`
 
 ### Non-Breaking Space (Shift+Space)
 - Shift+Space inserts a non-breaking space
@@ -266,6 +266,7 @@ V25 status: 181 passed, 11 skipped across all feature specs
 
 ### I18n
 - German I18n labels are applied to toolbar buttons
+- German I18n labels are applied to ERTE-specific buttons
 
 ### No Rulers Mode
 - setNoRulers hides the ruler
@@ -285,6 +286,14 @@ V25 status: 181 passed, 11 skipped across all feature specs
 - Sanitizer preserves ERTE-specific classes in HTML output
 - Sanitizer strips XSS payloads from HTML output
 - Sanitizer handles data-placeholder attribute in HTML output
+- Strips url() from style attribute
+- Strips expression() from style attribute
+- Preserves safe color style through round-trip
+- Preserves safe background-color style through round-trip
+- Strips data:text/html from img src
+- Preserves data:image/png in img src
+- Strips unknown CSS properties
+- background: url() shorthand is blocked
 
 ### focus() Method
 - focus() method gives focus to the editor
