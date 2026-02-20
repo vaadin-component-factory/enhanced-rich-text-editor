@@ -1,6 +1,6 @@
 # V25 Migration Status
 
-**Current: 3.3h Arrow Navigation**
+**Current: 3.4 Open Issues (Tier 4)**
 
 | Phase    | Feature                            | Status |
 |----------|------------------------------------|--------|
@@ -23,7 +23,7 @@
 | **3.3e** | Programmatic Text Insertion        | COMPLETE |
 | **3.3f** | Align Justify                      | COMPLETE |
 | **3.3g** | Replace Toolbar Button Icons       | COMPLETE |
-| 3.3h     | Arrow Navigation                   | NOT STARTED |
+| **3.3h** | Arrow Navigation                   | COMPLETE *(impl. in 3.1c)* |
 | **3.4**  | **Open Issues (Tier 4)**           | NOT STARTED |
 | 3.4a     | Placeholder Button Active State    | NOT STARTED |
 | 3.4b     | Toolbar Arrow-Key Navigation       | NOT STARTED |
