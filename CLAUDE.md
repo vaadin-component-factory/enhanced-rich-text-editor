@@ -41,7 +41,7 @@ Enhanced Rich Text Editor (ERTE) for Vaadin — a rich text editor component ext
 
 **Active work:** Migrating from Vaadin 24 / Quill 1 (ERTE 1) to Vaadin 25 / Quill 2 (ERTE 2). The old V24 modules remain in the repo as dead reference code (excluded from build). New V25 modules are created from scratch, using the old code as context.
 
-**Transfer folder:** `~/transfer/erte` — shared folder for screenshots and file exchange between user and Claude.
+**Screenshots:** Saved to `.claude/screenshots/` (working directory). The `~/transfer/erte` folder is read-only.
 
 ## Notifications — MANDATORY AND VERY IMPORTANT! DON'T IGNORE THIS!!!
 

@@ -745,7 +745,10 @@ class VcfEnhancedRichTextEditor extends RteBase {
       if (placeholders.length) {
         if (!this._inPlaceholder) {
           this._inPlaceholder = true;
-          if (this.__placeholderBtn) this.__placeholderBtn.classList.add('ql-active');
+          if (this.__placeholderBtn) {
+            this.__placeholderBtn.classList.add('ql-active');
+            this.__placeholderBtn.part.add('toolbar-button-pressed');
+          }
           this.dispatchEvent(new CustomEvent('placeholder-select', {
             bubbles: true, composed: true, cancelable: false,
             detail: { placeholders }
@@ -754,7 +757,10 @@ class VcfEnhancedRichTextEditor extends RteBase {
       } else {
         if (this._inPlaceholder) {
           this._inPlaceholder = false;
-          if (this.__placeholderBtn) this.__placeholderBtn.classList.remove('ql-active');
+          if (this.__placeholderBtn) {
+            this.__placeholderBtn.classList.remove('ql-active');
+            this.__placeholderBtn.part.remove('toolbar-button-pressed');
+          }
           this.dispatchEvent(new CustomEvent('placeholder-leave', {
             bubbles: true, composed: true, cancelable: false
           }));
