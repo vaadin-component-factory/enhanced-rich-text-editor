@@ -1,6 +1,6 @@
 # V25 Migration Status
 
-**Current: 3.1g extendOptions Hook**
+**Current: 3.2a Toolbar Button Visibility**
 
 | Phase    | Feature                            | Status |
 |----------|------------------------------------|--------|
@@ -13,7 +13,7 @@
 | ~~3.1d~~ | ~~Rulers~~                         | *(merged into 3.1c)* |
 | ~~3.1e~~ | ~~Soft-Break + Tab Copying~~       | *(merged into 3.1c)* |
 | **3.1f** | Placeholders                       | COMPLETE |
-| 3.1g     | extendOptions Hook                 | NOT STARTED |
+| **3.1g** | extendOptions Hook                 | COMPLETE |
 | 3.2a     | Toolbar Button Visibility          | NOT STARTED |
 | 3.2b     | Custom Keyboard Shortcuts          | NOT STARTED |
 | 3.3a     | Non-Breaking Space                 | NOT STARTED |

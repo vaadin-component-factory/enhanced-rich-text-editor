@@ -486,6 +486,18 @@ class VcfEnhancedRichTextEditor extends RteBase {
    * @protected
    */
   ready() {
+    // --- Extension hooks (V25 API) ---
+    const extNs = window.Vaadin?.Flow?.vcfEnhancedRichTextEditor;
+    if (extNs && Array.isArray(extNs.extendQuill)) {
+      extNs.extendQuill.forEach(cb => cb(Quill));
+    }
+    if (extNs && Array.isArray(extNs.extendOptions)) {
+      console.warn(
+        '[ERTE] extendOptions is deprecated in V25. Use extendQuill (pre-init) ' +
+        'and/or extendEditor (post-init) instead.'
+      );
+    }
+
     super.ready();
     this._injectToolbarSlots();
     this._injectReadonlyButton();
@@ -575,6 +587,11 @@ class VcfEnhancedRichTextEditor extends RteBase {
         }
       }
     });
+
+    // --- Extension hooks: post-init (V25 API) ---
+    if (extNs && Array.isArray(extNs.extendEditor)) {
+      extNs.extendEditor.forEach(cb => cb(this._editor, Quill));
+    }
 
     console.debug('[ERTE] ready, _editor:', !!this._editor, 'readonly protection active, tab engine initialized');
   }

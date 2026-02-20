@@ -157,6 +157,13 @@ a question.
     After successful implementation and verification of the phase, **delete**
     the plan file. Plan files are working documents, not permanent records.
 
+    **Writing plan files:** After planning a phase (including agents-manager reviews),
+    ALWAYS write the plan to `migration_v25/progress/PHASE__plan.md`. The plan must be
+    **self-contained and clear enough to be executed from a clean context** (no reliance
+    on conversation history). Each plan MUST include a **complexity recommendation**:
+    whether the `agents-manager` should handle implementation or the orchestrator can
+    do it directly. The agents-manager makes the final call on delegation.
+
     **Tier 1 — Core Differentiators (fixed order):**
     - **3.1a** Custom Slots / Toolbar Slot System (Feature 8)
     - **3.1b** Readonly Sections (Feature 4) — *also establishes sanitizer override structure*
@@ -250,7 +257,7 @@ Use these as needed, do NOT try to load all of them as context simultaneously.
 
 ## Playwright Tests
 
-251 total tests: 75 prototype + 176 ERTE. Full listing in [TEST_INVENTORY.md](enhanced-rich-text-editor-demo/tests/TEST_INVENTORY.md).
+255 total tests: 75 prototype + 180 ERTE. Full listing in [TEST_INVENTORY.md](enhanced-rich-text-editor-demo/tests/TEST_INVENTORY.md).
 
 **Running tests:**
 ```bash
@@ -266,7 +273,7 @@ npx playwright test tests/erte/
 bash server-stop.sh
 ```
 
-### ERTE Test Suite (173 tests in `tests/erte/`)
+### ERTE Test Suite (180 tests in `tests/erte/`)
 
 | Spec File | Tests | Covers |
 |-----------|-------|--------|
@@ -274,9 +281,10 @@ bash server-stop.sh
 | `placeholders.spec.ts` | 32 | Placeholder dialog, events, appearance, keyboard |
 | `readonly.spec.ts` | 18 | Readonly sections, protection, whole-editor readonly |
 | `toolbar.spec.ts` | 24 | Slot system, visibility, shortcuts, icons, keyboard nav |
+| `extend-options.spec.ts` | 4 | extendQuill/extendEditor hooks, V24 deprecation |
 | `features.spec.ts` | 24 | NBSP, addText, align, indent, i18n, sanitizer, focus |
 
-**Test views** (Java, in `com.vaadin.componentfactory`): `ErteTabStopTestView`, `ErtePlaceholderTestView`, `ErteReadonlyTestView`, `ErteToolbarTestView`, `ErteFeatureTestView`. Each provides a single editor (`id="test-editor"`), delta/HTML output elements, event log, and a ready indicator.
+**Test views** (Java, in `com.vaadin.componentfactory`): `ErteTabStopTestView`, `ErtePlaceholderTestView`, `ErteReadonlyTestView`, `ErteToolbarTestView`, `ErteExtendOptionsTestView`, `ErteFeatureTestView`. Each provides a single editor (`id="test-editor"`), delta/HTML output elements, event log, and a ready indicator.
 
 **Side navigation:** `ErteTestLayout.java` provides an `AppLayout` with `SideNav` listing all phases. When implementing a new phase, always update this layout: change the `disabled(...)` entry to `new SideNavItem("label", "erte-test/route", icon)` so the link becomes active.
 

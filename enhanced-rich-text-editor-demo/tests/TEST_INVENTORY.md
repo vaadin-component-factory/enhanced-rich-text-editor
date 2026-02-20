@@ -1,11 +1,11 @@
 # ERTE Test Suite Inventory
 
-> **V25 Migration Status (Phase 3.1f complete):** 139 tests passing, 22 fixme.
-> Implemented: Shell (6), Toolbar (24), Readonly (18), Tabstops (67 pass, 14 fixme), Placeholders (30 pass, 2 fixme).
+> **V25 Migration Status (Phase 3.1g complete):** 143 tests passing, 22 fixme.
+> Implemented: Shell (6), Toolbar (24), Readonly (18), Tabstops (67 pass, 14 fixme), Placeholders (30 pass, 2 fixme), extendOptions (4).
 > Remaining ERTE tests will be restored as features are migrated.
 
-Total: 251 tests (75 prototype + 176 ERTE)
-V25 status: 139 passed, 22 fixme across implemented features (tabstops, readonly, toolbar, placeholders)
+Total: 255 tests (75 prototype + 180 ERTE)
+V25 status: 143 passed, 22 fixme across implemented features (tabstops, readonly, toolbar, placeholders, extend-options)
 
 ---
 
@@ -228,6 +228,15 @@ V25 status: 139 passed, 22 fixme across implemented features (tabstops, readonly
 - I18n labels updated - German tooltips applied
 - All standard toolbar button parts exist
 - Screenshot: Toolbar with custom components
+
+---
+
+## extendOptions Hooks (4 tests) — `erte/extend-options.spec.ts`
+
+- extendEditor hook fires and sets flag on editor root
+- extendQuill hook registers highlight format
+- highlight format survives delta roundtrip
+- V24 extendOptions deprecation warning
 
 ---
 

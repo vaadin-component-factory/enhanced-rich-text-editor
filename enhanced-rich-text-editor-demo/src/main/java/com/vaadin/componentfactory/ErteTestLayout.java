@@ -75,7 +75,8 @@ public class ErteTestLayout extends AppLayout {
                 "erte-test/placeholders",
                 VaadinIcon.INPUT.create()));
 
-        tier1.addItem(disabled("3.1g extendOptions",
+        tier1.addItem(new SideNavItem("3.1g extendOptions",
+                "erte-test/extend-options",
                 VaadinIcon.COG.create()));
 
         // -- Tier 2: Important --
