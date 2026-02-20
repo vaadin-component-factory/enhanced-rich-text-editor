@@ -59,9 +59,13 @@ public class ErteTestLayout extends AppLayout {
         var tier1 = new SideNavItem("Tier 1 — Core");
         tier1.setPrefixComponent(VaadinIcon.STAR.create());
 
-        tier1.addItem(new SideNavItem("3.1a Toolbar Slots",
+        var toolbarItem = new SideNavItem("Toolbar",
                 "erte-test/toolbar",
-                VaadinIcon.TOOLS.create()));
+                VaadinIcon.TOOLS.create());
+        toolbarItem.addItem(new SideNavItem("3.1a Slots"));
+        toolbarItem.addItem(new SideNavItem("3.2a Visibility"));
+        toolbarItem.addItem(new SideNavItem("3.2b Shortcuts"));
+        tier1.addItem(toolbarItem);
 
         tier1.addItem(new SideNavItem("3.1b Readonly",
                 "erte-test/readonly",
@@ -83,12 +87,7 @@ public class ErteTestLayout extends AppLayout {
         var tier2 = new SideNavItem("Tier 2 — Important");
         tier2.setPrefixComponent(VaadinIcon.STAR_HALF_LEFT.create());
 
-        tier2.addItem(new SideNavItem("3.2a Button Visibility",
-                "erte-test/toolbar",
-                VaadinIcon.EYE.create()));
-
-        tier2.addItem(disabled("3.2b Keyboard Shortcuts",
-                VaadinIcon.KEYBOARD.create()));
+        // 3.2a + 3.2b share toolbar view — listed under Tier 1 Toolbar item
 
         // -- Tier 3: Remaining --
         var tier3 = new SideNavItem("Tier 3 — Remaining");

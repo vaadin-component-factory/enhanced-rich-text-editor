@@ -63,6 +63,16 @@ public class ErteToolbarTestView extends VerticalLayout {
         // Enable placeholder button by providing a placeholder list
         editor.setPlaceholders(List.of(new Placeholder("Test")));
 
+        // --- Keyboard shortcuts (Phase 3.2b) ---
+        editor.addStandardToolbarButtonShortcut(
+                EnhancedRichTextEditor.ToolbarButton.ALIGN_CENTER,
+                "F9", false, true, false); // Shift+F9 → align center
+        editor.addToolbarFocusShortcut(
+                "F10", false, true, false); // Shift+F10 → focus toolbar
+        editor.addStandardToolbarButtonShortcut(
+                EnhancedRichTextEditor.ToolbarButton.BOLD,
+                "b", true, true, false); // Ctrl+Shift+B → bold toggle
+
         // --- Slot components ---
 
         // START slot

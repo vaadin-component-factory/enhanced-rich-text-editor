@@ -1,6 +1,6 @@
 # V25 Migration Status
 
-**Current: 3.2b Custom Keyboard Shortcuts**
+**Current: 3.3a Non-Breaking Space**
 
 | Phase    | Feature                            | Status |
 |----------|------------------------------------|--------|
@@ -15,7 +15,7 @@
 | **3.1f** | Placeholders                       | COMPLETE |
 | **3.1g** | extendOptions Hook                 | COMPLETE |
 | **3.2a** | Toolbar Button Visibility          | COMPLETE |
-| 3.2b     | Custom Keyboard Shortcuts          | NOT STARTED |
+| **3.2b** | Custom Keyboard Shortcuts          | COMPLETE |
 | 3.3a     | Non-Breaking Space                 | NOT STARTED |
 | 3.3b     | Whitespace Indicators              | NOT STARTED |
 | 3.3c     | Security Hardening — Sanitization  | NOT STARTED |

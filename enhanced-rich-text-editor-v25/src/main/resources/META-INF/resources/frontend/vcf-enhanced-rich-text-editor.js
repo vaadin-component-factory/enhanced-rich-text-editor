@@ -1238,6 +1238,73 @@ class VcfEnhancedRichTextEditor extends RteBase {
   }
 
   // ==========================================================================
+  // Custom Keyboard Shortcuts — Phase 3.2b
+  // ==========================================================================
+
+  /**
+   * Binds a keyboard shortcut to a standard toolbar button.
+   * Clicking the button triggers its native handler (format toggle, dialog, etc.).
+   * @param {string} partSuffix - button part suffix (e.g. 'bold', 'align-center')
+   * @param {string} key - Quill 2 key name (e.g. 'F9', 'b')
+   * @param {boolean} shortKey - Ctrl (Win/Linux) or Cmd (Mac)
+   * @param {boolean} shiftKey
+   * @param {boolean} altKey
+   */
+  addStandardToolbarButtonShortcut(partSuffix, key, shortKey, shiftKey, altKey) {
+    const toolbar = this.shadowRoot?.querySelector('[part="toolbar"]');
+    if (!toolbar || !this._editor) return;
+    const btn = toolbar.querySelector(`[part~="toolbar-button-${partSuffix}"]`);
+    if (!btn) return;
+
+    const SHORTKEY = /Mac/i.test(navigator.platform) ? 'metaKey' : 'ctrlKey';
+    const binding = {
+      key,
+      shiftKey: !!shiftKey,
+      altKey: !!altKey,
+      [SHORTKEY]: !!shortKey,
+      handler: () => {
+        btn.click();
+        return false;
+      }
+    };
+
+    const bindings = this._editor.keyboard.bindings;
+    const existing = bindings[key] || [];
+    bindings[key] = [binding, ...existing];
+  }
+
+  /**
+   * Binds a keyboard shortcut that moves focus to the toolbar.
+   * @param {string} key - Quill 2 key name (e.g. 'F10')
+   * @param {boolean} shortKey - Ctrl (Win/Linux) or Cmd (Mac)
+   * @param {boolean} shiftKey
+   * @param {boolean} altKey
+   */
+  addToolbarFocusShortcut(key, shortKey, shiftKey, altKey) {
+    const toolbar = this.shadowRoot?.querySelector('[part="toolbar"]');
+    if (!toolbar || !this._editor) return;
+
+    const SHORTKEY = /Mac/i.test(navigator.platform) ? 'metaKey' : 'ctrlKey';
+    const self = this;
+    const binding = {
+      key,
+      shiftKey: !!shiftKey,
+      altKey: !!altKey,
+      [SHORTKEY]: !!shortKey,
+      handler: () => {
+        self._markToolbarFocused();
+        const firstBtn = toolbar.querySelector('button:not([style*="display: none"]):not([hidden])');
+        if (firstBtn) firstBtn.focus();
+        return false;
+      }
+    };
+
+    const bindings = this._editor.keyboard.bindings;
+    const existing = bindings[key] || [];
+    bindings[key] = [binding, ...existing];
+  }
+
+  // ==========================================================================
   // Tab Width Calculation Engine
   // ==========================================================================
 

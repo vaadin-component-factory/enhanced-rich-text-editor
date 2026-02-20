@@ -215,6 +215,42 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         return toolbarButtonsVisibility;
     }
 
+    // ---- Keyboard Shortcut API ----
+
+    /**
+     * Binds a keyboard shortcut to a standard toolbar button. When the
+     * shortcut is pressed, the button is clicked, triggering its native
+     * handler (format toggle, dialog open, undo/redo, etc.).
+     *
+     * @param toolbarButton the toolbar button to trigger
+     * @param key           Quill 2 key name (e.g. {@code "F9"}, {@code "b"})
+     * @param shortKey      {@code true} for Ctrl (Win/Linux) or Cmd (Mac)
+     * @param shiftKey      {@code true} for Shift modifier
+     * @param altKey        {@code true} for Alt modifier
+     */
+    public void addStandardToolbarButtonShortcut(ToolbarButton toolbarButton,
+            String key, boolean shortKey, boolean shiftKey, boolean altKey) {
+        getElement().executeJs(
+                "this.addStandardToolbarButtonShortcut($0, $1, $2, $3, $4)",
+                toolbarButton.getPartSuffix(), key, shortKey, shiftKey, altKey);
+    }
+
+    /**
+     * Binds a keyboard shortcut that moves focus from the editor to the
+     * toolbar. The first visible toolbar button receives focus.
+     *
+     * @param key      Quill 2 key name (e.g. {@code "F10"})
+     * @param shortKey {@code true} for Ctrl (Win/Linux) or Cmd (Mac)
+     * @param shiftKey {@code true} for Shift modifier
+     * @param altKey   {@code true} for Alt modifier
+     */
+    public void addToolbarFocusShortcut(String key, boolean shortKey,
+            boolean shiftKey, boolean altKey) {
+        getElement().executeJs(
+                "this.addToolbarFocusShortcut($0, $1, $2, $3)",
+                key, shortKey, shiftKey, altKey);
+    }
+
     // ---- TabStop API ----
 
     /**

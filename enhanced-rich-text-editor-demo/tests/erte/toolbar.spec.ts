@@ -308,7 +308,7 @@ test.describe('ERTE Toolbar', () => {
   // KEYBOARD SHORTCUT — Phase 3.2b
   // ============================================
 
-  test.fixme('Custom keyboard shortcut fires — Shift+F9 applies align center — Phase 3.2b', async ({ page }) => {
+  test('Custom keyboard shortcut fires — Shift+F9 applies align center — Phase 3.2b', async ({ page }) => {
     await focusEditor(page);
 
     await page.keyboard.type('Aligned text');
@@ -321,6 +321,45 @@ test.describe('ERTE Toolbar', () => {
       (op: any) => op.attributes && op.attributes.align === 'center'
     );
     expect(alignOps.length).toBeGreaterThan(0);
+  });
+
+  test('Keyboard shortcut focuses toolbar — Shift+F10 — Phase 3.2b', async ({ page }) => {
+    await focusEditor(page);
+
+    await page.keyboard.press('Shift+F10');
+    await page.waitForTimeout(300);
+
+    // Verify a toolbar button has focus inside the shadow DOM
+    const hasFocus = await page.evaluate(() => {
+      const el = document.querySelector('vcf-enhanced-rich-text-editor') as any;
+      const active = el?.shadowRoot?.activeElement;
+      return active?.tagName === 'BUTTON';
+    });
+    expect(hasFocus).toBe(true);
+  });
+
+  test('Custom shortcut toggles format — Ctrl+Shift+B toggles bold — Phase 3.2b', async ({ page }) => {
+    await focusEditor(page);
+
+    await page.keyboard.type('bold text');
+    await page.keyboard.press('Control+a');
+    await page.keyboard.press('Control+Shift+b');
+
+    await page.waitForTimeout(500);
+    let delta = await getDelta(page);
+    const boldOps = delta.ops.filter(
+      (op: any) => op.attributes && op.attributes.bold === true
+    );
+    expect(boldOps.length).toBeGreaterThan(0);
+
+    // Toggle off
+    await page.keyboard.press('Control+Shift+b');
+    await page.waitForTimeout(500);
+    delta = await getDelta(page);
+    const boldOpsAfter = delta.ops.filter(
+      (op: any) => op.attributes && op.attributes.bold === true
+    );
+    expect(boldOpsAfter.length).toBe(0);
   });
 
   // ============================================

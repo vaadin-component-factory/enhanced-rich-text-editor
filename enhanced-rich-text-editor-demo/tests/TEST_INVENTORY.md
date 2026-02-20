@@ -1,11 +1,11 @@
 # ERTE Test Suite Inventory
 
-> **V25 Migration Status (Phase 3.1g complete):** 143 tests passing, 22 fixme.
-> Implemented: Shell (6), Toolbar (24), Readonly (18), Tabstops (67 pass, 14 fixme), Placeholders (30 pass, 2 fixme), extendOptions (4).
+> **V25 Migration Status (Phase 3.2b complete):** 150 tests passing, 18 fixme.
+> Implemented: Shell (6), Toolbar (27), Readonly (18), Tabstops (67 pass, 14 fixme), Placeholders (30 pass, 2 fixme), extendOptions (4).
 > Remaining ERTE tests will be restored as features are migrated.
 
-Total: 255 tests (75 prototype + 180 ERTE)
-V25 status: 143 passed, 22 fixme across implemented features (tabstops, readonly, toolbar, placeholders, extend-options)
+Total: 258 tests (75 prototype + 183 ERTE)
+V25 status: 150 passed, 18 fixme across implemented features (tabstops, readonly, toolbar, placeholders, extend-options)
 
 ---
 
@@ -202,7 +202,7 @@ V25 status: 143 passed, 22 fixme across implemented features (tabstops, readonly
 
 ---
 
-## Toolbar (26 tests) — `erte/toolbar.spec.ts`
+## Toolbar (29 tests) — `erte/toolbar.spec.ts`
 
 - All 25 slots present in DOM
 - Component in START slot renders
@@ -219,7 +219,9 @@ V25 status: 143 passed, 22 fixme across implemented features (tabstops, readonly
 - Show hidden buttons again
 - Group auto-hides when all its buttons are hidden
 - Custom keyboard shortcut fires - Shift+F9 applies align center
-- Replace standard button icon
+- Keyboard shortcut focuses toolbar - Shift+F10
+- Custom shortcut toggles format - Ctrl+Shift+B toggles bold
+- ~~Replace standard button icon~~ *(fixme: Phase 3.3g)*
 - ToolbarSwitch toggle state - click activates
 - ToolbarSwitch second click toggles back to inactive
 - Custom button click fires Java event - START slot
