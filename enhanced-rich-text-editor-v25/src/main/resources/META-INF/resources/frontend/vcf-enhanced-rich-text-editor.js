@@ -1499,15 +1499,44 @@ class VcfEnhancedRichTextEditor extends RteBase {
   _getSelectedPlaceholders(range) {
     if (!range) return [];
     const placeholders = [];
-    // Check single character at cursor-1 for zero-length selection
-    const start = range.length > 0 ? range.index : Math.max(0, range.index - 1);
-    const length = range.length > 0 ? range.length : 1;
-    const delta = this._editor.getContents(start, length);
-    delta.ops.forEach(op => {
-      if (op.insert && op.insert.placeholder) {
-        placeholders.push(op.insert.placeholder);
+
+    if (range.length > 0) {
+      // Multi-character selection: check entire range
+      const delta = this._editor.getContents(range.index, range.length);
+      delta.ops.forEach(op => {
+        if (op.insert && op.insert.placeholder) {
+          placeholders.push(op.insert.placeholder);
+        }
+      });
+    } else {
+      // Zero-length selection (cursor position):
+      // Check BOTH index-1 (after placeholder) AND index (before/at placeholder)
+      // to handle Quill 2 Embed guard nodes that can create ambiguous cursor positions.
+
+      // Check index-1: cursor after placeholder (right guard or next character)
+      if (range.index > 0) {
+        const delta1 = this._editor.getContents(range.index - 1, 1);
+        delta1.ops.forEach(op => {
+          if (op.insert && op.insert.placeholder) {
+            placeholders.push(op.insert.placeholder);
+          }
+        });
       }
-    });
+
+      // Check index: cursor before/at placeholder (left guard or at embed start)
+      if (range.index < this._editor.getLength()) {
+        const delta2 = this._editor.getContents(range.index, 1);
+        delta2.ops.forEach(op => {
+          if (op.insert && op.insert.placeholder) {
+            // Avoid duplicates if both checks found the same placeholder
+            if (!placeholders.some(p => p.id === op.insert.placeholder.id)) {
+              placeholders.push(op.insert.placeholder);
+            }
+          }
+        });
+      }
+    }
+
     return placeholders;
   }
 
