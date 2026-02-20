@@ -1,6 +1,6 @@
 # V25 Migration Status
 
-**Current: 3.2a Toolbar Button Visibility**
+**Current: 3.2b Custom Keyboard Shortcuts**
 
 | Phase    | Feature                            | Status |
 |----------|------------------------------------|--------|
@@ -14,7 +14,7 @@
 | ~~3.1e~~ | ~~Soft-Break + Tab Copying~~       | *(merged into 3.1c)* |
 | **3.1f** | Placeholders                       | COMPLETE |
 | **3.1g** | extendOptions Hook                 | COMPLETE |
-| 3.2a     | Toolbar Button Visibility          | NOT STARTED |
+| **3.2a** | Toolbar Button Visibility          | COMPLETE |
 | 3.2b     | Custom Keyboard Shortcuts          | NOT STARTED |
 | 3.3a     | Non-Breaking Space                 | NOT STARTED |
 | 3.3b     | Whitespace Indicators              | NOT STARTED |

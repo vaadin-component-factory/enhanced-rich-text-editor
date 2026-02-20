@@ -1196,6 +1196,48 @@ class VcfEnhancedRichTextEditor extends RteBase {
   }
 
   // ==========================================================================
+  // Toolbar button visibility
+  // ==========================================================================
+
+  /**
+   * Shows/hides toolbar buttons by part suffix.
+   * Called from Java via executeJs. Pass an object like {bold: false, clean: false}
+   * to hide those buttons, or an empty object to reset all to visible.
+   * Groups where ALL buttons are hidden are auto-hidden.
+   * @param {Object} visMap - map of partSuffix → boolean
+   */
+  setToolbarButtonsVisibility(visMap) {
+    this.__toolbarButtonsVisibility = visMap;
+    this._applyToolbarButtonsVisibility();
+  }
+
+  /** @protected */
+  _applyToolbarButtonsVisibility() {
+    const toolbar = this.shadowRoot?.querySelector('[part="toolbar"]');
+    if (!toolbar) return;
+    const vis = this.__toolbarButtonsVisibility || {};
+
+    // Reset all buttons to visible, then hide specified ones
+    toolbar.querySelectorAll('[part~="toolbar-button"]').forEach(btn => {
+      btn.style.display = '';
+    });
+    for (const [name, visible] of Object.entries(vis)) {
+      if (visible === false) {
+        const btn = toolbar.querySelector(`[part~="toolbar-button-${name}"]`);
+        if (btn) btn.style.display = 'none';
+      }
+    }
+
+    // Auto-hide groups where ALL buttons are hidden
+    toolbar.querySelectorAll('[part~="toolbar-group"]').forEach(group => {
+      const buttons = group.querySelectorAll('[part~="toolbar-button"]');
+      if (buttons.length === 0) return; // skip empty groups (e.g., custom slot group)
+      const allHidden = [...buttons].every(b => b.style.display === 'none');
+      group.style.display = allHidden ? 'none' : '';
+    });
+  }
+
+  // ==========================================================================
   // Tab Width Calculation Engine
   // ==========================================================================
 

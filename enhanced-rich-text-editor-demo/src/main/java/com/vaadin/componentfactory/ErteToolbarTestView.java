@@ -16,6 +16,9 @@
  */
 package com.vaadin.componentfactory;
 
+import java.util.List;
+import java.util.Map;
+
 import com.vaadin.componentfactory.toolbar.ToolbarSlot;
 import com.vaadin.componentfactory.toolbar.ToolbarSwitch;
 import com.vaadin.flow.component.Html;
@@ -56,6 +59,9 @@ public class ErteToolbarTestView extends VerticalLayout {
         editor = new EnhancedRichTextEditor();
         editor.setId("test-editor");
         editor.setValue("<p>Toolbar test content</p>");
+
+        // Enable placeholder button by providing a placeholder list
+        editor.setPlaceholders(List.of(new Placeholder("Test")));
 
         // --- Slot components ---
 
@@ -144,7 +150,34 @@ public class ErteToolbarTestView extends VerticalLayout {
                 e -> setGermanI18n());
         setGermanI18n.setId("set-german-i18n");
 
-        var controls = new HorizontalLayout(removeStartBtn, setGermanI18n);
+        var hideButtons = new Button("Hide buttons", e -> {
+            editor.setToolbarButtonsVisibility(Map.of(
+                    EnhancedRichTextEditor.ToolbarButton.CLEAN, false,
+                    EnhancedRichTextEditor.ToolbarButton.BLOCKQUOTE, false));
+        });
+        hideButtons.setId("hide-buttons");
+
+        var hideErteButtons = new Button("Hide ERTE buttons", e -> {
+            editor.setToolbarButtonsVisibility(Map.of(
+                    EnhancedRichTextEditor.ToolbarButton.PLACEHOLDER, false,
+                    EnhancedRichTextEditor.ToolbarButton.READONLY, false));
+        });
+        hideErteButtons.setId("hide-erte-buttons");
+
+        var showButtons = new Button("Show all buttons", e -> {
+            editor.setToolbarButtonsVisibility(null);
+        });
+        showButtons.setId("show-buttons");
+
+        var hideBlockGroup = new Button("Hide block group", e -> {
+            editor.setToolbarButtonsVisibility(Map.of(
+                    EnhancedRichTextEditor.ToolbarButton.BLOCKQUOTE, false,
+                    EnhancedRichTextEditor.ToolbarButton.CODE_BLOCK, false));
+        });
+        hideBlockGroup.setId("hide-block-group");
+
+        var controls = new HorizontalLayout(removeStartBtn, setGermanI18n,
+                hideButtons, hideErteButtons, showButtons, hideBlockGroup);
         controls.setSpacing(true);
 
         // --- Ready indicator ---

@@ -202,9 +202,9 @@ V25 status: 143 passed, 22 fixme across implemented features (tabstops, readonly
 
 ---
 
-## Toolbar (24 tests) — `erte/toolbar.spec.ts`
+## Toolbar (26 tests) — `erte/toolbar.spec.ts`
 
-- All 24 slots present in DOM
+- All 25 slots present in DOM
 - Component in START slot renders
 - Component in END slot renders
 - Component in BEFORE_GROUP_HISTORY renders
@@ -217,6 +217,7 @@ V25 status: 143 passed, 22 fixme across implemented features (tabstops, readonly
 - Hide standard toolbar buttons
 - Hide ERTE-specific buttons
 - Show hidden buttons again
+- Group auto-hides when all its buttons are hidden
 - Custom keyboard shortcut fires - Shift+F9 applies align center
 - Replace standard button icon
 - ToolbarSwitch toggle state - click activates

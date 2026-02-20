@@ -251,7 +251,7 @@ test.describe('ERTE Toolbar', () => {
   // HIDE / SHOW BUTTONS — Phase 3.2a
   // ============================================
 
-  test.fixme('Hide standard toolbar buttons — Phase 3.2a', async ({ page }) => {
+  test('Hide standard toolbar buttons', async ({ page }) => {
     const cleanBtn = shadowButton(page, 'toolbar-button-clean');
     const blockquoteBtn = shadowButton(page, 'toolbar-button-blockquote');
     await expect(cleanBtn).toBeVisible();
@@ -263,20 +263,20 @@ test.describe('ERTE Toolbar', () => {
     await expect(blockquoteBtn).toBeHidden({ timeout: 5000 });
   });
 
-  test.fixme('Hide ERTE-specific buttons — Phase 3.2a', async ({ page }) => {
-    const whitespaceBtn = shadowButton(page, 'toolbar-button-whitespace');
+  test('Hide ERTE-specific buttons', async ({ page }) => {
+    const placeholderBtn = shadowButton(page, 'toolbar-button-placeholder');
     const readonlyBtn = shadowButton(page, 'toolbar-button-readonly');
 
-    await expect(whitespaceBtn).toBeVisible();
+    await expect(placeholderBtn).toBeVisible();
     await expect(readonlyBtn).toBeVisible();
 
     await page.locator('#hide-erte-buttons').click();
 
-    await expect(whitespaceBtn).toBeHidden({ timeout: 5000 });
+    await expect(placeholderBtn).toBeHidden({ timeout: 5000 });
     await expect(readonlyBtn).toBeHidden({ timeout: 5000 });
   });
 
-  test.fixme('Show hidden buttons again — Phase 3.2a', async ({ page }) => {
+  test('Show hidden buttons again', async ({ page }) => {
     const cleanBtn = shadowButton(page, 'toolbar-button-clean');
     const blockquoteBtn = shadowButton(page, 'toolbar-button-blockquote');
 
@@ -287,6 +287,21 @@ test.describe('ERTE Toolbar', () => {
     await page.locator('#show-buttons').click();
     await expect(cleanBtn).toBeVisible({ timeout: 5000 });
     await expect(blockquoteBtn).toBeVisible({ timeout: 5000 });
+  });
+
+  test('Group auto-hides when all its buttons are hidden', async ({ page }) => {
+    // Block group has blockquote + code-block
+    const blockGroup = page.locator('#test-editor').locator('[part~="toolbar-group-block"]');
+    await expect(blockGroup).toBeVisible();
+
+    await page.locator('#hide-block-group').click();
+
+    // Both buttons hidden → group should auto-hide
+    await expect(blockGroup).toBeHidden({ timeout: 5000 });
+
+    // Show all again → group should reappear
+    await page.locator('#show-buttons').click();
+    await expect(blockGroup).toBeVisible({ timeout: 5000 });
   });
 
   // ============================================

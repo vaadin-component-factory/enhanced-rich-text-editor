@@ -18,6 +18,7 @@ package com.vaadin.componentfactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import com.vaadin.componentfactory.toolbar.ToolbarSlot;
@@ -128,6 +129,90 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
      */
     public void replaceStandardButtonIcon(Icon icon, String iconSlotName) {
         SlotUtil.replaceStandardButtonIcon(this, icon, iconSlotName);
+    }
+
+    // ---- Toolbar button visibility API ----
+
+    /**
+     * Toolbar buttons that can be shown or hidden via
+     * {@link #setToolbarButtonsVisibility(Map)}.
+     * <p>
+     * Each constant maps to a shadow DOM button identified by part name
+     * {@code toolbar-button-<partSuffix>}.
+     */
+    public enum ToolbarButton {
+        // Standard RTE 2 buttons (25)
+        UNDO("undo"), REDO("redo"),
+        BOLD("bold"), ITALIC("italic"), UNDERLINE("underline"), STRIKE("strike"),
+        COLOR("color"), BACKGROUND("background"),
+        H1("h1"), H2("h2"), H3("h3"),
+        SUBSCRIPT("subscript"), SUPERSCRIPT("superscript"),
+        LIST_ORDERED("list-ordered"), LIST_BULLET("list-bullet"),
+        OUTDENT("outdent"), INDENT("indent"),
+        ALIGN_LEFT("align-left"), ALIGN_CENTER("align-center"),
+        ALIGN_RIGHT("align-right"),
+        IMAGE("image"), LINK("link"),
+        BLOCKQUOTE("blockquote"), CODE_BLOCK("code-block"),
+        CLEAN("clean"),
+        // ERTE-specific buttons (5)
+        READONLY("readonly"),
+        PLACEHOLDER("placeholder"),
+        PLACEHOLDER_APPEARANCE("placeholder-display"),
+        WHITESPACE("whitespace"),
+        ALIGN_JUSTIFY("align-justify");
+
+        private final String partSuffix;
+
+        ToolbarButton(String partSuffix) {
+            this.partSuffix = partSuffix;
+        }
+
+        /** Returns the suffix portion (e.g. {@code "bold"}). */
+        public String getPartSuffix() {
+            return partSuffix;
+        }
+
+        /** Returns the full part name (e.g. {@code "toolbar-button-bold"}). */
+        public String getPartName() {
+            return "toolbar-button-" + partSuffix;
+        }
+    }
+
+    private Map<ToolbarButton, Boolean> toolbarButtonsVisibility;
+
+    /**
+     * Shows or hides individual toolbar buttons. Pass {@code false} for a
+     * button to hide it; pass {@code true} (or omit) to show it. Groups
+     * whose <em>all</em> buttons are hidden are auto-hidden.
+     * <p>
+     * Pass {@code null} to reset all buttons to visible.
+     *
+     * @param visibility the visibility map, or {@code null} to reset
+     */
+    public void setToolbarButtonsVisibility(
+            Map<ToolbarButton, Boolean> visibility) {
+        this.toolbarButtonsVisibility = visibility;
+        runBeforeClientResponse(ui -> {
+            ObjectNode json = JacksonUtils.getMapper().createObjectNode();
+            if (visibility != null) {
+                for (var entry : visibility.entrySet()) {
+                    json.put(entry.getKey().getPartSuffix(),
+                            entry.getValue());
+                }
+            }
+            getElement().executeJs(
+                    "this.setToolbarButtonsVisibility($0)", json);
+        });
+    }
+
+    /**
+     * Returns the current toolbar button visibility map, or {@code null}
+     * if no visibility has been set.
+     *
+     * @return the visibility map
+     */
+    public Map<ToolbarButton, Boolean> getToolbarButtonsVisibility() {
+        return toolbarButtonsVisibility;
     }
 
     // ---- TabStop API ----

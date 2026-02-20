@@ -83,7 +83,8 @@ public class ErteTestLayout extends AppLayout {
         var tier2 = new SideNavItem("Tier 2 — Important");
         tier2.setPrefixComponent(VaadinIcon.STAR_HALF_LEFT.create());
 
-        tier2.addItem(disabled("3.2a Button Visibility",
+        tier2.addItem(new SideNavItem("3.2a Button Visibility",
+                "erte-test/toolbar",
                 VaadinIcon.EYE.create()));
 
         tier2.addItem(disabled("3.2b Keyboard Shortcuts",
