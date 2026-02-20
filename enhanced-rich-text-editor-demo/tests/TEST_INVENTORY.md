@@ -1,11 +1,11 @@
 # ERTE Test Suite Inventory
 
-> **V25 Migration Status (Phase 3.3g complete):** 195 tests passing, 11 fixme.
-> Implemented: Shell (6), Toolbar (27), Readonly (18), Tabstops (67 pass, 14 fixme), Placeholders (30 pass, 2 fixme), extendOptions (4), Whitespace (7 pass, 2 fixme), Sanitizer (11), I18n (2), Replace Icons (10).
-> Features.spec.ts: 28 pass, 5 fail (focus=unrelated to features).
+> **V25 Migration Status (Phase 3.3g complete):** 205 tests passing, 10 fixme.
+> Implemented: Shell (6), Toolbar (26), Readonly (18), Tabstops (67 pass, 14 fixme), Placeholders (30 pass, 2 fixme), extendOptions (4), Whitespace (7 pass, 2 fixme), Sanitizer (11), I18n (2), Replace Icons (10).
+> Features.spec.ts: 32 pass, 1 fail (focus=unrelated to features).
 
-Total: 278 tests (75 prototype + 203 ERTE)
-V25 status: 195 passed, 11 skipped across all feature specs
+Total: 277 tests (75 prototype + 202 ERTE)
+V25 status: 205 passed, 10 skipped across all feature specs
 
 ---
 
@@ -202,7 +202,7 @@ V25 status: 195 passed, 11 skipped across all feature specs
 
 ---
 
-## Toolbar (29 tests) — `erte/toolbar.spec.ts`
+## Toolbar (28 tests) — `erte/toolbar.spec.ts`
 
 - All 25 slots present in DOM
 - Component in START slot renders
@@ -221,7 +221,6 @@ V25 status: 195 passed, 11 skipped across all feature specs
 - Custom keyboard shortcut fires - Shift+F9 applies align center
 - Keyboard shortcut focuses toolbar - Shift+F10
 - Custom shortcut toggles format - Ctrl+Shift+B toggles bold
-- ~~Replace standard button icon~~ *(fixme: Phase 3.3g)*
 - ToolbarSwitch toggle state - click activates
 - ToolbarSwitch second click toggles back to inactive
 - Custom button click fires Java event - START slot

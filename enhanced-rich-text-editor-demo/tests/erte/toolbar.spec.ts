@@ -363,28 +363,6 @@ test.describe('ERTE Toolbar', () => {
   });
 
   // ============================================
-  // REPLACE ICON — Phase 3.3g
-  // ============================================
-
-  test.fixme('Replace standard button icon — Phase 3.3g', async ({ page }) => {
-    await page.locator('#replace-icon').click();
-    await page.waitForTimeout(500);
-
-    const undoBtn = shadowButton(page, 'toolbar-button-undo');
-    await expect(undoBtn).toBeVisible();
-
-    const newIcon = page.locator('#test-editor vaadin-icon[icon="vaadin:arrow-backward"]');
-    const iconCount = await newIcon.count();
-
-    if (iconCount > 0) {
-      await expect(newIcon.first()).toBeVisible();
-    } else {
-      const slotContent = page.locator('#test-editor [slot="undo"]');
-      await expect(slotContent).toHaveCount(1, { timeout: 5000 });
-    }
-  });
-
-  // ============================================
   // TOOLBAR SWITCH
   // ============================================
 
