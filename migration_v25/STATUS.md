@@ -1,6 +1,6 @@
 # V25 Migration Status
 
-**Current: 3.3a Non-Breaking Space**
+**Current: 3.3b Whitespace Indicators**
 
 | Phase    | Feature                            | Status |
 |----------|------------------------------------|--------|
@@ -16,7 +16,7 @@
 | **3.1g** | extendOptions Hook                 | COMPLETE |
 | **3.2a** | Toolbar Button Visibility          | COMPLETE |
 | **3.2b** | Custom Keyboard Shortcuts          | COMPLETE |
-| 3.3a     | Non-Breaking Space                 | NOT STARTED |
+| **3.3a** | Non-Breaking Space                 | COMPLETE |
 | 3.3b     | Whitespace Indicators              | NOT STARTED |
 | 3.3c     | Security Hardening — Sanitization  | NOT STARTED |
 | 3.3d     | I18n                               | NOT STARTED |

@@ -359,11 +359,33 @@ class PlaceholderBlot extends Embed {
 
 Quill.register('formats/placeholder', PlaceholderBlot, true);
 
+// ============================================================================
+// NbspBlot — Embed: <span class="ql-nbsp">&nbsp;</span>
+// Non-breaking space, inserted via Shift+Space.
+// ============================================================================
+class NbspBlot extends Embed {
+  static blotName = 'nbsp';
+  static tagName = 'span';
+  static className = 'ql-nbsp';
+
+  constructor(scroll, node) {
+    super(scroll, node);
+    // Set NBSP on contentNode (created by Embed constructor, not available in create()).
+    // Use this.contentNode — canonical Quill 2 API.
+    // SECURITY: textContent instead of innerHTML.
+    if (this.contentNode) {
+      this.contentNode.textContent = '\u00A0';
+    }
+  }
+}
+
+Quill.register('formats/nbsp', NbspBlot, true);
+
 /**
  * ERTE CSS classes to preserve in htmlValue (not stripped by __updateHtmlValue).
  * Each phase adds its classes here.
  */
-const ERTE_PRESERVED_CLASSES = ['ql-readonly', 'ql-tab', 'ql-soft-break', 'ql-placeholder'];
+const ERTE_PRESERVED_CLASSES = ['ql-readonly', 'ql-tab', 'ql-soft-break', 'ql-placeholder', 'ql-nbsp'];
 
 class VcfEnhancedRichTextEditor extends RteBase {
 
@@ -1783,6 +1805,19 @@ class VcfEnhancedRichTextEditor extends RteBase {
     keyboard.bindings['ArrowUp'] = [arrowUpBinding, ...arrowUpBindings];
     const arrowDownBindings = keyboard.bindings['ArrowDown'] || [];
     keyboard.bindings['ArrowDown'] = [arrowDownBinding, ...arrowDownBindings];
+
+    // Shift+Space: insert non-breaking space
+    const nbspBinding = {
+      key: ' ',
+      shiftKey: true,
+      handler: function(range) {
+        this.quill.insertEmbed(range.index, 'nbsp', true, Quill.sources.USER);
+        this.quill.setSelection(range.index + 1, 0, Quill.sources.USER);
+        return false;
+      }
+    };
+    const spaceBindings = keyboard.bindings[' '] || [];
+    keyboard.bindings[' '] = [nbspBinding, ...spaceBindings];
 
     // Ctrl+P (Cmd+P on Mac): open placeholder dialog.
     // Must use ctrlKey/metaKey directly — shortKey is only resolved by Quill's

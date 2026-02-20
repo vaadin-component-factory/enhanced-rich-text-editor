@@ -93,8 +93,8 @@ public class ErteTestLayout extends AppLayout {
         var tier3 = new SideNavItem("Tier 3 — Remaining");
         tier3.setPrefixComponent(VaadinIcon.STAR_O.create());
 
-        tier3.addItem(disabled("3.3a NBSP",
-                VaadinIcon.TEXT_LABEL.create()));
+        tier3.addItem(new SideNavItem("3.3a NBSP",
+                "erte-test/features", VaadinIcon.TEXT_LABEL.create()));
 
         tier3.addItem(disabled("3.3b Whitespace",
                 VaadinIcon.ALIGN_JUSTIFY.create()));

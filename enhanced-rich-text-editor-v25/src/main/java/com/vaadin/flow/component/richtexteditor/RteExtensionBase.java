@@ -46,7 +46,8 @@ public abstract class RteExtensionBase extends RichTextEditor {
      * Each migration phase adds its classes here.
      */
     private static final Set<String> ALLOWED_ERTE_CLASSES = Set.of(
-            "ql-readonly", "ql-tab", "ql-soft-break", "ql-placeholder");
+            "ql-readonly", "ql-tab", "ql-soft-break", "ql-placeholder",
+            "ql-nbsp");
 
     private static final Pattern CLASS_ATTR_PATTERN = Pattern
             .compile("class=\"([^\"]*)\"");
