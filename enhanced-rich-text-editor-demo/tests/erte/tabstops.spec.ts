@@ -1517,6 +1517,91 @@ test.describe('ERTE Tabstops', () => {
         .toBeLessThan(caretAfterDown!.top - 5);
     });
 
+    test('ArrowUp on first line jumps to line start', async ({ page }) => {
+      // Regression test: ArrowUp on first line stepped through guard nodes
+      // instead of jumping to line start. Custom handler must replicate
+      // Quill's default behavior when no line above exists.
+      const editor = getEditor(page);
+      await editor.click();
+
+      // Type text + tab + text on a single line
+      await page.keyboard.type('AAA');
+      await page.keyboard.press('Tab');
+      await page.keyboard.type('BBB');
+
+      // Cursor is at end after typing. Get Quill selection index.
+      const indexBefore = await page.evaluate(() => {
+        const el = document.getElementById('test-editor') as any;
+        return el._editor.getSelection()?.index;
+      });
+      expect(indexBefore).toBeGreaterThan(0);
+
+      // Press ArrowUp — should jump to index 0 (line start)
+      await page.keyboard.press('ArrowUp');
+      const indexAfter = await page.evaluate(() => {
+        const el = document.getElementById('test-editor') as any;
+        return el._editor.getSelection()?.index;
+      });
+      expect(indexAfter, 'ArrowUp on first line should jump to line start').toBe(0);
+    });
+
+    test('ArrowDown on last line jumps to line end', async ({ page }) => {
+      // Regression test: ArrowDown on last line stepped through guard nodes
+      // instead of jumping to line end. Custom handler must replicate
+      // Quill's default behavior when no line below exists.
+      const editor = getEditor(page);
+      await editor.click();
+
+      // Type text + tab + text on a single line
+      await page.keyboard.type('AAA');
+      await page.keyboard.press('Tab');
+      await page.keyboard.type('BBB');
+
+      // Go to line start
+      await page.keyboard.press('Home');
+      const indexAtHome = await page.evaluate(() => {
+        const el = document.getElementById('test-editor') as any;
+        return el._editor.getSelection()?.index;
+      });
+      expect(indexAtHome).toBe(0);
+
+      // Press ArrowDown — should jump to end of line (last content index)
+      await page.keyboard.press('ArrowDown');
+      const indexAfterDown = await page.evaluate(() => {
+        const el = document.getElementById('test-editor') as any;
+        return el._editor.getSelection()?.index;
+      });
+      // "AAA" (3) + tab (1) + "BBB" (3) = 7 characters, so last content index = 7
+      expect(indexAfterDown, 'ArrowDown on last line should jump to line end').toBe(7);
+    });
+
+    test('Cursor can be placed after the last tab in a line', async ({ page }) => {
+      // Regression test: position() fallback returned super.position() which
+      // produced a zero-size bounding rect, making cursor invisible/stuck
+      // after the last tab when no content followed.
+      const editor = getEditor(page);
+      await editor.click();
+
+      // Insert text + 2 tabs (no text after last tab)
+      await page.keyboard.type('Hello');
+      await page.keyboard.press('Tab');
+      await page.keyboard.press('Tab');
+
+      // Cursor should be at the right edge of the last tab
+      const bounds = await page.evaluate(() => {
+        const el = document.getElementById('test-editor') as any;
+        const quill = el._editor;
+        const sel = quill.getSelection();
+        if (!sel) return null;
+        const b = quill.getBounds(sel.index);
+        return { left: Math.round(b.left), height: Math.round(b.height) };
+      });
+      expect(bounds).not.toBeNull();
+      expect(bounds!.height, 'Cursor after last tab should have visible height').toBeGreaterThan(0);
+      // Cursor should be well past the "Hello" text (which is ~52px wide)
+      expect(bounds!.left, 'Cursor should be positioned past "Hello" + tabs').toBeGreaterThan(100);
+    });
+
     test('Cursor is visible (non-zero height) at every tab position', async ({ page }) => {
       // Regression test: overflow:clip + height:1rem clipped the caret to
       // invisibility at tab positions 1 and 2 (Lumo line-height 1.625 makes

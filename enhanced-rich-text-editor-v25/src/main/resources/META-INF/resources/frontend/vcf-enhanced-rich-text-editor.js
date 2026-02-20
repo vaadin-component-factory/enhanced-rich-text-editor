@@ -1011,7 +1011,34 @@ class VcfEnhancedRichTextEditor extends RteBase {
         quill.setSelection(bestIndex, 0, Quill.sources.USER);
         return false;
       }
-      return true; // no target found — let browser handle (e.g., first/last line)
+      // No target line found (first/last line). Replicate Quill's default:
+      // ArrowUp on first line → jump to line start; ArrowDown on last → line end.
+      // Cannot return true (let browser handle) because Chrome steps through
+      // inline-block guard nodes instead of jumping to line boundary.
+      if (direction === 'up') {
+        // Find start of current line (scan backward for line change)
+        let lineStart = 0;
+        for (let i = range.index - 1; i >= 0; i--) {
+          const b = quill.getBounds(i);
+          if (b.top < currentBounds.top - 5) {
+            lineStart = i + 1;
+            break;
+          }
+        }
+        quill.setSelection(lineStart, 0, Quill.sources.USER);
+      } else {
+        // Find end of current line (scan forward for line change)
+        let lineEnd = docLength - 1;
+        for (let i = range.index + 1; i < docLength; i++) {
+          const b = quill.getBounds(i);
+          if (b.top > currentBounds.top + 5) {
+            lineEnd = i - 1;
+            break;
+          }
+        }
+        quill.setSelection(lineEnd, 0, Quill.sources.USER);
+      }
+      return false;
     };
 
     const arrowUpBinding = {
