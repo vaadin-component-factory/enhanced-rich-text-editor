@@ -69,6 +69,12 @@ The V25 primary value format is HTML (matching RTE 2), with Delta access via `as
 
 ## Migration Rules
 
+### Git Workflow
+
+- **NEVER merge to `master`** — `master` is the V24 production branch.
+- Working branch: **`v25`**. All migration work lives here.
+- Feature/fix branches merge into `v25` (via PR or local merge), never into `master`.
+
 ### Golden Rules
 
 1. **No feature regression.** Every ERTE 1 feature must exist in ERTE 2. If you encounter a feature where no clear migration path exists, STOP and ask.
@@ -298,3 +304,16 @@ Custom Claude Code agents in `.claude/agents/`. The **agents-manager** orchestra
 ## License
 
 CVALv3 (Commercial Vaadin Add-On License). License headers are enforced on Java files.
+
+## Notifications — MANDATORY
+**ALWAYS use `notify` or `notify-urgent` in these situations — NO EXCEPTIONS:**
+1. **Questions or clarifications** of any kind → `notify-urgent`
+2. **Long-running tasks completed** (builds, tests, server starts) → `notify`
+3. **Blockades, errors, or interruptions** → `notify-urgent`
+4. **Waiting for user input** → `notify-urgent`
+
+Commands:
+- `notify "short description"` — informational (task done, status update)
+- `notify-urgent "short description"` — requires user attention (questions, errors, blocks)
+
+The user expects ACTIVE notifications, not just inline text. Failing to notify is a usability failure.

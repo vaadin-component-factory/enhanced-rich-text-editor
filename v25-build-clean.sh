@@ -13,10 +13,7 @@ for MOD in enhanced-rich-text-editor-v25 enhanced-rich-text-editor-tables-v25 en
     rm -rf "$MOD_DIR/node_modules" "$MOD_DIR/frontend/generated" "$MOD_DIR/target/frontend" "$MOD_DIR/target/dev-bundle" 2>/dev/null
     echo "  Cleaned $MOD"
 done
-echo "--- vaadin:clean-frontend ---"
-mvn com.vaadin:vaadin-maven-plugin:clean-frontend $QUIET \
-    -pl enhanced-rich-text-editor-v25,enhanced-rich-text-editor-tables-v25,enhanced-rich-text-editor-demo || true
-echo "--- mvn clean install -DskipTests ---"
-mvn clean install -DskipTests $QUIET \
+echo "--- vaadin:clean-frontend + clean install -DskipTests ---"
+mvn com.vaadin:vaadin-maven-plugin:clean-frontend clean install -DskipTests $QUIET \
     -pl enhanced-rich-text-editor-v25,enhanced-rich-text-editor-tables-v25,enhanced-rich-text-editor-demo \
     -am
