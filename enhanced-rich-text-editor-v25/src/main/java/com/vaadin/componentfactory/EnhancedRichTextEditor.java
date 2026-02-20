@@ -22,12 +22,18 @@ import java.util.Objects;
 
 import com.vaadin.componentfactory.toolbar.ToolbarSlot;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.ComponentEvent;
+import com.vaadin.flow.component.ComponentEventListener;
+import com.vaadin.flow.component.DomEvent;
+import com.vaadin.flow.component.EventData;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.richtexteditor.RteExtensionBase;
 import com.vaadin.flow.internal.JacksonUtils;
+import com.vaadin.flow.shared.Registration;
 
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
@@ -40,6 +46,8 @@ import tools.jackson.databind.node.ObjectNode;
 @Tag("vcf-enhanced-rich-text-editor")
 @JsModule("./vcf-enhanced-rich-text-editor.js")
 public class EnhancedRichTextEditor extends RteExtensionBase {
+
+    private List<Placeholder> placeholders;
 
     // ---- Toolbar component API ----
 
@@ -176,5 +184,320 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
      */
     public boolean isNoRulers() {
         return getElement().getProperty("noRulers", false);
+    }
+
+    // ---- Placeholder API ----
+
+    /**
+     * Sets the list of available placeholders for the editor.
+     *
+     * @param placeholders the placeholder definitions
+     */
+    public void setPlaceholders(List<Placeholder> placeholders) {
+        this.placeholders = new ArrayList<>(placeholders);
+        ArrayNode array = JacksonUtils.getMapper().createArrayNode();
+        for (Placeholder p : placeholders) {
+            array.add(p.toJson());
+        }
+        getElement().setPropertyJson("placeholders", array);
+    }
+
+    /**
+     * Returns the current placeholder configuration.
+     *
+     * @return list of placeholders, never null
+     */
+    public List<Placeholder> getPlaceholders() {
+        return placeholders != null ? List.copyOf(placeholders) : List.of();
+    }
+
+    /**
+     * Sets the start and end tags displayed around placeholder text.
+     *
+     * @param start the start tag (e.g. "@", "[")
+     * @param end   the end tag (e.g. "", "]"), may be null
+     */
+    public void setPlaceholderTags(String start, String end) {
+        ObjectNode tags = JacksonUtils.getMapper().createObjectNode();
+        tags.put("start", start);
+        tags.put("end", end != null ? end : "");
+        getElement().setPropertyJson("placeholderTags", tags);
+    }
+
+    /**
+     * Sets the regex pattern used to extract alt appearance text from
+     * placeholder text. Groups matched by this pattern are shown in alt mode.
+     *
+     * @param pattern the regex pattern
+     */
+    public void setPlaceholderAltAppearancePattern(String pattern) {
+        getElement().setProperty("placeholderAltAppearancePattern", pattern);
+    }
+
+    /**
+     * Toggles between normal and alternative placeholder appearance.
+     *
+     * @param alt true for alt appearance, false for normal
+     */
+    public void setPlaceholderAltAppearance(boolean alt) {
+        getElement().setProperty("placeholderAltAppearance", alt);
+    }
+
+    /**
+     * Returns whether the editor is currently showing alt placeholder
+     * appearance.
+     *
+     * @return true if alt appearance is active
+     */
+    public boolean isPlaceholderAltAppearance() {
+        return getElement().getProperty("placeholderAltAppearance", false);
+    }
+
+    /**
+     * Look up a full Placeholder from the master list by text match.
+     *
+     * @param placeholder the placeholder to look up (matched by text)
+     * @return the matching placeholder from the master list, or the input
+     *         placeholder if not found
+     */
+    protected Placeholder getPlaceholder(Placeholder placeholder) {
+        if (placeholders == null || placeholder == null) return placeholder;
+        return placeholders.stream()
+                .filter(p -> p.getText().equals(placeholder.getText()))
+                .findFirst().orElse(placeholder);
+    }
+
+    // ---- Placeholder event listeners ----
+
+    public Registration addPlaceholderButtonClickedListener(
+            ComponentEventListener<PlaceholderButtonClickedEvent> listener) {
+        return addListener(PlaceholderButtonClickedEvent.class, listener);
+    }
+
+    public Registration addPlaceholderBeforeInsertListener(
+            ComponentEventListener<PlaceholderBeforeInsertEvent> listener) {
+        return addListener(PlaceholderBeforeInsertEvent.class, listener);
+    }
+
+    public Registration addPlaceholderInsertedListener(
+            ComponentEventListener<PlaceholderInsertedEvent> listener) {
+        return addListener(PlaceholderInsertedEvent.class, listener);
+    }
+
+    public Registration addPlaceholderBeforeRemoveListener(
+            ComponentEventListener<PlaceholderBeforeRemoveEvent> listener) {
+        return addListener(PlaceholderBeforeRemoveEvent.class, listener);
+    }
+
+    public Registration addPlaceholderRemovedListener(
+            ComponentEventListener<PlaceholderRemovedEvent> listener) {
+        return addListener(PlaceholderRemovedEvent.class, listener);
+    }
+
+    public Registration addPlaceholderSelectedListener(
+            ComponentEventListener<PlaceholderSelectedEvent> listener) {
+        return addListener(PlaceholderSelectedEvent.class, listener);
+    }
+
+    public Registration addPlaceholderLeaveListener(
+            ComponentEventListener<PlaceholderLeaveEvent> listener) {
+        return addListener(PlaceholderLeaveEvent.class, listener);
+    }
+
+    public Registration addPlaceholderAppearanceChangedListener(
+            ComponentEventListener<PlaceholderAppearanceChangedEvent> listener) {
+        return addListener(PlaceholderAppearanceChangedEvent.class, listener);
+    }
+
+    // ========================================================================
+    // Placeholder Event Classes
+    // ========================================================================
+
+    /**
+     * Abstract base for events that carry a list of placeholders.
+     */
+    public static abstract class AbstractMultiPlaceholderEvent
+            extends ComponentEvent<EnhancedRichTextEditor> {
+
+        private final List<Placeholder> placeholders = new ArrayList<>();
+
+        public AbstractMultiPlaceholderEvent(EnhancedRichTextEditor source,
+                boolean fromClient, JsonNode placeholderJson) {
+            super(source, fromClient);
+            if (placeholderJson != null && placeholderJson.isArray()) {
+                for (JsonNode node : placeholderJson) {
+                    JsonNode pNode = node;
+                    int idx = -1;
+                    if (node.has("placeholder") && node.has("index")) {
+                        idx = node.get("index").asInt();
+                        pNode = node.get("placeholder");
+                    }
+                    Placeholder p = new Placeholder(pNode);
+                    if (idx != -1) p.setIndex(idx);
+                    placeholders.add(p);
+                }
+            }
+        }
+
+        public List<Placeholder> getPlaceholders() {
+            List<Placeholder> actual = new ArrayList<>();
+            for (Placeholder p : placeholders) {
+                Placeholder found = ((EnhancedRichTextEditor) source)
+                        .getPlaceholder(p);
+                if (found != null) {
+                    if (p.getIndex() != -1) found.setIndex(p.getIndex());
+                    actual.add(found);
+                }
+            }
+            return actual;
+        }
+    }
+
+    @DomEvent("placeholder-button-click")
+    public static class PlaceholderButtonClickedEvent
+            extends ComponentEvent<EnhancedRichTextEditor> {
+
+        private final int position;
+
+        public PlaceholderButtonClickedEvent(EnhancedRichTextEditor source,
+                boolean fromClient,
+                @EventData("event.preventDefault()") Object ignored,
+                @EventData("event.detail.position") int position) {
+            super(source, fromClient);
+            this.position = position;
+        }
+
+        public int getPosition() {
+            return position;
+        }
+
+        /**
+         * Insert a placeholder at the current cursor position.
+         */
+        public void insert(Placeholder placeholder) {
+            insert(placeholder, position);
+        }
+
+        /**
+         * Insert a placeholder at the given position.
+         */
+        public void insert(Placeholder placeholder, int position) {
+            Objects.requireNonNull(placeholder, "Placeholder cannot be null");
+            EnhancedRichTextEditor s = (EnhancedRichTextEditor) source;
+            s.getElement().executeJs(
+                    "this._confirmInsertPlaceholders([{$0,index: $1}])",
+                    placeholder.toJson(), position);
+        }
+    }
+
+    @DomEvent("placeholder-before-insert")
+    public static class PlaceholderBeforeInsertEvent
+            extends AbstractMultiPlaceholderEvent {
+
+        public PlaceholderBeforeInsertEvent(EnhancedRichTextEditor source,
+                boolean fromClient,
+                @EventData("event.preventDefault()") Object ignored,
+                @EventData("event.detail") ObjectNode detail) {
+            super(source, fromClient, detail.get("placeholders"));
+        }
+
+        /**
+         * Confirm insertion of the placeholders. If this method is not called,
+         * the placeholders will not be inserted.
+         */
+        public void insert() {
+            EnhancedRichTextEditor s = (EnhancedRichTextEditor) source;
+            s.getElement().executeJs("this._confirmInsertPlaceholders()");
+        }
+    }
+
+    @DomEvent("placeholder-insert")
+    public static class PlaceholderInsertedEvent
+            extends AbstractMultiPlaceholderEvent {
+
+        public PlaceholderInsertedEvent(EnhancedRichTextEditor source,
+                boolean fromClient,
+                @EventData("event.detail") ObjectNode detail) {
+            super(source, fromClient, detail.get("placeholders"));
+        }
+    }
+
+    @DomEvent("placeholder-before-delete")
+    public static class PlaceholderBeforeRemoveEvent
+            extends AbstractMultiPlaceholderEvent {
+
+        public PlaceholderBeforeRemoveEvent(EnhancedRichTextEditor source,
+                boolean fromClient,
+                @EventData("event.preventDefault()") Object ignored,
+                @EventData("event.detail") ObjectNode detail) {
+            super(source, fromClient, detail.get("placeholders"));
+        }
+
+        /**
+         * Confirm removal of the placeholders. If this method is not called,
+         * the placeholders will not be removed.
+         */
+        public void remove() {
+            EnhancedRichTextEditor s = (EnhancedRichTextEditor) source;
+            s.getElement().executeJs("this._confirmRemovePlaceholders()");
+        }
+    }
+
+    @DomEvent("placeholder-delete")
+    public static class PlaceholderRemovedEvent
+            extends AbstractMultiPlaceholderEvent {
+
+        public PlaceholderRemovedEvent(EnhancedRichTextEditor source,
+                boolean fromClient,
+                @EventData("event.detail") ObjectNode detail) {
+            super(source, fromClient, detail.get("placeholders"));
+        }
+    }
+
+    @DomEvent("placeholder-select")
+    public static class PlaceholderSelectedEvent
+            extends AbstractMultiPlaceholderEvent {
+
+        public PlaceholderSelectedEvent(EnhancedRichTextEditor source,
+                boolean fromClient,
+                @EventData("event.detail") ObjectNode detail) {
+            super(source, fromClient, detail.get("placeholders"));
+        }
+    }
+
+    @DomEvent("placeholder-leave")
+    public static class PlaceholderLeaveEvent
+            extends ComponentEvent<EnhancedRichTextEditor> {
+
+        public PlaceholderLeaveEvent(EnhancedRichTextEditor source,
+                boolean fromClient) {
+            super(source, fromClient);
+        }
+    }
+
+    @DomEvent("placeholder-appearance-change")
+    public static class PlaceholderAppearanceChangedEvent
+            extends ComponentEvent<EnhancedRichTextEditor> {
+
+        private final Boolean altAppearance;
+        private final String appearanceLabel;
+
+        public PlaceholderAppearanceChangedEvent(
+                EnhancedRichTextEditor source, boolean fromClient,
+                @EventData("event.detail") ObjectNode detail) {
+            super(source, fromClient);
+            altAppearance = detail.has("altAppearance")
+                    ? detail.get("altAppearance").asBoolean() : null;
+            appearanceLabel = detail.has("appearanceLabel")
+                    ? detail.get("appearanceLabel").asText() : null;
+        }
+
+        public Boolean getAltAppearance() {
+            return altAppearance;
+        }
+
+        public String getAppearanceLabel() {
+            return appearanceLabel;
+        }
     }
 }

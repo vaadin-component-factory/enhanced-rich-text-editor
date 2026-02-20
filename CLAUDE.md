@@ -25,6 +25,8 @@ Convenience scripts in the repo root for build, server, and test operations. **A
 
 **Workflow:** After changing addon code (ERTE JS/Java), always `v25-build.sh` before `v25-server-start.sh`. Tests require a running server.
 
+**Always stop the server** after tests/explorations are done (`v25-server-stop.sh`). The server runs inside a container and is not useful to the user — don't leave it running.
+
 **Background tasks** (`run_in_background: true`): Use for complex, longer-running operations like plan reviews, feature implementation, and test runs. Do NOT use for quick, simple tasks (e.g., a single file read, a status check, a small edit).
 
 ## Build Commands
@@ -260,6 +262,8 @@ bash server-stop.sh
 | `features.spec.ts` | 24 | NBSP, addText, align, indent, i18n, sanitizer, focus |
 
 **Test views** (Java, in `com.vaadin.componentfactory`): `ErteTabStopTestView`, `ErtePlaceholderTestView`, `ErteReadonlyTestView`, `ErteToolbarTestView`, `ErteFeatureTestView`. Each provides a single editor (`id="test-editor"`), delta/HTML output elements, event log, and a ready indicator.
+
+**Side navigation:** `ErteTestLayout.java` provides an `AppLayout` with `SideNav` listing all phases. When implementing a new phase, always update this layout: change the `disabled(...)` entry to `new SideNavItem("label", "erte-test/route", icon)` so the link becomes active.
 
 **Shared helpers** (`tests/erte/helpers.ts`): `waitForEditor()`, `getDelta()`, `getDeltaFromEditor()`, `getRuler()`, `getRulerMarkers()`, etc.
 

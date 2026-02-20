@@ -1,6 +1,6 @@
 # V25 Migration Status
 
-**Current: 3.1f Placeholders**
+**Current: 3.1g extendOptions Hook**
 
 | Phase | Feature | Status |
 |-------|---------|--------|
@@ -12,7 +12,7 @@
 | **3.1c** | Tabstops + Rulers + Soft-Break | COMPLETE |
 | ~~3.1d~~ | ~~Rulers~~ | *(merged into 3.1c)* |
 | ~~3.1e~~ | ~~Soft-Break + Tab Copying~~ | *(merged into 3.1c)* |
-| 3.1f | Placeholders | NOT STARTED |
+| **3.1f** | Placeholders | COMPLETE |
 | 3.1g | extendOptions Hook | NOT STARTED |
 | 3.2a | Toolbar Button Visibility | NOT STARTED |
 | 3.2b | Custom Keyboard Shortcuts | NOT STARTED |

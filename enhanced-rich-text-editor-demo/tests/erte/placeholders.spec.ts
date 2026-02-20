@@ -26,9 +26,24 @@ function getAppearanceToggleButton(page: Page, id = 'test-editor'): Locator {
   return page.locator(`#${id}`).locator('[part~="toolbar-button-placeholder-display"]');
 }
 
-/** Get the confirm-dialog overlay for the Placeholders dialog (not the link dialog). */
-function getDialog(page: Page): Locator {
-  return page.locator('vaadin-confirm-dialog-overlay[aria-label="Placeholders"]');
+/**
+ * Get the Placeholders confirm-dialog element.
+ * V25: the dialog element is zero-size (overlay renders inside its shadow DOM),
+ * so visibility checks use the [opened] attribute instead of toBeVisible/toBeHidden.
+ * Child elements (combo-box, buttons) are slot-projected into the overlay and ARE visible/clickable.
+ */
+function getDialog(page: Page, id = 'test-editor'): Locator {
+  return page.locator(`#${id}`).locator('vaadin-confirm-dialog[aria-label="Placeholders"]');
+}
+
+/** Assert dialog is open (has [opened] attribute). */
+async function expectDialogOpen(page: Page, timeout = 5000): Promise<void> {
+  await expect(getDialog(page)).toHaveAttribute('opened', '', { timeout });
+}
+
+/** Assert dialog is closed (no [opened] attribute). */
+async function expectDialogClosed(page: Page, timeout = 5000): Promise<void> {
+  await expect(getDialog(page)).not.toHaveAttribute('opened', { timeout });
 }
 
 /** Get the combo-box inside the placeholder dialog. */
@@ -41,9 +56,9 @@ function getPlaceholderBlots(page: Page, id = 'test-editor'): Locator {
   return page.locator(`#${id}`).locator('.ql-editor .ql-placeholder');
 }
 
-/** Click the OK / confirm button inside the dialog. */
-async function confirmDialog(page: Page): Promise<void> {
-  await getDialog(page).locator('[slot="confirm-button"]').click();
+/** Click the OK / confirm button inside the dialog (scoped to ERTE to avoid matching link dialog). */
+async function confirmDialog(page: Page, id = 'test-editor'): Promise<void> {
+  await page.locator(`#${id}`).getByRole('button', { name: 'OK' }).click();
 }
 
 /** Cancel the dialog by pressing Escape (cancel button is hidden by default in vaadin-confirm-dialog). */
@@ -51,26 +66,25 @@ async function cancelDialog(page: Page): Promise<void> {
   await page.keyboard.press('Escape');
 }
 
-/** Click the Remove / reject button inside the dialog. */
-async function removeViaDialog(page: Page): Promise<void> {
-  await getDialog(page).locator('[slot="reject-button"]').click();
+/** Click the Remove / reject button inside the dialog (scoped to ERTE). */
+async function removeViaDialog(page: Page, id = 'test-editor'): Promise<void> {
+  await page.locator(`#${id}`).getByRole('button', { name: 'Remove' }).click();
 }
 
 /** Open the combo-box dropdown and select an item by its visible text. */
 async function selectComboItem(page: Page, text: string): Promise<void> {
   const comboBox = getComboBox(page);
   await comboBox.click();
-  // Wait for the overlay to appear
-  const overlay = page.locator('vaadin-combo-box-overlay');
-  await overlay.waitFor({ state: 'visible', timeout: 5000 });
-  // Click the item matching the text
-  await overlay.locator(`vaadin-combo-box-item`).filter({ hasText: text }).click();
+  // V25: combo-box items are role="option" inside a role="listbox"
+  const listbox = page.getByRole('listbox');
+  await listbox.waitFor({ state: 'visible', timeout: 5000 });
+  await listbox.getByRole('option', { name: text }).click();
 }
 
 /** Open the placeholder dialog by clicking the toolbar button. */
 async function openPlaceholderDialog(page: Page): Promise<void> {
   await getPlaceholderButton(page).click();
-  await getDialog(page).waitFor({ state: 'visible', timeout: 5000 });
+  await expectDialogOpen(page);
 }
 
 /**
@@ -82,7 +96,7 @@ async function insertPlaceholder(page: Page, text: string): Promise<void> {
   await selectComboItem(page, text);
   await confirmDialog(page);
   // Wait for the dialog to close
-  await expect(getDialog(page)).toBeHidden({ timeout: 5000 });
+  await expectDialogClosed(page);
 }
 
 // ── Test suite ──────────────────────────────────────────────────────────────
@@ -101,7 +115,7 @@ test.describe('Placeholder functionality', () => {
   test('1 - Placeholder button opens dialog', async ({ page }) => {
     await focusEditor(page);
     await getPlaceholderButton(page).click();
-    await expect(getDialog(page)).toBeVisible({ timeout: 5000 });
+    await expectDialogOpen(page);
   });
 
   test('2 - Combo box populated with configured placeholders', async ({ page }) => {
@@ -109,9 +123,9 @@ test.describe('Placeholder functionality', () => {
     await openPlaceholderDialog(page);
     const comboBox = getComboBox(page);
     await comboBox.click();
-    const overlay = page.locator('vaadin-combo-box-overlay');
-    await overlay.waitFor({ state: 'visible', timeout: 5000 });
-    const items = overlay.locator('vaadin-combo-box-item');
+    const listbox = page.getByRole('listbox');
+    await listbox.waitFor({ state: 'visible', timeout: 5000 });
+    const items = listbox.getByRole('option');
     await expect(items).toHaveCount(3);
     await expect(items.nth(0)).toContainText('N-1=Company Name');
     await expect(items.nth(1)).toContainText('A-1=Street Address');
@@ -147,7 +161,7 @@ test.describe('Placeholder functionality', () => {
     await focusEditor(page);
     await openPlaceholderDialog(page);
     await cancelDialog(page);
-    await expect(getDialog(page)).toBeHidden({ timeout: 5000 });
+    await expectDialogClosed(page);
     // No placeholder should have been inserted
     await expect(getPlaceholderBlots(page)).toHaveCount(0);
   });
@@ -171,7 +185,7 @@ test.describe('Placeholder functionality', () => {
     // Open dialog — because we are on a placeholder, the Remove button should be visible
     await openPlaceholderDialog(page);
     await removeViaDialog(page);
-    await expect(getDialog(page)).toBeHidden({ timeout: 5000 });
+    await expectDialogClosed(page);
     await expect(getPlaceholderBlots(page)).toHaveCount(0);
   });
 
@@ -316,9 +330,18 @@ test.describe('Placeholder functionality', () => {
 
   test('16 - Keyboard insert (Ctrl+P)', async ({ page }) => {
     await focusEditor(page);
-    // Press Ctrl+P to open the placeholder dialog
-    await page.keyboard.press('Control+p');
-    await expect(getDialog(page)).toBeVisible({ timeout: 5000 });
+    // Ctrl+P is intercepted by the browser (Print) before reaching Quill.
+    // Dispatch a synthetic KeyboardEvent directly to the editor element to
+    // bypass browser interception while still exercising Quill's handler.
+    await page.evaluate(() => {
+      const erte = document.querySelector('vcf-enhanced-rich-text-editor')!;
+      const root = (erte as any)._editor.root;
+      root.dispatchEvent(new KeyboardEvent('keydown', {
+        key: 'p', code: 'KeyP', keyCode: 80, which: 80,
+        ctrlKey: true, bubbles: true, cancelable: true
+      }));
+    });
+    await expectDialogOpen(page);
   });
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -388,7 +411,7 @@ test.describe('Placeholder functionality', () => {
     await page.waitForTimeout(200);
     await openPlaceholderDialog(page);
     await removeViaDialog(page);
-    await expect(getDialog(page)).toBeHidden({ timeout: 5000 });
+    await expectDialogClosed(page);
     await expect(getPlaceholderBlots(page)).toHaveCount(0);
 
     // Undo the removal
@@ -440,7 +463,7 @@ test.describe('Placeholder functionality', () => {
     await openPlaceholderDialog(page);
     await selectComboItem(page, 'N-1=Company Name');
     await confirmDialog(page);
-    await expect(getDialog(page)).toBeHidden({ timeout: 5000 });
+    await expectDialogClosed(page);
 
     // The before-insert event should fire
     await waitForEvent(page, 'PlaceholderBeforeInsert');
@@ -473,7 +496,7 @@ test.describe('Placeholder functionality', () => {
     await page.waitForTimeout(200);
     await openPlaceholderDialog(page);
     await removeViaDialog(page);
-    await expect(getDialog(page)).toBeHidden({ timeout: 5000 });
+    await expectDialogClosed(page);
 
     await waitForEvent(page, 'PlaceholderBeforeRemove');
     const events = await getEventLog(page);
@@ -499,7 +522,7 @@ test.describe('Placeholder functionality', () => {
     await page.waitForTimeout(200);
     await openPlaceholderDialog(page);
     await removeViaDialog(page);
-    await expect(getDialog(page)).toBeHidden({ timeout: 5000 });
+    await expectDialogClosed(page);
 
     // The before-remove event should fire
     await waitForEvent(page, 'PlaceholderBeforeRemove');
@@ -520,7 +543,7 @@ test.describe('Placeholder functionality', () => {
     await page.waitForTimeout(200);
     await openPlaceholderDialog(page);
     await removeViaDialog(page);
-    await expect(getDialog(page)).toBeHidden({ timeout: 5000 });
+    await expectDialogClosed(page);
 
     await waitForEvent(page, 'PlaceholderRemoved');
     const events = await getEventLog(page);

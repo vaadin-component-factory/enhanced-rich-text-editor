@@ -225,11 +225,145 @@ class SoftBreakBlot extends Embed {
 
 Quill.register('formats/soft-break', SoftBreakBlot, true);
 
+// ============================================================================
+// PlaceholderBlot — Embed: <span class="ql-placeholder" data-placeholder="{...}">
+// Inline token for configurable placeholder text with format/altFormat support.
+// ============================================================================
+class PlaceholderBlot extends Embed {
+  static blotName = 'placeholder';
+  static tagName = 'SPAN';
+  static className = 'ql-placeholder';
+  static tags = null;               // Set by _onPlaceholderTagsChanged
+  static altAppearanceRegex = null;  // Set by _onPlaceholderAltAppearancePatternChanged
+
+  static create(value) {
+    const node = super.create();
+    // Do NOT set contenteditable="false" on outer node — guard nodes must stay editable
+    PlaceholderBlot.storeValue(node, value);
+    // NOTE: Do NOT call setText here — contentNode is created by the Embed
+    // constructor (which runs AFTER create()). setText is called in constructor().
+    return node;
+  }
+
+  static value(node) { return PlaceholderBlot.loadValue(node); }
+
+  static loadValue(node) {
+    try { return JSON.parse(node.dataset.placeholder); }
+    catch (e) { return true; }
+  }
+
+  static storeValue(node, value) {
+    node.dataset.placeholder = JSON.stringify(value);
+  }
+
+  static setText(node) {
+    const placeholder = PlaceholderBlot.loadValue(node);
+    if (!placeholder || !placeholder.text) return;
+    let text = placeholder.text;
+    const contentNode = node.querySelector('[contenteditable="false"]');
+    if (!contentNode) return;
+    contentNode.textContent = ''; // SECURITY: never innerHTML
+
+    if (PlaceholderBlot.altAppearanceRegex) {
+      const match = new RegExp(PlaceholderBlot.altAppearanceRegex).exec(text);
+      if (match) {
+        const altText = match[0];
+        if (placeholder.altAppearance) {
+          // Alt mode: show only alt text in [alt] span
+          const altSpan = document.createElement('span');
+          altSpan.setAttribute('alt', '');
+          altSpan.textContent = altText;
+          contentNode.appendChild(altSpan);
+        } else {
+          // Normal with alt span embedded
+          const before = text.slice(0, match.index);
+          const after = text.slice(match.index + altText.length);
+          let head = (PlaceholderBlot.tags ? PlaceholderBlot.tags.start : '') + before;
+          let tail = after + (PlaceholderBlot.tags ? PlaceholderBlot.tags.end : '');
+          contentNode.appendChild(document.createTextNode(head));
+          const altSpan = document.createElement('span');
+          altSpan.setAttribute('alt', '');
+          altSpan.textContent = altText;
+          contentNode.appendChild(altSpan);
+          if (tail) contentNode.appendChild(document.createTextNode(tail));
+        }
+        return;
+      } else if (placeholder.altAppearance) {
+        return; // No match in alt mode → show nothing
+      }
+    }
+    // Normal display: text with optional tags
+    if (PlaceholderBlot.tags && !placeholder.altAppearance) {
+      text = PlaceholderBlot.tags.start + text + PlaceholderBlot.tags.end;
+    }
+    contentNode.textContent = text;
+  }
+
+  // Apply Quill format attributes as inline styles
+  static deltaToInline(node, attr) {
+    if (!node) return;
+    Object.keys(attr).forEach(key => {
+      const value = attr[key];
+      switch (key) {
+        case 'bold':   node.style.fontWeight = value ? 'bold' : 'normal'; break;
+        case 'italic': node.style.fontStyle = value ? 'italic' : 'normal'; break;
+        case 'font':   node.style.fontFamily = value; break;
+        case 'code':   PlaceholderBlot._wrapContent('code', node); break;
+        case 'link':
+          // SECURITY: Only allow safe URL protocols (prevent javascript: XSS)
+          if (/^(https?:|mailto:)/i.test(value)) {
+            PlaceholderBlot._wrapContent('a', node, [{ name: 'href', value }]);
+          }
+          break;
+        case 'script':
+          if (value === 'super') PlaceholderBlot._wrapContent('sup', node);
+          else if (value === 'sub') PlaceholderBlot._wrapContent('sub', node);
+          break;
+        default: node.style[key] = value;
+      }
+    });
+  }
+
+  // SECURITY FIX: DOM methods instead of innerHTML
+  static _wrapContent(tag, node, attrs = []) {
+    if (!node.querySelector(tag)) {
+      const el = document.createElement(tag);
+      while (node.firstChild) el.appendChild(node.firstChild);
+      node.appendChild(el);
+      attrs.forEach(a => el.setAttribute(a.name, a.value));
+    }
+  }
+
+  constructor(scroll, node) {
+    super(scroll, node);
+    // setText + applyFormat MUST run here (not in create()) because the Embed
+    // constructor creates the contentNode and guard nodes. In create(), the
+    // contentNode doesn't exist yet → querySelector returns null.
+    PlaceholderBlot.setText(this.domNode);
+    this.applyFormat();
+  }
+
+  applyFormat() {
+    const placeholder = PlaceholderBlot.loadValue(this.domNode);
+    if (!placeholder) return;
+    if (placeholder.altFormat) {
+      const altNode = this.domNode.querySelector('[alt]');
+      if (altNode) PlaceholderBlot.deltaToInline(altNode, placeholder.altFormat);
+    }
+    if (placeholder.format) {
+      const contentNode = this.domNode.querySelector('[contenteditable="false"]');
+      if (contentNode) PlaceholderBlot.deltaToInline(contentNode, placeholder.format);
+    }
+  }
+}
+
+Quill.register('formats/placeholder', PlaceholderBlot, true);
+
 /**
  * ERTE CSS classes to preserve in htmlValue (not stripped by __updateHtmlValue).
  * Each phase adds its classes here.
  */
-const ERTE_PRESERVED_CLASSES = ['ql-readonly', 'ql-tab', 'ql-soft-break'];
+const ERTE_PRESERVED_CLASSES = ['ql-readonly', 'ql-tab', 'ql-soft-break', 'ql-placeholder'];
 
 class VcfEnhancedRichTextEditor extends RteBase {
 
@@ -242,6 +376,10 @@ class VcfEnhancedRichTextEditor extends RteBase {
       ...super.properties,
       tabStops: { type: Array },
       noRulers: { type: Boolean, reflect: true },
+      placeholders: { type: Array },
+      placeholderTags: { type: Object },
+      placeholderAltAppearance: { type: Boolean },
+      placeholderAltAppearancePattern: { type: String },
     };
   }
 
@@ -309,6 +447,18 @@ class VcfEnhancedRichTextEditor extends RteBase {
         .ql-soft-break {
           display: inline;
         }
+
+        /* Placeholders — inline embed tokens */
+        .ql-placeholder {
+          background-color: var(--lumo-primary-color-10pct);
+          border-radius: var(--lumo-border-radius-s);
+          padding-inline: 0.125em;
+          cursor: default;
+        }
+        .ql-placeholder [contenteditable="false"] {
+          font-size: inherit;
+          line-height: inherit;
+        }
       `,
     ];
   }
@@ -340,6 +490,8 @@ class VcfEnhancedRichTextEditor extends RteBase {
     this._injectToolbarSlots();
     this._injectReadonlyButton();
     this._initReadonlyProtection();
+    this._initPlaceholderDialog();
+    this._injectPlaceholderButtons();
 
     // Tab engine initialization
     this._tabStopsArray = [];
@@ -362,11 +514,67 @@ class VcfEnhancedRichTextEditor extends RteBase {
       this._onTabStopsChanged(this.tabStops);
     }
 
+    // Placeholder property observers
+    this._createPropertyObserver('placeholders', '_onPlaceholdersChanged');
+    this._createPropertyObserver('placeholderTags', '_onPlaceholderTagsChanged');
+    this._createPropertyObserver('placeholderAltAppearance', '_onPlaceholderAltAppearanceChanged');
+    this._createPropertyObserver('placeholderAltAppearancePattern', '_onPlaceholderAltAppearancePatternChanged');
+
+    // Trigger placeholder observers if set before ready()
+    if (this.placeholders) this._onPlaceholdersChanged(this.placeholders);
+    if (this.placeholderTags) this._onPlaceholderTagsChanged(this.placeholderTags);
+    if (this.placeholderAltAppearancePattern) this._onPlaceholderAltAppearancePatternChanged(this.placeholderAltAppearancePattern);
+
     // Recalculate tab widths on every text change
     this._editor.on('text-change', () => this._requestTabUpdate());
 
     // Recalculate tab widths on editor resize
     new ResizeObserver(() => this._requestTabUpdate()).observe(this._editor.root);
+
+    // Clear dialog-just-closed flag on any editor interaction, and handle
+    // placeholder clicks. Clicking on a placeholder's contenteditable="false"
+    // contentNode does NOT trigger a Quill selection-change, so we intercept
+    // mousedown, preventDefault the browser's non-editable handling, and
+    // manually set the Quill selection so placeholder-select fires properly.
+    this._editor.root.addEventListener('mousedown', (e) => {
+      this._dialogJustClosed = false;
+      const phEl = e.target.closest('.ql-placeholder');
+      if (phEl) {
+        e.preventDefault();
+        const blot = Quill.find(phEl);
+        if (blot) {
+          const index = this._editor.getIndex(blot);
+          // Defer setSelection to after mousedown processing completes,
+          // so the Quill selection-change and resulting placeholder-select
+          // CustomEvent fire outside the browser's mouse event chain.
+          setTimeout(() => this._editor.setSelection(index + 1, 0, Quill.sources.USER), 0);
+        }
+      }
+    });
+
+    // Placeholder selection tracking
+    this._editor.on('selection-change', (range) => {
+      if (!range) return;
+      const placeholders = this._getSelectedPlaceholders(range);
+      if (placeholders.length) {
+        if (!this._inPlaceholder) {
+          this._inPlaceholder = true;
+          if (this.__placeholderBtn) this.__placeholderBtn.classList.add('ql-active');
+          this.dispatchEvent(new CustomEvent('placeholder-select', {
+            bubbles: true, composed: true, cancelable: false,
+            detail: { placeholders }
+          }));
+        }
+      } else {
+        if (this._inPlaceholder) {
+          this._inPlaceholder = false;
+          if (this.__placeholderBtn) this.__placeholderBtn.classList.remove('ql-active');
+          this.dispatchEvent(new CustomEvent('placeholder-leave', {
+            bubbles: true, composed: true, cancelable: false
+          }));
+        }
+      }
+    });
 
     console.debug('[ERTE] ready, _editor:', !!this._editor, 'readonly protection active, tab engine initialized');
   }
@@ -553,6 +761,399 @@ class VcfEnhancedRichTextEditor extends RteBase {
         }
       }
     });
+  }
+
+  // ==========================================================================
+  // Placeholder: dialog
+  // ==========================================================================
+
+  /**
+   * Creates the placeholder confirm-dialog + combo-box programmatically
+   * in the shadow DOM. NOT in render() — updatability rule.
+   * @protected
+   */
+  _initPlaceholderDialog() {
+    const dialog = document.createElement('vaadin-confirm-dialog');
+    dialog.header = 'Placeholders';
+    dialog.setAttribute('aria-label', 'Placeholders');
+
+    const comboBox = document.createElement('vaadin-combo-box');
+    comboBox.setAttribute('item-label-path', 'text');
+    comboBox.setAttribute('item-value-path', 'text');
+    comboBox.label = 'Select a placeholder';
+    comboBox.style.width = '100%';
+    comboBox.clearButtonVisible = true;
+    dialog.appendChild(comboBox);
+
+    const okBtn = document.createElement('vaadin-button');
+    okBtn.setAttribute('slot', 'confirm-button');
+    okBtn.setAttribute('theme', 'primary');
+    okBtn.textContent = 'OK';
+    okBtn.addEventListener('click', () => this._onPlaceholderEditConfirm());
+    dialog.appendChild(okBtn);
+
+    const removeBtn = document.createElement('vaadin-button');
+    removeBtn.setAttribute('slot', 'reject-button');
+    removeBtn.setAttribute('theme', 'error');
+    removeBtn.textContent = 'Remove';
+    removeBtn.hidden = true;
+    removeBtn.addEventListener('click', () => this._onPlaceholderEditRemove());
+    dialog.appendChild(removeBtn);
+
+    const cancelBtn = document.createElement('vaadin-button');
+    cancelBtn.setAttribute('slot', 'cancel-button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', () => this._onPlaceholderEditCancel());
+    dialog.appendChild(cancelBtn);
+
+    // Handle external close (Escape, overlay click)
+    dialog.addEventListener('opened-changed', (e) => {
+      if (!e.detail.value && this.__placeholderDialog) {
+        this._closePlaceholderDialog();
+      }
+    });
+
+    this.shadowRoot.appendChild(dialog);
+    this.__placeholderDialog = dialog;
+    this.__placeholderComboBox = comboBox;
+    this.__placeholderRemoveBtn = removeBtn;
+  }
+
+  set _placeholderEditing(v) {
+    if (this.__placeholderDialog) this.__placeholderDialog.opened = v;
+  }
+  get _placeholderEditing() {
+    return this.__placeholderDialog?.opened || false;
+  }
+
+  // ==========================================================================
+  // Placeholder: toolbar buttons
+  // ==========================================================================
+
+  /**
+   * Injects two placeholder buttons into the format group:
+   * 1. Placeholder insert button (@ symbol)
+   * 2. Appearance toggle button (Plain/Value)
+   * @protected
+   */
+  _injectPlaceholderButtons() {
+    const toolbar = this.shadowRoot.querySelector('[part="toolbar"]');
+    if (!toolbar) return;
+
+    // Placeholder insert button
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.setAttribute('part', 'toolbar-button toolbar-button-placeholder');
+    btn.setAttribute('aria-label', 'Placeholder');
+    btn.textContent = '@';
+    btn.hidden = true;
+    btn.addEventListener('click', () => this._onPlaceholderClick());
+
+    // Appearance toggle button
+    const appBtn = document.createElement('button');
+    appBtn.type = 'button';
+    appBtn.setAttribute('part', 'toolbar-button toolbar-button-placeholder-display');
+    appBtn.setAttribute('aria-label', 'Toggle placeholder appearance');
+    appBtn.textContent = 'Plain';
+    appBtn.hidden = true;
+    appBtn.addEventListener('click', () => {
+      this.placeholderAltAppearance = !this.placeholderAltAppearance;
+    });
+
+    // Place in format group, before the readonly button
+    const formatGroup = toolbar.querySelector('[part~="toolbar-group-format"]');
+    if (formatGroup) {
+      const readonlyBtn = formatGroup.querySelector('[part~="toolbar-button-readonly"]');
+      if (readonlyBtn) {
+        formatGroup.insertBefore(btn, readonlyBtn);
+        formatGroup.insertBefore(appBtn, readonlyBtn);
+      } else {
+        formatGroup.appendChild(btn);
+        formatGroup.appendChild(appBtn);
+      }
+    }
+
+    this.__placeholderBtn = btn;
+    this.__placeholderAppearanceBtn = appBtn;
+  }
+
+  // ==========================================================================
+  // Placeholder: property observers
+  // ==========================================================================
+
+  /** @protected */
+  _onPlaceholdersChanged(placeholders) {
+    if (!placeholders || !Array.isArray(placeholders)) return;
+    if (this.__placeholderBtn) {
+      this.__placeholderBtn.hidden = !placeholders.length;
+    }
+    if (this.__placeholderAppearanceBtn) {
+      this.__placeholderAppearanceBtn.hidden = !(placeholders.length && this.placeholderAltAppearancePattern);
+    }
+    if (this.__placeholderComboBox && placeholders.length) {
+      this.__placeholderComboBox.items = placeholders.map(p => this._getPlaceholderOptions(p));
+    }
+  }
+
+  /** @protected */
+  _onPlaceholderTagsChanged(tags) {
+    PlaceholderBlot.tags = tags;
+    // Update button text to show the start tag
+    if (this.__placeholderBtn && tags && tags.start) {
+      this.__placeholderBtn.textContent = tags.start;
+    }
+    // Re-render existing placeholders with new tags
+    if (this._editor) {
+      this._editor.setContents(this._editor.getContents(), Quill.sources.SILENT);
+    }
+  }
+
+  /** @protected */
+  _onPlaceholderAltAppearanceChanged(altAppearance) {
+    if (!this._editor) return;
+
+    // Update button label
+    if (this.__placeholderAppearanceBtn) {
+      this.__placeholderAppearanceBtn.textContent = altAppearance ? 'Value' : 'Plain';
+      if (altAppearance) {
+        this.__placeholderAppearanceBtn.classList.add('ql-active');
+      } else {
+        this.__placeholderAppearanceBtn.classList.remove('ql-active');
+      }
+    }
+
+    // Update delta: set altAppearance on each placeholder op
+    const delta = this._editor.getContents();
+    let changed = false;
+    delta.ops.forEach(op => {
+      if (typeof op.insert === 'object' && op.insert.placeholder) {
+        op.insert.placeholder.altAppearance = altAppearance;
+        changed = true;
+      }
+    });
+    if (changed) {
+      this._editor.setContents(delta, Quill.sources.SILENT);
+    }
+
+    // Fire appearance-change event
+    const label = altAppearance ? 'Value' : 'Plain';
+    this.dispatchEvent(new CustomEvent('placeholder-appearance-change', {
+      bubbles: true, composed: true, cancelable: false,
+      detail: { altAppearance, appearanceLabel: label }
+    }));
+  }
+
+  /** @protected */
+  _onPlaceholderAltAppearancePatternChanged(regex) {
+    PlaceholderBlot.altAppearanceRegex = regex;
+    if (this.__placeholderAppearanceBtn) {
+      this.__placeholderAppearanceBtn.hidden = !(this.placeholders && this.placeholders.length && regex);
+    }
+  }
+
+  // ==========================================================================
+  // Placeholder: dialog logic
+  // ==========================================================================
+
+  /** @protected */
+  _onPlaceholderClick() {
+    const range = this._editor.getSelection(true);
+    if (!range) return;
+
+    // After dialog close, skip placeholder detection to allow consecutive inserts.
+    // Without this, cursor at index+1 after a fresh insert is falsely detected as
+    // "on a placeholder" (getContents(index-1) returns the just-inserted embed).
+    // Flag is cleared on editor mousedown (user clicked somewhere in the editor).
+    const justClosed = this._dialogJustClosed;
+    this._dialogJustClosed = false;
+    const placeholder = justClosed ? null : this.selectedPlaceholder;
+    const detail = { position: range.index };
+
+    if (placeholder && placeholder.text) {
+      // Editing existing placeholder
+      this.__placeholderRemoveBtn.hidden = false;
+      this.__placeholderDialog.rejectButtonVisible = true;
+      this._placeholderRange = { index: range.index - 1, length: 1 };
+      if (this.__placeholderComboBox) {
+        this.__placeholderComboBox.value = placeholder.text;
+      }
+    } else {
+      // New placeholder insert
+      this.__placeholderRemoveBtn.hidden = true;
+      this.__placeholderDialog.rejectButtonVisible = false;
+      this._insertPlaceholderIndex = range.index;
+      if (this.__placeholderComboBox) {
+        this.__placeholderComboBox.value = '';
+      }
+    }
+
+    const event = new CustomEvent('placeholder-button-click', {
+      bubbles: true, composed: true, cancelable: true, detail
+    });
+    const cancelled = !this.dispatchEvent(event);
+    if (!cancelled) {
+      this._placeholderEditing = true;
+    }
+  }
+
+  /** @protected */
+  _onPlaceholderEditConfirm() {
+    const value = this.__placeholderComboBox ? this.__placeholderComboBox.value : '';
+    if (!value) {
+      this._closePlaceholderDialog();
+      return;
+    }
+    const placeholder = this._getPlaceholderOptions(value);
+    if (this._insertPlaceholderIndex != null) {
+      this._insertPlaceholders([{ placeholder, index: this._insertPlaceholderIndex }]);
+    } else if (this._placeholderRange) {
+      // Update: remove old, insert new
+      this._confirmRemovePlaceholders([placeholder], true);
+      this._confirmInsertPlaceholders([{ placeholder, index: this._placeholderRange.index }]);
+    }
+    this._closePlaceholderDialog();
+  }
+
+  /** @protected */
+  _onPlaceholderEditCancel() {
+    this._closePlaceholderDialog();
+  }
+
+  /** @protected */
+  _onPlaceholderEditRemove() {
+    this._removePlaceholders();
+    this._closePlaceholderDialog();
+  }
+
+  /** @protected */
+  _insertPlaceholders(placeholders) {
+    const detail = { placeholders: placeholders.map(i => i.placeholder || i) };
+    const event = new CustomEvent('placeholder-before-insert', {
+      bubbles: true, composed: true, cancelable: true, detail
+    });
+    this._insertPlaceholdersList = placeholders;
+    const cancelled = !this.dispatchEvent(event);
+    if (!cancelled) {
+      this._confirmInsertPlaceholders(placeholders);
+    }
+  }
+
+  /** @protected */
+  _confirmInsertPlaceholders(placeholders = this._insertPlaceholdersList) {
+    if (!placeholders || !placeholders.length) return;
+    const detail = { placeholders: placeholders.map(i => i.placeholder || i) };
+
+    placeholders.forEach(({ placeholder, index: i }) => {
+      if (this.placeholderAltAppearance) placeholder.altAppearance = true;
+      this._editor.insertEmbed(i, 'placeholder', placeholder, Quill.sources.USER);
+    });
+
+    // Move cursor after last inserted placeholder
+    const last = placeholders[placeholders.length - 1];
+    this._editor.setSelection(last.index + 1, 0, Quill.sources.USER);
+
+    this.dispatchEvent(new CustomEvent('placeholder-insert', {
+      bubbles: true, composed: true, cancelable: false, detail
+    }));
+  }
+
+  /** @protected */
+  _removePlaceholders(placeholders = this._getSelectedPlaceholders(this._editor.getSelection(true))) {
+    if (!placeholders || !placeholders.length) return;
+    const detail = { placeholders };
+    const event = new CustomEvent('placeholder-before-delete', {
+      bubbles: true, composed: true, cancelable: true, detail
+    });
+    this._removePlaceholdersList = placeholders;
+    const cancelled = !this.dispatchEvent(event);
+    if (!cancelled) {
+      this._confirmRemovePlaceholders(placeholders);
+    }
+  }
+
+  /** @protected */
+  _confirmRemovePlaceholders(placeholders = this._removePlaceholdersList, silent = false) {
+    if (!placeholders || !placeholders.length) return;
+    const range = this._editor.getSelection(true);
+    if (!range) return;
+
+    let deleteRange;
+    if (range.length >= 1) {
+      deleteRange = range;
+    } else if (this._placeholderRange) {
+      deleteRange = this._placeholderRange;
+    } else {
+      deleteRange = { index: range.index - 1, length: 1 };
+    }
+
+    this._editor.deleteText(deleteRange.index, deleteRange.length, Quill.sources.USER);
+
+    if (!silent) {
+      const detail = { placeholders };
+      this.dispatchEvent(new CustomEvent('placeholder-delete', {
+        bubbles: true, composed: true, cancelable: false, detail
+      }));
+    }
+  }
+
+  /** @protected */
+  _closePlaceholderDialog() {
+    if (this.__placeholderDialog) this.__placeholderDialog.opened = false;
+    if (this.__placeholderComboBox) this.__placeholderComboBox.value = '';
+    this._insertPlaceholderIndex = null;
+    this._placeholderRange = null;
+    // NOTE: do NOT clear _insertPlaceholdersList here — it's needed by the async
+    // _confirmInsertPlaceholders() callback from Java (executeJs runs after this).
+    this._dialogJustClosed = true;
+    if (this._editor) this._editor.focus();
+  }
+
+  /** @protected */
+  _getPlaceholderOptions(text) {
+    if (!text) return null;
+    if (typeof text === 'object') return { ...text };
+    const placeholders = this.placeholders || [];
+    const found = placeholders.find(i => i.text === text);
+    if (found) return { ...found };
+    return { text };
+  }
+
+  // ==========================================================================
+  // Placeholder: selection getters
+  // ==========================================================================
+
+  get selectedPlaceholder() {
+    const range = this._editor.getSelection();
+    if (!range) return null;
+    // Check the character at cursor-1 (embeds have length 1)
+    const delta = this._editor.getContents(range.index - 1, 1);
+    if (delta.ops.length > 0) {
+      const op = delta.ops[0];
+      if (op.insert && op.insert.placeholder) return op.insert.placeholder;
+    }
+    return null;
+  }
+
+  get selectedPlaceholders() {
+    const range = this._editor.getSelection();
+    if (!range) return [];
+    return this._getSelectedPlaceholders(range);
+  }
+
+  /** @protected */
+  _getSelectedPlaceholders(range) {
+    if (!range) return [];
+    const placeholders = [];
+    // Check single character at cursor-1 for zero-length selection
+    const start = range.length > 0 ? range.index : Math.max(0, range.index - 1);
+    const length = range.length > 0 ? range.length : 1;
+    const delta = this._editor.getContents(start, length);
+    delta.ops.forEach(op => {
+      if (op.insert && op.insert.placeholder) {
+        placeholders.push(op.insert.placeholder);
+      }
+    });
+    return placeholders;
   }
 
   // ==========================================================================
@@ -753,7 +1354,8 @@ class VcfEnhancedRichTextEditor extends RteBase {
 
     if (node.classList && (
       node.classList.contains('ql-tab') ||
-      node.classList.contains('ql-soft-break')
+      node.classList.contains('ql-soft-break') ||
+      node.classList.contains('ql-placeholder')
     )) {
       return true;
     }
@@ -1055,6 +1657,17 @@ class VcfEnhancedRichTextEditor extends RteBase {
     keyboard.bindings['ArrowUp'] = [arrowUpBinding, ...arrowUpBindings];
     const arrowDownBindings = keyboard.bindings['ArrowDown'] || [];
     keyboard.bindings['ArrowDown'] = [arrowDownBinding, ...arrowDownBindings];
+
+    // Ctrl+P (Cmd+P on Mac): open placeholder dialog.
+    // Must use ctrlKey/metaKey directly — shortKey is only resolved by Quill's
+    // addBinding()/normalize(), which we bypass for prepend semantics.
+    const SHORTKEY = /Mac/i.test(navigator.platform) ? 'metaKey' : 'ctrlKey';
+    const placeholderBinding = {
+      key: 'p', [SHORTKEY]: true,
+      handler: function() { self._onPlaceholderClick(); return false; }
+    };
+    const pBindings = keyboard.bindings['p'] || [];
+    keyboard.bindings['p'] = [placeholderBinding, ...pBindings];
   }
 
   // ==========================================================================

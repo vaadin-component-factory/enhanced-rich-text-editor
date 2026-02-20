@@ -46,7 +46,7 @@ public abstract class RteExtensionBase extends RichTextEditor {
      * Each migration phase adds its classes here.
      */
     private static final Set<String> ALLOWED_ERTE_CLASSES = Set.of(
-            "ql-readonly", "ql-tab", "ql-soft-break");
+            "ql-readonly", "ql-tab", "ql-soft-break", "ql-placeholder");
 
     private static final Pattern CLASS_ATTR_PATTERN = Pattern
             .compile("class=\"([^\"]*)\"");
@@ -91,7 +91,7 @@ public abstract class RteExtensionBase extends RichTextEditor {
                 .addProtocols("img", "src", "data")
                 // ERTE additions
                 .addAttributes("span", "class", "contenteditable",
-                        "aria-readonly");
+                        "aria-readonly", "data-placeholder");
 
         String safe = Jsoup.clean(html, "", safelist, settings);
 
