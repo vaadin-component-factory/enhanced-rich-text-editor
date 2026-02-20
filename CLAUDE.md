@@ -233,7 +233,7 @@ Use these as needed, do NOT try to load all of them as context simultaneously.
 
 ## Playwright Tests
 
-248 total tests: 75 prototype + 173 ERTE. Full listing in [TEST_INVENTORY.md](enhanced-rich-text-editor-demo/tests/TEST_INVENTORY.md).
+251 total tests: 75 prototype + 176 ERTE. Full listing in [TEST_INVENTORY.md](enhanced-rich-text-editor-demo/tests/TEST_INVENTORY.md).
 
 **Running tests:**
 ```bash

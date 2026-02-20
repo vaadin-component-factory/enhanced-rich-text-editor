@@ -1,15 +1,15 @@
 # ERTE Test Suite Inventory
 
-> **V25 Migration Status (Phase 3.1c):** 100 tests passing, 17 fixme.
-> Implemented: Shell (6), Toolbar (19), Readonly (17), Tabstops (64 pass, 11 fixme).
+> **V25 Migration Status (Phase 3.1c complete):** 109 tests passing, 20 fixme.
+> Implemented: Shell (6), Toolbar (24), Readonly (18), Tabstops (67 pass, 14 fixme).
 > Remaining ERTE tests will be restored as features are migrated.
 
-Total: 248 tests (75 prototype + 173 ERTE)
-V25 status: 100 passed, 17 fixme across implemented features (tabstops, readonly, toolbar)
+Total: 251 tests (75 prototype + 176 ERTE)
+V25 status: 109 passed, 20 fixme across implemented features (tabstops, readonly, toolbar)
 
 ---
 
-## Tabstops (75 tests) — `erte/tabstops.spec.ts`
+## Tabstops (78 tests) — `erte/tabstops.spec.ts`
 
 ### Hard-Break (Enter)
 - Tab in new paragraph aligns to first tabstop
@@ -89,6 +89,12 @@ V25 status: 100 passed, 17 fixme across implemented features (tabstops, readonly
 
 ### Cursor Navigation
 - Arrow keys navigate correctly across tabs
+- ArrowDown/ArrowUp navigates between lines containing tabs
+- ArrowUp on first line jumps to line start
+- ArrowDown on last line jumps to line end
+- Cursor can be placed after the last tab in a line
+- Cursor is visible (non-zero height) at every tab position
+- Tab right edges align with ruler markers within 2px
 - End key moves to end of visual line
 - Shift+Arrow creates selection and delete removes selected content
 
