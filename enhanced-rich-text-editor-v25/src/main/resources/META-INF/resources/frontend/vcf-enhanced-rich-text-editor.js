@@ -183,6 +183,13 @@ class TabBlot extends Embed {
         return [firstText, 0];
       }
     }
+    // Fallback: return right guard (positioned at tab's right edge via CSS).
+    // super.position() returns [parentNode, childIndex+1] which produces
+    // a zero-size bounding rect when the tab is the last element in a line,
+    // making the cursor invisible or stuck at the wrong position.
+    if (this.rightGuard) {
+      return [this.rightGuard, this.rightGuard.textContent.length];
+    }
     return super.position(index, inclusive);
   }
 
@@ -284,6 +291,13 @@ class VcfEnhancedRichTextEditor extends RteBase {
           font-size: inherit;
           line-height: inherit;
           pointer-events: none;
+        }
+        /* Right guard at the tab's right edge for correct caret placement.
+           Without this, the right guard renders at the left edge (inline-block)
+           and the cursor appears at the wrong X position after the last tab. */
+        .ql-tab > .ql-tab-guard:last-child {
+          position: absolute;
+          right: 0;
         }
         .ql-tab > span[contenteditable="false"] {
           font-size: 0;
