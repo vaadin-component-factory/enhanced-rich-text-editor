@@ -193,6 +193,17 @@ Follow this exact sequence. Do not skip ahead. Full spec in `user_description.md
     review MUST include at minimum the `fullstack-developer` and `ui-designer` agents.
     Do NOT start implementing until the review feedback has been incorporated.
 
+    **CRITICAL: Planning and review in plan mode:** ALL planning and review activities
+    for migration phases MUST be performed in plan mode (triggered by EnterPlanMode).
+    This includes:
+    - Creating implementation plans for new phases
+    - Having plans reviewed by agents-manager
+    - Incorporating review feedback
+    - Any design or architecture discussions
+    The ONLY exception is when a plan file already exists at `migration_v25/progress/PHASE__plan.md` —
+    in that case, the plan was previously prepared and reviewed in plan mode, so direct
+    implementation can proceed without re-entering plan mode.
+
 ## Implementation Delegation
 
 **Plan execution and presumably non-trivial tasks** MUST be delegated to the
