@@ -401,6 +401,7 @@ const ERTE_I18N_DEFAULTS = {
   placeholderComboBoxLabel: 'Select a placeholder',
   placeholderAppearanceLabel1: 'Plain',
   placeholderAppearanceLabel2: 'Value',
+  alignJustify: 'Justify',
 };
 
 class VcfEnhancedRichTextEditor extends RteBase {
@@ -556,6 +557,14 @@ class VcfEnhancedRichTextEditor extends RteBase {
           pointer-events: none;
           margin-left: 2px;
         }
+
+        /* Justify button icon — RTE 2 base styles define icons for align-left/center/right
+           but not justify. Using SVG mask-image matching the Vaadin iconset icon
+           (vaadin:align-justify: 4 horizontal lines of equal length). */
+        [part~='toolbar-button-align-justify']::before {
+          -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M0 0h16v3h-16v-3z"></path><path d="M0 4h16v3h-16v-3z"></path><path d="M0 12h16v3h-16v-3z"></path><path d="M0 8h16v3h-16v-3z"></path></svg>');
+          mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M0 0h16v3h-16v-3z"></path><path d="M0 4h16v3h-16v-3z"></path><path d="M0 12h16v3h-16v-3z"></path><path d="M0 8h16v3h-16v-3z"></path></svg>');
+        }
       `,
     ];
   }
@@ -609,6 +618,9 @@ class VcfEnhancedRichTextEditor extends RteBase {
       this.__placeholderAppearanceBtn.setAttribute('aria-label',
         i18n.placeholderAppearance || d.placeholderAppearance);
     }
+    if (this.__justifyButton) {
+      this.__justifyButton.setAttribute('aria-label', i18n.alignJustify || d.alignJustify);
+    }
 
     // Placeholder dialog
     if (this.__placeholderDialog) {
@@ -655,6 +667,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
 
     super.ready();
     this._injectToolbarSlots();
+    this._injectJustifyButton();
     this._injectReadonlyButton();
     this._initReadonlyProtection();
     this._initPlaceholderDialog();
@@ -823,6 +836,71 @@ class VcfEnhancedRichTextEditor extends RteBase {
     toolbar.insertBefore(customGroupSpan, anchor);
     toolbar.insertBefore(_slot('after-group-custom'), anchor);
     toolbar.insertBefore(_slot('end'), anchor);
+  }
+
+  /**
+   * Injects the justify button into the alignment toolbar group.
+   * RTE 2 only provides left/center/right; ERTE adds justify.
+   * Quill 2 supports align:justify natively (already in RTE 2's whitelist).
+   * @protected
+   */
+  _injectJustifyButton() {
+    const toolbar = this.shadowRoot?.querySelector('[part="toolbar"]');
+    if (!toolbar) return;
+
+    const alignGroup = toolbar.querySelector('[part~="toolbar-group-alignment"]');
+    if (!alignGroup) return;
+
+    // Create justify button matching RTE 2 button structure
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ql-align';
+    btn.value = 'justify';
+    btn.setAttribute('part', 'toolbar-button toolbar-button-align-justify');
+    btn.setAttribute('aria-label', this.__effectiveI18n?.alignJustify || ERTE_I18N_DEFAULTS.alignJustify);
+
+    // Manually bind click handler since button is added after toolbar module init
+    // Quill's toolbar module only binds buttons that exist at initialization time
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const range = this._editor.getSelection(true);
+      const format = this._editor.getFormat(range);
+      const value = format.align === 'justify' ? false : 'justify';
+      this._editor.format('align', value, Quill.sources.USER);
+      // Update button active state (Quill's toolbar module does this for bound buttons)
+      if (value === 'justify') {
+        btn.classList.add('ql-active');
+      } else {
+        btn.classList.remove('ql-active');
+      }
+    });
+
+    // Update button active state on selection change
+    this._editor.on('selection-change', (range) => {
+      if (!range) return;
+      const format = this._editor.getFormat(range);
+      if (format.align === 'justify') {
+        btn.classList.add('ql-active');
+      } else {
+        btn.classList.remove('ql-active');
+      }
+    });
+
+    // Insert after the align-right button (last in group)
+    const rightBtn = alignGroup.querySelector('[part~="toolbar-button-align-right"]');
+    if (rightBtn && rightBtn.nextSibling) {
+      alignGroup.insertBefore(btn, rightBtn.nextSibling);
+    } else {
+      alignGroup.appendChild(btn);
+    }
+
+    // Inject slot for icon replacement (follows ERTE pattern)
+    const slot = document.createElement('slot');
+    slot.name = 'toolbar-button-align-justify';
+    btn.appendChild(slot);
+
+    // Store reference for i18n updates
+    this.__justifyButton = btn;
   }
 
   // ==========================================================================

@@ -756,6 +756,7 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         private String placeholderComboBoxLabel;
         private String placeholderAppearanceLabel1;
         private String placeholderAppearanceLabel2;
+        private String alignJustify;
 
         public String getReadonly() {
             return readonly;
@@ -832,6 +833,29 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         public EnhancedRichTextEditorI18n setPlaceholderAppearanceLabel2(
                 String placeholderAppearanceLabel2) {
             this.placeholderAppearanceLabel2 = placeholderAppearanceLabel2;
+            return this;
+        }
+
+        /**
+         * Gets the label for the justify alignment button.
+         *
+         * @return the label, or null if not set
+         */
+        public String getAlignJustify() {
+            return alignJustify;
+        }
+
+        /**
+         * Sets the label for the justify alignment button. RTE 2 only provides
+         * left, center, right alignment buttons; the justify button is
+         * ERTE-specific.
+         *
+         * @param alignJustify the label
+         * @return this instance for fluent chaining
+         */
+        public EnhancedRichTextEditorI18n setAlignJustify(
+                String alignJustify) {
+            this.alignJustify = alignJustify;
             return this;
         }
 

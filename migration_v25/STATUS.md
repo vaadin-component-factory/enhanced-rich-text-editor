@@ -1,6 +1,6 @@
 # V25 Migration Status
 
-**Current: 3.3f Align Justify**
+**Current: 3.3g Replace Toolbar Button Icons**
 
 | Phase    | Feature                            | Status |
 |----------|------------------------------------|--------|
@@ -21,7 +21,7 @@
 | **3.3c** | Security Hardening — Sanitization  | COMPLETE |
 | **3.3d** | I18n                               | COMPLETE |
 | **3.3e** | Programmatic Text Insertion        | COMPLETE |
-| 3.3f     | Align Justify                      | NOT STARTED |
+| **3.3f** | Align Justify                      | COMPLETE |
 | 3.3g     | Replace Toolbar Button Icons       | NOT STARTED |
 | 3.3h     | Arrow Navigation                   | NOT STARTED |
 | **3.4**  | **Open Issues (Tier 4)**           | NOT STARTED |
