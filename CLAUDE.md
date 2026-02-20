@@ -12,7 +12,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - [ ] **Using AskUserQuestion?** → `notify-urgent "question"` BEFORE the tool call
 - [ ] **Using EnterPlanMode?** → `notify-urgent "entering plan mode"` BEFORE the tool call
 - [ ] **Using ExitPlanMode?** → `notify-urgent "waiting for plan approval"` BEFORE the tool call
-- [ ] **Tool call needs permission?** → `notify-urgent "permission needed"` BEFORE the tool call
 - [ ] **Hit an error/blockade?** → `notify-urgent "error occurred"` IMMEDIATELY
 - [ ] **Background task completed?** → `notify "task completed"` when you receive task-notification
 
@@ -55,28 +54,21 @@ notify-urgent "Need clarification on approach"
 # Then: AskUserQuestion or text asking for decision
 ```
 
-### 2. Permission prompts → `notify-urgent` BEFORE
-**Trigger:** Any tool call that shows a permission prompt to the user (Edit large file, Bash with sudo, etc.)
-```bash
-notify-urgent "Permission needed for file edit"
-# Then: Edit tool call that triggers prompt
-```
-
-### 3. Blockades, errors, interruptions → `notify-urgent` IMMEDIATELY
+### 2. Blockades, errors, interruptions → `notify-urgent` IMMEDIATELY
 **Trigger:** Build failed, test failed, command errored, can't proceed.
 ```bash
 notify-urgent "Build failed - need user guidance"
 # Then: explain error and ask how to proceed
 ```
 
-### 4. Waiting for user input → `notify-urgent` BEFORE
+### 3. Waiting for user input → `notify-urgent` BEFORE
 **Trigger:** ExitPlanMode (waiting for plan approval), or any situation where you stop and wait.
 ```bash
 notify-urgent "Plan ready for review"
 # Then: ExitPlanMode
 ```
 
-### 5. Long-running tasks completed → `notify` AFTER
+### 4. Long-running tasks completed → `notify` AFTER
 **Trigger:** Task tool completes (you receive task-notification), build finishes, tests finish, server starts.
 ```bash
 notify "Tests completed - 185 passed, 5 failed"
