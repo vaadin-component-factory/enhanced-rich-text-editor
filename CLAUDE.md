@@ -10,6 +10,20 @@ Enhanced Rich Text Editor (ERTE) for Vaadin — a rich text editor component ext
 
 **Transfer folder:** `~/transfer/erte` — shared folder for screenshots and file exchange between user and Claude.
 
+## Notifications — MANDATORY
+**ALWAYS use `notify` or `notify-urgent` in these situations — NO EXCEPTIONS:**
+1. **Questions or clarifications** of any kind, including interactive multiple choice questions → `notify-urgent`
+2. **Permission promps** of any kind, i.e. when you ask the user for a certain permission (yes/no, yes/yes always/no) → `notify-urgent`
+3. **Blockades, errors, or interruptions** → `notify-urgent`
+4. **Waiting for any other user input** → `notify-urgent`
+5. **Long-running tasks completed** (builds, tests, server starts) → `notify`
+
+Commands:
+- `notify "short description"` — informational (task done, status update)
+- `notify-urgent "short description"` — requires user attention (questions, errors, blocks)
+
+The user expects ACTIVE notifications, not just inline text. Failing to notify is a usability failure.
+
 ## Root Scripts
 
 Convenience scripts in the repo root for build, server, and test operations. **Always use these instead of running Maven/server commands manually.**
@@ -165,6 +179,7 @@ a question.
     - **3.3f** Align Justify (Feature 18)
     - **3.3g** Replace Toolbar Button Icons (Feature 19)
     - **3.3h** Arrow Navigation (Feature 20)
+    - **3.4** Open Issues - fixing minor issues, left from the feature impl steps
 
     *Tier 0 (Features 13, 15, 17) — inherited, no migration needed.*
 
@@ -308,16 +323,3 @@ Custom Claude Code agents in `.claude/agents/`. The **agents-manager** orchestra
 ## License
 
 CVALv3 (Commercial Vaadin Add-On License). License headers are enforced on Java files.
-
-## Notifications — MANDATORY
-**ALWAYS use `notify` or `notify-urgent` in these situations — NO EXCEPTIONS:**
-1. **Questions or clarifications** of any kind → `notify-urgent`
-2. **Long-running tasks completed** (builds, tests, server starts) → `notify`
-3. **Blockades, errors, or interruptions** → `notify-urgent`
-4. **Waiting for user input** → `notify-urgent`
-
-Commands:
-- `notify "short description"` — informational (task done, status update)
-- `notify-urgent "short description"` — requires user attention (questions, errors, blocks)
-
-The user expects ACTIVE notifications, not just inline text. Failing to notify is a usability failure.
