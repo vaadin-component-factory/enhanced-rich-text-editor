@@ -29,3 +29,5 @@ rebel.xml
 .claude
 .devcontainer
 .mcp.json
+.playwright-mcp
+test-results

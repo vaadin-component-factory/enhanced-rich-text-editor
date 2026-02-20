@@ -1,0 +1,222 @@
+/* The tabulator spacer */
+span.ql-tab {
+    display: inline-block;
+    min-width: 2px;       /* Prevents disappearing */
+    height: 1rem;         /* Placeholder height */
+    white-space: pre;     /* No line break */
+    vertical-align: bottom;
+    position: relative;
+    cursor: default;      /* Indicates not editable text */
+    /* Fix for "Ghost Character" (\u200B) */
+    font-size: 0;
+    line-height: 0;
+    overflow: hidden;
+    /* GPU acceleration for smoother updates */
+    will-change: width;
+    transform: translateZ(0);
+}
+
+span.ql-soft-break {
+    display: inline;
+}
+
+/* ==========================================
+   WHITESPACE INDICATORS (Show Whitespace)
+   Shows special characters for tabs, soft-breaks, and paragraph ends
+   ========================================== */
+
+/* Tab indicator: → (right arrow) */
+.show-whitespace span.ql-tab::after {
+    position: absolute;
+    content: '→';
+    right: 2px;
+    top: 0;
+    line-height: 1rem;
+    font-size: var(--lumo-font-size-m);
+    color: var(--lumo-contrast-40pct);
+    pointer-events: none;
+}
+
+/* Auto-wrap indicator: ⮐ (return left) - prepended to the → */
+.show-whitespace span.ql-tab.ql-auto-wrap-start::after {
+    content: '⮐→';
+}
+
+/* Soft-break indicator: ↵ (return symbol) */
+.show-whitespace span.ql-soft-break::before {
+    content: '↵';
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-contrast-40pct);
+    vertical-align: baseline;
+    pointer-events: none;
+}
+
+/* Paragraph/Hard-break indicator: ¶ (pilcrow) at end of each paragraph (except last) */
+/* Use absolute positioning to prevent extra line height on empty paragraphs */
+.show-whitespace .ql-editor p:not(:last-child),
+.show-whitespace .ql-editor h1:not(:last-child),
+.show-whitespace .ql-editor h2:not(:last-child),
+.show-whitespace .ql-editor h3:not(:last-child),
+.show-whitespace .ql-editor li:not(:last-child),
+.show-whitespace .ql-editor blockquote:not(:last-child) {
+    position: relative;
+}
+
+.show-whitespace .ql-editor p:not(:last-child)::after,
+.show-whitespace .ql-editor h1:not(:last-child)::after,
+.show-whitespace .ql-editor h2:not(:last-child)::after,
+.show-whitespace .ql-editor h3:not(:last-child)::after,
+.show-whitespace .ql-editor li:not(:last-child)::after,
+.show-whitespace .ql-editor blockquote:not(:last-child)::after {
+    content: '¶';
+    position: absolute;
+    bottom: 0;
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-contrast-30pct);
+    pointer-events: none;
+    margin-left: 2px;
+}
+
+/* ==========================================
+   TAB DEBUG (Background highlighting)
+   Shows subtle background color for tabs
+   ========================================== */
+
+.tab-debug span.ql-tab {
+    background: var(--lumo-contrast-5pct);
+    border-right: 1px dotted var(--lumo-contrast-20pct);
+}
+
+/* ==========================================
+   LEGACY: Keep .debug as alias for both features
+   (for backward compatibility)
+   ========================================== */
+.debug span.ql-tab {
+    background: var(--lumo-contrast-5pct);
+    border-right: 1px dotted var(--lumo-contrast-20pct);
+}
+
+.debug span.ql-tab::after {
+    position: absolute;
+    content: '→';
+    right: 2px;
+    top: 0;
+    line-height: 1rem;
+    font-size: var(--lumo-font-size-m);
+    color: var(--lumo-contrast-40pct);
+    pointer-events: none;
+}
+
+.debug span.ql-tab.ql-auto-wrap-start::after {
+    content: '⮐→';
+}
+
+.debug span.ql-soft-break::before {
+    content: '↵';
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-contrast-40pct);
+    vertical-align: baseline;
+    pointer-events: none;
+}
+
+.debug .ql-editor p:not(:last-child),
+.debug .ql-editor h1:not(:last-child),
+.debug .ql-editor h2:not(:last-child),
+.debug .ql-editor h3:not(:last-child),
+.debug .ql-editor li:not(:last-child),
+.debug .ql-editor blockquote:not(:last-child) {
+    position: relative;
+}
+
+.debug .ql-editor p:not(:last-child)::after,
+.debug .ql-editor h1:not(:last-child)::after,
+.debug .ql-editor h2:not(:last-child)::after,
+.debug .ql-editor h3:not(:last-child)::after,
+.debug .ql-editor li:not(:last-child)::after,
+.debug .ql-editor blockquote:not(:last-child)::after {
+    content: '¶';
+    position: absolute;
+    bottom: 0;
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-contrast-30pct);
+    pointer-events: none;
+    margin-left: 2px;
+}
+
+/* --- Ruler Styles --- */
+.native-quill-ruler {
+    position: relative;
+    height: 24px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+    border-top: 1px solid #ddd;
+    box-sizing: border-box;
+    width: 100%;
+    overflow: hidden;
+    font-family: sans-serif;
+    color: #888;
+    margin-bottom: 5px;
+    /* Improve rendering performance */
+    will-change: scroll-position;
+}
+
+/* Ruler Tick */
+.ruler-tick {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 12px;       /* Wider hit area */
+    transform: translateX(-50%);
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    /* GPU acceleration */
+    will-change: transform;
+}
+
+/* Visual Line */
+.ruler-tick::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    bottom: 0;
+    width: 1px;
+    background-color: #999;
+    /* Smooth transitions with GPU acceleration */
+    transition: width 0.1s ease, background-color 0.1s ease;
+    will-change: width, background-color;
+}
+
+/* Hover Effect */
+.ruler-tick:hover::before {
+    background-color: #555;
+    width: 2px;
+}
+
+/* Alignment Text */
+.ruler-align-text {
+    position: absolute;
+    top: 0px;
+    font-size: 11px;
+    font-weight: bold;
+    color: #555;
+    pointer-events: none;
+    /* Improve text rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.ruler-label {
+    display: none;
+}
+
+/* Performance optimization: Reduce paint on scroll */
+.ql-editor {
+    will-change: scroll-position;
+}
+
+/* Smooth scrolling performance */
+.ql-container {
+    contain: layout style paint;
+}

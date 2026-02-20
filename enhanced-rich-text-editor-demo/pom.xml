@@ -9,7 +9,7 @@
 
     <name>Enhanced Rich Text Editor Demo</name>
 
-    <version>5.1.2</version>
+    <version>5.2.0</version>
 
     <inceptionYear>2019</inceptionYear>
     <organization>
@@ -78,13 +78,21 @@
         <dependency>
             <groupId>org.vaadin.addons.componentfactory</groupId>
             <artifactId>enhanced-rich-text-editor-tables</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>flow-component-demo-helpers</artifactId>
             <version>9.2.3</version>
+        </dependency>
+
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

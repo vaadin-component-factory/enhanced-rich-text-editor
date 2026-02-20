@@ -63,6 +63,9 @@ template.innerHTML = `<vaadin-iconset name="vcf-erte-extra-icons" size="24">
             <path d="M160-240h160v-480H160v480Zm240 0h160v-480H400v480Zm240 0h160v-480H640v480Zm-480 80q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Z"/>
         </svg>
     </g>
+    <g id="whitespace-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <text x="12" y="18" text-anchor="middle" font-family="serif" font-size="20" font-weight="bold" fill="var(--rte-extra-icons-stroke-color)">¶</text>
+</svg></g>
   </defs></svg>
 </vaadin-iconset>`;
 

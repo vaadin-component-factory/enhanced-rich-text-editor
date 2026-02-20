@@ -391,6 +391,87 @@ documentContainer.innerHTML = `
           color: var(--lumo-primary-color);
           border-radius: var(--lumo-border-radius);
         }
+
+        /* Tab Blot (Embed) - inline-block spacer with iterative width calculation */
+        span.ql-tab {
+          display: inline-block;
+          min-width: 2px;
+          height: 1rem;
+          white-space: pre;
+          vertical-align: bottom;
+          position: relative;
+          cursor: default;
+          font-size: 0;
+          line-height: 1rem;
+          overflow: hidden;
+          will-change: width;
+          transform: translateZ(0);
+        }
+
+        /* Soft Break Blot */
+        span.ql-soft-break {
+          display: inline;
+        }
+
+        /* ==========================================
+           WHITESPACE INDICATORS (Show Whitespace)
+           Shows special characters for tabs, soft-breaks, and paragraph ends.
+           Activated by adding 'show-whitespace' class on .ql-editor.
+           CRITICAL: ::after on .ql-tab inherits font-size:0, overflow:hidden
+           from parent. Must explicitly override to make indicators visible.
+           ========================================== */
+
+        /* Tab indicator: → (right arrow) */
+        .show-whitespace span.ql-tab::after {
+          position: absolute;
+          content: '→';
+          right: 2px;
+          top: 0;
+          line-height: 1rem;
+          font-size: var(--lumo-font-size-m, 1rem);
+          overflow: visible;
+          color: var(--lumo-contrast-40pct, rgba(0, 0, 0, 0.38));
+          pointer-events: none;
+        }
+
+        /* Auto-wrap indicator: ⮐→ */
+        .show-whitespace span.ql-tab.ql-auto-wrap-start::after {
+          content: '⮐→';
+        }
+
+        /* Soft-break indicator: ↵ (return symbol) */
+        .show-whitespace span.ql-soft-break::before {
+          content: '↵';
+          font-size: var(--lumo-font-size-s, 0.875rem);
+          color: var(--lumo-contrast-40pct, rgba(0, 0, 0, 0.38));
+          vertical-align: baseline;
+          pointer-events: none;
+        }
+
+        /* Paragraph/Hard-break indicator: ¶ (pilcrow) */
+        .show-whitespace p:not(:last-child),
+        .show-whitespace h1:not(:last-child),
+        .show-whitespace h2:not(:last-child),
+        .show-whitespace h3:not(:last-child),
+        .show-whitespace li:not(:last-child),
+        .show-whitespace blockquote:not(:last-child) {
+          position: relative;
+        }
+
+        .show-whitespace p:not(:last-child)::after,
+        .show-whitespace h1:not(:last-child)::after,
+        .show-whitespace h2:not(:last-child)::after,
+        .show-whitespace h3:not(:last-child)::after,
+        .show-whitespace li:not(:last-child)::after,
+        .show-whitespace blockquote:not(:last-child)::after {
+          content: '¶';
+          position: absolute;
+          bottom: 0;
+          font-size: var(--lumo-font-size-s, 0.875rem);
+          color: var(--lumo-contrast-30pct, rgba(0, 0, 0, 0.26));
+          pointer-events: none;
+          margin-left: 2px;
+        }
       </style>
     </template>
   </dom-module>
