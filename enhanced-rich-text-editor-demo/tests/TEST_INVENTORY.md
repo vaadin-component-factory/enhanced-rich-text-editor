@@ -1,11 +1,11 @@
 # ERTE Test Suite Inventory
 
-> **V25 Migration Status (Phase 3.3d complete):** 185 tests passing, 11 fixme.
-> Implemented: Shell (6), Toolbar (27), Readonly (18), Tabstops (67 pass, 14 fixme), Placeholders (30 pass, 2 fixme), extendOptions (4), Whitespace (7 pass, 2 fixme), Sanitizer (11), I18n (2).
-> Features.spec.ts: 28 pass, 5 fail (addText/getTextLength=3.3e, align justify=3.3f, focus=3.3e).
+> **V25 Migration Status (Phase 3.3g complete):** 195 tests passing, 11 fixme.
+> Implemented: Shell (6), Toolbar (27), Readonly (18), Tabstops (67 pass, 14 fixme), Placeholders (30 pass, 2 fixme), extendOptions (4), Whitespace (7 pass, 2 fixme), Sanitizer (11), I18n (2), Replace Icons (10).
+> Features.spec.ts: 28 pass, 5 fail (focus=unrelated to features).
 
-Total: 268 tests (75 prototype + 193 ERTE)
-V25 status: 185 passed, 11 skipped across all feature specs
+Total: 278 tests (75 prototype + 203 ERTE)
+V25 status: 195 passed, 11 skipped across all feature specs
 
 ---
 
@@ -297,6 +297,27 @@ V25 status: 185 passed, 11 skipped across all feature specs
 
 ### focus() Method
 - focus() method gives focus to the editor
+
+---
+
+## Replace Icons (10 tests) — `erte/replace-icons.spec.ts`
+
+Phase 3.3g — `replaceStandardToolbarButtonIcon()` enum-based API.
+
+| # | Test | Status |
+|---|------|--------|
+| 1 | Pre-configured icons render on load | PASS |
+| 2 | Default icons are removed when custom icon present | PASS |
+| 3 | Custom icon has correct attributes | PASS |
+| 4 | Null icon clears slot and restores default | PASS |
+| 5 | Runtime icon replacement works | PASS |
+| 6 | Icons survive toolbar re-render (i18n change) | PASS |
+| 7 | Multiple icon replacements coexist | PASS |
+| 8 | Icon replacement does not affect button functionality | PASS |
+| 9 | ERTE-specific button icon replacement (justify) | PASS |
+| 10 | Enum API provides compile-time safety | PASS |
+
+**Total:** 10 tests, all passing
 
 ---
 

@@ -667,6 +667,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
 
     super.ready();
     this._injectToolbarSlots();
+    this._injectStandardButtonSlots();
     this._injectJustifyButton();
     this._injectReadonlyButton();
     this._initReadonlyProtection();
@@ -836,6 +837,39 @@ class VcfEnhancedRichTextEditor extends RteBase {
     toolbar.insertBefore(customGroupSpan, anchor);
     toolbar.insertBefore(_slot('after-group-custom'), anchor);
     toolbar.insertBefore(_slot('end'), anchor);
+  }
+
+  /**
+   * Injects icon slots into standard toolbar buttons for icon replacement.
+   * Each button gets an unnamed <slot> prepended as its first child, allowing
+   * Java-side Icon components with slot="button-name" to replace the default
+   * SVG icon (rendered via CSS ::before pseudo-element).
+   * @protected
+   */
+  _injectStandardButtonSlots() {
+    const toolbar = this.shadowRoot.querySelector('[part="toolbar"]');
+    if (!toolbar) return;
+
+    // Query all standard toolbar buttons by part attribute pattern
+    const buttons = toolbar.querySelectorAll('[part*="toolbar-button-"]');
+
+    for (const btn of buttons) {
+      // Extract button name from part attribute (e.g., "toolbar-button-bold" → "bold")
+      const partAttr = btn.getAttribute('part');
+      if (!partAttr) continue;
+
+      const match = partAttr.match(/toolbar-button-([a-z0-9-]+)/);
+      if (!match) continue;
+
+      const buttonName = match[1];
+
+      // Create slot element with name matching button name
+      const slot = document.createElement('slot');
+      slot.setAttribute('name', buttonName);
+
+      // Prepend slot as first child so slotted content appears before ::before icon
+      btn.prepend(slot);
+    }
   }
 
   /**

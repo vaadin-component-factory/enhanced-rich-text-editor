@@ -109,11 +109,15 @@ public final class SlotUtil {
 
     /**
      * Replaces a standard toolbar button icon via its named slot.
+     * Pass {@code null} for icon to clear the slot and restore the default icon.
      */
     public static void replaceStandardButtonIcon(
             EnhancedRichTextEditor target, Icon icon, String iconSlotName) {
+        // Always clear existing icon first
+        clearSlot(target, iconSlotName);
+
+        // If a new icon is provided, add it to the slot
         if (icon != null) {
-            clearSlot(target, iconSlotName);
             icon.getElement().setAttribute("slot", iconSlotName);
             target.getElement().appendChild(icon.getElement());
         }

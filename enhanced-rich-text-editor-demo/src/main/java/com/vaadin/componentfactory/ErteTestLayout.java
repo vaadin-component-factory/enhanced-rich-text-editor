@@ -103,10 +103,12 @@ public class ErteTestLayout extends AppLayout {
         tier3.addItem(disabled("3.3e addText",
                 VaadinIcon.PENCIL.create()));
 
-        tier3.addItem(disabled("3.3f Align Justify",
+        tier3.addItem(new SideNavItem("3.3f Align Justify",
+                "erte-test/align-justify",
                 VaadinIcon.ALIGN_JUSTIFY.create()));
 
-        tier3.addItem(disabled("3.3g Replace Icons",
+        tier3.addItem(new SideNavItem("3.3g Replace Icons",
+                "erte-test/replace-icons",
                 VaadinIcon.PICTURE.create()));
 
         tier3.addItem(disabled("3.3h Arrow Nav",

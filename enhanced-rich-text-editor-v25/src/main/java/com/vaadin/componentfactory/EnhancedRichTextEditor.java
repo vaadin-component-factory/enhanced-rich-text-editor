@@ -133,6 +133,30 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         SlotUtil.replaceStandardButtonIcon(this, icon, iconSlotName);
     }
 
+    /**
+     * Replaces a standard toolbar button's icon via its enum constant.
+     * <p>
+     * The icon is projected into the button's light DOM slot, replacing the
+     * default SVG icon. Pass {@code null} to clear a previously set icon and
+     * restore the default appearance.
+     * <p>
+     * Example:
+     * <pre>
+     * editor.replaceStandardToolbarButtonIcon(
+     *     ToolbarButton.BOLD,
+     *     new Icon(VaadinIcon.STAR)
+     * );
+     * </pre>
+     *
+     * @param button the toolbar button to modify (not null)
+     * @param icon   the replacement icon, or {@code null} to restore default
+     * @throws NullPointerException if button is null
+     */
+    public void replaceStandardToolbarButtonIcon(ToolbarButton button, Icon icon) {
+        Objects.requireNonNull(button, "ToolbarButton cannot be null");
+        replaceStandardButtonIcon(icon, button.getPartSuffix());
+    }
+
     // ---- Toolbar button visibility API ----
 
     /**
