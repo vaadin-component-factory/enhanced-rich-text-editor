@@ -24,5 +24,8 @@
 | 3.3f     | Align Justify                      | NOT STARTED |
 | 3.3g     | Replace Toolbar Button Icons       | NOT STARTED |
 | 3.3h     | Arrow Navigation                   | NOT STARTED |
-| 3.4      | Open Issues                        | NOT STARTED |
+| **3.4**  | **Open Issues (Tier 4)**           | NOT STARTED |
+| 3.4a     | Placeholder Button Active State    | NOT STARTED |
+| 3.4b     | Toolbar Arrow-Key Navigation       | NOT STARTED |
+| 3.4c     | Whitespace Indicators (Spaces)     | NOT STARTED |
 | 4        | Table Extension                    | NOT STARTED |
