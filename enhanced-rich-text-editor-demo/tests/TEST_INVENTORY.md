@@ -1,8 +1,9 @@
 # ERTE Test Suite Inventory
 
-> **V25 Migration Status (Phase 3.3g complete):** 205 tests passing, 10 fixme.
-> Implemented: Shell (6), Toolbar (26), Readonly (18), Tabstops (67 pass, 14 fixme), Placeholders (30 pass, 2 fixme), extendOptions (4), Whitespace (7 pass, 2 fixme), Sanitizer (11), I18n (2), Replace Icons (10).
+> **V25 Migration Status (Phase 3.3g complete):** 205 tests passing, 10 skipped.
+> Implemented: Shell (6), Toolbar (26), Readonly (18), Tabstops (67 pass, 14 skip), Placeholders (30 pass, 2 skip), extendOptions (4), Whitespace (7 pass, 2 skip), Sanitizer (11), I18n (2), Replace Icons (10).
 > Features.spec.ts: 32 pass, 1 fail (focus=unrelated to features).
+> Skipped tests document known Quill 2/Parchment 3 limitations and deferred features, not ERTE bugs.
 
 Total: 277 tests (75 prototype + 202 ERTE)
 V25 status: 205 passed, 10 skipped across all feature specs
