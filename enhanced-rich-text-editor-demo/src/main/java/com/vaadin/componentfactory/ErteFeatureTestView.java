@@ -69,13 +69,17 @@ public class ErteFeatureTestView extends VerticalLayout {
         // Control buttons
         Button addTextAtCursor = new Button("Add Text at Cursor");
         addTextAtCursor.setId("add-text-cursor");
-        addTextAtCursor.addClickListener(e ->
-                logEvent("addText: NOT YET IMPLEMENTED (Phase 3.3e)"));
+        addTextAtCursor.addClickListener(e -> {
+            editor.addText("INSERTED");
+            logEvent("addText: Inserted 'INSERTED' at cursor");
+        });
 
         Button addTextAtPos = new Button("Add Text at Position 0");
         addTextAtPos.setId("add-text-pos");
-        addTextAtPos.addClickListener(e ->
-                logEvent("addText(pos): NOT YET IMPLEMENTED (Phase 3.3e)"));
+        addTextAtPos.addClickListener(e -> {
+            editor.addText("PREFIX", 0);
+            logEvent("addText(0): Inserted 'PREFIX' at position 0");
+        });
 
         Button toggleDisabled = new Button("Toggle Disabled");
         toggleDisabled.setId("toggle-disabled");
@@ -105,8 +109,10 @@ public class ErteFeatureTestView extends VerticalLayout {
 
         Button getTextLength = new Button("Get Text Length");
         getTextLength.setId("get-text-length");
-        getTextLength.addClickListener(e ->
-                logEvent("getTextLength: NOT YET IMPLEMENTED (Phase 3.3e)"));
+        getTextLength.addClickListener(e -> {
+            editor.getTextLength(length ->
+                logEvent("TextLength: " + length));
+        });
 
         // Set German I18n (with ERTE-specific labels)
         Button setGermanI18n = new Button("Set German I18n");

@@ -32,6 +32,7 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.richtexteditor.RteExtensionBase;
+import com.vaadin.flow.function.SerializableConsumer;
 import com.vaadin.flow.internal.JacksonUtils;
 import com.vaadin.flow.shared.Registration;
 
@@ -643,6 +644,84 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         public String getAppearanceLabel() {
             return appearanceLabel;
         }
+    }
+
+    // ========================================================================
+    // Programmatic Text Insertion (Feature 14)
+    // ========================================================================
+
+    /**
+     * Asynchronously retrieves the editor's text length.
+     * <p>
+     * The callback is invoked once the length is available from the browser.
+     * Quill's internal trailing newline is excluded from the count to match
+     * user expectations (e.g., "Hello" returns 5, not 6).
+     * </p>
+     * <p>
+     * <strong>Breaking Change from V24:</strong> V24's synchronous API
+     * ({@code int getTextLength()}) cannot be preserved in V25 due to
+     * Vaadin's deadlock detection. This async callback pattern matches
+     * Vaadin's {@code WebStorage.getItem()} API.
+     * </p>
+     *
+     * @param callback Consumer that receives the text length (never null)
+     * @throws NullPointerException if callback is null
+     */
+    public void getTextLength(SerializableConsumer<Integer> callback) {
+        Objects.requireNonNull(callback, "Callback cannot be null");
+        getElement()
+            .executeJs(
+                "return Math.max(0, ($0._editor ? $0._editor.getLength() : 0) - 1)",
+                getElement()
+            )
+            .then(Integer.class, callback::accept);
+    }
+
+    /**
+     * Inserts text at the specified position.
+     * <p>
+     * Position is clamped to valid range [0, length-1] on the client side.
+     * No insertion occurs if the editor is disabled.
+     * </p>
+     * <p>
+     * <strong>Behavior Change from V24:</strong> V24 rejected out-of-bounds
+     * positions silently. V25 clamps to nearest valid position.
+     * </p>
+     *
+     * @param text Text to be inserted (not null)
+     * @param position Position where text should be inserted (0-based index)
+     * @throws NullPointerException if text is null
+     */
+    public void addText(String text, int position) {
+        Objects.requireNonNull(text, "Text cannot be null");
+        getElement().executeJs(
+            "if ($0._editor && $0._editor.isEnabled()) {" +
+            "  const len = Math.max(1, $0._editor.getLength());" +
+            "  const pos = Math.max(0, Math.min($1, len - 1));" +
+            "  $0._editor.insertText(pos, $2);" +
+            "}",
+            getElement(), position, text
+        );
+    }
+
+    /**
+     * Inserts text at the current cursor position.
+     * <p>
+     * If no selection exists, editor is not focused, or editor is disabled,
+     * no insertion occurs.
+     * </p>
+     *
+     * @param text Text to be inserted (not null)
+     * @throws NullPointerException if text is null
+     */
+    public void addText(String text) {
+        Objects.requireNonNull(text, "Text cannot be null");
+        getElement().executeJs(
+            "if ($0._editor && $0._editor.isEnabled() && $0._editor.getSelection()) {" +
+            "  $0._editor.insertText($0._editor.getSelection().index, $1);" +
+            "}",
+            getElement(), text
+        );
     }
 
     // ========================================================================

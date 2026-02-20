@@ -2,6 +2,40 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## ⚠️ BEFORE YOU RESPOND — NOTIFICATION CHECKLIST
+
+**Check these BEFORE every response. Failing to notify = usability failure.**
+
+- [ ] **Using Task tool?** → Is this a long-running operation? → `notify "description"` AFTER completion
+- [ ] **Using AskUserQuestion?** → `notify-urgent "question"` BEFORE the tool call
+- [ ] **Using EnterPlanMode?** → `notify-urgent "entering plan mode"` BEFORE the tool call
+- [ ] **Using ExitPlanMode?** → `notify-urgent "waiting for plan approval"` BEFORE the tool call
+- [ ] **Tool call needs permission?** → `notify-urgent "permission needed"` BEFORE the tool call
+- [ ] **Hit an error/blockade?** → `notify-urgent "error occurred"` IMMEDIATELY
+- [ ] **Background task completed?** → `notify "task completed"` when you receive task-notification
+
+**Pattern:** Notification = SEPARATE Bash call. NEVER combine with other tools in same message.
+
+**Examples:**
+```bash
+# ✅ CORRECT - separate notification call before the blocking action
+notify-urgent "Waiting for plan approval"
+# (then in next tool block: ExitPlanMode)
+
+# ✅ CORRECT - notify after long task completes
+notify "Build completed successfully"
+
+# ❌ WRONG - no notification before question
+# (AskUserQuestion without prior notify-urgent)
+
+# ❌ WRONG - combined in same message
+# (Bash notify + Task in parallel blocks)
+```
+
+---
+
 ## Project Overview
 
 Enhanced Rich Text Editor (ERTE) for Vaadin — a rich text editor component extending Vaadin's built-in RTE with tabstops, placeholders, non-breaking space, rulers, customizable toolbar, read-only sections, and more.
@@ -11,16 +45,49 @@ Enhanced Rich Text Editor (ERTE) for Vaadin — a rich text editor component ext
 **Transfer folder:** `~/transfer/erte` — shared folder for screenshots and file exchange between user and Claude.
 
 ## Notifications — MANDATORY AND VERY IMPORTANT! DON'T IGNORE THIS!!!
-**ALWAYS use `notify` or `notify-urgent` in these situations — NO EXCEPTIONS:**
-1. **Questions or clarifications** of any kind, including interactive multiple choice questions → `notify-urgent`
-2. **Permission promps** of any kind, i.e. when you ask the user for a certain permission (yes/no, yes/yes always/no) → `notify-urgent`
-3. **Blockades, errors, or interruptions** → `notify-urgent`
-4. **Waiting for any other user input** → `notify-urgent`
-5. **Long-running tasks completed** (builds, tests, server starts) → `notify`
 
-Commands:
+**ALWAYS use `notify` or `notify-urgent` in these situations — NO EXCEPTIONS:**
+
+### 1. Questions or clarifications → `notify-urgent` BEFORE
+**Trigger:** AskUserQuestion, EnterPlanMode, or any text where you ask the user to decide something.
+```bash
+notify-urgent "Need clarification on approach"
+# Then: AskUserQuestion or text asking for decision
+```
+
+### 2. Permission prompts → `notify-urgent` BEFORE
+**Trigger:** Any tool call that shows a permission prompt to the user (Edit large file, Bash with sudo, etc.)
+```bash
+notify-urgent "Permission needed for file edit"
+# Then: Edit tool call that triggers prompt
+```
+
+### 3. Blockades, errors, interruptions → `notify-urgent` IMMEDIATELY
+**Trigger:** Build failed, test failed, command errored, can't proceed.
+```bash
+notify-urgent "Build failed - need user guidance"
+# Then: explain error and ask how to proceed
+```
+
+### 4. Waiting for user input → `notify-urgent` BEFORE
+**Trigger:** ExitPlanMode (waiting for plan approval), or any situation where you stop and wait.
+```bash
+notify-urgent "Plan ready for review"
+# Then: ExitPlanMode
+```
+
+### 5. Long-running tasks completed → `notify` AFTER
+**Trigger:** Task tool completes (you receive task-notification), build finishes, tests finish, server starts.
+```bash
+notify "Tests completed - 185 passed, 5 failed"
+# After: receiving task-notification or seeing background task output
+```
+
+**Commands:**
 - `notify "short description"` — informational (task done, status update)
 - `notify-urgent "short description"` — requires user attention (questions, errors, blocks)
+
+**Timing:** Notification = SEPARATE Bash call in its own message. NEVER combine with the triggering action.
 
 The user expects ACTIVE notifications, not just inline text. Failing to notify is a usability failure.
 
