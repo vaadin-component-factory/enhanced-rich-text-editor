@@ -527,6 +527,21 @@ test.describe('ERTE Feature Tests', () => {
   // ============================================
 
   test.describe('Sanitizer', () => {
+    /**
+     * Helper: sets HTML via the TextArea + Set HTML button, then reads it
+     * back via Get HTML. Returns the sanitized HTML string.
+     */
+    async function setAndGetHtml(page: any, html: string): Promise<string> {
+      // Vaadin TextArea is a web component — target the inner textarea
+      const htmlInput = page.locator('#html-input textarea');
+      await htmlInput.fill(html);
+      await page.locator('#set-html').click();
+      await page.waitForTimeout(500);
+      await page.locator('#get-html').click();
+      await page.waitForTimeout(500);
+      return (await page.locator('#html-output').textContent()) || '';
+    }
+
     test('22 - Sanitizer preserves ERTE-specific classes in HTML output', async ({ page }) => {
       // Load content with a tab blot
       await page.locator('#load-tab-delta').click();
@@ -602,6 +617,79 @@ test.describe('ERTE Feature Tests', () => {
         htmlOutput!.includes('placeholder');
 
       expect(hasPlaceholderContent).toBe(true);
+    });
+
+    test('25 - Strips url() from style attribute', async ({ page }) => {
+      const result = await setAndGetHtml(
+        page,
+        '<p style="background: url(https://evil.com/track.gif)">tracked</p>'
+      );
+      expect(result).not.toContain('url(');
+      expect(result).toContain('tracked');
+    });
+
+    test('26 - Strips expression() from style attribute', async ({ page }) => {
+      const result = await setAndGetHtml(
+        page,
+        '<p style="width: expression(alert(1))">xss</p>'
+      );
+      expect(result).not.toContain('expression');
+      expect(result).toContain('xss');
+    });
+
+    test('27 - Preserves safe color style through round-trip', async ({ page }) => {
+      const result = await setAndGetHtml(
+        page,
+        '<p><span style="color: rgb(230, 0, 0)">red text</span></p>'
+      );
+      expect(result).toContain('color');
+      expect(result).toContain('rgb(230, 0, 0)');
+    });
+
+    test('28 - Preserves safe background-color style through round-trip', async ({ page }) => {
+      const result = await setAndGetHtml(
+        page,
+        '<p><span style="background-color: rgb(255, 255, 0)">highlight</span></p>'
+      );
+      expect(result).toContain('background-color');
+      expect(result).toContain('rgb(255, 255, 0)');
+    });
+
+    test('29 - Strips data:text/html from img src', async ({ page }) => {
+      const result = await setAndGetHtml(
+        page,
+        '<p>before</p><img src="data:text/html,<script>alert(1)</script>" /><p>after</p>'
+      );
+      expect(result).not.toContain('data:text/html');
+      expect(result).toContain('before');
+    });
+
+    test('30 - Preserves data:image/png in img src', async ({ page }) => {
+      const result = await setAndGetHtml(
+        page,
+        '<p>text</p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" />'
+      );
+      expect(result).toContain('data:image/png');
+    });
+
+    test('31 - Strips unknown CSS properties', async ({ page }) => {
+      const result = await setAndGetHtml(
+        page,
+        '<p style="-moz-binding: url(evil); color: blue">text</p>'
+      );
+      expect(result).not.toContain('-moz-binding');
+      expect(result).toContain('color');
+      expect(result).toContain('blue');
+    });
+
+    test('32 - background: url() shorthand is blocked', async ({ page }) => {
+      const result = await setAndGetHtml(
+        page,
+        '<p style="background: url(https://evil.com/img.png) no-repeat; color: green">text</p>'
+      );
+      expect(result).not.toContain('url(');
+      expect(result).toContain('color');
+      expect(result).toContain('green');
     });
   });
 

@@ -16,6 +16,7 @@
  */
 package com.vaadin.flow.component.richtexteditor;
 
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,8 +50,58 @@ public abstract class RteExtensionBase extends RichTextEditor {
             "ql-readonly", "ql-tab", "ql-soft-break", "ql-placeholder",
             "ql-nbsp");
 
+    private static final Set<String> ALLOWED_CSS_PROPERTIES = Set.of(
+            // Text
+            "color", "background-color", "background", "font-size",
+            "font-family", "font-weight", "font-style",
+            // Layout
+            "text-align", "text-indent", "text-decoration",
+            "text-decoration-line", "text-decoration-style",
+            "text-decoration-color", "direction",
+            // Spacing
+            "line-height", "letter-spacing", "word-spacing",
+            // Box
+            "margin", "margin-top", "margin-right", "margin-bottom",
+            "margin-left", "padding", "padding-top", "padding-right",
+            "padding-bottom", "padding-left",
+            // Border
+            "border", "border-top", "border-right", "border-bottom",
+            "border-left", "border-width", "border-style", "border-color",
+            "border-collapse", "border-spacing",
+            // Display
+            "display", "white-space", "vertical-align", "visibility",
+            "opacity",
+            // Size
+            "width", "height", "min-width", "max-width", "min-height",
+            "max-height",
+            // Position
+            "position", "top", "right", "bottom", "left", "float",
+            // Other
+            "list-style-type", "overflow", "overflow-x", "overflow-y",
+            "cursor");
+
+    private static final Set<String> SAFE_CSS_FUNCTIONS = Set.of(
+            "rgb(", "rgba(", "hsl(", "hsla(", "calc(");
+
+    private static final Set<String> SAFE_DATA_MIMES = Set.of(
+            "image/png", "image/jpeg", "image/jpg", "image/gif",
+            "image/webp", "image/bmp", "image/x-icon");
+
     private static final Pattern CLASS_ATTR_PATTERN = Pattern
             .compile("class=\"([^\"]*)\"");
+
+    private static final Pattern STYLE_ATTR_PATTERN = Pattern
+            .compile("style=\"([^\"]*)\"");
+
+    private static final Pattern CSS_COMMENT_PATTERN = Pattern
+            .compile("/\\*.*?\\*/");
+
+    private static final Pattern CSS_FUNCTION_PATTERN = Pattern
+            .compile("\\w+\\s*\\(");
+
+    private static final Pattern DATA_SRC_PATTERN = Pattern.compile(
+            "src=\"data:\\s*([^;\"]+)[^\"]*\"",
+            Pattern.CASE_INSENSITIVE);
 
     private boolean ertePendingPresentationUpdate;
 
@@ -88,10 +139,10 @@ public abstract class RteExtensionBase extends RichTextEditor {
                 .addTags("img", "h1", "h2", "h3", "s")
                 .addAttributes("img", "align", "alt", "height", "src",
                         "title", "width")
-                .addAttributes(":all", "style")
-                .addProtocols("img", "src", "data")
+                .addAttributes(":all", "style", "class")
+                .addProtocols("img", "src", "data", "http", "https")
                 // ERTE additions
-                .addAttributes("span", "class", "contenteditable",
+                .addAttributes("span", "contenteditable",
                         "aria-readonly", "data-placeholder");
 
         String safe = Jsoup.clean(html, "", safelist, settings);
@@ -99,8 +150,15 @@ public abstract class RteExtensionBase extends RichTextEditor {
         // Post-filter: only allow known ERTE classes, strip unknown ones
         safe = filterErteClasses(safe);
 
+        // Post-filter: restrict style attributes to safe CSS properties
+        safe = filterStyleAttributes(safe);
+
+        // Post-filter: restrict data: URLs to safe image MIME types
+        safe = filterDataUrls(safe);
+
         // Post-filter: only allow contenteditable="false"
         safe = safe.replace("contenteditable=\"true\"", "");
+        safe = safe.replace("contenteditable=\"\"", "");
 
         return safe;
     }
@@ -134,6 +192,83 @@ public abstract class RteExtensionBase extends RichTextEditor {
             m.appendReplacement(sb,
                     "class=\"" + Matcher.quoteReplacement(filtered.toString())
                             + "\"");
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
+
+    /**
+     * Filters style attributes to only allow safe CSS properties. Strips
+     * dangerous CSS functions (only whitelisted ones like rgb/calc allowed),
+     * {@code @import} directives, and CSS comments.
+     */
+    private static String filterStyleAttributes(String html) {
+        Matcher m = STYLE_ATTR_PATTERN.matcher(html);
+        StringBuilder sb = new StringBuilder();
+        while (m.find()) {
+            String styleValue = m.group(1);
+            // Strip CSS comments first
+            styleValue = CSS_COMMENT_PATTERN.matcher(styleValue).replaceAll("");
+            String[] declarations = styleValue.split(";");
+            StringBuilder filtered = new StringBuilder();
+            for (String decl : declarations) {
+                decl = decl.trim();
+                if (decl.isEmpty()) continue;
+                int colon = decl.indexOf(':');
+                if (colon < 0) continue;
+                String property = decl.substring(0, colon).trim()
+                        .toLowerCase(Locale.ROOT);
+                String value = decl.substring(colon + 1).trim();
+                // Skip unknown properties
+                if (!ALLOWED_CSS_PROPERTIES.contains(property)) continue;
+                // Skip values containing @import
+                if (value.toLowerCase(Locale.ROOT).contains("@import"))
+                    continue;
+                // Check for CSS function calls — only allow whitelisted ones
+                Matcher funcMatcher = CSS_FUNCTION_PATTERN.matcher(
+                        value.toLowerCase(Locale.ROOT));
+                boolean hasDangerousFunction = false;
+                while (funcMatcher.find()) {
+                    String func = funcMatcher.group();
+                    if (!SAFE_CSS_FUNCTIONS.contains(func)) {
+                        hasDangerousFunction = true;
+                        break;
+                    }
+                }
+                if (hasDangerousFunction) continue;
+                if (filtered.length() > 0) filtered.append("; ");
+                filtered.append(property).append(": ").append(value);
+            }
+            if (filtered.length() > 0) {
+                m.appendReplacement(sb, "style=\""
+                        + Matcher.quoteReplacement(filtered.toString())
+                        + "\"");
+            } else {
+                // Remove empty style attribute entirely
+                m.appendReplacement(sb, "");
+            }
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
+
+    /**
+     * Filters {@code data:} URLs in {@code src} attributes to only allow
+     * safe image MIME types. SVG is excluded (can contain scripts).
+     */
+    private static String filterDataUrls(String html) {
+        Matcher m = DATA_SRC_PATTERN.matcher(html);
+        StringBuilder sb = new StringBuilder();
+        while (m.find()) {
+            String mime = m.group(1).trim().toLowerCase(Locale.ROOT);
+            if (SAFE_DATA_MIMES.contains(mime)) {
+                // Keep safe data URL as-is
+                m.appendReplacement(sb,
+                        Matcher.quoteReplacement(m.group()));
+            } else {
+                // Strip entire src attribute for unsafe MIME types
+                m.appendReplacement(sb, "");
+            }
         }
         m.appendTail(sb);
         return sb.toString();

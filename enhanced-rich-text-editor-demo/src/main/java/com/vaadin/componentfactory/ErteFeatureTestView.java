@@ -25,6 +25,7 @@ import com.vaadin.flow.component.html.Pre;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.richtexteditor.RichTextEditor;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 
@@ -199,10 +200,21 @@ public class ErteFeatureTestView extends VerticalLayout {
                 toggleDisabled, toggleReadonly, toggleNoRulers);
         HorizontalLayout controls3 = new HorizontalLayout(
                 loadTabDelta, loadReadonlyDelta, loadPlaceholderDelta, getHtml);
-        HorizontalLayout controls4 = new HorizontalLayout(setGermanI18n);
+        // Set HTML from TextArea (for sanitizer round-trip testing)
+        TextArea htmlInput = new TextArea("HTML Input");
+        htmlInput.setId("html-input");
+        htmlInput.setWidthFull();
+        htmlInput.setMaxHeight("100px");
+
+        Button setHtml = new Button("Set HTML");
+        setHtml.setId("set-html");
+        setHtml.addClickListener(e ->
+                editor.setValue(htmlInput.getValue()));
+
+        HorizontalLayout controls4 = new HorizontalLayout(setGermanI18n, setHtml);
 
         add(controls1, controls2, controls3, controls4,
-                editor, deltaOutput, eventLog, readyIndicator);
+                htmlInput, editor, deltaOutput, eventLog, readyIndicator);
     }
 
     private void logEvent(String message) {

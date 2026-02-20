@@ -1,6 +1,6 @@
 # V25 Migration Status
 
-**Current: 3.3c Security Hardening — Sanitization**
+**Current: 3.3d I18n**
 
 | Phase    | Feature                            | Status |
 |----------|------------------------------------|--------|
@@ -18,7 +18,7 @@
 | **3.2b** | Custom Keyboard Shortcuts          | COMPLETE |
 | **3.3a** | Non-Breaking Space                 | COMPLETE |
 | **3.3b** | Whitespace Indicators              | COMPLETE |
-| 3.3c     | Security Hardening — Sanitization  | NOT STARTED |
+| **3.3c** | Security Hardening — Sanitization  | COMPLETE |
 | 3.3d     | I18n                               | NOT STARTED |
 | 3.3e     | Programmatic Text Insertion        | NOT STARTED |
 | 3.3f     | Align Justify                      | NOT STARTED |
