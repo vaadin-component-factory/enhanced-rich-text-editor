@@ -83,12 +83,6 @@ public class ErteTestLayout extends AppLayout {
                 "erte-test/extend-options",
                 VaadinIcon.COG.create()));
 
-        // -- Tier 2: Important --
-        var tier2 = new SideNavItem("Tier 2 — Important");
-        tier2.setPrefixComponent(VaadinIcon.STAR_HALF_LEFT.create());
-
-        // 3.2a + 3.2b share toolbar view — listed under Tier 1 Toolbar item
-
         // -- Tier 3: Remaining --
         var tier3 = new SideNavItem("Tier 3 — Remaining");
         tier3.setPrefixComponent(VaadinIcon.STAR_O.create());
@@ -96,7 +90,8 @@ public class ErteTestLayout extends AppLayout {
         tier3.addItem(new SideNavItem("3.3a NBSP",
                 "erte-test/features", VaadinIcon.TEXT_LABEL.create()));
 
-        tier3.addItem(disabled("3.3b Whitespace",
+        tier3.addItem(new SideNavItem("3.3b Whitespace",
+                "erte-test/tabstops",
                 VaadinIcon.ALIGN_JUSTIFY.create()));
 
         tier3.addItem(disabled("3.3c Sanitizer",
@@ -117,7 +112,7 @@ public class ErteTestLayout extends AppLayout {
         tier3.addItem(disabled("3.3h Arrow Nav",
                 VaadinIcon.ARROWS_LONG_H.create()));
 
-        nav.addItem(tier1, tier2, tier3);
+        nav.addItem(tier1, tier3);
         return nav;
     }
 

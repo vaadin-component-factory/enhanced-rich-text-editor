@@ -251,6 +251,28 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
                 key, shortKey, shiftKey, altKey);
     }
 
+    // ---- Whitespace Indicators API ----
+
+    /**
+     * Sets whether whitespace indicators are shown in the editor.
+     * When enabled, special characters are displayed: → (tab), ↵ (soft-break),
+     * ¶ (paragraph end), ⮐→ (auto-wrap).
+     *
+     * @param show true to show whitespace indicators
+     */
+    public void setShowWhitespace(boolean show) {
+        getElement().setProperty("showWhitespace", show);
+    }
+
+    /**
+     * Returns whether whitespace indicators are currently shown.
+     *
+     * @return true if whitespace indicators are visible
+     */
+    public boolean isShowWhitespace() {
+        return getElement().getProperty("showWhitespace", false);
+    }
+
     // ---- TabStop API ----
 
     /**

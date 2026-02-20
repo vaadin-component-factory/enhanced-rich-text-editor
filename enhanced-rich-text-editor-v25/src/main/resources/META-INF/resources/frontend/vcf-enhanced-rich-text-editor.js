@@ -402,6 +402,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
       placeholderTags: { type: Object },
       placeholderAltAppearance: { type: Boolean },
       placeholderAltAppearancePattern: { type: String },
+      showWhitespace: { type: Boolean },
     };
   }
 
@@ -481,6 +482,62 @@ class VcfEnhancedRichTextEditor extends RteBase {
           font-size: inherit;
           line-height: inherit;
         }
+
+        /* Whitespace indicators — activated by 'show-whitespace' class on .ql-editor.
+           CRITICAL: ::after on .ql-tab inherits font-size:0, overflow:hidden
+           from parent. Must explicitly override to make indicators visible. */
+
+        /* Tab indicator: → (right arrow) */
+        .show-whitespace span.ql-tab::after {
+          position: absolute;
+          content: '→';
+          right: 2px;
+          top: 0;
+          line-height: 1rem;
+          font-size: var(--lumo-font-size-m, 1rem);
+          overflow: visible;
+          color: var(--lumo-contrast-40pct, rgba(0, 0, 0, 0.38));
+          pointer-events: none;
+        }
+
+        /* Auto-wrap indicator: ⮐→ */
+        .show-whitespace span.ql-tab.ql-auto-wrap-start::after {
+          content: '⮐→';
+        }
+
+        /* Soft-break indicator: ↵ (return symbol) */
+        .show-whitespace span.ql-soft-break::before {
+          content: '↵';
+          font-size: var(--lumo-font-size-s, 0.875rem);
+          color: var(--lumo-contrast-40pct, rgba(0, 0, 0, 0.38));
+          vertical-align: baseline;
+          pointer-events: none;
+        }
+
+        /* Paragraph/Hard-break indicator: ¶ (pilcrow) */
+        .show-whitespace p:not(:last-child),
+        .show-whitespace h1:not(:last-child),
+        .show-whitespace h2:not(:last-child),
+        .show-whitespace h3:not(:last-child),
+        .show-whitespace li:not(:last-child),
+        .show-whitespace blockquote:not(:last-child) {
+          position: relative;
+        }
+
+        .show-whitespace p:not(:last-child)::after,
+        .show-whitespace h1:not(:last-child)::after,
+        .show-whitespace h2:not(:last-child)::after,
+        .show-whitespace h3:not(:last-child)::after,
+        .show-whitespace li:not(:last-child)::after,
+        .show-whitespace blockquote:not(:last-child)::after {
+          content: '¶';
+          position: absolute;
+          bottom: 0;
+          font-size: var(--lumo-font-size-s, 0.875rem);
+          color: var(--lumo-contrast-30pct, rgba(0, 0, 0, 0.26));
+          pointer-events: none;
+          margin-left: 2px;
+        }
       `,
     ];
   }
@@ -526,6 +583,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
     this._initReadonlyProtection();
     this._initPlaceholderDialog();
     this._injectPlaceholderButtons();
+    this._injectWhitespaceButton();
 
     // Tab engine initialization
     this._tabStopsArray = [];
@@ -558,6 +616,10 @@ class VcfEnhancedRichTextEditor extends RteBase {
     if (this.placeholders) this._onPlaceholdersChanged(this.placeholders);
     if (this.placeholderTags) this._onPlaceholderTagsChanged(this.placeholderTags);
     if (this.placeholderAltAppearancePattern) this._onPlaceholderAltAppearancePatternChanged(this.placeholderAltAppearancePattern);
+
+    // Whitespace indicator property observer
+    this._createPropertyObserver('showWhitespace', '_showWhitespaceChanged');
+    if (this.showWhitespace) this._showWhitespaceChanged(this.showWhitespace);
 
     // Recalculate tab widths on every text change
     this._editor.on('text-change', () => this._requestTabUpdate());
@@ -759,6 +821,67 @@ class VcfEnhancedRichTextEditor extends RteBase {
       selection.index, selection.length,
       'readonly', !format.readonly, 'user'
     );
+  }
+
+  // ==========================================================================
+  // Whitespace indicators: toolbar button + toggle
+  // ==========================================================================
+
+  /**
+   * Injects a whitespace indicator toggle button into the toolbar,
+   * placed in the format group before the readonly button.
+   * @protected
+   */
+  _injectWhitespaceButton() {
+    const toolbar = this.shadowRoot.querySelector('[part="toolbar"]');
+    if (!toolbar) return;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.setAttribute('part', 'toolbar-button toolbar-button-whitespace');
+    btn.setAttribute('aria-label', 'Show whitespace');
+    btn.addEventListener('click', () => this._onWhitespaceClick());
+
+    // Pilcrow icon — inline SVG
+    btn.innerHTML = `<svg viewBox="0 0 24 24" width="1em" height="1em" style="fill:currentColor">
+      <text x="12" y="19" text-anchor="middle" font-family="serif" font-size="20" font-weight="bold">¶</text>
+    </svg>`;
+
+    // Place in format group, before readonly button
+    const formatGroup = toolbar.querySelector('[part~="toolbar-group-format"]');
+    if (formatGroup) {
+      const readonlyBtn = formatGroup.querySelector('[part~="toolbar-button-readonly"]');
+      if (readonlyBtn) {
+        formatGroup.insertBefore(btn, readonlyBtn);
+      } else {
+        formatGroup.appendChild(btn);
+      }
+    } else {
+      const fileInput = toolbar.querySelector('#fileInput');
+      toolbar.insertBefore(btn, fileInput || null);
+    }
+
+    this.__whitespaceBtn = btn;
+  }
+
+  /**
+   * Toggle whitespace indicators on/off.
+   * @protected
+   */
+  _onWhitespaceClick() {
+    this.showWhitespace = !this.showWhitespace;
+  }
+
+  /**
+   * Property observer for showWhitespace — toggles CSS class and button state.
+   * @protected
+   */
+  _showWhitespaceChanged(show) {
+    const editor = this._editor?.root;
+    if (editor) editor.classList.toggle('show-whitespace', !!show);
+    if (this.__whitespaceBtn) {
+      this.__whitespaceBtn.classList.toggle('ql-active', !!show);
+    }
   }
 
   // ==========================================================================

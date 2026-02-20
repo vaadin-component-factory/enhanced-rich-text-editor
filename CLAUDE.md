@@ -10,7 +10,7 @@ Enhanced Rich Text Editor (ERTE) for Vaadin — a rich text editor component ext
 
 **Transfer folder:** `~/transfer/erte` — shared folder for screenshots and file exchange between user and Claude.
 
-## Notifications — MANDATORY
+## Notifications — MANDATORY AND VERY IMPORTANT! DON'T IGNORE THIS!!!
 **ALWAYS use `notify` or `notify-urgent` in these situations — NO EXCEPTIONS:**
 1. **Questions or clarifications** of any kind, including interactive multiple choice questions → `notify-urgent`
 2. **Permission promps** of any kind, i.e. when you ask the user for a certain permission (yes/no, yes/yes always/no) → `notify-urgent`

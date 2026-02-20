@@ -2126,7 +2126,7 @@ test.describe('ERTE Tabstops', () => {
   // WHITESPACE INDICATORS Tests
   // ============================================
 
-  test.describe.fixme('Whitespace Indicators', () => {
+  test.describe('Whitespace Indicators', () => {
     test('Show Whitespace toolbar button is present and not active by default', async ({ page }) => {
       const btn = page.locator('#test-editor').locator('[part~="toolbar-button-whitespace"]');
       await expect(btn).toBeVisible();

@@ -1,11 +1,11 @@
 # ERTE Test Suite Inventory
 
-> **V25 Migration Status (Phase 3.2b complete):** 150 tests passing, 18 fixme.
-> Implemented: Shell (6), Toolbar (27), Readonly (18), Tabstops (67 pass, 14 fixme), Placeholders (30 pass, 2 fixme), extendOptions (4).
-> Remaining ERTE tests will be restored as features are migrated.
+> **V25 Migration Status (Phase 3.3b complete):** 159 tests passing, 9 fixme.
+> Implemented: Shell (6), Toolbar (27), Readonly (18), Tabstops (67 pass, 14 fixme), Placeholders (30 pass, 2 fixme), extendOptions (4), Whitespace (9 pass).
+> Features.spec.ts: 18 pass, 6 fail (addText/getTextLength=3.3e, align justify=3.3f, i18n=3.3d, focus=3.3e).
 
 Total: 258 tests (75 prototype + 183 ERTE)
-V25 status: 150 passed, 18 fixme across implemented features (tabstops, readonly, toolbar, placeholders, extend-options)
+V25 status: 183 passed, 9 skipped across all feature specs
 
 ---
 
