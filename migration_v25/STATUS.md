@@ -28,4 +28,14 @@
 | 3.4a     | Placeholder Button Active State    | NOT STARTED |
 | 3.4b     | Toolbar Arrow-Key Navigation       | NOT STARTED |
 | 3.4c     | Whitespace Indicators (Spaces)     | NOT STARTED |
-| 4        | Table Extension                    | NOT STARTED |
+| **3.5**  | **Documentation (Core)**           | NOT STARTED |
+| 3.5a     | Upgrade Guide ERTE 1→2             | NOT STARTED |
+| 3.5b     | User Documentation                 | NOT STARTED |
+| 3.5c     | Developer Documentation            | NOT STARTED |
+| 3.5d     | README & Project Docs              | NOT STARTED |
+| **4**    | **Tables Addon**                   | NOT STARTED |
+| 4.1      | Project Setup & Base               | NOT STARTED |
+| 4.2      | Blot Migration                     | NOT STARTED |
+| 4.3      | UI Controls & Java API             | NOT STARTED |
+| 4.4      | Tests                              | NOT STARTED |
+| 4.5      | Documentation                      | NOT STARTED |
