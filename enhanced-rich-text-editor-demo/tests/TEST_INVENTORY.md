@@ -1,11 +1,11 @@
 # ERTE Test Suite Inventory
 
-> **V25 Migration Status (Phase 3.3b complete):** 159 tests passing, 9 fixme.
-> Implemented: Shell (6), Toolbar (27), Readonly (18), Tabstops (67 pass, 14 fixme), Placeholders (30 pass, 2 fixme), extendOptions (4), Whitespace (9 pass).
+> **V25 Migration Status (Phase 3.3b complete):** 157 tests passing, 11 fixme.
+> Implemented: Shell (6), Toolbar (27), Readonly (18), Tabstops (67 pass, 14 fixme), Placeholders (30 pass, 2 fixme), extendOptions (4), Whitespace (7 pass, 2 fixme).
 > Features.spec.ts: 18 pass, 6 fail (addText/getTextLength=3.3e, align justify=3.3f, i18n=3.3d, focus=3.3e).
 
 Total: 258 tests (75 prototype + 183 ERTE)
-V25 status: 183 passed, 9 skipped across all feature specs
+V25 status: 181 passed, 11 skipped across all feature specs
 
 ---
 
@@ -132,8 +132,8 @@ V25 status: 183 passed, 9 skipped across all feature specs
 - Paragraph indicator visible at end of paragraphs
 - Disabling Show Whitespace removes indicators
 - Indicators visible for all whitespace types simultaneously
-- Auto-wrap indicator shown for wrapped tabs
-- Auto-wrap class removed when tab not on wrapped line
+- ~~Auto-wrap indicator shown for wrapped tabs~~ *(fixme — auto-wrap indicator disabled)*
+- ~~Auto-wrap class removed when tab not on wrapped line~~ *(fixme — auto-wrap indicator disabled)*
 
 ### ERTE Integration
 - Java setTabStops reflects in UI

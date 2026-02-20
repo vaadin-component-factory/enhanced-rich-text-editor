@@ -500,10 +500,12 @@ class VcfEnhancedRichTextEditor extends RteBase {
           pointer-events: none;
         }
 
-        /* Auto-wrap indicator: ⮐→ */
+        /* Auto-wrap indicator: DISABLED — only triggers for tabs that wrap,
+           not for text wrapping. Inconsistent behavior, so deactivated for now.
         .show-whitespace span.ql-tab.ql-auto-wrap-start::after {
           content: '⮐→';
         }
+        */
 
         /* Soft-break indicator: ↵ (return symbol) */
         .show-whitespace span.ql-soft-break::before {
@@ -1509,19 +1511,20 @@ class VcfEnhancedRichTextEditor extends RteBase {
 
       const isWrappedLine = this._isWrappedLine(tab, tabRect, parentBlock, parentRect);
 
-      tab.classList.remove('ql-auto-wrap-start');
-
-      if (isWrappedLine && parentBlock) {
-        const topPos = Math.round(tabRect.top);
-        if (!blockVisualLines.has(parentBlock)) {
-          blockVisualLines.set(parentBlock, new Set());
-        }
-        const seenTops = blockVisualLines.get(parentBlock);
-        if (!seenTops.has(topPos)) {
-          seenTops.add(topPos);
-          tab.classList.add('ql-auto-wrap-start');
-        }
-      }
+      // Auto-wrap indicator: DISABLED — only triggers for tabs that wrap,
+      // not for text wrapping. Inconsistent behavior, so deactivated for now.
+      // tab.classList.remove('ql-auto-wrap-start');
+      // if (isWrappedLine && parentBlock) {
+      //   const topPos = Math.round(tabRect.top);
+      //   if (!blockVisualLines.has(parentBlock)) {
+      //     blockVisualLines.set(parentBlock, new Set());
+      //   }
+      //   const seenTops = blockVisualLines.get(parentBlock);
+      //   if (!seenTops.has(topPos)) {
+      //     seenTops.add(topPos);
+      //     tab.classList.add('ql-auto-wrap-start');
+      //   }
+      // }
 
       const contentWidth = this._measureContentWidth(tab);
 
