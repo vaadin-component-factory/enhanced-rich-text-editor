@@ -30,9 +30,9 @@
 | 3.4c     | Whitespace Indicators (Spaces)     | COMPLETE |
 | 3.4d     | Fix focus() Method                 | COMPLETE |
 | 3.4e     | Toolbar Button Sync                | NOT SOLVABLE *(documented)* |
-| **3.4f** | Slotted Toolbar Button Styles      | NOT STARTED |
-| **3.4g** | ToolbarPopover                     | NOT STARTED |
-| **3.4h** | ToolbarSelectPopup                 | NOT STARTED |
+| **3.4f** | Slotted Toolbar Button Styles      | COMPLETE |
+| **3.4g** | ToolbarPopover                     | COMPLETE |
+| **3.4h** | ToolbarSelectPopup                 | COMPLETE |
 | **3.4i** | ToolbarDialog                      | NOT STARTED |
 | **3.4j** | Aura Theme Support                 | NOT STARTED *(spike required first)* |
 | **3.5**  | **Documentation (Core)**           | IN PROGRESS |

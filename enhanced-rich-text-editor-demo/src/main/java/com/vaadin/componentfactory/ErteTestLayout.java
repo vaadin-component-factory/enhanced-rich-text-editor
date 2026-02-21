@@ -122,6 +122,10 @@ public class ErteTestLayout extends AppLayout {
                 "erte-test/toolbar-popover",
                 VaadinIcon.VIEWPORT.create()));
 
+        phase34.addItem(new SideNavItem("3.4h ToolbarSelectPopup",
+                "erte-test/toolbar-select-popup",
+                VaadinIcon.MENU.create()));
+
         nav.addItem(tier1, tier3, phase34);
         return nav;
     }
