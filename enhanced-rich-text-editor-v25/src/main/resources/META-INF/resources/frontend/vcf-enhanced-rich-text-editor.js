@@ -780,41 +780,162 @@ class VcfEnhancedRichTextEditor extends RteBase {
   }
 
   /**
-   * Override RTE 2's _addToolbarListeners() to read _toolbarButtons
-   * dynamically inside the keydown handler instead of capturing a stale
-   * closure. RTE 2 captures buttons at init time, before ERTE injects
-   * custom buttons (placeholder, readonly, justify, whitespace, etc.).
-   * The stale closure causes TypeError when arrow keys are pressed.
+   * Returns all focusable elements in the toolbar, including custom slotted
+   * components. Broader than RTE 2's _toolbarButtons (which only queries buttons).
+   * @protected
+   */
+  get _toolbarFocusableElements() {
+    const toolbar = this.shadowRoot?.querySelector('[part="toolbar"]');
+    if (!toolbar) return [];
+
+    // Walk the toolbar's children in visual/DOM order to build the elements list.
+    // This ensures slotted elements appear at the correct position, not at the end.
+    const elements = [];
+
+    const collectFocusable = (node) => {
+      // If this is a slot, collect its assigned elements
+      if (node.tagName === 'SLOT') {
+        const assigned = node.assignedElements({ flatten: true });
+        for (const el of assigned) {
+          elements.push(el);
+        }
+        return;
+      }
+
+      // If this is a focusable element itself, add it
+      const selector = 'button, [tabindex], a[href], vaadin-text-field, vaadin-text-area, vaadin-combo-box';
+      if (node.matches && node.matches(selector)) {
+        elements.push(node);
+      }
+
+      // Recurse into children (for groups, spans, etc.)
+      if (node.children) {
+        for (const child of node.children) {
+          collectFocusable(child);
+        }
+      }
+    };
+
+    // Start recursion from toolbar root
+    for (const child of toolbar.children) {
+      collectFocusable(child);
+    }
+
+    // Filter by visibility and enabled state
+    // For Vaadin components, check if they or their children are disabled
+    return elements.filter(el => {
+      if (el.clientHeight === 0) return false;
+      if (el.disabled || el.hasAttribute('disabled')) return false;
+      // Vaadin components might delegate to internal button - check that too
+      if (el.shadowRoot) {
+        const internalButton = el.shadowRoot.querySelector('button');
+        if (internalButton && (internalButton.disabled || internalButton.hasAttribute('disabled'))) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }
+
+  /**
+   * Returns true if the element consumes arrow keys for internal navigation
+   * (input fields, textareas, combo-boxes, etc.). These elements should NOT
+   * participate in toolbar arrow-key navigation.
+   * @private
+   */
+  _isArrowKeyConsumer(element) {
+    if (!element) return false;
+
+    // Native input elements that use arrow keys
+    if (element.matches('input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input[type="number"], textarea')) {
+      return true;
+    }
+
+    // Vaadin components that wrap inputs
+    if (element.matches('vaadin-text-field, vaadin-text-area, vaadin-email-field, vaadin-number-field, vaadin-integer-field, vaadin-password-field, vaadin-combo-box, vaadin-select')) {
+      return true;
+    }
+
+    // Contenteditable elements
+    if (element.getAttribute('contenteditable') === 'true') {
+      return true;
+    }
+
+    // Check for focusElement property (Vaadin pattern for internal focus delegation)
+    if (element.focusElement && element.focusElement !== element) {
+      return this._isArrowKeyConsumer(element.focusElement);
+    }
+
+    return false;
+  }
+
+  /**
+   * Override RTE 2's _addToolbarListeners() to:
+   * 1. Include ALL focusable elements (not just buttons) — supports custom components
+   * 2. Respect arrow-key consumers (inputs, etc.) — don't preventDefault for those
+   *
+   * RTE 2 captures _toolbarButtons in a closure at init time, which becomes stale
+   * after ERTE injects custom buttons. ERTE reads dynamically on each keydown.
    * @private
    */
   _addToolbarListeners() {
     const toolbar = this._toolbar;
 
-    // Initial tabindex setup — disable tabbing to all but the first button.
-    // Use a snapshot; this is a one-time setup, not the navigation logic.
-    const initialButtons = this._toolbarButtons;
-    initialButtons.forEach((button, index) => index > 0 && button.setAttribute('tabindex', '-1'));
+    // Initial tabindex setup — disable tabbing to all but the first element
+    const initialElements = this._toolbarFocusableElements;
+    initialElements.forEach((el, index) => index > 0 && el.setAttribute('tabindex', '-1'));
 
     toolbar.addEventListener('keydown', (e) => {
-      // Use roving tab-index for the toolbar buttons
+      // Arrow key navigation
       if ([37, 39].indexOf(e.keyCode) > -1) {
+        // Check if target consumes arrow keys (TextField, Input, etc.)
+        if (this._isArrowKeyConsumer(e.target)) {
+          // Don't preventDefault — let the element handle arrow keys internally
+          return;
+        }
+
         e.preventDefault();
-        // Read buttons DYNAMICALLY — includes ERTE-injected buttons
-        const buttons = this._toolbarButtons;
-        let index = buttons.indexOf(e.target);
-        if (index === -1) return; // guard: target not in button list
-        buttons[index].setAttribute('tabindex', '-1');
+
+        // Read focusable elements DYNAMICALLY (includes ERTE-injected components)
+        const elements = this._toolbarFocusableElements;
+
+        // Find which element in our list fired the event
+        // For slotted/Vaadin components, e.target might be an internal element,
+        // so check composedPath() to find the actual toolbar element
+        const path = e.composedPath();
+        let currentElement = null;
+        let index = -1;
+
+        for (const pathElement of path) {
+          index = elements.indexOf(pathElement);
+          if (index !== -1) {
+            currentElement = pathElement;
+            break;
+          }
+        }
+
+        if (index === -1) return; // guard: target not in list
+
+        elements[index].setAttribute('tabindex', '-1');
 
         let step;
         if (e.keyCode === 39) {
-          step = 1;
+          step = 1;  // Right arrow
         } else if (e.keyCode === 37) {
-          step = -1;
+          step = -1; // Left arrow
         }
-        index = (buttons.length + index + step) % buttons.length;
-        buttons[index].removeAttribute('tabindex');
-        buttons[index].focus();
+        index = (elements.length + index + step) % elements.length;
+        const nextElement = elements[index];
+        nextElement.removeAttribute('tabindex');
+
+        // For Vaadin components that delegate focus, call focus on focusElement if available
+        if (nextElement.focusElement && nextElement.focusElement !== nextElement) {
+          nextElement.focusElement.focus();
+        } else {
+          nextElement.focus();
+        }
       }
+
       // Esc and Tab focuses the content
       if (e.keyCode === 27 || (e.key === 'Tab' && !e.shiftKey)) {
         e.preventDefault();
@@ -822,10 +943,10 @@ class VcfEnhancedRichTextEditor extends RteBase {
       }
     });
 
-    // Mousedown happens before editor focusout
+    // Mousedown handler
     toolbar.addEventListener('mousedown', (e) => {
-      const buttons = this._toolbarButtons;
-      if (buttons.indexOf(e.composedPath()[0]) > -1) {
+      const elements = this._toolbarFocusableElements;
+      if (elements.indexOf(e.composedPath()[0]) > -1) {
         this._markToolbarFocused();
       }
     });

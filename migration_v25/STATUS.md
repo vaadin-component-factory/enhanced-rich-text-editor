@@ -26,7 +26,7 @@
 | **3.3h** | Arrow Navigation                   | COMPLETE *(impl. in 3.1c)* |
 | **3.4**  | **Open Issues (Tier 4)**           | NOT STARTED |
 | 3.4a     | Placeholder Button Active State    | COMPLETE |
-| 3.4b     | Toolbar Arrow-Key Navigation       | NOT STARTED |
+| 3.4b     | Toolbar Arrow-Key Navigation       | PARTIAL ⚠️ |
 | 3.4c     | Whitespace Indicators (Spaces)     | NOT STARTED |
 | 3.4d     | Fix focus() Method                 | NOT STARTED |
 | **3.5**  | **Documentation (Core)**           | NOT STARTED |

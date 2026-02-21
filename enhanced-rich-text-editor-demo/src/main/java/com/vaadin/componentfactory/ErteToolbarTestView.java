@@ -28,6 +28,7 @@ import com.vaadin.flow.component.html.Pre;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 
@@ -117,9 +118,19 @@ public class ErteToolbarTestView extends VerticalLayout {
         var toolbarSwitch = new ToolbarSwitch("SW");
         toolbarSwitch.setId("toolbar-switch");
         toolbarSwitch.getElement().setAttribute("title", "Toolbar switch");
+        toolbarSwitch.getElement().setAttribute("tabindex", "0");
         toolbarSwitch.addActiveChangedListener(e -> appendEvent(
                 "ToolbarSwitchChanged active=" + e.isActive()));
         editor.addCustomToolbarComponents(toolbarSwitch);
+
+        // GROUP_CUSTOM — TextField (arrow-key consumer test)
+        var toolbarTextField = new TextField();
+        toolbarTextField.setId("toolbar-textfield");
+        toolbarTextField.setPlaceholder("Type here...");
+        toolbarTextField.setWidth("120px");
+        toolbarTextField.getElement().setAttribute("title", "TextField in toolbar");
+        toolbarTextField.getElement().setAttribute("tabindex", "0");
+        editor.addCustomToolbarComponents(toolbarTextField);
 
         // --- Delta output (client-side text-change) ---
         deltaOutput = new Pre();

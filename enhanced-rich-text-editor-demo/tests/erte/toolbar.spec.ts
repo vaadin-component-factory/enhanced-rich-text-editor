@@ -473,6 +473,83 @@ test.describe('ERTE Toolbar', () => {
     expect(thirdFocused).toBe(firstFocused);
   });
 
+  test('Arrow navigation includes custom components — ToolbarSwitch', async ({ page }) => {
+    // First verify the switch can be focused programmatically
+    const canFocus = await page.evaluate(() => {
+      const toolbarSwitch = document.getElementById('toolbar-switch');
+      if (!toolbarSwitch) return false;
+
+      toolbarSwitch.focus();
+      return document.activeElement === toolbarSwitch;
+    });
+
+    expect(canFocus).toBe(true); // Verify switch can receive focus
+
+    await focusEditor(page);
+    await page.keyboard.press('Shift+Tab');
+
+    // Navigate with ArrowRight until we find the ToolbarSwitch
+    // Slotted elements are in light DOM, so check document.activeElement
+    let foundSwitch = false;
+    for (let i = 0; i < 50; i++) { // safety limit
+      const isSwitch = await page.evaluate(() => {
+        const toolbarSwitch = document.getElementById('toolbar-switch');
+        const active = document.activeElement;
+
+        // Check if active element is the toolbar switch (by reference)
+        // Slotted elements remain in light DOM, so document.activeElement finds them
+        return active === toolbarSwitch;
+      });
+
+      if (isSwitch) {
+        foundSwitch = true;
+        break;
+      }
+
+      await page.keyboard.press('ArrowRight');
+    }
+
+    expect(foundSwitch).toBe(true);
+  });
+
+  test('TextField in toolbar consumes arrow keys — no toolbar navigation', async ({ page }) => {
+    await focusEditor(page);
+
+    // Focus the TextField directly (Tab navigation would get there eventually)
+    await page.evaluate(() => {
+      const editor = document.getElementById('test-editor') as any;
+      const toolbar = editor?.shadowRoot?.querySelector('[part="toolbar"]');
+      const textField = toolbar?.querySelector('#toolbar-textfield') as any;
+      textField?.focus();
+    });
+
+    // Type some text
+    await page.keyboard.type('Hello');
+
+    // Press ArrowLeft twice, then type X
+    // If arrow keys work within field: cursor moves, X inserted → "HelXlo"
+    // If toolbar navigation hijacks: focus moves away, X not inserted
+    await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('ArrowLeft');
+    await page.keyboard.type('X');
+
+    const text = await page.evaluate(() => {
+      const editor = document.getElementById('test-editor') as any;
+      const toolbar = editor?.shadowRoot?.querySelector('[part="toolbar"]');
+      const textField = toolbar?.querySelector('#toolbar-textfield') as any;
+      return textField?.value || '';
+    });
+
+    expect(text).toBe('HelXlo'); // Arrow keys worked within field
+
+    // Verify TextField still has focus (arrows didn't navigate away)
+    const stillFocused = await page.evaluate(() => {
+      const editor = document.getElementById('test-editor') as any;
+      return editor?.shadowRoot?.activeElement?.id === 'toolbar-textfield';
+    });
+    expect(stillFocused).toBe(true);
+  });
+
   // ============================================
   // I18N — TOOLBAR SURVIVES RE-RENDER
   // ============================================
