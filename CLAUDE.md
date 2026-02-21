@@ -43,6 +43,8 @@ Enhanced Rich Text Editor (ERTE) for Vaadin — a rich text editor component ext
 
 **Screenshots:** Saved to `.claude/screenshots/` (working directory). The `~/transfer/erte` folder is read-only.
 
+**Project Language:** English for all code, documentation, comments, commit messages, and technical content. User communication is in German.
+
 ## Notifications — MANDATORY AND VERY IMPORTANT! DON'T IGNORE THIS!!!
 
 **ALWAYS use `notify` or `notify-urgent` in these situations — NO EXCEPTIONS:**
