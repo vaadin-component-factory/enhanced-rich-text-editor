@@ -1,102 +1,132 @@
 # Enhanced Rich Text Editor for Flow
 
-Enhanced Rich Text Editor for Flow is an extended version of Vaadin Rich Text 
-Editor with more functionalities like tab-stops, non-breaking space, rulers, customizing toolbar buttons and
-read-only sections.
+Enhanced Rich Text Editor (ERTE) for Flow is an extended version of the Vaadin Rich Text Editor with tabstops, placeholders, non-breaking space, rulers, customizable toolbar, readonly sections, whitespace indicators, and more.
 
- [Live Demo ↗](https://incubator.app.fi/enhanced-rich-text-editor-demo/enhanced-rich-text-editor)
+**Version 6.x** targets Vaadin 25.0.x, Java 21+, Spring Boot 4.x, and Quill 2.
 
-# Usage
+**License:** [CVALv3](https://vaadin.com/license/cval-3) (Commercial Vaadin Add-On License)
 
-## Tabstops
+## Documentation
 
-Tabstops can be set in UI by clicking on horizontal ruler, on top of the editor. 
-There are 3 tabstop possible directions: Left, Right and Middle.
-* When Direction set to Left: then left side of text will be aligned to right side of tab stop (>text)
-* When Direction set to Right: then right side of text will be aligned to left side of tab stop  (text<)
-* When Direction set to Middle: then text will be centered to tab stop  (te|xt)
+- [User Guide](docs/USER_GUIDE.md) -- Features, examples, and best practices
+- [API Reference](docs/API_REFERENCE.md) -- Complete API surface (methods, events, enums)
+- [Configuration Guide](docs/CONFIGURATION.md) -- Toolbar, i18n, shortcuts, theming, sanitization
+- [Upgrade Guide](docs/UPGRADE_GUIDE.md) -- Migrating from ERTE 1 (v5.x, Vaadin 24) to ERTE 2 (v6.x, Vaadin 25)
 
-When you click on ruler left tabstop will appear, 
-then if you click on left tabstop it will change to right tabstop, and if you click on right tabstop it will change to middle tabstop. 
-It is also possible to set tabstops programmatically by using tabStops property of editor. For example:
+## Quick Start
 
-```
-EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
-List<TabStop> tabStops = new ArrayList<>();
+### Maven Dependency
 
-tabStops.add(new TabStop(TabStop.Direction.LEFT, 150));
-tabStops.add(new TabStop(TabStop.Direction.RIGHT, 350));
-tabStops.add(new TabStop(TabStop.Direction.MIDDLE, 550));
-
-rte.setTabStops(tabStops);
+```xml
+<dependency>
+    <groupId>com.vaadin.componentfactory</groupId>
+    <artifactId>enhanced-rich-text-editor-v25</artifactId>
+    <version>6.0.0</version>
+</dependency>
 ```
 
-Position of tab stop is set in pixels.
+> **Note:** Vaadin 25 moved the Rich Text Editor from `vaadin-core` to the commercial `vaadin` artifact. A Vaadin Pro subscription or higher is required for production use.
 
-## Non-breaking space
+### Basic Usage
 
-To add a non-breaking space where the caret is located, press `shift+space`.
+```java
+EnhancedRichTextEditor editor = new EnhancedRichTextEditor();
 
-## Customizing toolbar buttons
+// Configure tabstops
+editor.setTabStops(List.of(
+    new TabStop(TabStop.Direction.LEFT, 150),
+    new TabStop(TabStop.Direction.RIGHT, 350),
+    new TabStop(TabStop.Direction.MIDDLE, 550)
+));
 
-You can use `setToolbarButtonsVisibility` to show/hide the toolbar buttons. For example, the following piece of code hides Image and Link buttons.
+// Hide unwanted toolbar buttons
+editor.setToolbarButtonsVisibility(Map.of(
+    EnhancedRichTextEditor.ToolbarButton.IMAGE, false,
+    EnhancedRichTextEditor.ToolbarButton.CODE_BLOCK, false
+));
 
-```
-Map<EnhancedRichTextEditor.ToolbarButton, Boolean> buttons = new HashMap<>();
-buttons.put(EnhancedRichTextEditor.ToolbarButton.IMAGE, false);
-buttons.put(EnhancedRichTextEditor.ToolbarButton.LINK, false);
-rte.setToolbarButtonsVisibility(buttons);
-```
+// Set and get HTML content
+editor.setValue("<p>Hello, world!</p>");
+String html = editor.getValue();
 
-You can also add custom components, like `Button`, `ComboBox` or `ToolbarSwitch` to the toolbar, using the
-`addToolbarComponents` method. Currently the toolbar supports placement of custom components at its start, end, between
-groups and in the special (legacy) "custom" slot at the end of the toolbar. The enumeration `ToolbarSlot` provides a 
-list of potential places to add them. 
-
-```
-ComboBox<String> presets = new ComboBox<>("", "Preset 1", "Preset 2", "Preset 3");
-presets.setValue("Preset 1");
-presets.setTooltipText("A (non functional) custom toolbar component, placed in the '" + 
-ToolbarSlot.START.getSlotName() + "' slot");
-rte.addToolbarComponents(ToolbarSlot.START, presets);
-
-Select<String> colors = new Select<>();
-colors.setItems("Red", "Green", "Blue");
-colors.setValue("Red");
-colors.setTooltipText("A (non functional) custom toolbar component, placed in the '" + 
-ToolbarSlot.BEFORE_GROUP_GLYPH_TRANSFORMATION.getSlotName() + "' slot");
-rte.addToolbarComponents(ToolbarSlot.BEFORE_GROUP_GLYPH_TRANSFORMATION, colors);
+// Listen for changes (fires on blur)
+editor.addValueChangeListener(e -> save(e.getValue()));
 ```
 
-## Readonly sections
+## Features
 
-To make part of text read only, select text and click `lock` icon in toolbar. Now text is not editable. 
-To make text editable egain, select it and clicl `lock` button again.
-
-Limitations of readonly functionality:
-* Readonly is not working in `code` block
-* Readonly is a inline element(like span), so it is still possible to put cursore after the area and add some text
-* Readonly area can be deleted, if user put cursor after it and press backspace
-* Readonly area can be styled using toolbar buttons
-* Selecting multiple lines and making them readonly will create multiple Readonly areas
-
-The following example shows how you can have readonly sections in the middle of your text. 
-
-```
-rte.setValue("[" +
-        "{\"insert\":\"Some text\\n\"}," +
-        "{\"insert\":{\"readonly\":\"Some readonly text\\n\"}}," +
-        "{\"insert\":\"More text\\n\"}," +
-        "{\"insert\":{\"readonly\":\"More readonly text\\n\"}}]");
-``` 
+| Feature | Description |
+|---------|-------------|
+| **Tabstops** | Left/Right/Middle alignment with pixel-precise positioning |
+| **Rulers** | Horizontal and vertical rulers with click-to-add tabstops |
+| **Placeholders** | Embedded tokens with dialog, formatting, and alt appearance |
+| **Readonly Sections** | Inline content protection with delete prevention |
+| **Toolbar Customization** | 27 slots, 30 button visibility controls, custom keyboard shortcuts |
+| **Toolbar Icon Replacement** | Replace any standard button icon with Vaadin icons |
+| **Non-Breaking Space** | Shift+Space inserts non-breaking space |
+| **Soft-Break** | Shift+Enter inserts line break within paragraph |
+| **Whitespace Indicators** | Visual display of tabs, breaks, paragraphs, and wraps |
+| **Align Justify** | Additional justify alignment option |
+| **Extension Hooks** | Register custom Quill formats and modules |
+| **I18n** | Full internationalization for all ERTE-specific labels |
+| **Sanitization** | Server-side HTML sanitizer with XSS protection |
+| **Programmatic Text** | Insert text at cursor or position, query length |
 
 ## Tables
-To enable the usage of tables in the editor, you need to add the 
-[Table Extension ↗](https://vaadin.com/directory/component/enhanced-rich-text-editor-tables-extension), which is a 
-separate addon. Follow the instructions of the extension on how to use the table functionality.
 
-# Running the demo
-* Run from the command line `mvn install -DskipTests`
-* Run from the command line `mvn -pl enhanced-rich-text-editor-demo -Pwar jetty:run`
-* Browse http://127.0.0.1:8080/enhanced-rich-text-editor
+To enable table functionality, add the separate Tables Extension addon:
 
+```xml
+<dependency>
+    <groupId>com.vaadin.componentfactory</groupId>
+    <artifactId>enhanced-rich-text-editor-tables-v25</artifactId>
+    <version>2.0.0</version>
+</dependency>
+```
+
+## Running the Demo
+
+```bash
+# Build all modules
+bash v25-build.sh
+
+# Start the demo server on port 8080
+bash v25-server-start.sh
+
+# Browse to http://localhost:8080
+
+# Stop the server
+bash v25-server-stop.sh
+```
+
+## Running Tests
+
+```bash
+# Build and start server first
+bash v25-build.sh
+bash v25-server-start.sh
+
+# Run Playwright tests
+cd enhanced-rich-text-editor-demo
+npx playwright test tests/erte/
+
+# Stop server after testing
+bash v25-server-stop.sh
+```
+
+## Project Structure
+
+| Module | Description |
+|--------|-------------|
+| `enhanced-rich-text-editor-v25/` | Core component (V25) |
+| `enhanced-rich-text-editor-tables-v25/` | Tables extension (V25) |
+| `enhanced-rich-text-editor-demo/` | Demo application with test views |
+| `enhanced-rich-text-editor/` | V24 core (reference only, excluded from build) |
+| `enhanced-rich-text-editor-tables/` | V24 tables (reference only, excluded from build) |
+
+## Version History
+
+| Version | Vaadin | Java | Quill | Status |
+|---------|--------|------|-------|--------|
+| 6.0.x | 25.0.x | 21+ | 2.0.3 | Active development |
+| 5.2.x | 24.x | 17+ | 1.3.6 | Maintenance (master branch) |

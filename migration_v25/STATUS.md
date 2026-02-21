@@ -32,9 +32,10 @@
 | 3.4e     | Toolbar Button Sync                | NOT SOLVABLE *(documented)* |
 | **3.5**  | **Documentation (Core)**           | IN PROGRESS |
 | 3.5a     | Upgrade Guide ERTE 1→2             | COMPLETE |
-| 3.5b     | User Documentation                 | NOT STARTED |
+| 3.5b     | User Documentation                 | COMPLETE |
 | 3.5c     | Developer Documentation            | NOT STARTED |
-| 3.5d     | README & Project Docs              | NOT STARTED |
+| 3.5d     | README & Project Docs              | PARTIAL *(README done in 3.5b)* |
+| 3.5e     | Documentation Review               | NOT STARTED |
 | **4**    | **Tables Addon**                   | NOT STARTED |
 | 4.1      | Project Setup & Base               | NOT STARTED |
 | 4.2      | Blot Migration                     | NOT STARTED |
