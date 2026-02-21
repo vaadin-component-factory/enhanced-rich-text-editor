@@ -28,7 +28,7 @@
 | 3.4a     | Placeholder Button Active State    | COMPLETE |
 | 3.4b     | Toolbar Arrow-Key Navigation       | COMPLETE |
 | 3.4c     | Whitespace Indicators (Spaces)     | COMPLETE |
-| 3.4d     | Fix focus() Method                 | NOT STARTED |
+| 3.4d     | Fix focus() Method                 | COMPLETE |
 | **3.5**  | **Documentation (Core)**           | NOT STARTED |
 | 3.5a     | Upgrade Guide ERTE 1→2             | NOT STARTED |
 | 3.5b     | User Documentation                 | NOT STARTED |

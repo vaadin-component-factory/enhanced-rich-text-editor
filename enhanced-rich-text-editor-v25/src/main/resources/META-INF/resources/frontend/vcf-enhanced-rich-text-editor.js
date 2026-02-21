@@ -790,6 +790,21 @@ class VcfEnhancedRichTextEditor extends RteBase {
   }
 
   /**
+   * Override focus() to delegate to Quill's internal focus mechanism.
+   * The inherited HTMLElement focus() only focuses the web component element,
+   * but does NOT focus the Quill editor (cursor remains invisible, typing doesn't work).
+   * This override properly delegates to Quill, fixing the focus() API.
+   * @public
+   */
+  focus() {
+    if (this._editor) {
+      this._editor.focus();
+    } else {
+      super.focus();
+    }
+  }
+
+  /**
    * Returns all focusable elements in the toolbar, including custom slotted
    * components. Broader than RTE 2's _toolbarButtons (which only queries buttons).
    * @protected
