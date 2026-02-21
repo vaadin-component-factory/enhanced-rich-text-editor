@@ -33,7 +33,7 @@
 | **3.4f** | Slotted Toolbar Button Styles      | COMPLETE |
 | **3.4g** | ToolbarPopover                     | COMPLETE |
 | **3.4h** | ToolbarSelectPopup                 | COMPLETE |
-| **3.4i** | ToolbarDialog                      | NOT STARTED |
+| **3.4i** | ToolbarDialog                      | COMPLETE |
 | **3.4j** | Aura Theme Support                 | NOT STARTED *(spike required first)* |
 | **3.5**  | **Documentation (Core)**           | IN PROGRESS |
 | 3.5a     | Upgrade Guide ERTE 1→2             | PARTIAL *(needs review after 3.4f-j)* |
