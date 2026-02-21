@@ -606,8 +606,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
           outline: none;
         }
 
-        /* Vaadin Button elements have a default min-width that's too wide
-           for icon-only toolbar buttons. Override to match button height. */
+        /* Align the min-width with built-in toolbar buttons. */
         ::slotted(vaadin-button[part~='toolbar-button']) {
           min-width: var(--lumo-size-m);
         }
