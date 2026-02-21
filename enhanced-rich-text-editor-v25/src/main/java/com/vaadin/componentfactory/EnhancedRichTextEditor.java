@@ -45,6 +45,42 @@ import tools.jackson.databind.node.ObjectNode;
  * <p>
  * Extends {@link RteExtensionBase} which bridges package-private access to
  * RTE 2. All ERTE-specific logic lives in this class and package.
+ *
+ * <h2>Placeholder Workflow</h2>
+ * <p>
+ * Placeholders are configured via three related methods that work together:
+ * <ol>
+ *   <li><b>{@link #setPlaceholders(List)}</b> — Defines the master list of
+ *       available placeholders shown in the placeholder dialog. Each placeholder
+ *       has a text (e.g., "{{name}}"), optional tag for grouping, and optional
+ *       format/altFormat for appearance customization.</li>
+ *   <li><b>{@link #setPlaceholderTags(List)}</b> — (Optional) Defines tags
+ *       for grouping placeholders in the dialog. If not set, all placeholders
+ *       appear in a single list.</li>
+ *   <li><b>{@link #setPlaceholderAltAppearancePattern(String)}</b> — (Optional)
+ *       Defines a regex pattern to automatically switch placeholder appearance
+ *       based on surrounding text. When the text matching this pattern is found
+ *       before the placeholder, the altFormat is used instead of format.</li>
+ * </ol>
+ * <p>
+ * <b>Example usage:</b>
+ * <pre>{@code
+ * // 1. Define placeholders with default and alternative formatting
+ * editor.setPlaceholders(List.of(
+ *     new Placeholder("{{name}}", "user",
+ *         Map.of("bold", true),           // default format
+ *         Map.of("bold", true, "italic", true))  // altFormat
+ * ));
+ *
+ * // 2. (Optional) Define tags for dialog grouping
+ * editor.setPlaceholderTags(List.of("user", "system", "date"));
+ *
+ * // 3. (Optional) Auto-switch to altFormat when preceded by "Dear "
+ * editor.setPlaceholderAltAppearancePattern("Dear\\s+$");
+ * }</pre>
+ * <p>
+ * When a user types "Dear {{name}}", the placeholder will use its altFormat
+ * (bold + italic) instead of the default format (bold only).
  */
 @Tag("vcf-enhanced-rich-text-editor")
 @JsModule("./vcf-enhanced-rich-text-editor.js")
@@ -438,41 +474,124 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
 
     // ---- Placeholder event listeners ----
 
+    /**
+     * Adds a listener for when the placeholder toolbar button is clicked.
+     * <p>
+     * Fired when the user clicks the placeholder button in the toolbar. The event
+     * provides the current cursor position and an {@code insert()} method to
+     * programmatically insert a placeholder at that position.
+     *
+     * @param listener the listener to add
+     * @return a registration object for removing the listener
+     */
     public Registration addPlaceholderButtonClickedListener(
             ComponentEventListener<PlaceholderButtonClickedEvent> listener) {
         return addListener(PlaceholderButtonClickedEvent.class, listener);
     }
 
+    /**
+     * Adds a listener for when placeholders are about to be inserted.
+     * <p>
+     * Fired before placeholders are inserted into the editor (via dialog or
+     * programmatically). The event can be used to validate or modify the
+     * placeholders before insertion. If {@link PlaceholderBeforeInsertEvent#insert()}
+     * is not called, the insertion is cancelled.
+     *
+     * @param listener the listener to add
+     * @return a registration object for removing the listener
+     */
     public Registration addPlaceholderBeforeInsertListener(
             ComponentEventListener<PlaceholderBeforeInsertEvent> listener) {
         return addListener(PlaceholderBeforeInsertEvent.class, listener);
     }
 
+    /**
+     * Adds a listener for when placeholders have been inserted.
+     * <p>
+     * Fired after placeholders are successfully inserted into the editor.
+     * This is a notification event (read-only) — use
+     * {@link #addPlaceholderBeforeInsertListener} to prevent or modify insertion.
+     *
+     * @param listener the listener to add
+     * @return a registration object for removing the listener
+     */
     public Registration addPlaceholderInsertedListener(
             ComponentEventListener<PlaceholderInsertedEvent> listener) {
         return addListener(PlaceholderInsertedEvent.class, listener);
     }
 
+    /**
+     * Adds a listener for when placeholders are about to be removed.
+     * <p>
+     * Fired before placeholders are removed from the editor (via Delete/Backspace
+     * key). The event can be used to prevent removal of protected placeholders.
+     * If {@link PlaceholderBeforeRemoveEvent#remove()} is not called, the
+     * removal is cancelled.
+     *
+     * @param listener the listener to add
+     * @return a registration object for removing the listener
+     */
     public Registration addPlaceholderBeforeRemoveListener(
             ComponentEventListener<PlaceholderBeforeRemoveEvent> listener) {
         return addListener(PlaceholderBeforeRemoveEvent.class, listener);
     }
 
+    /**
+     * Adds a listener for when placeholders have been removed.
+     * <p>
+     * Fired after placeholders are successfully removed from the editor.
+     * This is a notification event (read-only) — use
+     * {@link #addPlaceholderBeforeRemoveListener} to prevent removal.
+     *
+     * @param listener the listener to add
+     * @return a registration object for removing the listener
+     */
     public Registration addPlaceholderRemovedListener(
             ComponentEventListener<PlaceholderRemovedEvent> listener) {
         return addListener(PlaceholderRemovedEvent.class, listener);
     }
 
+    /**
+     * Adds a listener for when a placeholder is selected.
+     * <p>
+     * Fired when the user clicks on a placeholder in the editor or navigates
+     * to it via keyboard (arrow keys, Tab). The event provides the selected
+     * placeholder(s).
+     *
+     * @param listener the listener to add
+     * @return a registration object for removing the listener
+     */
     public Registration addPlaceholderSelectedListener(
             ComponentEventListener<PlaceholderSelectedEvent> listener) {
         return addListener(PlaceholderSelectedEvent.class, listener);
     }
 
+    /**
+     * Adds a listener for when a placeholder loses selection.
+     * <p>
+     * Fired when the cursor moves away from a placeholder (e.g., user clicks
+     * elsewhere or presses an arrow key). Useful for cleaning up UI state
+     * related to placeholder selection.
+     *
+     * @param listener the listener to add
+     * @return a registration object for removing the listener
+     */
     public Registration addPlaceholderLeaveListener(
             ComponentEventListener<PlaceholderLeaveEvent> listener) {
         return addListener(PlaceholderLeaveEvent.class, listener);
     }
 
+    /**
+     * Adds a listener for when placeholder appearance changes.
+     * <p>
+     * Fired when a placeholder switches between its default format and altFormat,
+     * based on the {@link #setPlaceholderAltAppearancePattern(String)} regex.
+     * The event provides the new appearance state (altAppearance boolean) and
+     * the appearance label (if set).
+     *
+     * @param listener the listener to add
+     * @return a registration object for removing the listener
+     */
     public Registration addPlaceholderAppearanceChangedListener(
             ComponentEventListener<PlaceholderAppearanceChangedEvent> listener) {
         return addListener(PlaceholderAppearanceChangedEvent.class, listener);
@@ -484,6 +603,11 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
 
     /**
      * Abstract base for events that carry a list of placeholders.
+     * <p>
+     * This base class handles deserialization of placeholder data from the client
+     * and provides a {@link #getPlaceholders()} method that returns the full
+     * placeholder objects from the master list (via {@link #setPlaceholders(List)}),
+     * not just the lightweight event payload.
      */
     public static abstract class AbstractMultiPlaceholderEvent
             extends ComponentEvent<EnhancedRichTextEditor> {
@@ -508,6 +632,17 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
             }
         }
 
+        /**
+         * Returns the placeholders involved in this event.
+         * <p>
+         * The returned placeholders are looked up from the master list set via
+         * {@link EnhancedRichTextEditor#setPlaceholders(List)}, so they contain
+         * all configured properties (text, tag, format, altFormat), not just the
+         * minimal data sent from the client. The {@code index} property is set
+         * to the placeholder's position in the editor's delta.
+         *
+         * @return the list of placeholders, never null
+         */
         public List<Placeholder> getPlaceholders() {
             List<Placeholder> actual = new ArrayList<>();
             for (Placeholder p : placeholders) {
@@ -522,6 +657,13 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         }
     }
 
+    /**
+     * Event fired when the placeholder toolbar button is clicked.
+     * <p>
+     * This event is fired before the placeholder dialog opens. You can use it
+     * to programmatically insert a placeholder without showing the dialog, or
+     * to customize the dialog behavior.
+     */
     @DomEvent("placeholder-button-click")
     public static class PlaceholderButtonClickedEvent
             extends ComponentEvent<EnhancedRichTextEditor> {
@@ -536,19 +678,37 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
             this.position = position;
         }
 
+        /**
+         * Returns the cursor position where the placeholder would be inserted.
+         *
+         * @return the zero-based index in the editor's delta
+         */
         public int getPosition() {
             return position;
         }
 
         /**
-         * Insert a placeholder at the current cursor position.
+         * Inserts a placeholder at the current cursor position.
+         * <p>
+         * This bypasses the placeholder dialog and inserts the placeholder directly.
+         * The placeholder must be defined in the master list via
+         * {@link EnhancedRichTextEditor#setPlaceholders(List)}.
+         *
+         * @param placeholder the placeholder to insert
          */
         public void insert(Placeholder placeholder) {
             insert(placeholder, position);
         }
 
         /**
-         * Insert a placeholder at the given position.
+         * Inserts a placeholder at the specified position.
+         * <p>
+         * This bypasses the placeholder dialog and inserts the placeholder directly.
+         * The placeholder must be defined in the master list via
+         * {@link EnhancedRichTextEditor#setPlaceholders(List)}.
+         *
+         * @param placeholder the placeholder to insert
+         * @param position the zero-based index in the editor's delta where to insert
          */
         public void insert(Placeholder placeholder, int position) {
             Objects.requireNonNull(placeholder, "Placeholder cannot be null");
@@ -559,6 +719,17 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         }
     }
 
+    /**
+     * Event fired before placeholders are inserted into the editor.
+     * <p>
+     * This is a cancellable event. The insertion will only proceed if
+     * {@link #insert()} is called. If {@code insert()} is not called, the
+     * placeholders are NOT inserted and no {@link PlaceholderInsertedEvent}
+     * will be fired.
+     * <p>
+     * Use this event to validate placeholders before insertion, modify them,
+     * or cancel the operation entirely.
+     */
     @DomEvent("placeholder-before-insert")
     public static class PlaceholderBeforeInsertEvent
             extends AbstractMultiPlaceholderEvent {
@@ -571,8 +742,21 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         }
 
         /**
-         * Confirm insertion of the placeholders. If this method is not called,
-         * the placeholders will not be inserted.
+         * Confirms insertion of the placeholders.
+         * <p>
+         * <b>IMPORTANT:</b> If this method is not called, the placeholders will
+         * NOT be inserted into the editor. This allows validation or cancellation
+         * of the insertion operation.
+         * <p>
+         * Example:
+         * <pre>{@code
+         * editor.addPlaceholderBeforeInsertListener(e -> {
+         *     if (isValid(e.getPlaceholders())) {
+         *         e.insert(); // Proceed with insertion
+         *     }
+         *     // Otherwise, do nothing to cancel
+         * });
+         * }</pre>
          */
         public void insert() {
             EnhancedRichTextEditor s = (EnhancedRichTextEditor) source;
@@ -580,6 +764,13 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         }
     }
 
+    /**
+     * Event fired after placeholders have been successfully inserted.
+     * <p>
+     * This is a notification event fired after the insertion is complete.
+     * Use {@link PlaceholderBeforeInsertEvent} if you need to prevent or
+     * modify the insertion.
+     */
     @DomEvent("placeholder-insert")
     public static class PlaceholderInsertedEvent
             extends AbstractMultiPlaceholderEvent {
@@ -591,6 +782,17 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         }
     }
 
+    /**
+     * Event fired before placeholders are removed from the editor.
+     * <p>
+     * This is a cancellable event. The removal will only proceed if
+     * {@link #remove()} is called. If {@code remove()} is not called, the
+     * placeholders are NOT removed and no {@link PlaceholderRemovedEvent}
+     * will be fired.
+     * <p>
+     * Use this event to prevent deletion of protected placeholders or to
+     * prompt the user for confirmation.
+     */
     @DomEvent("placeholder-before-delete")
     public static class PlaceholderBeforeRemoveEvent
             extends AbstractMultiPlaceholderEvent {
@@ -603,8 +805,21 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         }
 
         /**
-         * Confirm removal of the placeholders. If this method is not called,
-         * the placeholders will not be removed.
+         * Confirms removal of the placeholders.
+         * <p>
+         * <b>IMPORTANT:</b> If this method is not called, the placeholders will
+         * NOT be removed from the editor. This allows preventing deletion of
+         * protected placeholders.
+         * <p>
+         * Example:
+         * <pre>{@code
+         * editor.addPlaceholderBeforeRemoveListener(e -> {
+         *     if (!isProtected(e.getPlaceholders())) {
+         *         e.remove(); // Allow removal
+         *     }
+         *     // Otherwise, do nothing to cancel
+         * });
+         * }</pre>
          */
         public void remove() {
             EnhancedRichTextEditor s = (EnhancedRichTextEditor) source;
@@ -612,6 +827,12 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         }
     }
 
+    /**
+     * Event fired after placeholders have been successfully removed.
+     * <p>
+     * This is a notification event fired after the removal is complete.
+     * Use {@link PlaceholderBeforeRemoveEvent} if you need to prevent removal.
+     */
     @DomEvent("placeholder-delete")
     public static class PlaceholderRemovedEvent
             extends AbstractMultiPlaceholderEvent {
@@ -623,6 +844,13 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         }
     }
 
+    /**
+     * Event fired when a placeholder is selected in the editor.
+     * <p>
+     * This event is fired when the user clicks on a placeholder or navigates
+     * to it via keyboard (arrow keys, Tab). The cursor is positioned at the
+     * placeholder.
+     */
     @DomEvent("placeholder-select")
     public static class PlaceholderSelectedEvent
             extends AbstractMultiPlaceholderEvent {
@@ -634,6 +862,13 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         }
     }
 
+    /**
+     * Event fired when a placeholder loses selection.
+     * <p>
+     * This event is fired when the cursor moves away from a placeholder
+     * (e.g., user clicks elsewhere, presses an arrow key, or types text).
+     * Useful for cleaning up UI state related to placeholder selection.
+     */
     @DomEvent("placeholder-leave")
     public static class PlaceholderLeaveEvent
             extends ComponentEvent<EnhancedRichTextEditor> {
@@ -644,6 +879,17 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         }
     }
 
+    /**
+     * Event fired when a placeholder's appearance changes.
+     * <p>
+     * This event is fired when a placeholder switches between its default
+     * format and altFormat, based on the regex pattern set via
+     * {@link EnhancedRichTextEditor#setPlaceholderAltAppearancePattern(String)}.
+     * <p>
+     * For example, if the pattern is "Dear\\s+$" and the user types "Dear ",
+     * any following placeholder will switch to its altFormat. When the user
+     * deletes "Dear ", the placeholder switches back to its default format.
+     */
     @DomEvent("placeholder-appearance-change")
     public static class PlaceholderAppearanceChangedEvent
             extends ComponentEvent<EnhancedRichTextEditor> {
@@ -661,10 +907,26 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
                     ? detail.get("appearanceLabel").asText() : null;
         }
 
+        /**
+         * Returns whether the placeholder is using its alternative appearance.
+         * <p>
+         * {@code true} if the placeholder is using its altFormat, {@code false}
+         * if using the default format, {@code null} if appearance state is unknown.
+         *
+         * @return the alternative appearance state, or null if unknown
+         */
         public Boolean getAltAppearance() {
             return altAppearance;
         }
 
+        /**
+         * Returns the appearance label (if set on the placeholder).
+         * <p>
+         * This is a custom label that can be set on placeholders to identify
+         * different appearance states. Returns {@code null} if no label is set.
+         *
+         * @return the appearance label, or null if not set
+         */
         public String getAppearanceLabel() {
             return appearanceLabel;
         }
