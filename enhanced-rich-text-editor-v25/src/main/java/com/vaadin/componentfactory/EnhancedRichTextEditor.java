@@ -91,6 +91,21 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
     // ---- Toolbar component API ----
 
     /**
+     * Ensures the component has the given part name so that
+     * {@code ::slotted([part~='toolbar-button'])} styles apply.
+     */
+    private void addOrAppendPartAttribute(Component component,
+            String partName) {
+        String existingPart = component.getElement().getAttribute("part");
+        if (existingPart == null || existingPart.isEmpty()) {
+            component.getElement().setAttribute("part", partName);
+        } else if (!existingPart.contains(partName)) {
+            component.getElement().setAttribute("part",
+                    existingPart + " " + partName);
+        }
+    }
+
+    /**
      * Adds components to the given toolbar slot (appended).
      */
     public void addToolbarComponents(ToolbarSlot toolbarSlot,
@@ -98,6 +113,7 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         Objects.requireNonNull(components);
         for (Component component : components) {
             Objects.requireNonNull(component);
+            addOrAppendPartAttribute(component, "toolbar-button");
             SlotUtil.addComponent(this, toolbarSlot.getSlotName(), component);
         }
     }
@@ -110,6 +126,7 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         Objects.requireNonNull(components);
         for (Component component : components) {
             Objects.requireNonNull(component);
+            addOrAppendPartAttribute(component, "toolbar-button");
             SlotUtil.addComponentAtIndex(this, toolbarSlot.getSlotName(),
                     component, index);
         }

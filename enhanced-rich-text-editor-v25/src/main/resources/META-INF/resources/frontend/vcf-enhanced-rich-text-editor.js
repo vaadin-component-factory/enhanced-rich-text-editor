@@ -575,6 +575,43 @@ class VcfEnhancedRichTextEditor extends RteBase {
           -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M0 0h16v3h-16v-3z"></path><path d="M0 4h16v3h-16v-3z"></path><path d="M0 12h16v3h-16v-3z"></path><path d="M0 8h16v3h-16v-3z"></path></svg>');
           mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M0 0h16v3h-16v-3z"></path><path d="M0 4h16v3h-16v-3z"></path><path d="M0 12h16v3h-16v-3z"></path><path d="M0 8h16v3h-16v-3z"></path></svg>');
         }
+
+        /* ========================================
+           SLOTTED TOOLBAR BUTTON STYLES
+           Custom components added via addToolbarComponents()
+           ======================================== */
+
+        ::slotted([part~='toolbar-button']) {
+          width: auto;
+          height: var(--lumo-size-m);
+          flex-shrink: 0;
+          padding: 0 var(--lumo-space-s);
+          margin: 2px 1px;
+          border-radius: var(--lumo-border-radius-m);
+          color: var(--lumo-contrast-60pct);
+          background: transparent;
+          border: none;
+          cursor: var(--lumo-clickable-cursor);
+          font: inherit;
+          line-height: 1;
+          text-transform: none;
+          transition: background-color 100ms, color 100ms;
+          position: relative;
+        }
+
+        ::slotted([part~='toolbar-button']:hover) {
+          background-color: var(--lumo-contrast-5pct);
+          color: var(--lumo-contrast-80pct);
+          box-shadow: none;
+          outline: none;
+        }
+
+        [part~='toolbar-button-placeholder-display'] {
+          width: auto;
+          min-width: var(--lumo-size-l);
+          padding: 0 var(--lumo-space-xs);
+          font-size: 0.875em;
+        }
       `,
     ];
   }
