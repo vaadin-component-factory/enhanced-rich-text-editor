@@ -114,7 +114,15 @@ public class ErteTestLayout extends AppLayout {
         tier3.addItem(disabled("3.3h Arrow Nav",
                 VaadinIcon.ARROWS_LONG_H.create()));
 
-        nav.addItem(tier1, tier3);
+        // -- Phase 3.4: Open Issues --
+        var phase34 = new SideNavItem("Phase 3.4 — Open Issues");
+        phase34.setPrefixComponent(VaadinIcon.WRENCH.create());
+
+        phase34.addItem(new SideNavItem("3.4g ToolbarPopover",
+                "erte-test/toolbar-popover",
+                VaadinIcon.VIEWPORT.create()));
+
+        nav.addItem(tier1, tier3, phase34);
         return nav;
     }
 
