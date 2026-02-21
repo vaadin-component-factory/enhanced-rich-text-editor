@@ -786,7 +786,122 @@ class VcfEnhancedRichTextEditor extends RteBase {
     // Apply ERTE i18n labels to custom buttons/dialog (initial defaults)
     this._applyErteI18n();
 
+    // SPIKE: Test Aura Style Proxy (Phase 3.4j)
+    this._injectAuraStyleProxySpike();
+
     console.debug('[ERTE] ready, _editor:', !!this._editor, 'readonly protection active, tab engine initialized');
+  }
+
+  /**
+   * SPIKE: Aura Style Proxy - scans document stylesheets and clones RTE rules for ERTE.
+   * Part of Phase 3.4j spike investigation.
+   * @private
+   */
+  _injectAuraStyleProxySpike() {
+    console.group('ERTE Spike: Aura Style Proxy');
+
+    // Guard: avoid duplicate injection
+    if (document.querySelector('style[data-vcf-erte-spike-proxy]')) {
+      console.log('Proxy already injected, skipping.');
+      console.groupEnd();
+      return;
+    }
+
+    const startTime = performance.now();
+    const stats = {
+      totalSheets: 0,
+      scannedSheets: 0,
+      corsSkipped: 0,
+      totalRules: 0,
+      matchedRules: 0,
+    };
+
+    const rteRules = [];
+
+    // Scan all stylesheets
+    for (const sheet of document.styleSheets) {
+      stats.totalSheets++;
+
+      try {
+        stats.scannedSheets++;
+        const rules = Array.from(sheet.cssRules || []);
+        stats.totalRules += rules.length;
+
+        for (const rule of rules) {
+          if (rule.cssText && rule.cssText.includes('vaadin-rich-text-editor')) {
+            rteRules.push({
+              original: rule.cssText,
+              sheet: sheet.href || '(inline)',
+            });
+            stats.matchedRules++;
+          }
+        }
+      } catch (e) {
+        // CORS-protected sheet
+        stats.corsSkipped++;
+        console.warn('Skipped stylesheet (CORS):', sheet.href, e.message);
+      }
+    }
+
+    if (rteRules.length === 0) {
+      console.log('No RTE-specific rules found.');
+      console.groupEnd();
+      return;
+    }
+
+    // Clone rules with ERTE tag (CRITICAL: negative lookbehind to avoid CSS var collision)
+    const proxyStyles = rteRules.map(({ original }) =>
+      original.replace(/(?<!--)vaadin-rich-text-editor/g, 'vcf-enhanced-rich-text-editor')
+    );
+
+    // Inject into document
+    const styleEl = document.createElement('style');
+    styleEl.setAttribute('data-vcf-erte-spike-proxy', '');
+    styleEl.textContent = [
+      '/* ERTE Aura Style Proxy (SPIKE) */',
+      `/* Generated: ${new Date().toISOString()} */`,
+      `/* Cloned ${stats.matchedRules} rules */`,
+      '',
+      ...proxyStyles,
+    ].join('\n');
+    document.head.appendChild(styleEl);
+
+    const endTime = performance.now();
+    const duration = (endTime - startTime).toFixed(2);
+
+    // Log stats
+    console.table(stats);
+    console.log(`Duration: ${duration}ms`);
+    console.log('Sample cloned rules:', proxyStyles.slice(0, 3));
+    console.log('Full injected stylesheet:', styleEl.textContent.substring(0, 500) + '...');
+    console.groupEnd();
+
+    // Write debug output to page
+    this._writeSpikeDebugOutput(stats, duration, rteRules.length);
+  }
+
+  /**
+   * SPIKE: Writes spike debug output to the page (if debug div exists).
+   * Part of Phase 3.4j spike investigation.
+   * @private
+   */
+  _writeSpikeDebugOutput(stats, duration, clonedCount) {
+    const debugDiv = document.getElementById('debug-output');
+    if (!debugDiv) return;
+
+    debugDiv.innerHTML = `
+      <h3>Spike Results</h3>
+      <ul>
+        <li><strong>Total Stylesheets:</strong> ${stats.totalSheets}</li>
+        <li><strong>Scanned:</strong> ${stats.scannedSheets}</li>
+        <li><strong>CORS Skipped:</strong> ${stats.corsSkipped}</li>
+        <li><strong>Total Rules:</strong> ${stats.totalRules}</li>
+        <li><strong>Matched RTE Rules:</strong> ${stats.matchedRules}</li>
+        <li><strong>Cloned Rules:</strong> ${clonedCount}</li>
+        <li><strong>Duration:</strong> ${duration}ms</li>
+      </ul>
+      <p><em>Check browser console for full details.</em></p>
+    `;
   }
 
   /**
