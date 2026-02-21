@@ -243,12 +243,17 @@ V25 status: 205 passed, 10 skipped across all feature specs
 
 ---
 
-## Features (33 tests) — `erte/features.spec.ts`
+## Features (36 tests) — `erte/features.spec.ts`
 
 ### Non-Breaking Space (Shift+Space)
 - Shift+Space inserts a non-breaking space
 - Multiple consecutive NBSPs are all preserved
 - NBSP survives copy-paste round-trip
+
+### NBSP Whitespace Indicators
+- NBSP shows middle dot when whitespace indicators enabled
+- NBSP indicator disappears when whitespace indicators disabled
+- Multiple NBSPs show individual indicators
 
 ### addText API
 - addText at cursor position inserts text

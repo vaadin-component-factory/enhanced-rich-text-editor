@@ -79,6 +79,11 @@ notify "Tests completed - 185 passed, 5 failed"
 - `notify "short description"` — informational (task done, status update)
 - `notify-urgent "short description"` — requires user attention (questions, errors, blocks)
 
+**What NOT to use notify-urgent for:**
+- Intermediate status updates ("running tests", "building", "checking files") — these don't need notifications at all
+- Routine progress ("test 1 of 3 complete") — too noisy, just do the work
+- Only use notify-urgent for truly important/blocking situations: questions, errors, waiting for approval
+
 **Timing:** Notification = SEPARATE Bash call in its own message. NEVER combine with the triggering action.
 
 The user expects ACTIVE notifications, not just inline text. Failing to notify is a usability failure.
@@ -155,7 +160,8 @@ The V25 primary value format is HTML (matching RTE 2), with Delta access via `as
 1. **No feature regression.** Every ERTE 1 feature must exist in ERTE 2. If you encounter a feature where no clear migration path exists, STOP and ask.
 2. **Updatability over convenience.** Never copy RTE 2 source code. Extend at runtime. The only acceptable "fork" is the `render()` override in the JS subclass.
 3. **One feature at a time.** Complete and verify each feature before starting the next.
-4. **Security fixes are mandatory.** See `SECURITY.md` — known XSS vectors from ERTE 1 must be fixed during migration, not reproduced.
+4. **Tests first, status second.** NEVER mark a phase as COMPLETE in STATUS.md or progress files until tests actually pass. Verify implementation with passing tests BEFORE updating status.
+5. **Security fixes are mandatory.** See `SECURITY.md` — known XSS vectors from ERTE 1 must be fixed during migration, not reproduced.
 
 ### Architecture Decisions (confirmed by spike — all PASS)
 
@@ -214,8 +220,8 @@ a question.
 
 - **Parallel execution preferred:** Independent steps (e.g., Java backend + JS frontend,
   or test view + test spec) SHOULD be delegated to separate agents running concurrently.
-- **Background tasks:** Use `run_in_background: true` for agents where possible, so
-  multiple workstreams proceed simultaneously. The orchestrator monitors progress and
+- **Background tasks:** Consider using `run_in_background: true` for agents when appropriate,
+  especially for parallelizing multiple workstreams. The orchestrator monitors progress and
   coordinates results.
 - **Sequential only when required:** Only truly dependent steps (e.g., build before test,
   blot registration before keyboard bindings that use the blot) should block on each other.

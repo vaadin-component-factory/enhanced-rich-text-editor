@@ -96,6 +96,101 @@ test.describe('ERTE Feature Tests', () => {
   });
 
   // ============================================
+  // NBSP Whitespace Indicator Tests
+  // ============================================
+
+  test.describe('NBSP whitespace indicators', () => {
+    test('1 - NBSP shows middle dot when whitespace indicators enabled', async ({ page }) => {
+      await focusEditor(page);
+
+      // Insert NBSP via Shift+Space
+      await typeInEditor(page, 'Hello');
+      await pressKey(page, 'Shift+Space');
+      await typeInEditor(page, 'World');
+      await page.waitForTimeout(200);
+
+      // Enable whitespace indicators
+      await page.locator('[part~="toolbar-button-whitespace"]').click();
+      await page.waitForTimeout(200);
+
+      // Find the NBSP element
+      const nbspElement = await getEditor(page).locator('span.ql-nbsp').first();
+      await expect(nbspElement).toBeVisible();
+
+      // Check pseudo-element content
+      const pseudoContent = await page.evaluate((el) => {
+        const computed = window.getComputedStyle(el, '::before');
+        return computed.content;
+      }, await nbspElement.elementHandle());
+
+      expect(pseudoContent).toBe('"·"');
+    });
+
+    test('2 - NBSP indicator disappears when whitespace indicators disabled', async ({ page }) => {
+      await focusEditor(page);
+
+      // Insert NBSP
+      await typeInEditor(page, 'Hello');
+      await pressKey(page, 'Shift+Space');
+      await typeInEditor(page, 'World');
+      await page.waitForTimeout(200);
+
+      const nbspElement = await getEditor(page).locator('span.ql-nbsp').first();
+
+      // Enable whitespace indicators
+      await page.locator('[part~="toolbar-button-whitespace"]').click();
+      await page.waitForTimeout(200);
+
+      // Verify indicator is present
+      let pseudoContent = await page.evaluate((el) => {
+        const computed = window.getComputedStyle(el, '::before');
+        return computed.content;
+      }, await nbspElement.elementHandle());
+      expect(pseudoContent).toBe('"·"');
+
+      // Disable whitespace indicators
+      await page.locator('[part~="toolbar-button-whitespace"]').click();
+      await page.waitForTimeout(200);
+
+      // Verify indicator is gone (content should be 'none' or empty)
+      pseudoContent = await page.evaluate((el) => {
+        const computed = window.getComputedStyle(el, '::before');
+        return computed.content;
+      }, await nbspElement.elementHandle());
+      expect(pseudoContent === 'none' || pseudoContent === '""').toBe(true);
+    });
+
+    test('3 - Multiple NBSPs show individual indicators', async ({ page }) => {
+      await focusEditor(page);
+
+      // Insert 3 NBSPs consecutively
+      await typeInEditor(page, 'A');
+      await pressKey(page, 'Shift+Space');
+      await pressKey(page, 'Shift+Space');
+      await pressKey(page, 'Shift+Space');
+      await typeInEditor(page, 'B');
+      await page.waitForTimeout(200);
+
+      // Enable whitespace indicators
+      await page.locator('[part~="toolbar-button-whitespace"]').click();
+      await page.waitForTimeout(200);
+
+      // Verify 3 NBSP elements exist
+      const nbspElements = await getEditor(page).locator('span.ql-nbsp').all();
+      expect(nbspElements.length).toBe(3);
+
+      // Verify each has the middle dot pseudo-element
+      for (const nbspElement of nbspElements) {
+        const pseudoContent = await page.evaluate((el) => {
+          const computed = window.getComputedStyle(el, '::before');
+          return computed.content;
+        }, await nbspElement.elementHandle());
+        expect(pseudoContent).toBe('"·"');
+      }
+    });
+  });
+
+  // ============================================
   // addText API Tests
   // ============================================
 

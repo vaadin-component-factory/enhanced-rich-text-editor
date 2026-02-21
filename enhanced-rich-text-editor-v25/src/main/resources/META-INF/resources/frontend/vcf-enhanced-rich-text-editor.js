@@ -558,6 +558,16 @@ class VcfEnhancedRichTextEditor extends RteBase {
           margin-left: 2px;
         }
 
+        /* NBSP indicator: · (middle dot) */
+        .show-whitespace span.ql-nbsp::before {
+          content: '·';
+          font-size: var(--lumo-font-size-m, 1rem);
+          color: var(--lumo-contrast-40pct, rgba(0, 0, 0, 0.38));
+          vertical-align: middle;
+          pointer-events: none;
+          margin-right: 2px;
+        }
+
         /* Justify button icon — RTE 2 base styles define icons for align-left/center/right
            but not justify. Using SVG mask-image matching the Vaadin iconset icon
            (vaadin:align-justify: 4 horizontal lines of equal length). */
