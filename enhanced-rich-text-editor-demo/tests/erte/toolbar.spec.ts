@@ -516,10 +516,9 @@ test.describe('ERTE Toolbar', () => {
     await focusEditor(page);
 
     // Focus the TextField directly (Tab navigation would get there eventually)
+    // TextField is slotted (light DOM), not in shadow DOM
     await page.evaluate(() => {
-      const editor = document.getElementById('test-editor') as any;
-      const toolbar = editor?.shadowRoot?.querySelector('[part="toolbar"]');
-      const textField = toolbar?.querySelector('#toolbar-textfield') as any;
+      const textField = document.getElementById('toolbar-textfield') as any;
       textField?.focus();
     });
 
@@ -534,18 +533,18 @@ test.describe('ERTE Toolbar', () => {
     await page.keyboard.type('X');
 
     const text = await page.evaluate(() => {
-      const editor = document.getElementById('test-editor') as any;
-      const toolbar = editor?.shadowRoot?.querySelector('[part="toolbar"]');
-      const textField = toolbar?.querySelector('#toolbar-textfield') as any;
+      const textField = document.getElementById('toolbar-textfield') as any;
       return textField?.value || '';
     });
 
     expect(text).toBe('HelXlo'); // Arrow keys worked within field
 
     // Verify TextField still has focus (arrows didn't navigate away)
+    // When TextField is focused, document.activeElement is the internal INPUT element
     const stillFocused = await page.evaluate(() => {
-      const editor = document.getElementById('test-editor') as any;
-      return editor?.shadowRoot?.activeElement?.id === 'toolbar-textfield';
+      const activeEl = document.activeElement;
+      // Check if active element is the TextField's internal input
+      return activeEl?.id?.startsWith('input-vaadin-text-field');
     });
     expect(stillFocused).toBe(true);
   });

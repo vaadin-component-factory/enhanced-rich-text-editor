@@ -899,18 +899,37 @@ class VcfEnhancedRichTextEditor extends RteBase {
         // Read focusable elements DYNAMICALLY (includes ERTE-injected components)
         const elements = this._toolbarFocusableElements;
 
-        // Find which element in our list fired the event
-        // For slotted/Vaadin components, e.target might be an internal element,
-        // so check composedPath() to find the actual toolbar element
+        // Find which element in our list is currently focused.
+        // Strategy: Check composedPath() first, then walk up from document.activeElement
+        // to handle cases where focus is delegated to shadow DOM internals.
         const path = e.composedPath();
-        let currentElement = null;
         let index = -1;
 
+        // 1. Check composedPath() - works for shadow DOM event targets
         for (const pathElement of path) {
           index = elements.indexOf(pathElement);
           if (index !== -1) {
-            currentElement = pathElement;
             break;
+          }
+        }
+
+        // 2. Check if any element in our list contains document.activeElement
+        // This handles Vaadin components where focus is delegated to an internal input
+        if (index === -1) {
+          const active = document.activeElement;
+          if (active) {
+            // First, check if active element itself is in the list
+            index = elements.indexOf(active);
+
+            // If not, check if any element in our list contains the active element
+            if (index === -1) {
+              for (let i = 0; i < elements.length; i++) {
+                if (elements[i].contains(active)) {
+                  index = i;
+                  break;
+                }
+              }
+            }
           }
         }
 
@@ -926,7 +945,14 @@ class VcfEnhancedRichTextEditor extends RteBase {
         }
         index = (elements.length + index + step) % elements.length;
         const nextElement = elements[index];
-        nextElement.removeAttribute('tabindex');
+
+        // Ensure the next element is focusable
+        // For Vaadin components in light DOM (slotted), tabindex is required
+        if (!nextElement.hasAttribute('tabindex')) {
+          nextElement.setAttribute('tabindex', '0');
+        } else {
+          nextElement.removeAttribute('tabindex');
+        }
 
         // For Vaadin components that delegate focus, call focus on focusElement if available
         if (nextElement.focusElement && nextElement.focusElement !== nextElement) {
