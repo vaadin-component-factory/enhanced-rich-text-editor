@@ -1,6 +1,6 @@
 # V25 Migration Status
 
-**Current: 3.5 Documentation (Core)**
+**Current: 3.4 Open Issues (Toolbar Regression)**
 
 | Phase    | Feature                            | Status |
 |----------|------------------------------------|--------|
@@ -24,12 +24,16 @@
 | **3.3f** | Align Justify                      | COMPLETE |
 | **3.3g** | Replace Toolbar Button Icons       | COMPLETE |
 | **3.3h** | Arrow Navigation                   | COMPLETE *(impl. in 3.1c)* |
-| **3.4**  | **Open Issues (Tier 4)**           | COMPLETE |
+| **3.4**  | **Open Issues (Tier 4)**           | IN PROGRESS |
 | 3.4a     | Placeholder Button Active State    | COMPLETE |
 | 3.4b     | Toolbar Arrow-Key Navigation       | COMPLETE |
 | 3.4c     | Whitespace Indicators (Spaces)     | COMPLETE |
 | 3.4d     | Fix focus() Method                 | COMPLETE |
 | 3.4e     | Toolbar Button Sync                | NOT SOLVABLE *(documented)* |
+| **3.4f** | Slotted Toolbar Button Styles      | NOT STARTED |
+| **3.4g** | ToolbarPopover                     | NOT STARTED |
+| **3.4h** | ToolbarSelectPopup                 | NOT STARTED |
+| **3.4i** | ToolbarDialog                      | NOT STARTED |
 | **3.5**  | **Documentation (Core)**           | IN PROGRESS |
 | 3.5a     | Upgrade Guide ERTE 1→2             | COMPLETE |
 | 3.5b     | User Documentation                 | COMPLETE |
