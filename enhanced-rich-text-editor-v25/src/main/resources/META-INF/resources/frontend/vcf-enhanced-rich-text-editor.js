@@ -599,7 +599,9 @@ class VcfEnhancedRichTextEditor extends RteBase {
           position: relative;
         }
 
-        ::slotted([part~='toolbar-button']:hover) {
+        /* Hover effect only for button elements, not for input fields */
+        ::slotted(button[part~='toolbar-button']:hover),
+        ::slotted(vaadin-button[part~='toolbar-button']:hover) {
           background-color: var(--lumo-contrast-5pct);
           color: var(--lumo-contrast-80pct);
           box-shadow: none;
