@@ -436,19 +436,41 @@ test.describe('ERTE Toolbar', () => {
   // ============================================
 
   test('Toolbar keyboard navigation — arrow keys move focus', async ({ page }) => {
-    const undoBtn = shadowButton(page, 'toolbar-button-undo');
-    await undoBtn.focus();
+    // Focus editor first, then Shift+Tab to move focus to toolbar
+    await focusEditor(page);
+    await page.keyboard.press('Shift+Tab');
 
-    await page.keyboard.press('ArrowRight');
-
-    const focusedPart = await page.evaluate((editorId) => {
+    // Read which button has focus after Shift+Tab
+    const firstFocused = await page.evaluate((editorId) => {
       const el = document.getElementById(editorId) as any;
       if (!el || !el.shadowRoot) return null;
       const focused = el.shadowRoot.activeElement;
       return focused ? focused.getAttribute('part') : null;
     }, 'test-editor');
+    expect(firstFocused).not.toBeNull();
+    expect(firstFocused).toContain('toolbar-button');
 
-    expect(focusedPart).not.toBeNull();
+    // Press ArrowRight — focus should move to a DIFFERENT button
+    await page.keyboard.press('ArrowRight');
+    const secondFocused = await page.evaluate((editorId) => {
+      const el = document.getElementById(editorId) as any;
+      if (!el || !el.shadowRoot) return null;
+      const focused = el.shadowRoot.activeElement;
+      return focused ? focused.getAttribute('part') : null;
+    }, 'test-editor');
+    expect(secondFocused).not.toBeNull();
+    expect(secondFocused).toContain('toolbar-button');
+    expect(secondFocused).not.toBe(firstFocused);
+
+    // Press ArrowLeft — focus should return to the first button
+    await page.keyboard.press('ArrowLeft');
+    const thirdFocused = await page.evaluate((editorId) => {
+      const el = document.getElementById(editorId) as any;
+      if (!el || !el.shadowRoot) return null;
+      const focused = el.shadowRoot.activeElement;
+      return focused ? focused.getAttribute('part') : null;
+    }, 'test-editor');
+    expect(thirdFocused).toBe(firstFocused);
   });
 
   // ============================================

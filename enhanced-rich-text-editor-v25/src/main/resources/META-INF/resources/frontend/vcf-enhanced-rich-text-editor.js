@@ -780,6 +780,58 @@ class VcfEnhancedRichTextEditor extends RteBase {
   }
 
   /**
+   * Override RTE 2's _addToolbarListeners() to read _toolbarButtons
+   * dynamically inside the keydown handler instead of capturing a stale
+   * closure. RTE 2 captures buttons at init time, before ERTE injects
+   * custom buttons (placeholder, readonly, justify, whitespace, etc.).
+   * The stale closure causes TypeError when arrow keys are pressed.
+   * @private
+   */
+  _addToolbarListeners() {
+    const toolbar = this._toolbar;
+
+    // Initial tabindex setup — disable tabbing to all but the first button.
+    // Use a snapshot; this is a one-time setup, not the navigation logic.
+    const initialButtons = this._toolbarButtons;
+    initialButtons.forEach((button, index) => index > 0 && button.setAttribute('tabindex', '-1'));
+
+    toolbar.addEventListener('keydown', (e) => {
+      // Use roving tab-index for the toolbar buttons
+      if ([37, 39].indexOf(e.keyCode) > -1) {
+        e.preventDefault();
+        // Read buttons DYNAMICALLY — includes ERTE-injected buttons
+        const buttons = this._toolbarButtons;
+        let index = buttons.indexOf(e.target);
+        if (index === -1) return; // guard: target not in button list
+        buttons[index].setAttribute('tabindex', '-1');
+
+        let step;
+        if (e.keyCode === 39) {
+          step = 1;
+        } else if (e.keyCode === 37) {
+          step = -1;
+        }
+        index = (buttons.length + index + step) % buttons.length;
+        buttons[index].removeAttribute('tabindex');
+        buttons[index].focus();
+      }
+      // Esc and Tab focuses the content
+      if (e.keyCode === 27 || (e.key === 'Tab' && !e.shiftKey)) {
+        e.preventDefault();
+        this._editor.focus();
+      }
+    });
+
+    // Mousedown happens before editor focusout
+    toolbar.addEventListener('mousedown', (e) => {
+      const buttons = this._toolbarButtons;
+      if (buttons.indexOf(e.composedPath()[0]) > -1) {
+        this._markToolbarFocused();
+      }
+    });
+  }
+
+  /**
    * Injects 25 named <slot> elements into the toolbar DOM produced by
    * super.render(). Slots are placed: START before first group, BEFORE/AFTER
    * around each of the 11 standard groups, a custom group span with
