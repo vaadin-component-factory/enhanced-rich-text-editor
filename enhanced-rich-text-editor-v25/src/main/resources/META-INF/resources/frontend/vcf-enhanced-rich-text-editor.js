@@ -870,6 +870,115 @@ class VcfEnhancedRichTextEditor extends RteBase {
   }
 
   /**
+   * Tracks the index of the currently focused toolbar element in the
+   * _toolbarFocusableElements list. Used by roving tabindex management.
+   * @private
+   */
+  _currentFocusedToolbarIndex = 0;
+
+  /**
+   * Resets all toolbar elements to tabindex="-1", enforcing the roving
+   * tabindex invariant that exactly one element has tabindex="0" at a time.
+   * @param {Element[]} elements - The toolbar focusable elements list
+   * @private
+   */
+  _resetAllTabindex(elements) {
+    for (const el of elements) {
+      el.setAttribute('tabindex', '-1');
+    }
+  }
+
+  /**
+   * Unified focus management for toolbar elements. Handles:
+   * - Resetting all tabindex to "-1" (roving tabindex invariant)
+   * - Paint synchronization (fixes Issue 1: duplicate focus indicators)
+   * - Vaadin focus delegation (focusElement property)
+   * - Index tracking (_currentFocusedToolbarIndex)
+   *
+   * @param {number} index - Target index in _toolbarFocusableElements
+   * @private
+   */
+  _focusToolbarElement(index) {
+    const elements = this._toolbarFocusableElements;
+    if (!elements.length || index < 0 || index >= elements.length) return;
+
+    // 1. Reset ALL tabindex to -1 (prevents Issue 2: stale tabindex state)
+    this._resetAllTabindex(elements);
+
+    // 2. Force paint sync on previous element (fixes Issue 1: duplicate :focus-visible)
+    // Reading offsetHeight forces the browser to recompute styles BEFORE we set
+    // focus on the next element, ensuring the previous element's :focus-visible clears.
+    const prevIndex = this._currentFocusedToolbarIndex;
+    if (prevIndex >= 0 && prevIndex < elements.length && prevIndex !== index) {
+      const prev = elements[prevIndex];
+      if (prev.focusElement && prev.focusElement !== prev) {
+        prev.focusElement.blur();
+      }
+      prev.blur();
+      void prev.offsetHeight; // Force style recalc
+    }
+
+    // 3. Set target tabindex and focus
+    const target = elements[index];
+    target.setAttribute('tabindex', '0');
+
+    if (target.focusElement && target.focusElement !== target) {
+      target.focusElement.focus();
+    } else {
+      target.focus();
+    }
+
+    // 4. Track current index
+    this._currentFocusedToolbarIndex = index;
+  }
+
+  /**
+   * Finds the index of the currently focused element in the toolbar elements list.
+   * Handles shadow DOM boundaries and Vaadin focus delegation.
+   *
+   * @param {Element[]} elements - The toolbar focusable elements list
+   * @param {Event} e - The keyboard event (for composedPath)
+   * @returns {number} Index of the focused element, or -1 if not found
+   * @private
+   */
+  _findCurrentIndex(elements, e) {
+    // 1. Check composedPath() - works for shadow DOM event targets
+    if (e) {
+      const path = e.composedPath();
+      for (const pathElement of path) {
+        const idx = elements.indexOf(pathElement);
+        if (idx !== -1) return idx;
+      }
+    }
+
+    // 2. Check if any element contains document.activeElement
+    // Handles Vaadin components with focus delegation
+    const active = document.activeElement;
+    if (active) {
+      const directIdx = elements.indexOf(active);
+      if (directIdx !== -1) return directIdx;
+
+      for (let i = 0; i < elements.length; i++) {
+        if (elements[i].contains(active)) return i;
+      }
+    }
+
+    // 3. Check shadowRoot.activeElement
+    const shadowActive = this.shadowRoot?.activeElement;
+    if (shadowActive) {
+      const shadowIdx = elements.indexOf(shadowActive);
+      if (shadowIdx !== -1) return shadowIdx;
+
+      for (let i = 0; i < elements.length; i++) {
+        if (elements[i].contains(shadowActive)) return i;
+      }
+    }
+
+    // 4. Fall back to tracked index
+    return this._currentFocusedToolbarIndex;
+  }
+
+  /**
    * Override RTE 2's _addToolbarListeners() to:
    * 1. Include ALL focusable elements (not just buttons) — supports custom components
    * 2. Respect arrow-key consumers (inputs, etc.) — don't preventDefault for those
@@ -881,85 +990,31 @@ class VcfEnhancedRichTextEditor extends RteBase {
   _addToolbarListeners() {
     const toolbar = this._toolbar;
 
-    // Initial tabindex setup — disable tabbing to all but the first element
+    // Initial tabindex setup — roving tabindex: only first element is tabbable
     const initialElements = this._toolbarFocusableElements;
-    initialElements.forEach((el, index) => index > 0 && el.setAttribute('tabindex', '-1'));
+    this._resetAllTabindex(initialElements);
+    if (initialElements.length > 0) {
+      initialElements[0].setAttribute('tabindex', '0');
+    }
+    this._currentFocusedToolbarIndex = 0;
 
     toolbar.addEventListener('keydown', (e) => {
       // Arrow key navigation
       if ([37, 39].indexOf(e.keyCode) > -1) {
         // Check if target consumes arrow keys (TextField, Input, etc.)
         if (this._isArrowKeyConsumer(e.target)) {
-          // Don't preventDefault — let the element handle arrow keys internally
           return;
         }
 
         e.preventDefault();
 
-        // Read focusable elements DYNAMICALLY (includes ERTE-injected components)
         const elements = this._toolbarFocusableElements;
+        const currentIndex = this._findCurrentIndex(elements, e);
+        if (currentIndex === -1) return;
 
-        // Find which element in our list is currently focused.
-        // Strategy: Check composedPath() first, then walk up from document.activeElement
-        // to handle cases where focus is delegated to shadow DOM internals.
-        const path = e.composedPath();
-        let index = -1;
-
-        // 1. Check composedPath() - works for shadow DOM event targets
-        for (const pathElement of path) {
-          index = elements.indexOf(pathElement);
-          if (index !== -1) {
-            break;
-          }
-        }
-
-        // 2. Check if any element in our list contains document.activeElement
-        // This handles Vaadin components where focus is delegated to an internal input
-        if (index === -1) {
-          const active = document.activeElement;
-          if (active) {
-            // First, check if active element itself is in the list
-            index = elements.indexOf(active);
-
-            // If not, check if any element in our list contains the active element
-            if (index === -1) {
-              for (let i = 0; i < elements.length; i++) {
-                if (elements[i].contains(active)) {
-                  index = i;
-                  break;
-                }
-              }
-            }
-          }
-        }
-
-        if (index === -1) return; // guard: target not in list
-
-        elements[index].setAttribute('tabindex', '-1');
-
-        let step;
-        if (e.keyCode === 39) {
-          step = 1;  // Right arrow
-        } else if (e.keyCode === 37) {
-          step = -1; // Left arrow
-        }
-        index = (elements.length + index + step) % elements.length;
-        const nextElement = elements[index];
-
-        // Ensure the next element is focusable
-        // For Vaadin components in light DOM (slotted), tabindex is required
-        if (!nextElement.hasAttribute('tabindex')) {
-          nextElement.setAttribute('tabindex', '0');
-        } else {
-          nextElement.removeAttribute('tabindex');
-        }
-
-        // For Vaadin components that delegate focus, call focus on focusElement if available
-        if (nextElement.focusElement && nextElement.focusElement !== nextElement) {
-          nextElement.focusElement.focus();
-        } else {
-          nextElement.focus();
-        }
+        const step = e.keyCode === 39 ? 1 : -1;
+        const nextIndex = (elements.length + currentIndex + step) % elements.length;
+        this._focusToolbarElement(nextIndex);
       }
 
       // Esc and Tab focuses the content
@@ -969,13 +1024,40 @@ class VcfEnhancedRichTextEditor extends RteBase {
       }
     });
 
-    // Mousedown handler
+    // Mousedown handler — sync tracked index when user clicks toolbar elements
     toolbar.addEventListener('mousedown', (e) => {
       const elements = this._toolbarFocusableElements;
-      if (elements.indexOf(e.composedPath()[0]) > -1) {
-        this._markToolbarFocused();
+      const path = e.composedPath();
+      for (const pathElement of path) {
+        const idx = elements.indexOf(pathElement);
+        if (idx !== -1) {
+          this._markToolbarFocused();
+          // Sync roving tabindex state to clicked element
+          this._resetAllTabindex(elements);
+          elements[idx].setAttribute('tabindex', '0');
+          this._currentFocusedToolbarIndex = idx;
+          break;
+        }
       }
     });
+  }
+
+  /**
+   * Override RTE 2's __patchKeyboard() to use _toolbarFocusableElements
+   * (includes slotted components) instead of just shadow DOM buttons.
+   * Fixes Issue 3: Shift+Tab now focuses the FIRST toolbar element in
+   * visual order, whether it's a shadow DOM button or a slotted component.
+   * @private
+   */
+  __patchKeyboard() {
+    const focusToolbar = () => {
+      this._markToolbarFocused();
+      this._focusToolbarElement(0);
+    };
+
+    const keyboard = this._editor.keyboard;
+    keyboard.addBinding({ key: 'Tab', shiftKey: true, handler: focusToolbar });
+    keyboard.addBinding({ key: 'F10', altKey: true, handler: focusToolbar });
   }
 
   /**
@@ -2145,22 +2227,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
 
     const focusToolbar = () => {
       this._markToolbarFocused();
-      const toolbar = this.shadowRoot.querySelector('[part="toolbar"]');
-      if (!toolbar) return;
-      const standardButton = toolbar.querySelector('button:not([tabindex])');
-      if (standardButton != null) {
-        standardButton.focus();
-      } else {
-        const customSlot = toolbar.querySelector('slot[name="toolbar"]');
-        if (customSlot) {
-          const button = customSlot
-            .assignedElements()
-            .filter(e => e.getAttribute('tabindex') == 0 || e.getAttribute('tabindex') == undefined)[0];
-          if (button != null) {
-            button.focus();
-          }
-        }
-      }
+      this._focusToolbarElement(0);
     };
 
     const keyboard = this._editor.getModule('keyboard');

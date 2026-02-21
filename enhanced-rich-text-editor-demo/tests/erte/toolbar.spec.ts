@@ -440,35 +440,58 @@ test.describe('ERTE Toolbar', () => {
     await focusEditor(page);
     await page.keyboard.press('Shift+Tab');
 
-    // Read which button has focus after Shift+Tab
+    // Read which element has focus after Shift+Tab (check both shadow and light DOM)
     const firstFocused = await page.evaluate((editorId) => {
       const el = document.getElementById(editorId) as any;
-      if (!el || !el.shadowRoot) return null;
-      const focused = el.shadowRoot.activeElement;
-      return focused ? focused.getAttribute('part') : null;
+      if (!el) return null;
+      const shadowFocused = el.shadowRoot?.activeElement;
+      const docFocused = document.activeElement;
+
+      // Prefer shadow DOM element part attribute, fall back to light DOM id
+      if (shadowFocused && shadowFocused.hasAttribute('part')) {
+        return shadowFocused.getAttribute('part');
+      }
+      if (docFocused && docFocused.id) {
+        return docFocused.id;
+      }
+      return null;
     }, 'test-editor');
     expect(firstFocused).not.toBeNull();
-    expect(firstFocused).toContain('toolbar-button');
 
-    // Press ArrowRight — focus should move to a DIFFERENT button
+    // Press ArrowRight — focus should move to a DIFFERENT element
     await page.keyboard.press('ArrowRight');
     const secondFocused = await page.evaluate((editorId) => {
       const el = document.getElementById(editorId) as any;
-      if (!el || !el.shadowRoot) return null;
-      const focused = el.shadowRoot.activeElement;
-      return focused ? focused.getAttribute('part') : null;
+      if (!el) return null;
+      const shadowFocused = el.shadowRoot?.activeElement;
+      const docFocused = document.activeElement;
+
+      if (shadowFocused && shadowFocused.hasAttribute('part')) {
+        return shadowFocused.getAttribute('part');
+      }
+      if (docFocused && docFocused.id) {
+        return docFocused.id;
+      }
+      return null;
     }, 'test-editor');
     expect(secondFocused).not.toBeNull();
-    expect(secondFocused).toContain('toolbar-button');
     expect(secondFocused).not.toBe(firstFocused);
 
-    // Press ArrowLeft — focus should return to the first button
+    // Press ArrowLeft — focus should return to the first element
     await page.keyboard.press('ArrowLeft');
     const thirdFocused = await page.evaluate((editorId) => {
       const el = document.getElementById(editorId) as any;
-      if (!el || !el.shadowRoot) return null;
-      const focused = el.shadowRoot.activeElement;
-      return focused ? focused.getAttribute('part') : null;
+      if (!el) return null;
+      const shadowFocused = el.shadowRoot?.activeElement;
+      const docFocused = document.activeElement;
+
+      if (shadowFocused && shadowFocused.hasAttribute('part')) {
+        return shadowFocused.getAttribute('part');
+      }
+      if (docFocused && docFocused.id) {
+        return docFocused.id;
+      }
+      return null;
     }, 'test-editor');
     expect(thirdFocused).toBe(firstFocused);
   });
@@ -598,6 +621,120 @@ test.describe('ERTE Toolbar', () => {
         timeout: 5000,
       });
     }
+  });
+
+  // ============================================
+  // FOCUS MANAGEMENT — Phase 3.4b
+  // ============================================
+
+  test('Only one focus indicator after arrow navigation — no duplicates (Issue 1)', async ({ page }) => {
+    await focusEditor(page);
+    await page.keyboard.press('Shift+Tab');
+    await page.waitForTimeout(200);
+
+    // Navigate 10 times with ArrowRight, checking focus at each step
+    for (let i = 0; i < 10; i++) {
+      await page.keyboard.press('ArrowRight');
+      await page.waitForTimeout(100);
+
+      // Count elements with :focus-visible across both shadow and light DOM
+      const focusCount = await page.evaluate((editorId) => {
+        const el = document.getElementById(editorId) as any;
+        if (!el?.shadowRoot) return -1;
+
+        let count = 0;
+
+        // Check shadow DOM elements
+        el.shadowRoot.querySelectorAll('button, [tabindex]').forEach((btn: Element) => {
+          if (btn.matches(':focus-visible') || btn.matches(':focus')) count++;
+        });
+
+        // Check light DOM slotted elements
+        el.querySelectorAll('[slot] button, [slot][tabindex], [slot]').forEach((btn: Element) => {
+          if (btn.matches(':focus-visible') || btn.matches(':focus')) count++;
+        });
+
+        return count;
+      }, 'test-editor');
+
+      expect(focusCount, `Step ${i + 1}: expected exactly 1 focused element`).toBeLessThanOrEqual(1);
+    }
+  });
+
+  test('Shift+Tab consistently focuses first element over multiple cycles (Issue 2)', async ({ page }) => {
+    for (let cycle = 0; cycle < 3; cycle++) {
+      await focusEditor(page);
+      await page.keyboard.press('Shift+Tab');
+      await page.waitForTimeout(200);
+
+      // Navigate right a few times
+      for (let i = 0; i < 3; i++) {
+        await page.keyboard.press('ArrowRight');
+        await page.waitForTimeout(100);
+      }
+
+      // Return to editor
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(200);
+
+      // Shift+Tab back — should focus first element again
+      await page.keyboard.press('Shift+Tab');
+      await page.waitForTimeout(200);
+
+      // Check that the FIRST element in _toolbarFocusableElements has focus
+      const firstHasFocus = await page.evaluate((editorId) => {
+        const el = document.getElementById(editorId) as any;
+        if (!el?._toolbarFocusableElements) return false;
+        const elements = el._toolbarFocusableElements;
+        if (!elements.length) return false;
+        const first = elements[0];
+        // Check if first element or its focusElement has focus
+        const shadowActive = el.shadowRoot?.activeElement;
+        const docActive = document.activeElement;
+        return first === shadowActive ||
+               first === docActive ||
+               first.contains(shadowActive) ||
+               first.contains(docActive) ||
+               (first.focusElement && (first.focusElement === shadowActive || first.focusElement === docActive));
+      }, 'test-editor');
+
+      expect(firstHasFocus, `Cycle ${cycle + 1}: Shift+Tab should focus first toolbar element`).toBe(true);
+    }
+  });
+
+  test('Shift+Tab focuses first visible toolbar element including slotted (Issue 3)', async ({ page }) => {
+    await focusEditor(page);
+    await page.keyboard.press('Shift+Tab');
+    await page.waitForTimeout(200);
+
+    // Verify focus is on the FIRST element of _toolbarFocusableElements
+    const result = await page.evaluate((editorId) => {
+      const el = document.getElementById(editorId) as any;
+      if (!el?._toolbarFocusableElements) return { match: false, info: 'no _toolbarFocusableElements' };
+      const elements = el._toolbarFocusableElements;
+      if (!elements.length) return { match: false, info: 'empty elements list' };
+      const first = elements[0];
+
+      const shadowActive = el.shadowRoot?.activeElement;
+      const docActive = document.activeElement;
+
+      const match = first === shadowActive ||
+                    first === docActive ||
+                    first.contains(shadowActive) ||
+                    first.contains(docActive) ||
+                    (first.focusElement && (first.focusElement === shadowActive || first.focusElement === docActive));
+
+      return {
+        match,
+        firstTag: first.tagName,
+        firstId: first.id,
+        shadowActiveTag: shadowActive?.tagName,
+        docActiveTag: docActive?.tagName,
+        docActiveId: docActive?.id,
+      };
+    }, 'test-editor');
+
+    expect(result.match, `Expected first toolbar element to have focus. First element: ${result.firstTag}#${result.firstId}, shadow active: ${result.shadowActiveTag}, doc active: ${result.docActiveTag}#${result.docActiveId}`).toBe(true);
   });
 
   // ============================================
