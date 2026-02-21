@@ -4,6 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## ⚠️ CRITICAL PRINCIPLES
+
+**SEI GRÜNDLICH und deiner selbst nie zu sicher!**
+
+- **Always verify your changes actually work** — Never assume success without testing
+- **Check that your edits actually land in the built artifacts** — Source changes don't matter if they don't reach the runtime
+- **Test end-to-end** — from source edit → build → browser → visual verification
+- **When something doesn't work, verify EACH step** — Don't skip ahead assuming your fix worked
+
+---
+
 ## ⚠️ BEFORE YOU RESPOND — NOTIFICATION CHECKLIST
 
 **Check these BEFORE every response. Failing to notify = usability failure.**

@@ -568,20 +568,14 @@ class VcfEnhancedRichTextEditor extends RteBase {
           margin-right: 2px;
         }
 
-        /* Justify button icon — RTE 2 base styles define icons for align-left/center/right
-           but not justify. Using SVG mask-image matching the Vaadin iconset icon
-           (vaadin:align-justify: 4 horizontal lines of equal length). */
-        [part~='toolbar-button-align-justify']::before {
-          -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M0 0h16v3h-16v-3z"></path><path d="M0 4h16v3h-16v-3z"></path><path d="M0 12h16v3h-16v-3z"></path><path d="M0 8h16v3h-16v-3z"></path></svg>');
-          mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M0 0h16v3h-16v-3z"></path><path d="M0 4h16v3h-16v-3z"></path><path d="M0 12h16v3h-16v-3z"></path><path d="M0 8h16v3h-16v-3z"></path></svg>');
-        }
+        /* Justify button icon is added as <vaadin-icon> element in JS, not via CSS */
 
         /* ========================================
-           SLOTTED TOOLBAR BUTTON STYLES
+           SLOTTED CUSTOM COMPONENT STYLES
            Custom components added via addToolbarComponents()
            ======================================== */
 
-        ::slotted([part~='toolbar-button']) {
+        ::slotted([part~='toolbar-custom-component']) {
           width: auto;
           height: var(--lumo-size-m);
           flex-shrink: 0;
@@ -600,8 +594,8 @@ class VcfEnhancedRichTextEditor extends RteBase {
         }
 
         /* Hover effect only for button elements, not for input fields */
-        ::slotted(button[part~='toolbar-button']:hover),
-        ::slotted(vaadin-button[part~='toolbar-button']:hover) {
+        ::slotted(button[part~='toolbar-custom-component']:hover),
+        ::slotted(vaadin-button[part~='toolbar-custom-component']:hover) {
           background-color: var(--lumo-contrast-5pct);
           color: var(--lumo-contrast-80pct);
           box-shadow: none;
@@ -609,7 +603,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
         }
 
         /* Align the min-width with built-in toolbar buttons. */
-        ::slotted(vaadin-button[part~='toolbar-button']) {
+        ::slotted(vaadin-button[part~='toolbar-custom-component']) {
           min-width: var(--lumo-size-m);
         }
 
@@ -1391,6 +1385,39 @@ class VcfEnhancedRichTextEditor extends RteBase {
       }
     });
 
+    // Add SVG icon directly (vaadin-icon doesn't work with inline SVG)
+    // Icon: 3 horizontal lines, all equal length (justify alignment)
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('width', '24');
+    svg.setAttribute('height', '24');
+    svg.setAttribute('part', 'toolbar-button-icon toolbar-button-align-justify-icon');
+    svg.style.display = 'block';
+    svg.style.fill = 'none';
+    svg.style.stroke = 'currentColor';
+    svg.style.strokeWidth = '2';
+    svg.style.strokeLinecap = 'round';
+
+    // Three horizontal lines
+    for (let i = 0; i < 3; i++) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      const y = 6 + i * 6; // y positions: 6, 12, 18
+      line.setAttribute('x1', '4');
+      line.setAttribute('y1', String(y));
+      line.setAttribute('x2', '20');
+      line.setAttribute('y2', String(y));
+      svg.appendChild(line);
+    }
+
+    // Inject slot for icon replacement (follows ERTE pattern)
+    const slot = document.createElement('slot');
+    slot.name = 'toolbar-button-align-justify';
+    btn.appendChild(slot);
+
+    // Add SVG as default content in slot
+    slot.appendChild(svg);
+
     // Insert after the align-right button (last in group)
     const rightBtn = alignGroup.querySelector('[part~="toolbar-button-align-right"]');
     if (rightBtn && rightBtn.nextSibling) {
@@ -1398,11 +1425,6 @@ class VcfEnhancedRichTextEditor extends RteBase {
     } else {
       alignGroup.appendChild(btn);
     }
-
-    // Inject slot for icon replacement (follows ERTE pattern)
-    const slot = document.createElement('slot');
-    slot.name = 'toolbar-button-align-justify';
-    btn.appendChild(slot);
 
     // Store reference for i18n updates
     this.__justifyButton = btn;

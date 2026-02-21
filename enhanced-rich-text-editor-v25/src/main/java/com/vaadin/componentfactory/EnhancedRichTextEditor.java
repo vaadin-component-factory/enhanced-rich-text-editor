@@ -92,7 +92,7 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
 
     /**
      * Ensures the component has the given part name so that
-     * {@code ::slotted([part~='toolbar-button'])} styles apply.
+     * {@code ::slotted([part~='toolbar-custom-component'])} styles apply.
      */
     private void addOrAppendPartAttribute(Component component,
             String partName) {
@@ -113,7 +113,7 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         Objects.requireNonNull(components);
         for (Component component : components) {
             Objects.requireNonNull(component);
-            addOrAppendPartAttribute(component, "toolbar-button");
+            addOrAppendPartAttribute(component, "toolbar-custom-component");
             SlotUtil.addComponent(this, toolbarSlot.getSlotName(), component);
         }
     }
@@ -126,7 +126,7 @@ public class EnhancedRichTextEditor extends RteExtensionBase {
         Objects.requireNonNull(components);
         for (Component component : components) {
             Objects.requireNonNull(component);
-            addOrAppendPartAttribute(component, "toolbar-button");
+            addOrAppendPartAttribute(component, "toolbar-custom-component");
             SlotUtil.addComponentAtIndex(this, toolbarSlot.getSlotName(),
                     component, index);
         }
