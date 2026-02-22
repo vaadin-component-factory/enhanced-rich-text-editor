@@ -210,8 +210,10 @@ Follow this exact sequence. Do not skip ahead. Full spec in `user_description.md
     **Mandatory plan review:** Every plan created for a migration (sub)phase MUST be
     automatically reviewed by the `agents-manager` before implementation begins. The
     review MUST include at minimum the `fullstack-developer`, `ui-designer`, and
-    `requirements-reviewer` agents. Do NOT start implementing until the review feedback
-    has been incorporated.
+    `requirements-reviewer` agents. The `agents-manager` may assign additional agents
+    beyond this minimum as needed based on the phase requirements (e.g., `security-reviewer`,
+    `performance-auditor`, `architecture-guard`). Do NOT start implementing until the
+    review feedback has been incorporated.
 
     **Exception:** Phase 3.5 (Documentation) and Phase 3.6 (Code Quality) do NOT require
     fullstack-developer + ui-designer + requirements-reviewer review. This rule applies
