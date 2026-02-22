@@ -6,6 +6,12 @@ This guide helps developers migrate from ERTE 1 (v5.x, Vaadin 24, Quill 1) to ER
 
 **Scope:** Server-side Java API changes, client-side behavior differences, data format migration, and known limitations.
 
+> **Terminology:** This guide uses these terms interchangeably:
+> - "ERTE 1" = "v5.x" = "V24" (Vaadin 24 version)
+> - "ERTE 2" = "v6.x" = "V25" (Vaadin 25 version)
+>
+> Code examples use the format `// --- ERTE 1 (V24) ---` and `// --- ERTE 2 (V25) ---`.
+
 ---
 
 ## Table of Contents
@@ -14,6 +20,7 @@ This guide helps developers migrate from ERTE 1 (v5.x, Vaadin 24, Quill 1) to ER
 - [2. Prerequisites and Dependencies](#2-prerequisites-and-dependencies)
 - [3. Breaking Changes](#3-breaking-changes)
 - [4. Feature-by-Feature Migration](#4-feature-by-feature-migration)
+- [4A. New in ERTE 2](#4a-new-in-erte-2)
 - [5. Known Limitations](#5-known-limitations)
 - [6. Step-by-Step Migration Strategy](#6-step-by-step-migration-strategy)
 - [7. Troubleshooting](#7-troubleshooting)
@@ -34,7 +41,7 @@ This guide helps developers migrate from ERTE 1 (v5.x, Vaadin 24, Quill 1) to ER
 | **Java** | 17+ | 21+ |
 | **Quill** | 1.3.6 | 2.0.3 |
 | **Parchment** | 1.x | 3.x |
-| **Jackson** | 2.x (`com.fasterxml.jackson`) | 3.x (`tools.jackson`) |
+| **JSON API** | `elemental.json` (Vaadin's JSON API, not Jackson) | Jackson 3.x (`tools.jackson`) |
 | **JUnit** | 4/5 | 5 |
 | **Mockito** | 1.x / PowerMock | 5.x |
 | **Web Component** | Polymer | Lit |
@@ -50,15 +57,15 @@ work is required on the *consumer* side during migration.
 | 2 | Rulers (horizontal + vertical) | None | API unchanged |
 | 3 | Soft-Break (Shift+Enter + tab copy) | None | Behavior unchanged |
 | 4 | Readonly Sections (inline) | None | API unchanged |
-| 5 | Placeholders (embed + dialog) | Low | Typo fixes, Collection to List |
+| 5 | Placeholders (embed + dialog) | Medium | Typo fixes, Collection to List, multiple API changes |
 | 6 | Non-Breaking Space (Shift+Space) | None | Behavior unchanged |
 | 7 | Whitespace Indicators | None | API unchanged |
-| 8 | Toolbar Slot System | Low | 3 new slots added |
+| 8 | Toolbar Slot System | Low | 2 new slots added |
 | 9 | Toolbar Button Visibility | Low | Enum rename: DEINDENT to OUTDENT |
 | 10 | Custom Keyboard Shortcuts | Medium | keyCode to key name, method rename |
-| 11 | HTML Sanitization | None | Improved security (transparent) |
+| 11 | HTML Sanitization | Low | Improved security (transparent), stricter filtering |
 | 12 | I18n | Medium | New class hierarchy |
-| 13 | Theme Variants | None | Inherited from Vaadin 25 |
+| 13 | Theme Variants | Low | `EnhancedRichTextEditorVariant` removed, use standard Vaadin variants |
 | 14 | Programmatic Text Insertion | Medium | getTextLength is now async |
 | 15 | Value Change Mode | None | Inherited |
 | 16 | extendOptions Hook | Medium | Deprecated, new hooks available |
@@ -163,6 +170,12 @@ public class Application implements AppShellConfigurator {
 
 This is the most impactful change for existing applications and deserves careful
 planning.
+
+> **Warning:** If your application stores content **positions or indices** (e.g., bookmarks
+> at character offset 42 in Delta JSON), be aware that Delta indices and HTML character
+> positions are NOT equivalent. Converting between them requires accounting for HTML tag
+> offsets. Consider storing positions separately or keeping content in Delta format
+> via `asDelta()`.
 
 **What changed:**
 
@@ -314,9 +327,9 @@ EnhancedRichTextEditor.EnhancedRichTextEditorI18n i18n =
         new EnhancedRichTextEditor.EnhancedRichTextEditorI18n();
 i18n.setBold("Fett");
 i18n.setOutdent("Weniger einrücken");   // "outdent" in V25 (renamed)
-i18n.setReadonly("Schreibschutz");
-i18n.setPlaceholder("Platzhalter");     // new ERTE-specific field
-i18n.setPlaceholderDialogTitle("Platzhalter einfügen"); // new
+i18n.setReadonly("Schreibschutz");       // ERTE-specific (moved from V24)
+i18n.setPlaceholder("Platzhalter");     // ERTE-specific (moved from V24)
+i18n.setPlaceholderDialogTitle("Platzhalter einfügen"); // ERTE-specific (moved from V24)
 editor.setI18n(i18n);
 ```
 
@@ -324,24 +337,39 @@ editor.setI18n(i18n);
 
 | V24 | V25 | Change |
 |-----|-----|--------|
-| `RichTextEditorI18n` | `EnhancedRichTextEditorI18n` | Class renamed |
+| `RichTextEditorI18n` (inner class) | `EnhancedRichTextEditorI18n` (inner class) | Class renamed |
 | `setDeindent()` / `getDeindent()` | `setOutdent()` / `getOutdent()` | Renamed |
-| All 32 fields in one class | Standard fields inherited from parent | Structural |
-| No dialog/combo labels | 8 new ERTE-specific fields | Added |
+| `setPlaceholderAppeance()` (typo) | `setPlaceholderAppearance()` | Typo fixed (missing 'r') |
+| All fields in one monolithic class | Standard RTE fields inherited from `RichTextEditor.RichTextEditorI18n`; ERTE-specific fields in subclass | Structural split |
 
-**New ERTE-specific I18n fields (V25):**
+The main breaking change is **structural**: V24 had all 32+ fields in a single
+`RichTextEditorI18n` class. V25 splits this into a parent class (standard RTE 2
+labels like bold, italic, etc.) and an `EnhancedRichTextEditorI18n` subclass
+(ERTE-specific labels). The API is source-compatible for most setters -- you just
+need to change the class name and fix the renamed/typo-fixed methods.
 
-| Method | Default | Description |
-|--------|---------|-------------|
-| `setReadonly(String)` | "Readonly" | Readonly toolbar button label |
-| `setWhitespace(String)` | "Whitespace" | Whitespace toggle label |
-| `setPlaceholder(String)` | "Placeholder" | Placeholder button label |
-| `setPlaceholderAppearance(String)` | "Appearance" | Appearance toggle label |
-| `setPlaceholderDialogTitle(String)` | "Placeholder" | Dialog title |
-| `setPlaceholderComboBoxLabel(String)` | "Select placeholder" | Combo-box label |
-| `setPlaceholderAppearanceLabel1(String)` | "Plain" | Normal appearance label |
-| `setPlaceholderAppearanceLabel2(String)` | "Value" | Alt appearance label |
-| `setAlignJustify(String)` | "Justify" | Justify alignment button label |
+**Key structural change:** V24's monolithic `RichTextEditorI18n` inner class contained all fields (standard RTE + ERTE-specific). V25 separates them:
+- **Parent class `RichTextEditor.RichTextEditorI18n`**: Standard RTE 2 fields (inherited from Vaadin's RTE 2)
+- **Subclass `EnhancedRichTextEditor.EnhancedRichTextEditorI18n`**: ERTE-specific fields only
+
+Use the subclass for ERTE features. All setters on both classes support fluent chaining.
+
+**ERTE-specific I18n fields (V25 subclass):**
+
+Most of these fields already existed in V24's monolithic class and have been moved
+into the V25 subclass. Only `whitespace` is genuinely new.
+
+| Method | Default | Status |
+|--------|---------|--------|
+| `setReadonly(String)` | "Readonly" | Moved from V24 |
+| `setWhitespace(String)` | "Whitespace" | **New in V25** |
+| `setPlaceholder(String)` | "Placeholder" | Moved from V24 |
+| `setPlaceholderAppearance(String)` | "Appearance" | Moved from V24 (typo fixed) |
+| `setPlaceholderDialogTitle(String)` | "Placeholder" | Moved from V24 |
+| `setPlaceholderComboBoxLabel(String)` | "Select placeholder" | Moved from V24 |
+| `setPlaceholderAppearanceLabel1(String)` | "Plain" | Moved from V24 |
+| `setPlaceholderAppearanceLabel2(String)` | "Value" | Moved from V24 |
+| `setAlignJustify(String)` | "Justify" | Moved from V24 |
 
 ### 3.4 ToolbarButton Enum Changes
 
@@ -388,15 +416,25 @@ Each enum constant now has a `getPartSuffix()` method (e.g., `"bold"`) and a
 
 **Impact:** Low -- code using toolbar slots may need awareness of the new style group.
 
-V25 adds a new toolbar group for text color and background color buttons. This
-introduces 2 new `ToolbarSlot` values:
+V25 adds a new toolbar group for text color and background color buttons (the
+"style" group). This introduces 2 new `ToolbarSlot` values:
 
 | New V25 Slot | Position |
 |-------------|----------|
 | `BEFORE_GROUP_STYLE` | Before color/background group |
 | `AFTER_GROUP_STYLE` | After color/background group |
 
-The total slot count increases from 24 (V24) to 27 (V25), for 11 groups.
+The total slot count increases from 25 (V24) to 27 (V25), for 11 groups.
+
+**Toolbar layout change:**
+```
+V24: [Emphasis] [Heading] [List] ...
+V25: [Emphasis] [Style ←NEW] [Heading] [List] ...
+```
+
+If you placed custom components via `AFTER_GROUP_EMPHASIS`, they now appear
+before the new style group. Use `BEFORE_GROUP_STYLE` or `AFTER_GROUP_STYLE`
+to position components relative to the new group.
 
 Existing slot names are unchanged. Code referencing existing slots (e.g.,
 `BEFORE_GROUP_EMPHASIS`, `GROUP_CUSTOM`, `END`) works without changes.
@@ -440,20 +478,26 @@ editor.addToolbarFocusShortcut("F10", false, false, false);
 | 121 | `"F10"` | Function key F10 |
 | 27 | `"Escape"` | Escape key |
 
-### 3.7 Placeholder API Typo Fixes
+### 3.7 Typo Fixes (Placeholder and I18n)
 
 **Impact:** Low -- search-and-replace.
 
-Two method names had typos in V24 that are fixed in V25:
+Several method names had typos in V24 that are fixed in V25:
 
 ```java
-// --- ERTE 1 (V24) ---
-editor.setPlacehoderAltAppearance(true);   // missing 'l'
+// --- ERTE 1 (V24) --- Editor API
+editor.setPlacehoderAltAppearance(true);   // missing 'l' in "Placeholder"
 boolean alt = editor.isPlacehoderAltAppearance();
 
-// --- ERTE 2 (V25) ---
+// --- ERTE 2 (V25) --- Editor API
 editor.setPlaceholderAltAppearance(true);  // fixed
 boolean alt = editor.isPlaceholderAltAppearance();
+
+// --- ERTE 1 (V24) --- I18n
+i18n.setPlaceholderAppeance("Appearance"); // missing 'r' in "Appearance"
+
+// --- ERTE 2 (V25) --- I18n
+i18n.setPlaceholderAppearance("Appearance"); // fixed
 ```
 
 ### 3.8 Placeholder Collection to List
@@ -517,24 +561,33 @@ Map<String, Object> altFmt = p.getAltFormat();
 
 **Migration:** Replace `JsonObject` creation with `Map.of()` or `new HashMap<>()`.
 
-### 3.10 Jackson 2 to Jackson 3
+### 3.10 JSON API Change (`elemental.json` to `tools.jackson`)
 
 **Impact:** None for most users. Only affects code that directly manipulates ERTE's
 internal JSON structures.
 
-Vaadin 25 uses Jackson 3 (`tools.jackson` package) instead of Jackson 2
-(`com.fasterxml.jackson` package). If your code extends ERTE classes or directly
-uses `JsonNode`, `ObjectNode`, or `ArrayNode` from ERTE's API:
+V24 (ERTE 1) used Vaadin's `elemental.json` API (`JsonObject`, `JsonArray`,
+`JreJsonFactory`) for internal JSON handling and the `Placeholder` format API.
+V25 (ERTE 2) uses Jackson 3 (`tools.jackson` package) because Vaadin 25 itself
+migrated from `elemental.json` to Jackson 3.
+
+If your code extends ERTE classes or directly uses JSON types from ERTE's API:
 
 ```java
 // --- ERTE 1 (V24) ---
-import com.fasterxml.jackson.databind.JsonNode;
+import elemental.json.JsonObject;
 import elemental.json.JsonArray;
+import elemental.json.impl.JreJsonFactory;
 
 // --- ERTE 2 (V25) ---
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ObjectNode;
 import tools.jackson.databind.node.ArrayNode;
 ```
+
+> **Note:** The `Placeholder` format API also changed from `JsonObject` to
+> `Map<String, Object>` (see [Section 3.9](#39-placeholder-format-api-jsonobject--map)).
+> This is a separate, higher-level change that most users will encounter.
 
 ### 3.11 Deprecated V24 Methods
 
@@ -543,14 +596,20 @@ replacement API.
 
 | V24 Method | V25 Replacement | Notes |
 |------------|----------------|-------|
-| `addCustomButton(Button)` | `addCustomToolbarComponents(Component...)` | Accepts any Component |
-| `addCustomButtons(Button...)` | `addCustomToolbarComponents(Component...)` | Same |
+| `addCustomButton(Button)` | `addCustomToolbarComponents(Component...)` | Now accepts any `Component`, not just `Button` |
+| `addCustomButtons(Button...)` | `addCustomToolbarComponents(Component...)` | Same — any `Component` |
 | `getCustomButton(String)` | `getToolbarComponent(ToolbarSlot, String)` | Requires slot parameter |
 | `removeCustomButton(String)` | `removeToolbarComponent(ToolbarSlot, String)` | Requires slot parameter |
 | `removeCustomButton(Button)` | `removeToolbarComponent(ToolbarSlot, Component)` | Requires slot parameter |
 | `getHtmlValue()` | `getValue()` | HTML is now primary format |
-| Constructor `(String initialValue)` | `new ERTE()` + `setValue(html)` | Two-step initialization |
-| Constructor `(String, ValueChangeMode)` | `new ERTE()` + configure separately | Two-step initialization |
+| Constructor `(String initialValue)` | `new EnhancedRichTextEditor()` + `setValue(html)` | Two-step initialization |
+| Constructor `(String, ValueChangeListener)` | `new EnhancedRichTextEditor()` + configure separately | Two-step initialization |
+| Constructor `(ValueChangeListener)` | `new EnhancedRichTextEditor()` + `addValueChangeListener(...)` | Two-step initialization |
+
+**Key change in toolbar components:** The V24 methods `addCustomButton(Button)` and
+`addCustomButtons(Button...)` are removed in V25. Use `addCustomToolbarComponents(Component...)`
+instead. This new method is a **type widening** — it accepts any `Component`, not just `Button`.
+This allows you to add more complex toolbar extensions (checkboxes, combo boxes, custom widgets, etc.).
 
 ### 3.12 extendOptions Hook -- Deprecated
 
@@ -605,19 +664,22 @@ If your code or tests query buttons by title attribute, update accordingly:
 // Toolbar buttons have aria-label="Bold", aria-label="Italic", etc.
 ```
 
-### 3.14 Removed: Constructors with Initial Value
+### 3.14 Removed: Convenience Constructors
 
 **Impact:** Low -- affects code using convenience constructors.
+
+V24 provided four constructors. V25 only provides the no-arg constructor.
 
 ```java
 // --- ERTE 1 (V24) ---
 var editor = new EnhancedRichTextEditor(deltaJsonString);
-var editor = new EnhancedRichTextEditor(deltaJsonString, ValueChangeMode.EAGER);
+var editor = new EnhancedRichTextEditor(deltaJsonString, listener);
+var editor = new EnhancedRichTextEditor(listener);
 
 // --- ERTE 2 (V25) ---
 var editor = new EnhancedRichTextEditor();
-editor.setValue(htmlString);
-editor.setValueChangeMode(ValueChangeMode.EAGER);
+editor.setValue(htmlString);          // was Delta, now HTML
+editor.addValueChangeListener(listener);
 ```
 
 ---
@@ -636,12 +698,21 @@ These features work identically in V24 and V25. No code changes needed.
 Vaadin 25's Lumo theme is applied automatically. ERTE-specific styles (readonly
 sections, tab indicators, ruler rendering) are included in the component.
 
-```java
-// Works in both V24 and V25
-editor.addThemeVariants(EnhancedRichTextEditorVariant.COMPACT);
-```
-
-> **Note:** Ensure `@StyleSheet(Lumo.STYLESHEET)` is on your `AppShellConfigurator`
+> **Breaking Change:** V24's `EnhancedRichTextEditorVariant` enum
+> (`LUMO_COMPACT`, `LUMO_NO_BORDER`, `MATERIAL_NO_BORDER`) is **removed** in V25.
+> ERTE 2 inherits theme variant support directly from the parent RTE 2 component.
+> Use standard Vaadin Lumo variants instead:
+>
+> ```java
+> // --- ERTE 1 (V24) ---
+> editor.addThemeVariants(EnhancedRichTextEditorVariant.LUMO_COMPACT);
+>
+> // --- ERTE 2 (V25) ---
+> // Use Vaadin's standard theme variant mechanism:
+> editor.getElement().getThemeList().add("compact");
+> ```
+>
+> Ensure `@StyleSheet(Lumo.STYLESHEET)` is on your `AppShellConfigurator`
 > (see [Section 2.5](#25-lumo-theme-configuration)).
 
 #### Feature 15: Value Change Mode
@@ -756,14 +827,18 @@ editor.replaceStandardToolbarButtonIcon(
 
 **Changes required:**
 
-1. Fix `setPlacehoderAltAppearance` typo (see [Section 3.7](#37-placeholder-api-typo-fixes))
+1. Fix `setPlacehoderAltAppearance` typo (see [Section 3.7](#37-typo-fixes-placeholder-and-i18n))
 2. Update `Collection` to `List` if using explicit type (see [Section 3.8](#38-placeholder-collection-to-list))
 
 The rest of the placeholder API -- including events, dialog, tags, and alt
 appearance -- is unchanged:
 
 ```java
-// V25 placeholder setup (same as V24 except typo fix)
+import com.vaadin.componentfactory.Placeholder;
+import java.util.ArrayList;
+import java.util.List;
+
+// V25 placeholder setup
 List<Placeholder> placeholders = new ArrayList<>();
 
 Placeholder p1 = new Placeholder();
@@ -773,9 +848,9 @@ p1.getAltFormat().put("bold", true);
 placeholders.add(p1);
 
 editor.setPlaceholders(placeholders);
-editor.setPlaceholderTags("@", "");
+editor.setPlaceholderTags("@", "");          // NEW Java API in V25
 editor.setPlaceholderAltAppearancePattern("(?<=\\=).*$");
-editor.setPlaceholderAltAppearance(true);  // fixed spelling
+editor.setPlaceholderAltAppearance(true);    // fixed spelling (was setPlacehoderAltAppearance)
 
 // Event listeners (unchanged)
 editor.addPlaceholderBeforeInsertListener(event -> {
@@ -789,13 +864,18 @@ editor.addPlaceholderSelectedListener(event -> {
 });
 ```
 
+> **New Java API:** `setPlaceholderTags(String start, String end)` is a new Java
+> method in V25. In V24, placeholder tags were only configurable as a Polymer
+> property on the client side (via `getElement().setProperty()`). V25 provides
+> a proper server-side API method.
+
 > **Warning:** Placeholder removal events use `PlaceholderBeforeRemoveEvent`
 > with `event.remove()` to confirm. If you do not call `event.remove()`, the
 > placeholder will not be deleted. This cancel/confirm pattern is unchanged from V24.
 
 #### Feature 8: Toolbar Slot System
 
-The slot API is unchanged. V25 adds 3 new slots for the new style (color/background)
+The slot API is unchanged. V25 adds 2 new slots for the new style (color/background)
 group. Existing slot references work without changes:
 
 ```java
@@ -813,6 +893,10 @@ editor.addCustomToolbarComponents(new Button("End"));  // GROUP_CUSTOM
 
 These slots surround the new color/background button group (between emphasis and
 heading groups).
+
+V25 also introduces **toolbar helper classes** (`ToolbarSwitch`, `ToolbarPopover`,
+`ToolbarSelectPopup`, `ToolbarDialog`) for building custom toolbar extensions.
+See [Section 4A.1](#4a1-toolbar-helper-classes) for details.
 
 #### Feature 9: Toolbar Button Visibility
 
@@ -849,6 +933,10 @@ These features require more substantial code updates.
 #### Feature 10: Custom Keyboard Shortcuts
 
 Two changes: (1) numeric keyCode to string key name, (2) method name typo fix.
+
+**Affected methods:**
+- `addStandardToolbarButtonShortcut()` — change keyCode parameter to string key name
+- `addToolbarFocusShortcut()` — was `addToobarFocusShortcut()` (typo fixed); change keyCode to string key name
 
 ```java
 // --- ERTE 1 (V24) ---
@@ -916,7 +1004,7 @@ i18n.setBlockquote("Zitat");
 i18n.setCodeBlock("Code");
 i18n.setClean("Formatierung entfernen");
 
-// ERTE-specific labels (new in V25)
+// ERTE-specific labels (in V25 subclass; most moved from V24, whitespace is new)
 i18n.setReadonly("Schreibschutz");
 i18n.setWhitespace("Leerzeichen anzeigen");
 i18n.setPlaceholder("Platzhalter");
@@ -963,6 +1051,117 @@ guide. Summary:
 | `extendOptions` | `extendQuill` (pre-init) + `extendEditor` (post-init) |
 | Receives `(options, Quill)` | `extendQuill`: `(Quill)`, `extendEditor`: `(editor, Quill)` |
 | Single timing | Two separate timings |
+
+---
+
+## 4A. New in ERTE 2
+
+These features are new in ERTE 2 and have no V24 equivalent. They are not breaking
+changes but provide new capabilities worth knowing about during migration.
+
+### 4A.1 Toolbar Helper Classes
+
+ERTE 2 includes four helper classes in `com.vaadin.componentfactory.toolbar` for
+building custom toolbar extensions. They all integrate with `ToolbarSwitch` for
+automatic open/close state synchronization.
+
+| Class | Extends | Purpose |
+|-------|---------|---------|
+| `ToolbarSwitch` | `Button` | Toggle button with active/inactive state (reflected via `on` attribute) |
+| `ToolbarPopover` | `Popover` | Popover panel anchored to a `ToolbarSwitch` |
+| `ToolbarSelectPopup` | `ContextMenu` | Dropdown menu (left-click) anchored to a `ToolbarSwitch` |
+| `ToolbarDialog` | `Dialog` | Non-modal, draggable dialog controlled by a `ToolbarSwitch` |
+
+**Example: Toggle switch with popover**
+
+```java
+import com.vaadin.componentfactory.toolbar.*;
+
+ToolbarSwitch fontSwitch = new ToolbarSwitch(VaadinIcon.TEXT_HEIGHT);
+editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, fontSwitch);
+
+TextField sizeField = new TextField("Font size");
+ToolbarPopover popover = ToolbarPopover.vertical(fontSwitch, sizeField);
+popover.setFocusOnOpenTarget(sizeField);
+```
+
+Clicking the switch opens the popover; clicking again (or pressing Escape) closes it.
+The switch's visual active state is synchronized automatically.
+
+See the [User Guide](USER_GUIDE.md) for more examples including `ToolbarSelectPopup`
+and `ToolbarDialog`.
+
+### 4A.2 CSS Custom Properties
+
+ERTE 2 exposes 20 CSS custom properties (`--vaadin-erte-*`) for theming ERTE-specific
+visual elements without writing complex selectors. Override them on the host element:
+
+```css
+vcf-enhanced-rich-text-editor {
+  /* Readonly section styling */
+  --vaadin-erte-readonly-background: #fffde7;
+  --vaadin-erte-readonly-border-color: #fbc02d;
+
+  /* Placeholder styling */
+  --vaadin-erte-placeholder-background: rgba(33, 150, 243, 0.1);
+
+  /* Whitespace indicator color */
+  --vaadin-erte-whitespace-indicator-color: rgba(0, 0, 0, 0.25);
+
+  /* Ruler height */
+  --vaadin-erte-ruler-height: 1.25rem;
+}
+```
+
+**Property groups (20 total):**
+
+| Group | Properties | Count |
+|-------|-----------|:-----:|
+| Readonly sections | `readonly-color`, `-background`, `-border-color`, `-border-width`, `-border-radius`, `-padding` | 6 |
+| Placeholders | `placeholder-color`, `-background`, `-border-color`, `-border-width`, `-border-radius`, `-padding` | 6 |
+| Whitespace indicators | `whitespace-indicator-color`, `-paragraph-indicator-color`, `-indicator-spacing` | 3 |
+| Rulers | `ruler-height`, `-border-color`, `-background`, `-marker-size`, `-marker-color` | 5 |
+
+All properties have sensible Lumo-based defaults. See the
+[Configuration Guide](CONFIGURATION.md) for the full property reference.
+
+### 4A.3 Toolbar Part-Based Styling
+
+**Architecture:**
+
+1. **Light DOM placement:** Custom components are added to the light DOM as direct children of the ERTE element (not inside the shadow DOM).
+2. **Automatic part assignment:** `addToolbarComponents()` automatically sets `part="toolbar-custom-component"` on each component.
+3. **Shadow DOM internal styling:** The ERTE shadow DOM uses `::slotted([part~='toolbar-custom-component'])` pseudo-element selectors to style slotted custom components.
+4. **Application styling:** From your application CSS, target custom toolbar components via attribute selectors on the light DOM element.
+
+**Styling custom components from application CSS:**
+
+```css
+vcf-enhanced-rich-text-editor [part~='toolbar-custom-component'] {
+  /* Styles for all custom toolbar components */
+  min-width: var(--lumo-size-m);
+  margin: 0 var(--lumo-space-xs);
+}
+```
+
+Custom components inherit RTE 2's `--vaadin-rich-text-editor-toolbar-button-*`
+custom properties for consistent theming. Interactive states (hover, focus, active,
+disabled) are pre-configured for `button` and `vaadin-button` elements.
+
+`ToolbarSwitch` components in their active state use the `[on]` attribute, which
+triggers the pressed/active visual style (matching RTE 2's built-in pressed buttons).
+
+### 4A.4 Other Improvements
+
+**Toolbar arrow-key navigation:** Pressing left/right arrow keys while a toolbar
+button has focus moves focus to the adjacent button. This works for both built-in
+RTE 2 buttons and custom slotted components, providing consistent keyboard
+accessibility across the entire toolbar.
+
+**Reliable `focus()` method:** `editor.focus()` reliably transfers focus to the
+editor's content area from any context. In V24, `focus()` was unreliable due to timing
+issues with the Polymer lifecycle. In V25, no workarounds are needed — `focus()` works
+reliably from button click handlers, attach listeners, or any other context.
 
 ---
 
@@ -1150,7 +1349,7 @@ Test each feature after migration:
 | Shortcuts | Custom keyboard shortcuts trigger correct buttons. |
 | Sanitization | Paste HTML with scripts. Scripts stripped. ERTE classes preserved. |
 | I18n | Set translated labels. All buttons and dialog show translated text. |
-| Theme | Lumo theme applied. Dark mode works. Compact variant works. |
+| Theme | Lumo theme applied. Dark mode works. Standard Vaadin theme variants work. |
 | addText | Programmatic text insertion at position and cursor. |
 | Value Change | EAGER/LAZY/TIMEOUT modes work. |
 | extendOptions | Custom Quill extensions load (via extendQuill/extendEditor). |
@@ -1482,6 +1681,14 @@ issue tracker or migration document.
 - [ ] Automated tests pass
 - [ ] Tested with production data (or representative sample)
 
+### After Migration -- New V25 Features (optional)
+
+- [ ] CSS custom properties override correctly (e.g., `--vaadin-erte-readonly-background`)
+- [ ] Toolbar helper classes work if used (`ToolbarSwitch`, `ToolbarPopover`, etc.)
+- [ ] Custom toolbar components show correct interactive states (hover, focus, active)
+- [ ] Toolbar arrow-key navigation works across built-in and custom buttons
+- [ ] `editor.focus()` reliably focuses the editor content area
+
 ---
 
 ## 9. Additional Considerations
@@ -1543,6 +1750,17 @@ ERTE 2 includes security hardening that addresses known vulnerabilities in ERTE 
 
 These improvements are transparent to application code. No action is required
 unless you were deliberately using unsafe patterns (which is unlikely).
+
+### 9.6 CSS Custom Properties
+
+ERTE 2 introduces 20 CSS custom properties (`--vaadin-erte-*`) for theming
+ERTE-specific visual elements. If your application customized ERTE 1 appearance
+via direct CSS selectors (e.g., `.ql-readonly { background: ... }`), consider
+switching to the custom property approach for better maintainability and forward
+compatibility.
+
+See [Section 4A.2](#4a2-css-custom-properties) for the full property list and
+examples.
 
 ---
 

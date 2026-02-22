@@ -208,12 +208,11 @@ Follow this exact sequence. Do not skip ahead. Full spec in `user_description.md
     "Cross-cutting notes from phase X.Y" section.
 
     **Mandatory plan review:** Every plan created for a migration (sub)phase MUST be
-    automatically reviewed by the `agents-manager` before implementation begins. The
-    review MUST include at minimum the `fullstack-developer`, `ui-designer`, and
-    `requirements-reviewer` agents. The `agents-manager` may assign additional agents
-    beyond this minimum as needed based on the phase requirements (e.g., `security-reviewer`,
-    `performance-auditor`, `architecture-guard`). Do NOT start implementing until the
-    review feedback has been incorporated.
+    reviewed before implementation begins. The orchestrator launches review agents
+    directly (at minimum `fullstack-developer`, `ui-designer`, and `requirements-reviewer`),
+    adding additional agents as needed based on the phase requirements (e.g.,
+    `security-reviewer`, `performance-auditor`, `architecture-guard`). Do NOT start
+    implementing until the review feedback has been incorporated.
 
     **Exception:** Phase 3.5 (Documentation) and Phase 3.6 (Code Quality) do NOT require
     fullstack-developer + ui-designer + requirements-reviewer review. This rule applies
@@ -223,7 +222,7 @@ Follow this exact sequence. Do not skip ahead. Full spec in `user_description.md
     for migration phases MUST be performed in plan mode (triggered by EnterPlanMode).
     This includes:
     - Creating implementation plans for new phases
-    - Having plans reviewed by agents-manager
+    - Having plans reviewed by appropriate agents
     - Incorporating review feedback
     - Any design or architecture discussions
     The ONLY exception is when a plan file already exists at `migration_v25/progress/PHASE__plan.md` —
@@ -233,10 +232,9 @@ Follow this exact sequence. Do not skip ahead. Full spec in `user_description.md
 ## Implementation Delegation
 
 **Plan execution and presumably non-trivial tasks** MUST be delegated to the
-`agents-manager` (default/task-assignment mode). The agents-manager selects the
-appropriate agents for each step. Examples: implementing a reviewed plan, fixing a bug,
-adding a feature. Counter-examples: creating a commit, updating a status file, answering
-a question.
+appropriate specialized agents directly. The orchestrator selects the right agent(s)
+for each step. Examples: implementing a reviewed plan, fixing a bug, adding a feature.
+Counter-examples: creating a commit, updating a status file, answering a question.
 
 - **Parallel execution preferred:** Independent steps (e.g., Java backend + JS frontend,
   or test view + test spec) SHOULD be delegated to separate agents running concurrently.
@@ -253,12 +251,12 @@ a question.
     After successful implementation and verification of the phase, **delete**
     the plan file. Plan files are working documents, not permanent records.
 
-    **Writing plan files:** After planning a phase (including agents-manager reviews),
+    **Writing plan files:** After planning a phase (including agent reviews),
     ALWAYS write the plan to `migration_v25/progress/PHASE__plan.md`. The plan must be
     **self-contained and clear enough to be executed from a clean context** (no reliance
     on conversation history). Each plan MUST include a **complexity recommendation**:
-    whether the `agents-manager` should handle implementation or the orchestrator can
-    do it directly. The agents-manager makes the final call on delegation.
+    whether a specialized agent should handle implementation or the orchestrator can
+    do it directly.
 
     **Tier 1 — Core Differentiators (fixed order):**
     - **3.1a** Custom Slots / Toolbar Slot System (Feature 8)
@@ -399,11 +397,10 @@ Original tabstop tests against the prototype view at `/tab-stop`. See [prototype
 
 ## Custom Agents
 
-Custom Claude Code agents in `.claude/agents/`. The **agents-manager** orchestrates them (tech stack discovery, project-specific injection, task delegation).
+Custom Claude Code agents in `.claude/agents/`. The orchestrator launches them directly via the `Task` tool.
 
 | Agent | Purpose |
 |-------|---------|
-| **agents-manager** | Delegates tasks to agents, discovers tech stack, injects project patterns |
 | **fullstack-developer** | End-to-end feature implementation (backend + frontend) |
 | **code-reviewer** | Quick code review during development (no builds/tests) |
 | **qa-tester** | Comprehensive QA: code review + build + tests + responsive checks |
@@ -419,10 +416,7 @@ Custom Claude Code agents in `.claude/agents/`. The **agents-manager** orchestra
 | **requirements-reviewer** | Requirements review before implementation |
 | **housekeeper** | Cleanup: servers, Docker, temp files, screenshots |
 
-**Usage:** Agents are launched via the `Task` tool with `subagent_type`. The agents-manager has three modes:
-- **Update mode:** Run after CLAUDE.md changes or `/init` to inject project-specific patterns
-- **Review mode:** Evaluate whether the agent suite fits the project
-- **Task assignment (default):** Delegate a task to the right agent(s)
+**Usage:** Agents are launched via the `Task` tool with `subagent_type`. The orchestrator selects the appropriate agent(s) for each task, composes detailed prompts, and launches them directly — in parallel when independent, sequentially when dependent.
 
 ## License
 
