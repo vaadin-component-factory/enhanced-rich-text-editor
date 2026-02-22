@@ -228,13 +228,58 @@
   position: relative;
 }
 
-/* Hover effect only for button elements, not for input fields */
-::slotted(button[part~='toolbar-custom-component']:hover),
-::slotted(vaadin-button[part~='toolbar-custom-component']:hover) {
-  background-color: var(--lumo-contrast-5pct);
-  color: var(--lumo-contrast-80pct);
+/* Hover effect only for button elements, not for input fields.
+   Exclude [on] toggles so hover doesn't override the active state.
+   Uses RTE 2 custom properties so user overrides apply uniformly. */
+::slotted(button[part~='toolbar-custom-component']:not([on]):hover),
+::slotted(vaadin-button[part~='toolbar-custom-component']:not([on]):hover) {
+  --vaadin-rich-text-editor-toolbar-button-background: var(--lumo-contrast-5pct);
+  --vaadin-rich-text-editor-toolbar-button-text-color: var(--lumo-contrast-80pct);
   box-shadow: none;
   outline: none;
+}
+
+/* Focus ring for keyboard navigation (plain buttons only —
+   vaadin-button manages its own focus ring internally) */
+::slotted(button[part~='toolbar-custom-component']:focus-visible) {
+  outline: var(--vaadin-focus-ring-width, 2px) solid var(--vaadin-focus-ring-color, var(--lumo-primary-color-50pct));
+  outline-offset: 1px;
+  z-index: 1;
+}
+
+/* Active/pressed state for toggle switches (ToolbarSwitch [on] attribute).
+   Matches RTE 2's built-in toolbar-button-pressed styling (solid primary).
+   Uses same custom properties as shadow DOM buttons for uniform theming. */
+::slotted([part~='toolbar-custom-component'][on]) {
+  --vaadin-rich-text-editor-toolbar-button-background: var(--vaadin-selection-color, var(--lumo-primary-color));
+  --vaadin-rich-text-editor-toolbar-button-text-color: var(--lumo-primary-contrast-color);
+}
+
+/* Momentary press feedback (exclude active toggles) */
+::slotted(button[part~='toolbar-custom-component']:not([on]):active),
+::slotted(vaadin-button[part~='toolbar-custom-component']:not([on]):active) {
+  --vaadin-rich-text-editor-toolbar-button-background: var(--lumo-contrast-10pct);
+  --vaadin-rich-text-editor-toolbar-button-text-color: var(--lumo-contrast-90pct);
+}
+
+/* Disabled state */
+::slotted([part~='toolbar-custom-component'][disabled]) {
+  --vaadin-rich-text-editor-toolbar-button-background: transparent;
+  --vaadin-rich-text-editor-toolbar-button-text-color: var(--lumo-disabled-text-color, var(--lumo-contrast-30pct));
+  pointer-events: none;
+}
+
+/* Editor-level disabled: reset custom component backgrounds */
+:host([disabled]) ::slotted([part~='toolbar-custom-component']) {
+  --vaadin-rich-text-editor-toolbar-button-background: transparent;
+}
+
+/* Touch devices: prevent sticky hover on tap */
+@media (hover: none) {
+  ::slotted(button[part~='toolbar-custom-component']:hover),
+  ::slotted(vaadin-button[part~='toolbar-custom-component']:hover) {
+    --vaadin-rich-text-editor-toolbar-button-background: transparent;
+  }
 }
 
 /* Align the min-width with built-in toolbar buttons. */

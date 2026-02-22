@@ -377,7 +377,7 @@ test.describe('ERTE Toolbar', () => {
 
     await switchBtn.click();
 
-    await expect(switchBtn).toHaveAttribute('on', 'on', { timeout: 5000 });
+    await expect(switchBtn).toHaveAttribute('on', '', { timeout: 5000 });
 
     await waitForEvent(page, 'ToolbarSwitchChanged');
     const events = await getEventLog(page);
@@ -391,7 +391,7 @@ test.describe('ERTE Toolbar', () => {
     const switchBtn = page.locator('#toolbar-switch');
 
     await switchBtn.click();
-    await expect(switchBtn).toHaveAttribute('on', 'on', { timeout: 5000 });
+    await expect(switchBtn).toHaveAttribute('on', '', { timeout: 5000 });
 
     await clearEventLog(page);
 

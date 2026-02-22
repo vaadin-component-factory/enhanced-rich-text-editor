@@ -80,7 +80,7 @@ public class ToolbarSwitch extends Button {
         if (this.active != active) {
             this.active = active;
             if (active) {
-                getElement().setAttribute("on", "on");
+                getElement().setAttribute("on", true );
             } else {
                 getElement().removeAttribute("on");
             }
