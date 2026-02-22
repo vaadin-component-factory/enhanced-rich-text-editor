@@ -43,6 +43,9 @@
 | 3.5c     | Developer Documentation            | NOT STARTED                            |
 | 3.5d     | README & Project Docs              | PARTIAL *(README done in 3.5b)*        |
 | 3.5e     | Documentation Review               | NOT STARTED                            |
+| **3.6**  | **Demo Migration (Core)**          | NOT STARTED                            |
+| 3.6a     | V24 EnhancedRichTextEditorView     | NOT STARTED *(non-table samples)*      |
+| 3.6b     | V24 Test Views                     | NOT STARTED *(5 test views + prototype)*|
 | **4**    | **Tables Addon**                   | NOT STARTED                            |
 | 4.1      | Project Setup & Base               | NOT STARTED                            |
 | 4.2      | Blot Migration                     | NOT STARTED                            |
@@ -50,6 +53,7 @@
 | 4.4      | Tests                              | NOT STARTED                            |
 | 4.5      | Documentation                      | NOT STARTED                            |
 | 4.6      | Custom Properties for Tables       | NOT STARTED                            |
+| 4.7      | Demo Migration (Tables)            | NOT STARTED *(table samples from V24)* |
 | **5**    | **Theme Support (Post-6.0.0)**     | NOT STARTED                            |
 | 5.1      | Aura Theme Support                 | NOT STARTED                            |
 | 5.2      | Material Theme Support             | NOT STARTED                            |
