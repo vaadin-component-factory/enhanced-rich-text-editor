@@ -40,7 +40,7 @@
 | **3.5**  | **Documentation (Core)**           | IN PROGRESS                            |
 | 3.5a     | Upgrade Guide ERTE 1→2             | PARTIAL *(needs review after 3.4)*     |
 | 3.5b     | User Documentation                 | PARTIAL *(needs review after 3.4)*     |
-| 3.5c     | Developer Documentation            | NOT STARTED                            |
+| 3.5c     | Developer Documentation            | COMPLETE                               |
 | 3.5d     | README & Project Docs              | PARTIAL *(README done in 3.5b)*        |
 | 3.5e     | Documentation Review               | NOT STARTED                            |
 | **3.6**  | **Demo Migration (Core)**          | NOT STARTED                            |
