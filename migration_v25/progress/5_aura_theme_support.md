@@ -1,11 +1,14 @@
-# Phase 3.4j: Aura Theme Support
+# Phase 5.1: Aura Theme Support (Post-6.0.0)
 
 **Status:** NOT STARTED
 **Type:** Feature Addition
-**Priority:** HIGH — Theme completeness
+**Priority:** DEFERRED — Post-6.0.0 release
 **Created:** 2026-02-21
+**Updated:** 2026-02-22 (moved from Phase 3.4j to Phase 5.1)
 
-**Prerequisite:** Phase 3.4j Spike (`3.4j__spike.md`) must be completed first to validate Aura Style Proxy feasibility
+> **Note:** ERTE 6.0.0 focuses on Lumo theme support only. Aura theme support is planned for a post-6.0.0 release.
+
+**Prerequisite:** Phase 5 Spike (`5__spike.md`) must be completed first to validate Aura Style Proxy feasibility
 
 ---
 
@@ -27,8 +30,8 @@ Add support for Vaadin's Aura theme alongside existing Lumo theme support. Curre
 - Aura has NO equivalent injector mechanism (uses external CSS selectors instead)
 
 ### Analysis Documents
-- **Technical:** `3.4j__aura_theme_technical.md` (fullstack-developer)
-- **Design:** `3.4j__aura_theme_design.md` (ui-designer)
+- **Technical:** `5__aura_theme_technical.md` (fullstack-developer)
+- **Design:** `5__aura_theme_design.md` (ui-designer)
 
 ---
 
@@ -270,7 +273,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
 
 ### Recommendation
 
-**IMPORTANT:** This design consideration should be evaluated during Phase 3.4j planning:
+**IMPORTANT:** This design consideration should be evaluated during Phase 5.1 planning:
 
 1. **If Lumo + Aura are the ONLY themes ERTE will support:**
    - Current approach (override `lumoInjector` + add style proxy) is simpler
@@ -352,7 +355,7 @@ Vaadin **does not** appear to be planning a generic theme injection API in the v
 ### Step 4: Documentation
 - [ ] Update README.md: Add Aura to supported themes list
 - [ ] Update CONFIGURATION.md: Add Aura-specific configuration notes (if any)
-- [ ] Update UPGRADE_GUIDE.md: Note that Aura support is new in ERTE 6.x
+- [ ] Update UPGRADE_GUIDE.md: Note that Aura support is planned for post-6.0.0 releases
 - [ ] Add theme switching example (if relevant)
 
 ---
@@ -395,7 +398,7 @@ background-color: var(--vaadin-primary-color-10pct,
 - [ ] Documentation updated
 - [ ] Manual testing complete
 - [ ] Progress file updated to COMPLETE
-- [ ] Commit created: "Add Aura theme support with runtime style proxy (Phase 3.4j)"
+- [ ] Commit created: "Add Aura theme support with runtime style proxy (Phase 5.1)"
 
 ---
 
@@ -413,4 +416,4 @@ background-color: var(--vaadin-primary-color-10pct,
 
 - No blocking dependencies
 - Should be done BEFORE 3.5 documentation review (to capture Aura in docs)
-- Can be done in parallel with 3.4f-i (independent features)
+- Independent of Phase 4 (Tables) — can be done before or after

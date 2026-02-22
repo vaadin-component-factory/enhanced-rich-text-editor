@@ -1,8 +1,11 @@
-# Phase 3.4j: Aura Theme Support — Technical Analysis
+# Phase 5.1: Aura Theme Support — Technical Analysis (Post-6.0.0)
 
 **Date:** 2026-02-21
+**Updated:** 2026-02-22 (moved from Phase 3.4j to Phase 5.1)
 **Status:** Research complete — analysis only, no implementation
 **Author:** Claude Code (fullstack-developer agent)
+
+> **Note:** ERTE 6.0.0 focuses on Lumo theme support only. Aura theme support is planned for a post-6.0.0 release (Phase 5.1).
 
 ---
 

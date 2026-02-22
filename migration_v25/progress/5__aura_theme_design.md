@@ -1,8 +1,11 @@
-# Phase 3.4j: Aura Theme Design Analysis
+# Phase 5.1: Aura Theme Design Analysis (Post-6.0.0)
 
 **Status:** Analysis Complete
 **Date:** 2026-02-21
+**Updated:** 2026-02-22 (moved from Phase 3.4j to Phase 5.1)
 **Scope:** Design token compatibility assessment for ERTE V25 component with Vaadin Aura theme
+
+> **Note:** ERTE 6.0.0 focuses on Lumo theme support only. Aura theme support is planned for a post-6.0.0 release (Phase 5.1).
 
 ---
 

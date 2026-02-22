@@ -2,6 +2,8 @@
 
 **Current: 3.4 Open Issues (Toolbar Regression)**
 
+> **Note:** ERTE 6.0.0 focuses on Lumo theme support only. Multi-theme support (Aura, Material) is planned for post-6.0.0 releases (Phase 5).
+
 | Phase    | Feature                            | Status                                 |
 |----------|------------------------------------|----------------------------------------|
 | 0        | Use Case Analysis                  | COMPLETE                               |
@@ -34,11 +36,10 @@
 | **3.4g** | ToolbarPopover                     | COMPLETE                               |
 | **3.4h** | ToolbarSelectPopup                 | COMPLETE                               |
 | **3.4i** | ToolbarDialog                      | COMPLETE                               |
-| **3.4j** | Aura Theme Support                 | NOT STARTED *(also see spike results)* |
-| **3.4k** | Custom Properties for ERTE Styles  | NOT STARTED *(after 3.4j)*             |
+| **3.4k** | Custom Properties for ERTE Styles  | NOT STARTED                            |
 | **3.5**  | **Documentation (Core)**           | IN PROGRESS                            |
-| 3.5a     | Upgrade Guide ERTE 1→2             | PARTIAL *(needs review after 3.4f-j)*  |
-| 3.5b     | User Documentation                 | PARTIAL *(needs review after 3.4f-j)*  |
+| 3.5a     | Upgrade Guide ERTE 1→2             | PARTIAL *(needs review after 3.4)*     |
+| 3.5b     | User Documentation                 | PARTIAL *(needs review after 3.4)*     |
 | 3.5c     | Developer Documentation            | NOT STARTED                            |
 | 3.5d     | README & Project Docs              | PARTIAL *(README done in 3.5b)*        |
 | 3.5e     | Documentation Review               | NOT STARTED                            |
@@ -48,3 +49,7 @@
 | 4.3      | UI Controls & Java API             | NOT STARTED                            |
 | 4.4      | Tests                              | NOT STARTED                            |
 | 4.5      | Documentation                      | NOT STARTED                            |
+| 4.6      | Custom Properties for Tables       | NOT STARTED                            |
+| **5**    | **Theme Support (Post-6.0.0)**     | NOT STARTED                            |
+| 5.1      | Aura Theme Support                 | NOT STARTED                            |
+| 5.2      | Material Theme Support             | NOT STARTED                            |
