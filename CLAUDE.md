@@ -209,12 +209,13 @@ Follow this exact sequence. Do not skip ahead. Full spec in `user_description.md
 
     **Mandatory plan review:** Every plan created for a migration (sub)phase MUST be
     automatically reviewed by the `agents-manager` before implementation begins. The
-    review MUST include at minimum the `fullstack-developer` and `ui-designer` agents.
-    Do NOT start implementing until the review feedback has been incorporated.
+    review MUST include at minimum the `fullstack-developer`, `ui-designer`, and
+    `requirements-reviewer` agents. Do NOT start implementing until the review feedback
+    has been incorporated.
 
     **Exception:** Phase 3.5 (Documentation) and Phase 3.6 (Code Quality) do NOT require
-    fullstack-developer + ui-designer review. This rule applies only to code-migration
-    phases (3.1-3.4, 4.x).
+    fullstack-developer + ui-designer + requirements-reviewer review. This rule applies
+    only to code-migration phases (3.1-3.4, 4.x).
 
     **CRITICAL: Planning and review in plan mode:** ALL planning and review activities
     for migration phases MUST be performed in plan mode (triggered by EnterPlanMode).
