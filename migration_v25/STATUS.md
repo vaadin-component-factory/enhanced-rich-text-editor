@@ -35,6 +35,7 @@
 | **3.4h** | ToolbarSelectPopup                 | COMPLETE |
 | **3.4i** | ToolbarDialog                      | COMPLETE |
 | **3.4j** | Aura Theme Support                 | NOT STARTED *(spike required first)* |
+| **3.4k** | Custom Properties for ERTE Styles  | NOT STARTED *(after 3.4j)* |
 | **3.5**  | **Documentation (Core)**           | IN PROGRESS |
 | 3.5a     | Upgrade Guide ERTE 1→2             | PARTIAL *(needs review after 3.4f-j)* |
 | 3.5b     | User Documentation                 | PARTIAL *(needs review after 3.4f-j)* |
