@@ -20,14 +20,18 @@ Add support for Vaadin's Aura theme alongside existing Lumo theme support. Curre
 
 ## Background
 
-### Current State
-- ERTE V25 uses 14 `--lumo-*` specific CSS custom properties
-- These tokens do NOT exist in Aura theme → features break visually:
-  - Readonly sections: invisible (no background/outline)
-  - Placeholders: invisible (transparent background)
-  - Whitespace indicators: broken in dark mode
+### Current State (Post-Phase 3.4k)
+- ERTE 6.0.0 will ship with **Phase 3.4k (Custom Properties)** implemented
+- All ERTE-specific styles use `--vaadin-erte-*` custom properties (e.g., `--vaadin-erte-format-readonly-color`)
+- These custom properties default to **Lumo-compatible values** in 6.0.0
 - ERTE successfully inherits Lumo RTE styles via `lumoInjector` override
 - Aura has NO equivalent injector mechanism (uses external CSS selectors instead)
+
+### Theme Compatibility Challenge
+When Aura theme is active:
+- **ERTE custom properties** (`--vaadin-erte-*`) will still have Lumo-based defaults
+- **Aura design tokens** may have different values than Lumo equivalents
+- Without theme-aware defaults, ERTE features may look inconsistent with Aura's design language
 
 ### Analysis Documents
 - **Technical:** `5__aura_theme_technical.md` (fullstack-developer)
@@ -37,43 +41,81 @@ Add support for Vaadin's Aura theme alongside existing Lumo theme support. Curre
 
 ## Implementation Approach
 
-### 1. Replace Lumo-Specific Tokens with Generic Vaadin Tokens
+### 1. Update ERTE Custom Properties for Theme-Aware Defaults
 
-**Current (Lumo-only):**
+**Context:** Phase 3.4k (Custom Properties) will be implemented in ERTE 6.0.0 with Lumo-only defaults.
+
+**Current state after Phase 3.4k (Lumo-only):**
 ```css
+:host {
+  /* ERTE custom properties with Lumo defaults */
+  --vaadin-erte-format-readonly-color: var(--vaadin-text-color-secondary);
+  --vaadin-erte-format-readonly-background: var(--vaadin-background-container);
+  --vaadin-erte-format-readonly-border-color: var(--vaadin-border-color);
+  /* ... more properties ... */
+}
+
 .ql-readonly {
-  color: var(--lumo-secondary-text-color);
-  background-color: var(--lumo-contrast-5pct);
-  outline: 1px solid var(--lumo-contrast-10pct);
-  border-radius: var(--lumo-border-radius-s);
+  color: var(--vaadin-erte-format-readonly-color);
+  background-color: var(--vaadin-erte-format-readonly-background);
+  outline: 1px solid var(--vaadin-erte-format-readonly-border-color);
 }
 ```
 
-**Target (Lumo + Aura):**
-```css
-.ql-readonly {
-  color: var(--vaadin-text-color-secondary);
-  background-color: var(--vaadin-background-container);
-  outline: 1px solid var(--vaadin-border-color);
-  border-radius: var(--vaadin-radius-s);
+**Challenge:**
+- Generic Vaadin tokens (`--vaadin-*`) work across themes
+- BUT: Aura may need different defaults for optimal design language alignment
+- Example: Aura uses different contrast levels, border styles, and spacing than Lumo
+
+**Solution: Theme-Aware Custom Property Defaults**
+
+Detect active theme and adjust ERTE custom property defaults accordingly:
+
+```javascript
+// In vcf-enhanced-rich-text-editor.js
+
+static get styles() {
+  return css`
+    :host {
+      /* Generic Vaadin fallbacks (work for both themes) */
+      --vaadin-erte-format-readonly-color: var(--vaadin-text-color-secondary);
+      --vaadin-erte-format-readonly-background: var(--vaadin-background-container);
+      /* ... */
+    }
+
+    /* Aura-specific overrides (when Aura theme is active) */
+    :host([theme~="aura"]) {
+      /* Adjust defaults for Aura design language if needed */
+      --vaadin-erte-format-readonly-background: var(--aura-surface-variant, var(--vaadin-background-container));
+      /* Only override properties that need different values in Aura */
+    }
+
+    /* Component styles use custom properties */
+    .ql-readonly {
+      color: var(--vaadin-erte-format-readonly-color);
+      background-color: var(--vaadin-erte-format-readonly-background);
+      /* ... */
+    }
+  `;
 }
 ```
 
-**Token Mapping (14 replacements):**
-| Current Lumo Token | Generic Vaadin Token | Usage |
-|-------------------|---------------------|-------|
-| `--lumo-secondary-text-color` | `--vaadin-text-color-secondary` | Readonly text |
-| `--lumo-contrast-5pct` | `--vaadin-background-container` | Readonly background |
-| `--lumo-contrast-10pct` | `--vaadin-border-color` | Readonly outline |
-| `--lumo-border-radius-s` | `--vaadin-radius-s` | Border radius |
-| `--lumo-primary-color-10pct` | `color-mix(in srgb, var(--vaadin-primary-color) 10%, transparent)` | Placeholder background |
-| `--lumo-font-size-m` | `1rem` | Base font size |
-| `--lumo-font-size-s` | `0.875rem` | Small font size |
-| `--lumo-contrast-40pct` | Remove hardcoded fallback, rely on `--vaadin-text-color-tertiary` | Indicator colors |
-| `--lumo-contrast-30pct` | Remove hardcoded fallback, rely on `--vaadin-text-color-disabled` | Subtle indicators |
+**Alternative: Pure Generic Tokens**
 
-**Files to modify:**
-- `vcf-enhanced-rich-text-editor.js` (lines 431-578, `static get styles()`)
+If generic Vaadin tokens (`--vaadin-*`) provide sufficient compatibility, no theme-specific overrides needed:
+```css
+:host {
+  /* These work for both Lumo and Aura */
+  --vaadin-erte-format-readonly-color: var(--vaadin-text-color-secondary);
+  --vaadin-erte-format-readonly-background: var(--vaadin-background-container);
+}
+```
+
+**Decision Point:** After Aura integration testing, determine if theme-specific overrides are needed or if generic tokens suffice.
+
+**Files to review:**
+- `vcf-enhanced-rich-text-editor.js` - Review all `--vaadin-erte-*` custom property defaults
+- Phase 3.4k property list - Audit each property for Aura compatibility
 
 ---
 
@@ -327,11 +369,13 @@ Vaadin **does not** appear to be planning a generic theme injection API in the v
 
 ## Tasks
 
-### Step 1: Token Replacement
-- [ ] Replace 14 `--lumo-*` tokens with `--vaadin-*` equivalents in `static get styles()`
-- [ ] Use `color-mix()` for placeholder background (maintains accent color semantic)
-- [ ] Remove hardcoded `rgba(0,0,0,...)` fallbacks (cause dark mode issues)
-- [ ] Verify CSS syntax (especially `color-mix()` browser support: Safari 16.4+, Chrome 111+)
+### Step 1: Audit ERTE Custom Properties for Aura Compatibility
+- [ ] Review Phase 3.4k custom property list (all `--vaadin-erte-*` properties)
+- [ ] Test each property's default value under Aura theme (visual compatibility check)
+- [ ] Identify properties that need Aura-specific overrides (if any)
+- [ ] Document theme-specific adjustments needed
+- [ ] Update custom property definitions with `:host([theme~="aura"])` overrides (if needed)
+- [ ] Verify all ERTE features look consistent with Aura design language
 
 ### Step 2: Aura Style Proxy
 - [ ] Add `_injectAuraStyleProxy()` method to ERTE
@@ -388,15 +432,18 @@ background-color: var(--vaadin-primary-color-10pct,
 
 ## Success Criteria
 
-- [ ] All 14 Lumo tokens replaced with generic Vaadin tokens
+- [ ] All ERTE custom properties (Phase 3.4k) reviewed for Aura compatibility
+- [ ] Theme-specific overrides added (if needed) for properties that differ between Lumo and Aura
 - [ ] Aura style proxy implemented and tested
 - [ ] ERTE works correctly under Aura theme:
   - All features visible and functional
   - Proper colors in light and dark mode
   - WCAG AA contrast maintained
+  - Design language consistent with Aura (not Lumo-looking-in-Aura)
 - [ ] No regressions under Lumo theme
-- [ ] Documentation updated
-- [ ] Manual testing complete
+- [ ] Custom properties work correctly in both themes
+- [ ] Documentation updated (custom properties list includes Aura-specific notes)
+- [ ] Manual testing complete (both themes, light/dark modes)
 - [ ] Progress file updated to COMPLETE
 - [ ] Commit created: "Add Aura theme support with runtime style proxy (Phase 5.1)"
 
@@ -404,16 +451,19 @@ background-color: var(--vaadin-primary-color-10pct,
 
 ## Estimated Effort
 
-**Total: 4-6 hours**
-- Token replacement: 1-2 hours
+**Total: 5-8 hours**
+- Custom properties audit: 1-2 hours (review Phase 3.4k properties under Aura)
+- Theme-specific overrides: 1-2 hours (if needed)
 - Aura style proxy: 2-3 hours (implementation + edge cases)
 - Testing (manual, both themes, light/dark): 1-2 hours
-- Documentation: 30 minutes
+- Documentation: 30-60 minutes (update custom properties list with Aura notes)
 
 ---
 
 ## Dependencies
 
-- No blocking dependencies
-- Should be done BEFORE 3.5 documentation review (to capture Aura in docs)
+- **Prerequisite:** Phase 3.4k (Custom Properties for ERTE Styles) must be complete
+- **Prerequisite:** Phase 5 Spike (`5__spike.md`) validates style proxy approach
+- Should be done BEFORE Phase 5 documentation updates
 - Independent of Phase 4 (Tables) — can be done before or after
+- If Phase 4.6 (Tables Custom Properties) is complete, those should also be audited for Aura compatibility
