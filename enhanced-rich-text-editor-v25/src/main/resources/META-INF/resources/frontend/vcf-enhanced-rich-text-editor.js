@@ -1386,27 +1386,29 @@ class VcfEnhancedRichTextEditor extends RteBase {
     });
 
     // Add SVG icon directly (vaadin-icon doesn't work with inline SVG)
-    // Icon: 3 horizontal lines, all equal length (justify alignment)
+    // Icon: 4 horizontal lines, all equal length (justify alignment)
+    // Matches the style of built-in align buttons (left/center/right)
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     svg.setAttribute('viewBox', '0 0 24 24');
     svg.setAttribute('width', '24');
     svg.setAttribute('height', '24');
     svg.setAttribute('part', 'toolbar-button-icon toolbar-button-align-justify-icon');
-    svg.style.display = 'block';
+    svg.style.display = 'inline-block';
     svg.style.fill = 'none';
     svg.style.stroke = 'currentColor';
-    svg.style.strokeWidth = '2';
+    svg.style.strokeWidth = '1.5';
     svg.style.strokeLinecap = 'round';
 
-    // Three horizontal lines
-    for (let i = 0; i < 3; i++) {
+    // Four horizontal lines matching built-in align icons
+    // Centered horizontally and vertically in 24x24 viewBox
+    const yPositions = [6.5, 11, 15.5, 20];
+    for (let i = 0; i < 4; i++) {
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      const y = 6 + i * 6; // y positions: 6, 12, 18
-      line.setAttribute('x1', '4');
-      line.setAttribute('y1', String(y));
-      line.setAttribute('x2', '20');
-      line.setAttribute('y2', String(y));
+      line.setAttribute('x1', '3');
+      line.setAttribute('y1', String(yPositions[i]));
+      line.setAttribute('x2', '21');
+      line.setAttribute('y2', String(yPositions[i]));
       svg.appendChild(line);
     }
 
