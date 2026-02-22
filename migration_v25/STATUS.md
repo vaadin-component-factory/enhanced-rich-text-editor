@@ -1,6 +1,6 @@
 # V25 Migration Status
 
-**Current: 3.4 Open Issues (Toolbar Regression)**
+**Current: 3.5 Documentation (Core)**
 
 > **Note:** ERTE 6.0.0 focuses on Lumo theme support only. Multi-theme support (Aura, Material) is planned for post-6.0.0 releases (Phase 5).
 
@@ -26,7 +26,7 @@
 | **3.3f** | Align Justify                      | COMPLETE                               |
 | **3.3g** | Replace Toolbar Button Icons       | COMPLETE                               |
 | **3.3h** | Arrow Navigation                   | COMPLETE *(impl. in 3.1c)*             |
-| **3.4**  | **Open Issues (Tier 4)**           | IN PROGRESS                            |
+| **3.4**  | **Open Issues (Tier 4)**           | COMPLETE                               |
 | 3.4a     | Placeholder Button Active State    | COMPLETE                               |
 | 3.4b     | Toolbar Arrow-Key Navigation       | COMPLETE                               |
 | 3.4c     | Whitespace Indicators (Spaces)     | COMPLETE                               |
@@ -36,7 +36,7 @@
 | **3.4g** | ToolbarPopover                     | COMPLETE                               |
 | **3.4h** | ToolbarSelectPopup                 | COMPLETE                               |
 | **3.4i** | ToolbarDialog                      | COMPLETE                               |
-| **3.4k** | Custom Properties for ERTE Styles  | NOT STARTED                            |
+| **3.4k** | Custom Properties for ERTE Styles  | COMPLETE                               |
 | **3.5**  | **Documentation (Core)**           | IN PROGRESS                            |
 | 3.5a     | Upgrade Guide ERTE 1→2             | PARTIAL *(needs review after 3.4)*     |
 | 3.5b     | User Documentation                 | PARTIAL *(needs review after 3.4)*     |
