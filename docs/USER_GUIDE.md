@@ -45,6 +45,8 @@ ERTE v6.x requires Vaadin 25.0.x and Java 21+. Add the dependency to your `pom.x
 
 > **Note:** Vaadin 25 moved the Rich Text Editor to the commercial `vaadin` artifact (not `vaadin-core`). A Vaadin Pro subscription or higher is required for production use.
 
+> **Theme:** ERTE v6.x uses the Vaadin Lumo theme. Ensure your application loads Lumo (the default for Vaadin 25). For theme setup details, see [Upgrade Guide -- Section 2.5](UPGRADE_GUIDE.md).
+
 ### 1.2 Basic Usage
 
 Create an editor, get/set its value, and listen for changes:
@@ -70,6 +72,9 @@ editor.addValueChangeListener(event -> {
 A typical setup includes configuring toolbar visibility, adding custom toolbar components, and handling events:
 
 ```java
+import com.vaadin.componentfactory.EnhancedRichTextEditor;
+import com.vaadin.componentfactory.toolbar.ToolbarSlot;
+
 // Create editor with custom toolbar
 EnhancedRichTextEditor editor = new EnhancedRichTextEditor();
 
@@ -172,6 +177,74 @@ toolbarSwitch.addActiveChangedListener(e ->
 editor.addCustomToolbarComponents(toolbarSwitch);
 ```
 
+#### Toolbar Popovers
+
+`ToolbarPopover` opens a popover panel anchored to a `ToolbarSwitch`. It syncs open/close state with the switch and supports custom focus targets.
+
+```java
+// Source: V25DemoView.java
+
+// Color picker popover with a text field and apply button
+ToolbarSwitch colorSwitch = new ToolbarSwitch(VaadinIcon.PAINTBRUSH);
+TextField colorField = new TextField("Color");
+colorField.setPlaceholder("#000000");
+Button applyBtn = new Button("Apply");
+
+ToolbarPopover popover = ToolbarPopover.vertical(colorSwitch, colorField, applyBtn);
+popover.setFocusOnOpenTarget(colorField);  // Focus the text field on open
+
+editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, colorSwitch);
+```
+
+Factory methods: `vertical(switch, components...)`, `horizontal(switch, components...)`, `horizontal(switch, alignment, components...)`.
+
+> See [API Reference -- ToolbarPopover](API_REFERENCE.md#7-toolbarpopover) for the complete API.
+
+#### Toolbar Select Popups
+
+`ToolbarSelectPopup` opens a context menu on left-click (not right-click) anchored to a `ToolbarSwitch`. It syncs open/close state with the switch.
+
+```java
+// Source: V25DemoView.java
+
+// Insert menu with multiple options
+ToolbarSwitch insertSwitch = new ToolbarSwitch(VaadinIcon.PLUS);
+ToolbarSelectPopup menu = new ToolbarSelectPopup(insertSwitch);
+menu.addItem("Horizontal Rule", e -> { /* insert HR */ });
+menu.addItem("Page Break", e -> { /* insert page break */ });
+menu.addComponent(new Hr());
+menu.addItem("Special Character...", e -> { /* open dialog */ });
+
+editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, insertSwitch);
+```
+
+Inherits the standard Vaadin `ContextMenu` API (`addItem()`, `addComponent()`, etc.).
+
+> See [API Reference -- ToolbarSelectPopup](API_REFERENCE.md#8-toolbarselectpopup) for the complete API.
+
+#### Toolbar Dialogs
+
+`ToolbarDialog` opens a non-modal dialog controlled by a `ToolbarSwitch`. Defaults: non-modal, resizable, draggable, no padding, closes on ESC. Can be positioned at the switch button or centered.
+
+```java
+// Source: V25DemoView.java
+
+// Settings dialog positioned at the toolbar switch
+ToolbarSwitch settingsSwitch = new ToolbarSwitch(VaadinIcon.COG);
+Checkbox showRulers = new Checkbox("Show rulers");
+Checkbox showWhitespace = new Checkbox("Show whitespace");
+Checkbox autoSave = new Checkbox("Auto-save");
+
+ToolbarDialog.vertical(settingsSwitch, showRulers, showWhitespace, autoSave)
+    .openAtSwitch();  // Position at the switch instead of centering
+
+editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, settingsSwitch);
+```
+
+Factory methods: `vertical(switch, components...)`, `horizontal(switch, components...)`, `horizontal(switch, alignment, components...)`.
+
+> See [API Reference -- ToolbarDialog](API_REFERENCE.md#9-toolbardialog) for the complete API.
+
 **Removing components:**
 
 ```java
@@ -179,6 +252,8 @@ editor.removeToolbarComponent(ToolbarSlot.START, startBtn);
 // or by ID:
 editor.removeToolbarComponent(ToolbarSlot.START, "slot-start-btn");
 ```
+
+> **Styling note:** All components added via `addToolbarComponents()` automatically receive `part="toolbar-custom-component"`. This enables consistent styling through ERTE's shadow DOM (hover, focus, active/pressed states for buttons). See [Configuration Guide -- Shadow Parts](CONFIGURATION.md#42-shadow-parts) for styling details.
 
 #### Toolbar Button Visibility
 
@@ -426,6 +501,8 @@ List<TabStop> current = editor.getTabStops();
 
 Position is in pixels from the left edge of the editor content area.
 
+> **Arrow navigation:** ERTE provides custom ArrowUp/ArrowDown handling when tabs are present. Quill 2 renders tabs as inline-block elements, which can confuse the browser's native vertical cursor navigation. ERTE intercepts vertical arrow keys and calculates the correct target line, ensuring smooth navigation through tab-heavy content.
+
 #### Rulers
 
 Rulers provide a visual grid above and beside the editor:
@@ -485,10 +562,10 @@ Whitespace indicators display special characters for invisible formatting:
 
 | Indicator | Meaning |
 |-----------|---------|
-| -> | Tab |
-| (line break symbol) | Soft-break (Shift+Enter) |
-| (paragraph symbol) | Paragraph end |
-| (wrap arrow) | Auto-wrap point |
+| `→` | Tab |
+| `↵` | Soft-break (Shift+Enter) |
+| `¶` | Paragraph end |
+| `·` | Non-breaking space |
 
 ```java
 // Enable whitespace indicators
@@ -730,13 +807,13 @@ editor.setI18n(i18n);
 | Method | Default | Purpose |
 |--------|---------|---------|
 | `setReadonly()` | "Readonly" | Lock toolbar button tooltip |
-| `setWhitespace()` | "Whitespace" | Whitespace indicator button tooltip |
+| `setWhitespace()` | "Show whitespace" | Whitespace indicator button tooltip |
 | `setPlaceholder()` | "Placeholder" | Placeholder toolbar button tooltip |
-| `setPlaceholderAppearance()` | "Placeholder Appearance" | Appearance toggle button tooltip |
+| `setPlaceholderAppearance()` | "Toggle placeholder appearance" | Appearance toggle button tooltip |
 | `setPlaceholderDialogTitle()` | "Placeholders" | Dialog title |
-| `setPlaceholderComboBoxLabel()` | "Select Placeholder" | Combo-box label in dialog |
-| `setPlaceholderAppearanceLabel1()` | "Format" | First appearance label |
-| `setPlaceholderAppearanceLabel2()` | "Alt Format" | Second appearance label |
+| `setPlaceholderComboBoxLabel()` | "Select a placeholder" | Combo-box label in dialog |
+| `setPlaceholderAppearanceLabel1()` | "Plain" | First appearance label in dialog |
+| `setPlaceholderAppearanceLabel2()` | "Value" | Second appearance label in dialog |
 | `setAlignJustify()` | "Justify" | Justify alignment button tooltip |
 
 **Inherited RTE 2 labels:** `setUndo()`, `setRedo()`, `setBold()`, `setItalic()`, `setUnderline()`, `setStrike()`, `setColor()`, `setBackground()`, `setH1()`, `setH2()`, `setH3()`, `setSubscript()`, `setSuperscript()`, `setListOrdered()`, `setListBullet()`, `setOutdent()`, `setIndent()`, `setAlignLeft()`, `setAlignCenter()`, `setAlignRight()`, `setImage()`, `setLink()`, `setBlockquote()`, `setCodeBlock()`, `setClean()`.
@@ -788,7 +865,7 @@ ERTE includes a server-side HTML sanitizer that prevents XSS attacks while prese
 
 - Provide `aria-label` or `title` on custom toolbar buttons for screen reader support
 - Use `addToolbarFocusShortcut()` to enable keyboard access to the toolbar
-- ERTE toolbar buttons support keyboard navigation (Tab/Shift+Tab, Arrow keys)
+- ERTE toolbar buttons support keyboard navigation: Tab/Shift+Tab moves focus in/out of the toolbar, Left/Right arrow keys navigate between buttons within the toolbar, and Escape returns focus to the editor content
 - Test with screen readers to verify custom toolbar components are announced correctly
 
 ### 4.4 Testing
@@ -842,6 +919,11 @@ bash v25-server-stop.sh
 - `addValueChangeListener()` fires on **blur**, not on every keystroke
 - For immediate updates, use `ValueChangeMode.EAGER` or read Delta directly via client-side JS
 - Check if the editor is disabled (`setEnabled(false)` prevents events)
+
+**Programmatic focus not working**
+- V25's `focus()` method delegates to Quill's internal focus mechanism, which is reliable
+- If focus doesn't work, ensure the editor is attached to the DOM and enabled
+- The inherited `HTMLElement.focus()` only focuses the web component element -- ERTE overrides this to properly focus the Quill editor
 
 **I18n labels not updating**
 - Call `setI18n()` with a complete `EnhancedRichTextEditorI18n` object

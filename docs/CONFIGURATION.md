@@ -4,7 +4,7 @@ This guide covers all configuration patterns for the Enhanced Rich Text Editor (
 
 **Audience:** Developers customizing ERTE for their application.
 
-**Related docs:** [User Guide](USER_GUIDE.md) for feature documentation, [API Reference](API_REFERENCE.md) for complete API surface, [Upgrade Guide](UPGRADE_GUIDE.md) for migration from v5.x.
+**Related docs:** [User Guide](USER_GUIDE.md) for feature documentation (including placeholder configuration), [API Reference](API_REFERENCE.md) for complete API surface, [Upgrade Guide](UPGRADE_GUIDE.md) for migration from v5.x.
 
 ---
 
@@ -304,7 +304,21 @@ The placeholder dialog uses these i18n keys:
 
 ### 4.1 Vaadin Lumo Theme
 
-ERTE uses the Vaadin Lumo theme. Key custom properties:
+ERTE v6.x uses the Vaadin Lumo theme exclusively. Support for additional themes (Aura, Material) is planned for a future release.
+
+**Style variants:** ERTE inherits RTE 2's Lumo style variants:
+
+```java
+import com.vaadin.flow.component.richtexteditor.RichTextEditorVariant;
+
+// Compact toolbar (reduced height and spacing)
+editor.addThemeVariants(RichTextEditorVariant.LUMO_COMPACT);
+
+// Remove outer border (useful when wrapping in a container with its own border)
+editor.addThemeVariants(RichTextEditorVariant.LUMO_NO_BORDER);
+```
+
+Key Lumo custom properties used by ERTE:
 
 | Property | Used For |
 |----------|----------|
@@ -343,6 +357,28 @@ vcf-enhanced-rich-text-editor::part(toolbar) {
 }
 ```
 
+**Slotted custom components:**
+
+Components added via `addToolbarComponents()` automatically receive `part="toolbar-custom-component"`. ERTE provides built-in interactive states for `button` and `vaadin-button` elements:
+
+| State | CSS Selector | Behavior |
+|-------|-------------|----------|
+| Default | `::slotted([part~='toolbar-custom-component'])` | Inherits `--vaadin-rich-text-editor-toolbar-button-*` custom properties |
+| Hover | `::slotted(button[part~='toolbar-custom-component']:not([on]):hover)` | Subtle background highlight |
+| Focus | `::slotted(button[part~='toolbar-custom-component']:focus-visible)` | Focus ring outline |
+| Active/Pressed | `::slotted([part~='toolbar-custom-component'][on])` | Solid primary background (matches built-in pressed style) |
+| Disabled | `::slotted([part~='toolbar-custom-component'][disabled])` | Muted text, no pointer events |
+
+Custom components inherit from RTE 2's `--vaadin-rich-text-editor-toolbar-button-*` properties, so user overrides of those properties apply to custom components too.
+
+```css
+/* Example: override all toolbar buttons including custom ones */
+vcf-enhanced-rich-text-editor {
+    --vaadin-rich-text-editor-toolbar-button-border-radius: 0;
+    --vaadin-rich-text-editor-toolbar-button-background: var(--lumo-contrast-5pct);
+}
+```
+
 ### 4.3 ERTE-Specific CSS Classes
 
 These classes are used in the editor content area (inside `.ql-editor`):
@@ -363,6 +399,8 @@ These classes are used in the editor content area (inside `.ql-editor`):
 | `vaadin-icon` inside ruler | Tabstop markers (LEFT/RIGHT/MIDDLE) |
 
 ### 4.4 Custom Content Styling
+
+> **Recommended:** Use [ERTE custom properties](#45-erte-custom-properties) for styling readonly sections, placeholders, whitespace indicators, and rulers. Custom properties are theme-aware and the preferred approach. The manual CSS class overrides below are available for fine-grained control beyond what custom properties offer.
 
 Override default styles for ERTE content elements:
 
@@ -387,6 +425,62 @@ Override default styles for ERTE content elements:
 ```
 
 > **Note:** Content styles inside `.ql-editor` are applied via the component's shadow DOM `static get styles()`. External CSS targeting `.ql-editor` descendants works because the editor content is in the shadow DOM's slotted area.
+
+### 4.5 ERTE Custom Properties
+
+ERTE provides 20 CSS custom properties for customizing the appearance of editor content elements. These are the **recommended** approach for visual customization -- they use Vaadin design tokens as fallback values, ensuring theme awareness.
+
+Override custom properties on the host element:
+
+```css
+vcf-enhanced-rich-text-editor {
+    --vaadin-erte-readonly-background: lightyellow;
+    --vaadin-erte-placeholder-background: #e8f4fd;
+    --vaadin-erte-ruler-height: 1.25rem;
+}
+```
+
+#### Readonly Sections (6 properties)
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `--vaadin-erte-readonly-color` | `var(--vaadin-text-color-secondary)` | Text color |
+| `--vaadin-erte-readonly-background` | `var(--vaadin-background-container)` | Background color |
+| `--vaadin-erte-readonly-border-color` | `var(--vaadin-border-color-secondary)` | Border (outline) color |
+| `--vaadin-erte-readonly-border-width` | `1px` | Border (outline) width |
+| `--vaadin-erte-readonly-border-radius` | `var(--lumo-border-radius-s)` | Corner radius |
+| `--vaadin-erte-readonly-padding` | `calc(var(--vaadin-padding-xs) / 2)` | Horizontal padding |
+
+#### Placeholders (6 properties)
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `--vaadin-erte-placeholder-color` | `inherit` | Text color |
+| `--vaadin-erte-placeholder-background` | `var(--lumo-primary-color-10pct)` | Background color |
+| `--vaadin-erte-placeholder-border-color` | `transparent` | Border (outline) color |
+| `--vaadin-erte-placeholder-border-width` | `0` | Border (outline) width |
+| `--vaadin-erte-placeholder-border-radius` | `var(--lumo-border-radius-s)` | Corner radius |
+| `--vaadin-erte-placeholder-padding` | `calc(var(--vaadin-padding-xs) / 2)` | Horizontal padding |
+
+#### Whitespace Indicators (3 properties)
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `--vaadin-erte-whitespace-indicator-color` | `var(--lumo-contrast-40pct)` | Color for tab, NBSP, soft-break indicators |
+| `--vaadin-erte-whitespace-paragraph-indicator-color` | `var(--lumo-contrast-30pct)` | Color for paragraph-end indicator |
+| `--vaadin-erte-whitespace-indicator-spacing` | `calc(var(--vaadin-padding-xs) / 2)` | Spacing around indicators |
+
+#### Ruler (5 properties)
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `--vaadin-erte-ruler-height` | `0.9375rem` | Ruler bar height |
+| `--vaadin-erte-ruler-border-color` | `var(--vaadin-border-color, var(--lumo-contrast-20pct, rgb(158, 170, 182)))` | Ruler border color |
+| `--vaadin-erte-ruler-background` | `url(...)` (ruler tick image) | Ruler background image |
+| `--vaadin-erte-ruler-marker-size` | `0.9375rem` | Tabstop marker icon size |
+| `--vaadin-erte-ruler-marker-color` | `inherit` | Tabstop marker icon color |
+
+> **Migration note:** V24 (ERTE 1) required manual CSS class overrides for content styling. V25 (ERTE 2) provides these official custom properties as the preferred approach. See [Upgrade Guide](UPGRADE_GUIDE.md) for migration details.
 
 ---
 

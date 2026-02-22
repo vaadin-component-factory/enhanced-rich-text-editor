@@ -16,9 +16,12 @@ Complete API reference for the Enhanced Rich Text Editor (ERTE) v6.x. This docum
 - [4. ToolbarButton (Enum)](#4-toolbarbutton-enum)
 - [5. ToolbarSlot (Enum)](#5-toolbarslot-enum)
 - [6. ToolbarSwitch](#6-toolbarswitch)
-- [7. EnhancedRichTextEditorI18n](#7-enhancedrichtexteditori18n)
-- [8. Events](#8-events)
-- [9. Inherited from RichTextEditor](#9-inherited-from-richtexteditor)
+- [7. ToolbarPopover](#7-toolbarpopover)
+- [8. ToolbarSelectPopup](#8-toolbarselectpopup)
+- [9. ToolbarDialog](#9-toolbardialog)
+- [10. EnhancedRichTextEditorI18n](#10-enhancedrichtexteditori18n)
+- [11. Events](#11-events)
+- [12. Inherited from RichTextEditor](#12-inherited-from-richtexteditor)
 
 ---
 
@@ -371,14 +374,14 @@ All listener methods return a `Registration` object that can be used to remove t
 
 | Method | Event Type | Section |
 |--------|-----------|---------|
-| `addPlaceholderButtonClickedListener()` | `PlaceholderButtonClickedEvent` | [8.1](#81-placeholderbuttonclickedevent) |
-| `addPlaceholderBeforeInsertListener()` | `PlaceholderBeforeInsertEvent` | [8.2](#82-placeholderbeforeinsertevent) |
-| `addPlaceholderInsertedListener()` | `PlaceholderInsertedEvent` | [8.3](#83-placeholderinsertedevent) |
-| `addPlaceholderBeforeRemoveListener()` | `PlaceholderBeforeRemoveEvent` | [8.4](#84-placeholderbeforeremoveevent) |
-| `addPlaceholderRemovedListener()` | `PlaceholderRemovedEvent` | [8.5](#85-placeholderremovedevent) |
-| `addPlaceholderSelectedListener()` | `PlaceholderSelectedEvent` | [8.6](#86-placeholderselectedevent) |
-| `addPlaceholderLeaveListener()` | `PlaceholderLeaveEvent` | [8.7](#87-placeholderleaveevent) |
-| `addPlaceholderAppearanceChangedListener()` | `PlaceholderAppearanceChangedEvent` | [8.8](#88-placeholderappearancechangedevent) |
+| `addPlaceholderButtonClickedListener()` | `PlaceholderButtonClickedEvent` | [11.1](#111-placeholderbuttonclickedevent) |
+| `addPlaceholderBeforeInsertListener()` | `PlaceholderBeforeInsertEvent` | [11.2](#112-placeholderbeforeinsertevent) |
+| `addPlaceholderInsertedListener()` | `PlaceholderInsertedEvent` | [11.3](#113-placeholderinsertedevent) |
+| `addPlaceholderBeforeRemoveListener()` | `PlaceholderBeforeRemoveEvent` | [11.4](#114-placeholderbeforeremoveevent) |
+| `addPlaceholderRemovedListener()` | `PlaceholderRemovedEvent` | [11.5](#115-placeholderremovedevent) |
+| `addPlaceholderSelectedListener()` | `PlaceholderSelectedEvent` | [11.6](#116-placeholderselectedevent) |
+| `addPlaceholderLeaveListener()` | `PlaceholderLeaveEvent` | [11.7](#117-placeholderleaveevent) |
+| `addPlaceholderAppearanceChangedListener()` | `PlaceholderAppearanceChangedEvent` | [11.8](#118-placeholderappearancechangedevent) |
 
 ---
 
@@ -685,7 +688,247 @@ A toolbar toggle button. Clicking toggles between active (on) and inactive state
 
 ---
 
-## 7. EnhancedRichTextEditorI18n
+## 7. ToolbarPopover
+
+```java
+package com.vaadin.componentfactory.toolbar;
+
+public class ToolbarPopover extends Popover
+```
+
+A specialized `Popover` that integrates with `ToolbarSwitch` for opening and closing. The popover automatically syncs its opened state with the switch's active state.
+
+### Constructor
+
+```java
+public ToolbarPopover(ToolbarSwitch referencedSwitch)
+```
+
+Creates a popover targeted at the given switch. The popover:
+- Opens/closes when the switch is activated/deactivated
+- Updates the switch state when opened/closed programmatically
+- Autofocus enabled by default (focuses first focusable element)
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `referencedSwitch` | `ToolbarSwitch` | The switch that controls the popover |
+
+### Static Factory Methods
+
+#### vertical
+
+```java
+public static ToolbarPopover vertical(ToolbarSwitch toolbarSwitch, Component... components)
+```
+
+Creates a popover with components arranged in a `VerticalLayout`.
+
+---
+
+#### horizontal
+
+```java
+public static ToolbarPopover horizontal(ToolbarSwitch toolbarSwitch, Component... components)
+```
+
+Creates a popover with components arranged in a `HorizontalLayout` (center-aligned, with padding).
+
+---
+
+#### horizontal (with alignment)
+
+```java
+public static ToolbarPopover horizontal(ToolbarSwitch toolbarSwitch, Alignment alignment, Component... components)
+```
+
+Creates a popover with components arranged in a `HorizontalLayout` with the specified vertical alignment.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `toolbarSwitch` | `ToolbarSwitch` | The switch that controls the popover |
+| `alignment` | `FlexComponent.Alignment` | Vertical alignment of components |
+| `components` | `Component...` | Content components |
+
+### Methods
+
+#### setFocusOnOpenTarget
+
+```java
+public void setFocusOnOpenTarget(Component focusOnOpenTarget)
+```
+
+Sets a component to receive focus when the popover opens. Disables default autofocus to avoid conflicts.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `focusOnOpenTarget` | `Component` | Component to focus on open |
+
+**Example:**
+```java
+ToolbarSwitch colorSwitch = new ToolbarSwitch(VaadinIcon.PAINTBRUSH);
+TextField colorField = new TextField("Color");
+ToolbarPopover popover = ToolbarPopover.vertical(colorSwitch, colorField);
+popover.setFocusOnOpenTarget(colorField);
+editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, colorSwitch);
+```
+
+---
+
+## 8. ToolbarSelectPopup
+
+```java
+package com.vaadin.componentfactory.toolbar;
+
+public class ToolbarSelectPopup extends ContextMenu
+```
+
+A specialized `ContextMenu` that integrates with `ToolbarSwitch` for opening and closing. Opens on **left-click** (not the default right-click behavior). Inherits the full Vaadin `ContextMenu` API.
+
+### Constructor
+
+```java
+public ToolbarSelectPopup(ToolbarSwitch referencedSwitch)
+```
+
+Creates a context menu targeted at the given switch. The menu:
+- Opens on left-click (via `setOpenOnClick(true)`)
+- Syncs the switch's active state with the menu's opened state
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `referencedSwitch` | `ToolbarSwitch` | The switch that triggers the menu |
+
+### Inherited Methods (from ContextMenu)
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `addItem(String text, ComponentEventListener)` | `MenuItem` | Adds a text menu item |
+| `addItem(Component component, ComponentEventListener)` | `MenuItem` | Adds a component menu item |
+| `addComponent(Component component)` | `void` | Adds a non-clickable component (e.g., `Hr` separator) |
+
+**Example:**
+```java
+ToolbarSwitch insertSwitch = new ToolbarSwitch(VaadinIcon.PLUS);
+ToolbarSelectPopup menu = new ToolbarSelectPopup(insertSwitch);
+menu.addItem("Horizontal Rule", e -> { /* ... */ });
+menu.addItem("Page Break", e -> { /* ... */ });
+menu.addComponent(new Hr());
+menu.addItem("Special Character...", e -> { /* ... */ });
+editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, insertSwitch);
+```
+
+---
+
+## 9. ToolbarDialog
+
+```java
+package com.vaadin.componentfactory.toolbar;
+
+public class ToolbarDialog extends Dialog
+```
+
+A specialized `Dialog` that integrates with `ToolbarSwitch` for opening and closing. The dialog automatically syncs its opened state with the switch's active state, and returns focus to the switch when closed.
+
+**Default settings:** Non-modal, resizable, draggable, no padding (`LUMO_NO_PADDING`), closes on ESC, does NOT close on outside click.
+
+### Constructors
+
+```java
+public ToolbarDialog(ToolbarSwitch toolbarSwitch)
+```
+
+Creates a center-positioned dialog controlled by the given switch.
+
+```java
+public ToolbarDialog(ToolbarSwitch toolbarSwitch, boolean openAtSwitch)
+```
+
+Creates a dialog controlled by the given switch. When `openAtSwitch` is `true`, the dialog is positioned directly below the switch button.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `toolbarSwitch` | `ToolbarSwitch` | The switch that controls the dialog |
+| `openAtSwitch` | `boolean` | Position at switch (`true`) or center (`false`) |
+
+### Static Factory Methods
+
+#### vertical
+
+```java
+public static ToolbarDialog vertical(ToolbarSwitch toolbarSwitch, Component... components)
+```
+
+Creates a center-positioned dialog with components arranged in a `VerticalLayout`.
+
+---
+
+#### horizontal
+
+```java
+public static ToolbarDialog horizontal(ToolbarSwitch toolbarSwitch, Component... components)
+```
+
+Creates a center-positioned dialog with components arranged in a `HorizontalLayout` (center-aligned, with padding).
+
+---
+
+#### horizontal (with alignment)
+
+```java
+public static ToolbarDialog horizontal(ToolbarSwitch toolbarSwitch, FlexComponent.Alignment alignment, Component... components)
+```
+
+Creates a center-positioned dialog with the specified horizontal alignment.
+
+### Methods
+
+#### setFocusOnOpenTarget
+
+```java
+public void setFocusOnOpenTarget(Component focusOnOpenTarget)
+```
+
+Sets a component to receive focus when the dialog opens.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `focusOnOpenTarget` | `Component` | Component to focus on open |
+
+---
+
+#### getToolbarSwitch
+
+```java
+public ToolbarSwitch getToolbarSwitch()
+```
+
+**Returns:** The toolbar switch that controls this dialog.
+
+---
+
+#### openAtSwitch
+
+```java
+public ToolbarDialog openAtSwitch()
+```
+
+Configures the dialog to open at the toolbar switch's position (below the button) instead of centering. Returns `this` for method chaining.
+
+**Example:**
+```java
+ToolbarSwitch settingsSwitch = new ToolbarSwitch(VaadinIcon.COG);
+Checkbox showRulers = new Checkbox("Show rulers");
+Checkbox showWhitespace = new Checkbox("Show whitespace");
+
+ToolbarDialog.vertical(settingsSwitch, showRulers, showWhitespace)
+    .openAtSwitch();
+
+editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, settingsSwitch);
+```
+
+---
+
+## 10. EnhancedRichTextEditorI18n
 
 ```java
 package com.vaadin.componentfactory;
@@ -704,13 +947,13 @@ All setters return `EnhancedRichTextEditorI18n` for fluent chaining.
 | Getter | Setter | Default Value | Purpose |
 |--------|--------|---------------|---------|
 | `getReadonly()` | `setReadonly(String)` | "Readonly" | Lock button tooltip |
-| `getWhitespace()` | `setWhitespace(String)` | "Whitespace" | Whitespace button tooltip |
+| `getWhitespace()` | `setWhitespace(String)` | "Show whitespace" | Whitespace indicator button tooltip |
 | `getPlaceholder()` | `setPlaceholder(String)` | "Placeholder" | Placeholder button tooltip |
-| `getPlaceholderAppearance()` | `setPlaceholderAppearance(String)` | "Placeholder Appearance" | Appearance toggle tooltip |
+| `getPlaceholderAppearance()` | `setPlaceholderAppearance(String)` | "Toggle placeholder appearance" | Appearance toggle tooltip |
 | `getPlaceholderDialogTitle()` | `setPlaceholderDialogTitle(String)` | "Placeholders" | Dialog title |
-| `getPlaceholderComboBoxLabel()` | `setPlaceholderComboBoxLabel(String)` | "Select Placeholder" | Combo-box label |
-| `getPlaceholderAppearanceLabel1()` | `setPlaceholderAppearanceLabel1(String)` | "Format" | First appearance label |
-| `getPlaceholderAppearanceLabel2()` | `setPlaceholderAppearanceLabel2(String)` | "Alt Format" | Second appearance label |
+| `getPlaceholderComboBoxLabel()` | `setPlaceholderComboBoxLabel(String)` | "Select a placeholder" | Combo-box label |
+| `getPlaceholderAppearanceLabel1()` | `setPlaceholderAppearanceLabel1(String)` | "Plain" | First appearance label |
+| `getPlaceholderAppearanceLabel2()` | `setPlaceholderAppearanceLabel2(String)` | "Value" | Second appearance label |
 | `getAlignJustify()` | `setAlignJustify(String)` | "Justify" | Justify button tooltip |
 
 ### Inherited Labels (Covariant Overrides)
@@ -731,11 +974,11 @@ editor.setI18n(new EnhancedRichTextEditorI18n()
 
 ---
 
-## 8. Events
+## 11. Events
 
 All placeholder events are inner classes of `EnhancedRichTextEditor`.
 
-### 8.1 PlaceholderButtonClickedEvent
+### 11.1 PlaceholderButtonClickedEvent
 
 ```java
 @DomEvent("placeholder-button-click")
@@ -755,7 +998,7 @@ Fired when the placeholder toolbar button is clicked. This event fires **before*
 
 ---
 
-### 8.2 PlaceholderBeforeInsertEvent
+### 11.2 PlaceholderBeforeInsertEvent
 
 ```java
 @DomEvent("placeholder-before-insert")
@@ -772,7 +1015,7 @@ Fired before placeholders are inserted. **Cancellable:** the insertion only proc
 
 ---
 
-### 8.3 PlaceholderInsertedEvent
+### 11.3 PlaceholderInsertedEvent
 
 ```java
 @DomEvent("placeholder-insert")
@@ -788,7 +1031,7 @@ Fired after placeholders are successfully inserted. Notification event (read-onl
 
 ---
 
-### 8.4 PlaceholderBeforeRemoveEvent
+### 11.4 PlaceholderBeforeRemoveEvent
 
 ```java
 @DomEvent("placeholder-before-delete")
@@ -805,7 +1048,7 @@ Fired before placeholders are removed. **Cancellable:** the removal only proceed
 
 ---
 
-### 8.5 PlaceholderRemovedEvent
+### 11.5 PlaceholderRemovedEvent
 
 ```java
 @DomEvent("placeholder-delete")
@@ -821,7 +1064,7 @@ Fired after placeholders are successfully removed. Notification event (read-only
 
 ---
 
-### 8.6 PlaceholderSelectedEvent
+### 11.6 PlaceholderSelectedEvent
 
 ```java
 @DomEvent("placeholder-select")
@@ -837,7 +1080,7 @@ Fired when the user clicks on a placeholder or navigates to it via keyboard.
 
 ---
 
-### 8.7 PlaceholderLeaveEvent
+### 11.7 PlaceholderLeaveEvent
 
 ```java
 @DomEvent("placeholder-leave")
@@ -849,7 +1092,7 @@ Fired when the cursor moves away from a placeholder. No additional methods beyon
 
 ---
 
-### 8.8 PlaceholderAppearanceChangedEvent
+### 11.8 PlaceholderAppearanceChangedEvent
 
 ```java
 @DomEvent("placeholder-appearance-change")
@@ -881,7 +1124,7 @@ Base class for events that carry a list of placeholders. Handles deserialization
 
 ---
 
-## 9. Inherited from RichTextEditor
+## 12. Inherited from RichTextEditor
 
 `EnhancedRichTextEditor` inherits the full API of Vaadin's `RichTextEditor`. Key inherited methods:
 
@@ -911,6 +1154,6 @@ Base class for events that carry a list of placeholders. Handles deserialization
 
 | Method | Description |
 |--------|-------------|
-| `focus()` | Programmatic focus |
+| `focus()` | Programmatic focus (delegates to Quill's internal focus mechanism for reliable behavior) |
 
-For the complete inherited API, see the [Vaadin RichTextEditor documentation](https://vaadin.com/docs/latest/components/rich-text-editor).
+For the complete inherited API, see the [Vaadin RichTextEditor documentation](https://vaadin.com/docs/v25/components/rich-text-editor).
