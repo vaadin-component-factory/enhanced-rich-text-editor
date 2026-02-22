@@ -601,10 +601,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
       if (placeholders.length) {
         if (!this._inPlaceholder) {
           this._inPlaceholder = true;
-          if (this.__placeholderBtn) {
-            this.__placeholderBtn.classList.add('ql-active');
-            this.__placeholderBtn.part.add('toolbar-button-pressed');
-          }
+          this._syncButtonPressed(this.__placeholderBtn, true);
           this.dispatchEvent(new CustomEvent('placeholder-select', {
             bubbles: true, composed: true, cancelable: false,
             detail: { placeholders }
@@ -613,10 +610,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
       } else {
         if (this._inPlaceholder) {
           this._inPlaceholder = false;
-          if (this.__placeholderBtn) {
-            this.__placeholderBtn.classList.remove('ql-active');
-            this.__placeholderBtn.part.remove('toolbar-button-pressed');
-          }
+          this._syncButtonPressed(this.__placeholderBtn, false);
           this.dispatchEvent(new CustomEvent('placeholder-leave', {
             bubbles: true, composed: true, cancelable: false
           }));
@@ -1047,6 +1041,21 @@ class VcfEnhancedRichTextEditor extends RteBase {
   }
 
   /**
+   * Toggles both the `ql-active` CSS class and the `toolbar-button-pressed`
+   * part attribute on an ERTE toolbar button. RTE 2 does this automatically
+   * for buttons registered in `toolbar.controls`, but ERTE's injected buttons
+   * are not registered there — so we manage the sync ourselves.
+   * @param {HTMLElement|null} btn - the toolbar button element
+   * @param {boolean} active - whether the button should appear pressed
+   * @protected
+   */
+  _syncButtonPressed(btn, active) {
+    if (!btn) return;
+    btn.classList.toggle('ql-active', active);
+    btn.part.toggle('toolbar-button-pressed', active);
+  }
+
+  /**
    * Injects 25 named <slot> elements into the toolbar DOM produced by
    * super.render(). Slots are placed: START before first group, BEFORE/AFTER
    * around each of the 11 standard groups, a custom group span with
@@ -1175,22 +1184,14 @@ class VcfEnhancedRichTextEditor extends RteBase {
       const value = format.align === 'justify' ? false : 'justify';
       this._editor.format('align', value, Quill.sources.USER);
       // Update button active state (Quill's toolbar module does this for bound buttons)
-      if (value === 'justify') {
-        btn.classList.add('ql-active');
-      } else {
-        btn.classList.remove('ql-active');
-      }
+      this._syncButtonPressed(btn, value === 'justify');
     });
 
     // Update button active state on selection change
     this._editor.on('selection-change', (range) => {
       if (!range) return;
       const format = this._editor.getFormat(range);
-      if (format.align === 'justify') {
-        btn.classList.add('ql-active');
-      } else {
-        btn.classList.remove('ql-active');
-      }
+      this._syncButtonPressed(btn, format.align === 'justify');
     });
 
     // Add SVG icon directly (vaadin-icon doesn't work with inline SVG)
@@ -1287,18 +1288,10 @@ class VcfEnhancedRichTextEditor extends RteBase {
       const selection = this._editor.getSelection();
       if (selection && selection.length > 0) {
         const format = this._editor.getFormat(selection.index, selection.length);
-        if (format.readonly) {
-          btn.classList.add('ql-active');
-        } else {
-          btn.classList.remove('ql-active');
-        }
+        this._syncButtonPressed(btn, !!format.readonly);
       } else if (selection) {
         const format = this._editor.getFormat(selection.index);
-        if (format.readonly) {
-          btn.classList.add('ql-active');
-        } else {
-          btn.classList.remove('ql-active');
-        }
+        this._syncButtonPressed(btn, !!format.readonly);
       }
     });
   }
@@ -1374,7 +1367,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
     const editor = this._editor?.root;
     if (editor) editor.classList.toggle('show-whitespace', !!show);
     if (this.__whitespaceBtn) {
-      this.__whitespaceBtn.classList.toggle('ql-active', !!show);
+      this._syncButtonPressed(this.__whitespaceBtn, !!show);
     }
   }
 
@@ -1572,11 +1565,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
     if (this.__placeholderAppearanceBtn) {
       const labels = this.__erteI18nLabels || ERTE_I18N_DEFAULTS;
       this.__placeholderAppearanceBtn.textContent = altAppearance ? labels.label2 : labels.label1;
-      if (altAppearance) {
-        this.__placeholderAppearanceBtn.classList.add('ql-active');
-      } else {
-        this.__placeholderAppearanceBtn.classList.remove('ql-active');
-      }
+      this._syncButtonPressed(this.__placeholderAppearanceBtn, altAppearance);
     }
 
     // Update delta: set altAppearance on each placeholder op
