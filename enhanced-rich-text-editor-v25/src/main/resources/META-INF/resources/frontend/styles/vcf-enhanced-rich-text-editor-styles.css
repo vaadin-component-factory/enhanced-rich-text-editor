@@ -1,0 +1,293 @@
+/*-
+ * #%L
+ * Enhanced Rich Text Editor V25
+ * %%
+ * Copyright (C) 2019 - 2025 Vaadin Ltd
+ * %%
+ * This program is available under Commercial Vaadin Add-On License 3.0
+ * (CVALv3).
+ *
+ * See the file license.html distributed with this software for more
+ * information about licensing.
+ *
+ * You should have received a copy of the CVALv3 along with this program.
+ * If not, see <http://vaadin.com/license/cval-3>.
+ * #L%
+ */
+
+/* ============================================================================
+   ERTE Custom Properties
+   Users can override these on the host element:
+     vcf-enhanced-rich-text-editor { --vaadin-erte-readonly-background: yellow; }
+   ============================================================================ */
+:host {
+  /* Readonly sections */
+  --vaadin-erte-readonly-color: var(--vaadin-text-color-secondary);
+  --vaadin-erte-readonly-background: var(--vaadin-background-container);
+  --vaadin-erte-readonly-border-color: var(--vaadin-border-color-secondary);
+  --vaadin-erte-readonly-border-width: 1px;
+  --vaadin-erte-readonly-border-radius: var(--lumo-border-radius-s);
+  --vaadin-erte-readonly-padding: calc(var(--vaadin-padding-xs) / 2);
+
+  /* Placeholders */
+  --vaadin-erte-placeholder-color: inherit;
+  --vaadin-erte-placeholder-background: var(--lumo-primary-color-10pct);
+  --vaadin-erte-placeholder-border-color: transparent;
+  --vaadin-erte-placeholder-border-width: 0;
+  --vaadin-erte-placeholder-border-radius: var(--lumo-border-radius-s);
+  --vaadin-erte-placeholder-padding: calc(var(--vaadin-padding-xs) / 2);
+
+  /* Whitespace indicators */
+  --vaadin-erte-whitespace-indicator-color: var(--lumo-contrast-40pct, rgba(0, 0, 0, 0.38));
+  --vaadin-erte-whitespace-paragraph-indicator-color: var(--lumo-contrast-30pct, rgba(0, 0, 0, 0.26));
+  --vaadin-erte-whitespace-indicator-spacing: calc(var(--vaadin-padding-xs) / 2);
+
+  /* Ruler */
+  --vaadin-erte-ruler-height: 0.9375rem;
+  --vaadin-erte-ruler-border-color: var(--vaadin-border-color, var(--lumo-contrast-20pct, rgb(158, 170, 182)));
+  --vaadin-erte-ruler-background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAV4AAAAPBAMAAABeoLrPAAAAA3NCSVQICAjb4U/gAAAAHlBMVEXS0tLR0dHQ0NCerLmfq7eeqrafqbOdqbWcqLT///9ePaWcAAAACnRSTlP///////////8AsswszwAAAAlwSFlzAAALEgAACxIB0t1+/AAAACB0RVh0U29mdHdhcmUATWFjcm9tZWRpYSBGaXJld29ya3MgTVi7kSokAAAAFnRFWHRDcmVhdGlvbiBUaW1lADA1LzEwLzEyhpCxGgAAAKtJREFUeJztksENgCAMRXt1BEZgICdwBvco3NxWqwYDFGMrajT2QOD/0v8kwvCugqcBhPXzXluf4XViA+uNKmfIeX09Q5Eh5y0+o9xQZFT8H24xINgXLwmMdtl4fVjcruYO9nEans6YeA2NMSQaEtedYzQMx0RLbkTzbHmeImPibWhrY8cy2to3IyRalM7P89ldVQZk39ksPZhpXJ9hUHfeDanlVAZ0ffumGgEWlrgeDxx/xAAAAABJRU5ErkJggg==') repeat-x;
+  --vaadin-erte-ruler-marker-size: 0.9375rem;
+  --vaadin-erte-ruler-marker-color: inherit;
+}
+
+/* ============================================================================
+   Readonly Sections
+   ============================================================================ */
+.ql-readonly {
+  color: var(--vaadin-erte-readonly-color);
+  background-color: var(--vaadin-erte-readonly-background);
+  border-radius: var(--vaadin-erte-readonly-border-radius);
+  padding-inline: var(--vaadin-erte-readonly-padding);
+  outline-width: var(--vaadin-erte-readonly-border-width);
+  outline-style: solid;
+  outline-color: var(--vaadin-erte-readonly-border-color);
+  outline-offset: calc(-1 * var(--vaadin-erte-readonly-border-width));
+}
+
+/* ============================================================================
+   Tab Stops
+   Quill 2 Embed structure after guard wrapping:
+     [span.ql-tab-guard > guard \uFEFF] [contentNode span] [span.ql-tab-guard > guard \uFEFF]
+   Guard TextNodes are wrapped in named <span> elements by TabBlot constructor.
+   Guards need min 2px width — Chrome cannot render a caret in a 0px element.
+   CRITICAL: Must use inline-block, NOT inline-flex. Chrome treats inline-flex
+   elements as atomic inlines — ArrowUp/ArrowDown gets trapped in guard nodes.
+   overflow:visible — caret taller than tab box needs to be visible.
+   No will-change/translateZ — compositor layers break caret in Chrome.
+   ============================================================================ */
+.ql-tab {
+  display: inline-block;
+  min-width: 2px;
+  white-space: pre;
+  vertical-align: baseline;
+  position: relative;
+  overflow: visible;
+  cursor: default;
+}
+
+.ql-tab-guard {
+  display: inline-block;
+  min-width: 2px;
+  font-size: inherit;
+  line-height: inherit;
+  pointer-events: none;
+}
+
+/* Right guard at the tab's right edge for correct caret placement. */
+.ql-tab > .ql-tab-guard:last-child {
+  position: absolute;
+  right: 0;
+}
+
+.ql-tab > span[contenteditable="false"] {
+  font-size: 0;
+  line-height: 0;
+  overflow: hidden;
+}
+
+/* ============================================================================
+   Soft Breaks
+   ============================================================================ */
+.ql-soft-break {
+  display: inline;
+}
+
+/* ============================================================================
+   Placeholders
+   ============================================================================ */
+.ql-placeholder {
+  color: var(--vaadin-erte-placeholder-color);
+  background-color: var(--vaadin-erte-placeholder-background);
+  border-radius: var(--vaadin-erte-placeholder-border-radius);
+  padding-inline: var(--vaadin-erte-placeholder-padding);
+  outline-width: var(--vaadin-erte-placeholder-border-width);
+  outline-style: solid;
+  outline-color: var(--vaadin-erte-placeholder-border-color);
+  outline-offset: calc(-1 * var(--vaadin-erte-placeholder-border-width));
+  cursor: default;
+}
+
+.ql-placeholder [contenteditable="false"] {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* ============================================================================
+   Whitespace Indicators
+   Activated by 'show-whitespace' class on .ql-editor.
+   CRITICAL: ::after on .ql-tab inherits font-size:0, overflow:hidden
+   from parent. Must explicitly override to make indicators visible.
+   ============================================================================ */
+
+/* Tab indicator: → (right arrow) */
+.show-whitespace span.ql-tab::after {
+  position: absolute;
+  content: '→';
+  right: var(--vaadin-erte-whitespace-indicator-spacing);
+  top: 0;
+  line-height: 1rem;
+  font-size: var(--lumo-font-size-m, 1rem);
+  overflow: visible;
+  color: var(--vaadin-erte-whitespace-indicator-color);
+  pointer-events: none;
+}
+
+/* Auto-wrap indicator: DISABLED — inconsistent behavior, deactivated.
+.show-whitespace span.ql-tab.ql-auto-wrap-start::after {
+  content: '⮐→';
+}
+*/
+
+/* Soft-break indicator: ↵ (return symbol) */
+.show-whitespace span.ql-soft-break::before {
+  content: '↵';
+  font-size: var(--lumo-font-size-s, 0.875rem);
+  color: var(--vaadin-erte-whitespace-indicator-color);
+  vertical-align: baseline;
+  pointer-events: none;
+}
+
+/* Paragraph/Hard-break indicator: ¶ (pilcrow) */
+.show-whitespace p:not(:last-child),
+.show-whitespace h1:not(:last-child),
+.show-whitespace h2:not(:last-child),
+.show-whitespace h3:not(:last-child),
+.show-whitespace li:not(:last-child),
+.show-whitespace blockquote:not(:last-child) {
+  position: relative;
+}
+
+.show-whitespace p:not(:last-child)::after,
+.show-whitespace h1:not(:last-child)::after,
+.show-whitespace h2:not(:last-child)::after,
+.show-whitespace h3:not(:last-child)::after,
+.show-whitespace li:not(:last-child)::after,
+.show-whitespace blockquote:not(:last-child)::after {
+  content: '¶';
+  position: absolute;
+  bottom: 0;
+  font-size: var(--lumo-font-size-s, 0.875rem);
+  color: var(--vaadin-erte-whitespace-paragraph-indicator-color);
+  pointer-events: none;
+  margin-left: var(--vaadin-erte-whitespace-indicator-spacing);
+}
+
+/* NBSP indicator: · (middle dot) */
+.show-whitespace span.ql-nbsp::before {
+  content: '·';
+  font-size: var(--lumo-font-size-m, 1rem);
+  color: var(--vaadin-erte-whitespace-indicator-color);
+  vertical-align: middle;
+  pointer-events: none;
+  margin-right: var(--vaadin-erte-whitespace-indicator-spacing);
+}
+
+/* ============================================================================
+   Slotted Custom Component Styles
+   Custom components added via addToolbarComponents().
+   Inherits from RTE 2's toolbar button custom properties where possible,
+   so user overrides of --vaadin-rich-text-editor-toolbar-button-* apply
+   to custom components too.
+   ============================================================================ */
+::slotted([part~='toolbar-custom-component']) {
+  width: auto;
+  height: var(--lumo-size-m);
+  flex-shrink: 0;
+  padding: var(--vaadin-rich-text-editor-toolbar-button-padding, 0 var(--lumo-space-s));
+  margin: 2px 1px;
+  border-radius: var(--vaadin-rich-text-editor-toolbar-button-border-radius, var(--vaadin-radius-m, var(--lumo-border-radius-m)));
+  color: var(--vaadin-rich-text-editor-toolbar-button-text-color, var(--vaadin-text-color));
+  background: var(--vaadin-rich-text-editor-toolbar-button-background, transparent);
+  border: var(--vaadin-rich-text-editor-toolbar-button-border-width, 1px) solid
+    var(--vaadin-rich-text-editor-toolbar-button-border-color, transparent);
+  cursor: var(--lumo-clickable-cursor);
+  font: inherit;
+  line-height: 1;
+  text-transform: none;
+  transition: background-color 100ms, color 100ms;
+  position: relative;
+}
+
+/* Hover effect only for button elements, not for input fields */
+::slotted(button[part~='toolbar-custom-component']:hover),
+::slotted(vaadin-button[part~='toolbar-custom-component']:hover) {
+  background-color: var(--lumo-contrast-5pct);
+  color: var(--lumo-contrast-80pct);
+  box-shadow: none;
+  outline: none;
+}
+
+/* Align the min-width with built-in toolbar buttons. */
+::slotted(vaadin-button[part~='toolbar-custom-component']) {
+  min-width: var(--lumo-size-m);
+}
+
+[part~='toolbar-button-placeholder-display'] {
+  width: auto;
+  min-width: var(--lumo-size-l);
+  padding: 0 var(--lumo-space-xs);
+  font-size: 0.875em;
+}
+
+/* ============================================================================
+   Ruler Widget
+   ============================================================================ */
+[part~="ruler-wrapper"] {
+  overflow: hidden;
+  box-sizing: content-box;
+  width: 100%;
+  height: var(--vaadin-erte-ruler-height);
+  flex-shrink: 0;
+  display: flex;
+}
+
+[part~="ruler-corner"] {
+  overflow: hidden;
+  box-sizing: content-box;
+  border-color: var(--vaadin-erte-ruler-border-color);
+  border-style: solid;
+  border-width: 0 1px 1px 0;
+  width: calc(var(--vaadin-erte-ruler-height) - 1px);
+  height: calc(var(--vaadin-erte-ruler-height) - 1px);
+}
+
+[part~="horizontalRuler"] {
+  position: relative;
+  overflow: hidden;
+  box-sizing: content-box;
+  background: var(--vaadin-erte-ruler-background);
+  flex-grow: 1;
+  height: var(--vaadin-erte-ruler-height);
+  padding: 0;
+  cursor: crosshair;
+}
+
+/* Tabstop marker icons — translateX(-50%) for automatic centering */
+[part~="horizontalRuler"] > vaadin-icon {
+  width: var(--vaadin-erte-ruler-marker-size);
+  height: var(--vaadin-erte-ruler-marker-size);
+  color: var(--vaadin-erte-ruler-marker-color);
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+}

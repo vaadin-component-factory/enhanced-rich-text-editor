@@ -23,7 +23,8 @@
  * structure. Import path is stable as of Vaadin 25.0.5.
  */
 import '@vaadin/rich-text-editor';
-import { css } from 'lit';
+import { unsafeCSS } from 'lit';
+import erteStyles from './styles/vcf-enhanced-rich-text-editor-styles.css?inline';
 
 const Quill = window.Quill;
 
@@ -46,10 +47,6 @@ const TAB_BLOCK_ELEMENTS = ['P', 'DIV', 'LI', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'
                             'BLOCKQUOTE', 'PRE', 'OL', 'UL', 'TABLE', 'TR', 'TD', 'TH'];
 const TAB_BLOCK_SELECTOR = TAB_BLOCK_ELEMENTS.map(t => t.toLowerCase()).join(', ');
 
-// ============================================================================
-// Ruler background image (base64 PNG)
-// ============================================================================
-const RULER_HORI_BASE64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAV4AAAAPBAMAAABeoLrPAAAAA3NCSVQICAjb4U/gAAAAHlBMVEXS0tLR0dHQ0NCerLmfq7eeqrafqbOdqbWcqLT///9ePaWcAAAACnRSTlP///////////8AsswszwAAAAlwSFlzAAALEgAACxIB0t1+/AAAACB0RVh0U29mdHdhcmUATWFjcm9tZWRpYSBGaXJld29ya3MgTVi7kSokAAAAFnRFWHRDcmVhdGlvbiBUaW1lADA1LzEwLzEyhpCxGgAAAKtJREFUeJztksENgCAMRXt1BEZgICdwBvco3NxWqwYDFGMrajT2QOD/0v8kwvCugqcBhPXzXluf4XViA+uNKmfIeX09Q5Eh5y0+o9xQZFT8H24xINgXLwmMdtl4fVjcruYO9nEans6YeA2NMSQaEtedYzQMx0RLbkTzbHmeImPibWhrY8cy2to3IyRalM7P89ldVQZk39ksPZhpXJ9hUHfeDanlVAZ0ffumGgEWlrgeDxx/xAAAAABJRU5ErkJggg==';
 
 // ============================================================================
 // ReadOnlyBlot — Inline format: <span class="ql-readonly" contenteditable="false">
@@ -425,196 +422,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
 
   static get styles() {
     const base = super.styles ? [...super.styles] : [];
-    return [
-      ...base,
-      css`
-        /* Readonly sections — Lumo design tokens for light/dark compatibility */
-        .ql-readonly {
-          color: var(--lumo-secondary-text-color);
-          background-color: var(--lumo-contrast-5pct);
-          border-radius: var(--lumo-border-radius-s);
-          padding-inline: 0.125em;
-          outline: 1px solid var(--lumo-contrast-10pct);
-          outline-offset: -1px;
-        }
-
-        /* Tab stops — inline-block spans with calculated width.
-           Quill 2 Embed structure after guard wrapping:
-             [span.ql-tab-guard > guard \uFEFF] [contentNode span] [span.ql-tab-guard > guard \uFEFF]
-           Guard TextNodes are wrapped in named <span> elements by TabBlot constructor.
-           Guards need min 2px width — Chrome cannot render a caret in a 0px element.
-           The \uFEFF glyph has zero advance width, so without explicit sizing the guards
-           collapse to 0px. 2×2px = 4px total overhead per tab, imperceptible at typical
-           tab widths (100-200px). Tab width engine sets outer .ql-tab width, so guards
-           are included and ruler alignment is unaffected.
-           CRITICAL: Must use inline-block, NOT inline-flex. Chrome treats inline-flex
-           elements as atomic inlines for vertical navigation — ArrowUp/ArrowDown gets
-           trapped in guard nodes instead of moving between lines.
-           overflow:visible — tab is invisible spacing; hidden/clip clips the caret
-           (Lumo line-height 1.625 makes caret ~26px, taller than 1rem box).
-           No height/line-height — inherit from paragraph so caret matches text.
-           No will-change/translateZ — compositor layers break caret in Chrome. */
-        .ql-tab {
-          display: inline-block;
-          min-width: 2px;
-          white-space: pre;
-          vertical-align: baseline;
-          position: relative;
-          overflow: visible;
-          cursor: default;
-        }
-        .ql-tab-guard {
-          display: inline-block;
-          min-width: 2px;
-          font-size: inherit;
-          line-height: inherit;
-          pointer-events: none;
-        }
-        /* Right guard at the tab's right edge for correct caret placement.
-           Without this, the right guard renders at the left edge (inline-block)
-           and the cursor appears at the wrong X position after the last tab. */
-        .ql-tab > .ql-tab-guard:last-child {
-          position: absolute;
-          right: 0;
-        }
-        .ql-tab > span[contenteditable="false"] {
-          font-size: 0;
-          line-height: 0;
-          overflow: hidden;
-        }
-
-        /* Soft breaks — inline line break */
-        .ql-soft-break {
-          display: inline;
-        }
-
-        /* Placeholders — inline embed tokens */
-        .ql-placeholder {
-          background-color: var(--lumo-primary-color-10pct);
-          border-radius: var(--lumo-border-radius-s);
-          padding-inline: 0.125em;
-          cursor: default;
-        }
-        .ql-placeholder [contenteditable="false"] {
-          font-size: inherit;
-          line-height: inherit;
-        }
-
-        /* Whitespace indicators — activated by 'show-whitespace' class on .ql-editor.
-           CRITICAL: ::after on .ql-tab inherits font-size:0, overflow:hidden
-           from parent. Must explicitly override to make indicators visible. */
-
-        /* Tab indicator: → (right arrow) */
-        .show-whitespace span.ql-tab::after {
-          position: absolute;
-          content: '→';
-          right: 2px;
-          top: 0;
-          line-height: 1rem;
-          font-size: var(--lumo-font-size-m, 1rem);
-          overflow: visible;
-          color: var(--lumo-contrast-40pct, rgba(0, 0, 0, 0.38));
-          pointer-events: none;
-        }
-
-        /* Auto-wrap indicator: DISABLED — only triggers for tabs that wrap,
-           not for text wrapping. Inconsistent behavior, so deactivated for now.
-        .show-whitespace span.ql-tab.ql-auto-wrap-start::after {
-          content: '⮐→';
-        }
-        */
-
-        /* Soft-break indicator: ↵ (return symbol) */
-        .show-whitespace span.ql-soft-break::before {
-          content: '↵';
-          font-size: var(--lumo-font-size-s, 0.875rem);
-          color: var(--lumo-contrast-40pct, rgba(0, 0, 0, 0.38));
-          vertical-align: baseline;
-          pointer-events: none;
-        }
-
-        /* Paragraph/Hard-break indicator: ¶ (pilcrow) */
-        .show-whitespace p:not(:last-child),
-        .show-whitespace h1:not(:last-child),
-        .show-whitespace h2:not(:last-child),
-        .show-whitespace h3:not(:last-child),
-        .show-whitespace li:not(:last-child),
-        .show-whitespace blockquote:not(:last-child) {
-          position: relative;
-        }
-
-        .show-whitespace p:not(:last-child)::after,
-        .show-whitespace h1:not(:last-child)::after,
-        .show-whitespace h2:not(:last-child)::after,
-        .show-whitespace h3:not(:last-child)::after,
-        .show-whitespace li:not(:last-child)::after,
-        .show-whitespace blockquote:not(:last-child)::after {
-          content: '¶';
-          position: absolute;
-          bottom: 0;
-          font-size: var(--lumo-font-size-s, 0.875rem);
-          color: var(--lumo-contrast-30pct, rgba(0, 0, 0, 0.26));
-          pointer-events: none;
-          margin-left: 2px;
-        }
-
-        /* NBSP indicator: · (middle dot) */
-        .show-whitespace span.ql-nbsp::before {
-          content: '·';
-          font-size: var(--lumo-font-size-m, 1rem);
-          color: var(--lumo-contrast-40pct, rgba(0, 0, 0, 0.38));
-          vertical-align: middle;
-          pointer-events: none;
-          margin-right: 2px;
-        }
-
-        /* Justify button icon is added as <vaadin-icon> element in JS, not via CSS */
-
-        /* ========================================
-           SLOTTED CUSTOM COMPONENT STYLES
-           Custom components added via addToolbarComponents()
-           ======================================== */
-
-        ::slotted([part~='toolbar-custom-component']) {
-          width: auto;
-          height: var(--lumo-size-m);
-          flex-shrink: 0;
-          padding: 0 var(--lumo-space-s);
-          margin: 2px 1px;
-          border-radius: var(--lumo-border-radius-m);
-          color: var(--lumo-contrast-60pct);
-          background: transparent;
-          border: none;
-          cursor: var(--lumo-clickable-cursor);
-          font: inherit;
-          line-height: 1;
-          text-transform: none;
-          transition: background-color 100ms, color 100ms;
-          position: relative;
-        }
-
-        /* Hover effect only for button elements, not for input fields */
-        ::slotted(button[part~='toolbar-custom-component']:hover),
-        ::slotted(vaadin-button[part~='toolbar-custom-component']:hover) {
-          background-color: var(--lumo-contrast-5pct);
-          color: var(--lumo-contrast-80pct);
-          box-shadow: none;
-          outline: none;
-        }
-
-        /* Align the min-width with built-in toolbar buttons. */
-        ::slotted(vaadin-button[part~='toolbar-custom-component']) {
-          min-width: var(--lumo-size-m);
-        }
-
-        [part~='toolbar-button-placeholder-display'] {
-          width: auto;
-          min-width: var(--lumo-size-l);
-          padding: 0 var(--lumo-space-xs);
-          font-size: 0.875em;
-        }
-      `,
-    ];
+    return [...base, unsafeCSS(erteStyles)];
   }
 
   static get lumoInjector() {
@@ -2705,7 +2513,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
   _onNoRulersChanged(noRulers) {
     const rulerWrapper = this.shadowRoot.querySelector('[part="ruler-wrapper"]');
     if (rulerWrapper) {
-      rulerWrapper.style.display = noRulers ? 'none' : 'flex';
+      rulerWrapper.style.display = noRulers ? 'none' : '';
     }
   }
 
@@ -2722,21 +2530,18 @@ class VcfEnhancedRichTextEditor extends RteBase {
     const contentDiv = this.shadowRoot.querySelector('[part="content"]');
     if (!contentDiv) return;
 
-    // Ruler wrapper: flex row container
+    // Ruler wrapper: flex row container (styled via [part~="ruler-wrapper"] CSS)
     const wrapper = document.createElement('div');
     wrapper.setAttribute('part', 'ruler-wrapper');
-    wrapper.style.cssText = 'overflow:hidden;box-sizing:content-box;width:100%;height:15px;flex-shrink:0;display:flex;';
 
-    // Ruler corner: 14x14px box with border
+    // Ruler corner (styled via [part~="ruler-corner"] CSS)
     const corner = document.createElement('div');
     corner.setAttribute('part', 'ruler-corner');
-    corner.style.cssText = 'overflow:hidden;box-sizing:content-box;border-color:rgb(158,170,182);border-style:solid;border-width:0 1px 1px 0;width:14px;height:14px;';
     wrapper.appendChild(corner);
 
-    // Horizontal ruler: repeating tick-mark background
+    // Horizontal ruler (styled via [part~="horizontalRuler"] CSS)
     const ruler = document.createElement('div');
     ruler.setAttribute('part', 'horizontalRuler');
-    ruler.style.cssText = `position:relative;overflow:hidden;box-sizing:content-box;background:url('${RULER_HORI_BASE64}') repeat-x;flex-grow:1;height:15px;padding:0;cursor:crosshair;`;
     ruler.addEventListener('click', (event) => this._addTabStop(event));
     wrapper.appendChild(ruler);
 
@@ -2781,13 +2586,10 @@ class VcfEnhancedRichTextEditor extends RteBase {
     }
 
     icon.setAttribute('icon', iconName);
-    icon.style.width = '15px';
-    icon.style.height = '15px';
-    icon.style.position = 'absolute';
-    icon.style.top = '0px';
-    // Convert editor coordinate space to ruler coordinate space
+    // Convert editor coordinate space to ruler coordinate space.
+    // CSS translateX(-50%) handles centering (no manual -7px offset needed).
     const offset = this._getRulerEditorOffset();
-    icon.style.left = (tabStop.position + offset - 7) + 'px';
+    icon.style.left = (tabStop.position + offset) + 'px';
 
     const horizontalRuler = this.shadowRoot.querySelector('[part="horizontalRuler"]');
     if (!horizontalRuler) return;
