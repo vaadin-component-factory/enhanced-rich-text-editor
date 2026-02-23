@@ -16,6 +16,7 @@
  */
 package com.vaadin.componentfactory.toolbar;
 
+import com.vaadin.componentfactory.SlotUtil;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
@@ -48,6 +49,30 @@ public class ToolbarSwitch extends Button {
     public ToolbarSwitch(VaadinIcon icon) {
         super(icon.create());
         init();
+    }
+
+    /**
+     * Creates a new instance with the given icons. The second icon is displayed
+     * smaller and elevated as an addition to the first icon.
+     *
+     * @param icon       main icon
+     * @param suffixIcon suffix / overlay icon
+     */
+    public ToolbarSwitch(VaadinIcon icon, VaadinIcon suffixIcon) {
+        this(icon.create(), suffixIcon.create());
+    }
+
+    /**
+     * Creates a new instance with the given icons. The second icon is displayed
+     * smaller and elevated as an addition to the first icon.
+     *
+     * @param icon       main icon
+     * @param suffixIcon suffix / overlay icon
+     */
+    public ToolbarSwitch(Component icon, Component suffixIcon) {
+        super(icon);
+        init();
+        SlotUtil.addSuffixIcon(this, suffixIcon);
     }
 
     public ToolbarSwitch(String text, Component icon) {

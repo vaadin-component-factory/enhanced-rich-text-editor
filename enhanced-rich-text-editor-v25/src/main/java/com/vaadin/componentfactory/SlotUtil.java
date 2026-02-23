@@ -22,7 +22,9 @@ import java.util.stream.Stream;
 import com.vaadin.componentfactory.toolbar.ToolbarSlot;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasElement;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.dom.Element;
 
 /**
@@ -121,6 +123,25 @@ public final class SlotUtil {
             icon.getElement().setAttribute("slot", iconSlotName);
             target.getElement().appendChild(icon.getElement());
         }
+    }
+
+    /**
+     * Adds a suffix icon to a button. The suffix icon is displayed smaller and
+     * elevated as an overlay to the main button icon.
+     */
+    public static void addSuffixIcon(Button button, VaadinIcon icon) {
+        Icon i = icon.create();
+        addSuffixIcon(button, i);
+    }
+
+    /**
+     * Adds a suffix icon component to a button. The suffix icon is displayed
+     * smaller and elevated as an overlay to the main button icon.
+     */
+    public static void addSuffixIcon(Button button, Component icon) {
+        icon.getElement().setAttribute("slot", "suffix");
+        button.getElement().appendChild(icon.getElement());
+        button.addClassName("suffix-icon");
     }
 
     private static void clearSlot(EnhancedRichTextEditor target,

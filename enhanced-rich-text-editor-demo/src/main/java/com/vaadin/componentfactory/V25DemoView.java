@@ -3,6 +3,7 @@ package com.vaadin.componentfactory;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
 import com.vaadin.componentfactory.toolbar.ToolbarDialog;
 import com.vaadin.componentfactory.toolbar.ToolbarPopover;
 import com.vaadin.componentfactory.toolbar.ToolbarSelectPopup;
@@ -68,6 +69,9 @@ public class V25DemoView extends VerticalLayout {
         // --- ERTE ---
         var editor = new EnhancedRichTextEditor();
         editor.setWidthFull();
+
+        // Tables addon
+        EnhancedRichTextEditorTables.enable(editor);
 
         // Tabstops
         editor.setTabStops(List.of(

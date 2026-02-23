@@ -45,8 +45,8 @@
 | **3.6**  | **Demo Migration (Core)**          | NOT STARTED                            |
 | 3.6a     | V24 EnhancedRichTextEditorView     | NOT STARTED *(non-table samples)*      |
 | 3.6b     | V24 Test Views                     | NOT STARTED *(5 test views + prototype)*|
-| **4**    | **Tables Addon**                   | NOT STARTED                            |
-| 4.1      | Project Setup & Base               | NOT STARTED                            |
+| **4**    | **Tables Addon**                   | IN PROGRESS                            |
+| 4.1      | Project Setup & Base               | COMPLETE                               |
 | 4.2      | Blot Migration                     | NOT STARTED                            |
 | 4.3      | UI Controls & Java API             | NOT STARTED                            |
 | 4.4      | Tests                              | NOT STARTED                            |

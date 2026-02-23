@@ -130,7 +130,15 @@ public class ErteTestLayout extends AppLayout {
                 "erte-test/toolbar-dialog",
                 VaadinIcon.MODAL.create()));
 
-        nav.addItem(tier1, tier3, phase34);
+        // -- Phase 4: Tables --
+        var phase4 = new SideNavItem("Phase 4 — Tables");
+        phase4.setPrefixComponent(VaadinIcon.TABLE.create());
+
+        phase4.addItem(new SideNavItem("4.1 Tables Setup",
+                "erte-test/tables",
+                VaadinIcon.TABLE.create()));
+
+        nav.addItem(tier1, tier3, phase34, phase4);
         return nav;
     }
 
