@@ -48,7 +48,7 @@ public abstract class RteExtensionBase extends RichTextEditor {
      */
     private static final Set<String> ALLOWED_ERTE_CLASSES = Set.of(
             "ql-readonly", "ql-tab", "ql-soft-break", "ql-placeholder",
-            "ql-nbsp");
+            "ql-nbsp", "td-q", "ql-editor__table--hideBorder");
 
     private static final Set<String> ALLOWED_CSS_PROPERTIES = Set.of(
             // Text
@@ -136,14 +136,21 @@ public abstract class RteExtensionBase extends RichTextEditor {
 
         // Start from RTE 2's safelist and extend for ERTE
         Safelist safelist = Safelist.basic()
-                .addTags("img", "h1", "h2", "h3", "s")
+                .addTags("img", "h1", "h2", "h3", "s",
+                         "table", "tbody", "tr", "td", "th",
+                         "colgroup", "col")
                 .addAttributes("img", "align", "alt", "height", "src",
                         "title", "width")
                 .addAttributes(":all", "style", "class")
                 .addProtocols("img", "src", "data", "http", "https")
                 // ERTE additions
                 .addAttributes("span", "contenteditable",
-                        "aria-readonly", "data-placeholder");
+                        "aria-readonly", "data-placeholder")
+                // Table additions
+                .addAttributes("td", "table_id", "row_id", "cell_id",
+                        "merge_id", "colspan", "rowspan", "table-class")
+                .addAttributes("tr", "row_id")
+                .addAttributes("table", "table_id");
 
         String safe = Jsoup.clean(html, "", safelist, settings);
 

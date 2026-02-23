@@ -17,9 +17,12 @@
 package com.vaadin.componentfactory;
 
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Pre;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 
@@ -52,6 +55,38 @@ public class ErteTablesTestView extends VerticalLayout {
                 .set("padding", "var(--lumo-space-s)");
         editor.addValueChangeListener(e -> htmlOutput.setText(e.getValue()));
 
+        // Delta input area
+        TextArea deltaInput = new TextArea("Delta JSON");
+        deltaInput.setId("delta-input");
+        deltaInput.setWidthFull();
+        deltaInput.setMaxHeight("200px");
+        deltaInput.setPlaceholder("Paste Delta JSON here, then click 'Load Delta'");
+
+        Button loadDelta = new Button("Load Delta", e -> {
+            String json = deltaInput.getValue();
+            if (json != null && !json.isBlank()) {
+                // Accept both {"ops":[...]} and plain [...] array format
+                String trimmed = json.strip();
+                if (trimmed.startsWith("{")) {
+                    // Extract ops array from {"ops":[...]}
+                    int idx = trimmed.indexOf('[');
+                    int lastIdx = trimmed.lastIndexOf(']');
+                    if (idx >= 0 && lastIdx > idx) {
+                        trimmed = trimmed.substring(idx, lastIdx + 1);
+                    }
+                }
+                editor.asDelta().setValue(trimmed);
+            }
+        });
+        loadDelta.setId("load-delta-btn");
+
+        Button readDelta = new Button("Read Delta", e -> {
+            deltaInput.setValue(editor.asDelta().getValue());
+        });
+        readDelta.setId("read-delta-btn");
+
+        HorizontalLayout deltaButtons = new HorizontalLayout(loadDelta, readDelta);
+
         // Event log
         Div eventLog = new Div();
         eventLog.setId("event-log");
@@ -60,7 +95,7 @@ public class ErteTablesTestView extends VerticalLayout {
                 .set("max-height", "100px")
                 .set("overflow", "auto");
 
-        add(editor, htmlOutput, eventLog);
+        add(editor, deltaInput, deltaButtons, htmlOutput, eventLog);
 
         // Hidden ready indicator
         Div ready = new Div();

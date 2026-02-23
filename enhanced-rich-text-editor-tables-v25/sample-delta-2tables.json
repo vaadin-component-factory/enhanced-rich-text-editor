@@ -1,0 +1,16 @@
+[
+  {"insert":"Cell A1"},
+  {"insert":"\n","attributes":{"td":"tblA|r1|c1||||"}},
+  {"insert":"Cell B1"},
+  {"insert":"\n","attributes":{"td":"tblA|r1|c2||||"}},
+  {"insert":"Cell A2"},
+  {"insert":"\n","attributes":{"td":"tblA|r2|c3||||"}},
+  {"insert":"Cell B2"},
+  {"insert":"\n","attributes":{"td":"tblA|r2|c4||||"}},
+  {"insert":"Text between tables\n"},
+  {"insert":"Table 2 Cell 1"},
+  {"insert":"\n","attributes":{"td":"tblB|r1|c1||||"}},
+  {"insert":"Table 2 Cell 2"},
+  {"insert":"\n","attributes":{"td":"tblB|r1|c2||||"}},
+  {"insert":"\n"}
+]

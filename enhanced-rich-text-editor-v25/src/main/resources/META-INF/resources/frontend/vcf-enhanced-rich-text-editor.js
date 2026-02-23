@@ -382,7 +382,7 @@ Quill.register('formats/nbsp', NbspBlot, true);
  * ERTE CSS classes to preserve in htmlValue (not stripped by __updateHtmlValue).
  * Each phase adds its classes here.
  */
-const ERTE_PRESERVED_CLASSES = ['ql-readonly', 'ql-tab', 'ql-soft-break', 'ql-placeholder', 'ql-nbsp'];
+const ERTE_PRESERVED_CLASSES = ['ql-readonly', 'ql-tab', 'ql-soft-break', 'ql-placeholder', 'ql-nbsp', 'ql-editor__table--hideBorder'];
 
 /**
  * Default English labels for ERTE-specific buttons and dialogs.
