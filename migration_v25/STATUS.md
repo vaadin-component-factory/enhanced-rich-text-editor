@@ -51,9 +51,11 @@
 | 4.5      | Documentation                      | NOT STARTED                            |
 | 4.6      | Custom Properties for Tables       | NOT STARTED                            |
 | 4.7      | Demo Migration (Tables)            | NOT STARTED *(table samples from V24)* |
-| **5**    | **Demo Migration**                 | NOT STARTED                            |
-| 5.1      | V24 EnhancedRichTextEditorView     | NOT STARTED *(non-table samples)*      |
-| 5.2      | V24 Test Views                     | NOT STARTED *(5 test views + prototype)*|
+| **5**    | **Final QA & Restructuring**       | NOT STARTED                            |
+| 5.0      | Public API Breaking Changes Audit  | NOT STARTED                            |
+| 5.1      | V24 Sample Views Migration         | NOT STARTED *(migrate V24 demo views to V25 demo placeholder)* |
+| 5.2      | Test Views → Module IT             | NOT STARTED *(move test views + Playwright tests from demo into module test infrastructure)* |
+| 5.3      | Documentation Humanization Review  | NOT STARTED *(rewrite docs for human readers, reduce machine-generated tone)* |
 | **6**    | **Theme Support (Post-6.0.0)**     | NOT STARTED                            |
 | 6.1      | Aura Theme Support                 | NOT STARTED                            |
 | 6.2      | Material Theme Support             | NOT STARTED                            |
