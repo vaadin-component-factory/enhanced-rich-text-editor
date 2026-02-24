@@ -12,10 +12,10 @@ test.describe('ERTE Shell (Phase 2)', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    // Wait for the ERTE custom element to be defined and ready
+    // Wait for the ERTE custom element to be defined, ready, AND content loaded from Java
     await page.waitForFunction(() => {
       const el = document.querySelector('vcf-enhanced-rich-text-editor');
-      return el && (el as any)._editor;
+      return el && (el as any)._editor && (el as any)._editor.getLength() > 1;
     }, { timeout: 60000 });
   });
 

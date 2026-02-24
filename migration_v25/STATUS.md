@@ -48,7 +48,8 @@
 | **4**    | **Tables Addon**                   | IN PROGRESS                            |
 | 4.1      | Project Setup & Base               | COMPLETE                               |
 | 4.2      | Blot Migration                     | COMPLETE                               |
-| 4.3      | UI Controls & Java API             | NOT STARTED                            |
+| **4.3a** | Table Operations, CSS, Java API    | COMPLETE                               |
+| 4.3b     | Template System                    | NOT STARTED                            |
 | 4.4      | Tests                              | NOT STARTED                            |
 | 4.5      | Documentation                      | NOT STARTED                            |
 | 4.6      | Custom Properties for Tables       | NOT STARTED                            |

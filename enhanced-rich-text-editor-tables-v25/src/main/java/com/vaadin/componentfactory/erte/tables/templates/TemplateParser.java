@@ -23,7 +23,10 @@ public final class TemplateParser {
     private TemplateParser() {
     }
 
-    // TODO Phase 4.3: Implement CSS generation from templates
+    // TODO Phase 4.3b: Implement CSS generation from templates
+    // TODO Phase 4.3b SECURITY: Re-enable isValidPropertyValue() validation
+    // before appendDeclaration() goes live. Every CSS property value must be
+    // validated. See SECURITY.md.
     public static String convertToCss(ObjectNode templates) {
         // Stub — returns empty string
         return "";

@@ -134,7 +134,7 @@ public class ErteTestLayout extends AppLayout {
         var phase4 = new SideNavItem("Phase 4 — Tables");
         phase4.setPrefixComponent(VaadinIcon.TABLE.create());
 
-        phase4.addItem(new SideNavItem("4.1 Tables Setup",
+        phase4.addItem(new SideNavItem("4.3a Tables Operations",
                 "erte-test/tables",
                 VaadinIcon.TABLE.create()));
 

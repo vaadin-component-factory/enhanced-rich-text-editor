@@ -1,2 +1,60 @@
-/* ERTE Tables styles — V25 / Quill 2 */
-/* Phase 4.1 placeholder — actual styles in Phase 4.3 */
+/**
+ * ERTE Tables — V25 Base Styles
+ * Ported from V24 shadow CSS, modernized with Lumo tokens.
+ * Only structure styles, NOT toolbar CSS (V25 toolbar is server-side).
+ */
+
+/* Table structure */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  overflow: hidden;
+}
+
+/* Table cells */
+table td.td-q {
+  border: 1px solid var(--vaadin-erte-table-border-color, var(--lumo-contrast-30pct));
+  padding: var(--vaadin-erte-table-cell-padding, 2px 5px);
+  min-height: 1.625em;
+  vertical-align: top;
+  white-space: pre-wrap;
+  cursor: cell;
+}
+
+/* Hidden border variant */
+.ql-editor__table--hideBorder td {
+  border: none !important;
+}
+
+/* Hidden merged cells */
+table td[merge_id] {
+  display: none;
+}
+
+/* Cell selection highlight */
+table td.ql-cell-selected {
+  background-image: linear-gradient(
+    var(--lumo-primary-color-10pct, rgba(25, 118, 210, 0.1)),
+    var(--lumo-primary-color-10pct, rgba(25, 118, 210, 0.1))
+  );
+}
+
+/* Focused cell (keyboard navigation) */
+td.focused-cell {
+  outline: 2px solid var(--vaadin-erte-table-cell-focus-color, var(--lumo-primary-color));
+  outline-offset: -2px;
+}
+
+/* Table cell hover */
+table td:hover {
+  background-color: var(--vaadin-erte-table-cell-hover-color, transparent);
+}
+
+/* Custom property defaults */
+:host {
+  --vaadin-erte-table-border-color: var(--lumo-contrast-30pct);
+  --vaadin-erte-table-cell-padding: 2px 5px;
+  --vaadin-erte-table-cell-focus-color: var(--lumo-primary-color);
+  --vaadin-erte-table-cell-hover-color: transparent;
+}

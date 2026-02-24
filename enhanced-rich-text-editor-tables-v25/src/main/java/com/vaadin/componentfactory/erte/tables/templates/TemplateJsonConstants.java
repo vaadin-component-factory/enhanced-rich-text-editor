@@ -51,11 +51,13 @@ public final class TemplateJsonConstants {
     /** Hexcode pattern for colors */
     public static final Pattern PATTERN_P_COLOR_1 = Pattern.compile("#[a-f\\d]{3}(?:[a-f\\d]?|(?:[a-f\\d]{3}(?:[a-f\\d]{2})?)?)\\b");
     /** Text pattern for colors (names, like "red", "green", "salmon", etc. does NOT test for valid names) */
-    public static final Pattern PATTERN_P_COLOR_2 = Pattern.compile("[a-z\\d]");
+    public static final Pattern PATTERN_P_COLOR_2 = Pattern.compile("[a-zA-Z]+");
     /** hsla pattern for colors */
-    public static final Pattern PATTERN_P_COLOR_3 = Pattern.compile("hsla?\\((?:(-?\\d+(?:deg|g?rad|turn)?),\\s*((?:\\d{1,2}|100)%),\\s*((?:\\d{1,2}|100)%)(?:,\\s*((?:\\d{1,2}|100)%|0(?:\\.\\d+)?|1))?|(-?\\d+(?:deg|g?rad|turn)?)\\s+((?:\\d{1,2}|100)%)\\s+((?:\\d{1,2}|100)%)(?:\\s+((?:\\d{1,2}|100)%|0(?:\\.\\d+)?|1))?)\\)\n"); // names
+    public static final Pattern PATTERN_P_COLOR_3 = Pattern.compile("hsla?\\((?:(-?\\d+(?:deg|g?rad|turn)?),\\s*((?:\\d{1,2}|100)%),\\s*((?:\\d{1,2}|100)%)(?:,\\s*((?:\\d{1,2}|100)%|0(?:\\.\\d+)?|1))?|(-?\\d+(?:deg|g?rad|turn)?)\\s+((?:\\d{1,2}|100)%)\\s+((?:\\d{1,2}|100)%)(?:\\s+((?:\\d{1,2}|100)%|0(?:\\.\\d+)?|1))?)\\)"); // names
     /** rgb(a)*/
-    public static final Pattern PATTERN_P_COLOR_4 = Pattern.compile("rgba?\\((?:(25[0-5]|2[0-4]\\d|1?\\d{1,2}|(?:\\d{1,2}|100)%),\\s*(25[0-5]|2[0-4]\\d|1?\\d{1,2}|(?:\\d{1,2}|100)%),\\s*(25[0-5]|2[0-4]\\d|1?\\d{1,2}|(?:\\d{1,2}|100)%)(?:,\\s*((?:\\d{1,2}|100)%|0(?:\\.\\d+)?|1))?|(25[0-5]|2[0-4]\\d|1?\\d{1,2}|(?:\\d{1,2}|100)%)\\s+(25[0-5]|2[0-4]\\d|1?\\d{1,2}|(?:\\d{1,2}|100)%)\\s+(25[0-5]|2[0-4]\\d|1?\\d{1,2}|(?:\\d{1,2}|100)%)(?:\\s+((?:\\d{1,2}|100)%|0(?:\\.\\d+)?|1))?)\\)\n"); // names
+    public static final Pattern PATTERN_P_COLOR_4 = Pattern.compile("rgba?\\((?:(25[0-5]|2[0-4]\\d|1?\\d{1,2}|(?:\\d{1,2}|100)%),\\s*(25[0-5]|2[0-4]\\d|1?\\d{1,2}|(?:\\d{1,2}|100)%),\\s*(25[0-5]|2[0-4]\\d|1?\\d{1,2}|(?:\\d{1,2}|100)%)(?:,\\s*((?:\\d{1,2}|100)%|0(?:\\.\\d+)?|1))?|(25[0-5]|2[0-4]\\d|1?\\d{1,2}|(?:\\d{1,2}|100)%)\\s+(25[0-5]|2[0-4]\\d|1?\\d{1,2}|(?:\\d{1,2}|100)%)\\s+(25[0-5]|2[0-4]\\d|1?\\d{1,2}|(?:\\d{1,2}|100)%)(?:\\s+((?:\\d{1,2}|100)%|0(?:\\.\\d+)?|1))?)\\)"); // names
+    /** CSS custom properties (var(--name)) */
+    public static final Pattern PATTERN_P_COLOR_5 = Pattern.compile("var\\(--[a-zA-Z][a-zA-Z0-9-]*\\)");
 
     public static final Map<String, Set<String>> ALLOWED_PROPERTIES;
 
@@ -66,6 +68,21 @@ public final class TemplateJsonConstants {
         map.put(COLUMNS, Set.of(P_BACKGROUND, P_COLOR, P_WIDTH, P_BORDER));
         map.put(CELLS, Set.of(P_BACKGROUND, P_COLOR, P_BORDER));
         ALLOWED_PROPERTIES = Collections.unmodifiableMap(map);
+    }
+
+    /**
+     * Validates a CSS color value against known patterns.
+     * @param color color string to validate, null is allowed (disables feature)
+     * @return true if valid or null, false otherwise
+     */
+    public static boolean isValidColor(String color) {
+        if (color == null) return true; // null = disable feature
+        color = color.trim();
+        return PATTERN_P_COLOR_1.asMatchPredicate().test(color) ||
+               PATTERN_P_COLOR_2.asMatchPredicate().test(color) ||
+               PATTERN_P_COLOR_3.asMatchPredicate().test(color) ||
+               PATTERN_P_COLOR_4.asMatchPredicate().test(color) ||
+               PATTERN_P_COLOR_5.asMatchPredicate().test(color);
     }
 
 }

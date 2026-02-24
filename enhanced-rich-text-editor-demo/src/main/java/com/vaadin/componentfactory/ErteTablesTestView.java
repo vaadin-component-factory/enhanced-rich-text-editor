@@ -40,8 +40,29 @@ public class ErteTablesTestView extends VerticalLayout {
         editor.setValueChangeMode(ValueChangeMode.EAGER);
         editor.setMaxHeight("400px");
 
+        // Event log
+        Div eventLog = new Div();
+        eventLog.setId("event-log");
+        eventLog.getStyle()
+                .set("font-size", "var(--lumo-font-size-xs)")
+                .set("max-height", "100px")
+                .set("overflow", "auto");
+
         // Enable tables addon
         EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(editor);
+
+        // Event listeners
+        tables.addTableSelectedListener(e -> {
+            String msg = String.format("TableSelected: selected=%s, cellSelection=%s, template=%s",
+                e.isSelected(), e.isCellSelectionActive(), e.getTemplate());
+            eventLog.add(new Div(new com.vaadin.flow.component.html.Span(msg)));
+        });
+
+        tables.addTableCellChangedListener(e -> {
+            String msg = String.format("CellChanged: row=%s, col=%s, oldRow=%s, oldCol=%s",
+                e.getRowIndex(), e.getColIndex(), e.getOldRowIndex(), e.getOldColIndex());
+            eventLog.add(new Div(new com.vaadin.flow.component.html.Span(msg)));
+        });
 
         // HTML output
         Pre htmlOutput = new Pre();
@@ -86,14 +107,6 @@ public class ErteTablesTestView extends VerticalLayout {
         readDelta.setId("read-delta-btn");
 
         HorizontalLayout deltaButtons = new HorizontalLayout(loadDelta, readDelta);
-
-        // Event log
-        Div eventLog = new Div();
-        eventLog.setId("event-log");
-        eventLog.getStyle()
-                .set("font-size", "var(--lumo-font-size-xs)")
-                .set("max-height", "100px")
-                .set("overflow", "auto");
 
         add(editor, deltaInput, deltaButtons, htmlOutput, eventLog);
 
