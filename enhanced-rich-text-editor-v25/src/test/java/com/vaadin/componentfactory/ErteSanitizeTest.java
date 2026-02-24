@@ -14,7 +14,7 @@
  * If not, see <http://vaadin.com/license/cval-3>.
  * #L%
  */
-package com.vaadin.flow.component.richtexteditor;
+package com.vaadin.componentfactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,13 +23,13 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for {@link RteExtensionBase#erteSanitize(String)}.
+ * Unit tests for {@link EnhancedRichTextEditor#erteSanitize(String)}.
  * Same package gives direct access to the protected static method.
  */
-class RteExtensionBaseSanitizeTest {
+class ErteSanitizeTest {
 
     private static String sanitize(String html) {
-        return RteExtensionBase.erteSanitize(html);
+        return EnhancedRichTextEditor.erteSanitize(html);
     }
 
     // ================================================================
