@@ -106,6 +106,31 @@ public abstract class RteExtensionBase extends RichTextEditor {
     private boolean ertePendingPresentationUpdate;
 
     /**
+     * Intercepts the client→server HTML value sync to use ERTE's extended
+     * sanitizer instead of the parent's {@code sanitize()}.
+     * <p>
+     * {@code AbstractSinglePropertyField} registers a property change listener
+     * for {@code htmlValue} that converts via
+     * {@code RichTextEditor::presentationToModel} which calls the parent's
+     * package-private {@code sanitize()}. That safelist does NOT include
+     * {@code <table>}, {@code <tr>}, {@code <td>} — so all table elements
+     * are stripped, turning tables into plain paragraphs.
+     * <p>
+     * This override re-reads the raw {@code htmlValue} from the element
+     * property and applies {@code erteSanitize()} instead, preserving table
+     * structure and ERTE-specific attributes.
+     */
+    @Override
+    protected void setModelValue(String newModelValue, boolean fromClient) {
+        if (fromClient) {
+            String rawHtml = getElement().getProperty("htmlValue", "");
+            super.setModelValue(erteSanitize(rawHtml), fromClient);
+        } else {
+            super.setModelValue(newModelValue, fromClient);
+        }
+    }
+
+    /**
      * Visibility-widening override: package-private → protected.
      * {@code RichTextEditor.runBeforeClientResponse()} is package-private,
      * invisible to {@code EnhancedRichTextEditor} in

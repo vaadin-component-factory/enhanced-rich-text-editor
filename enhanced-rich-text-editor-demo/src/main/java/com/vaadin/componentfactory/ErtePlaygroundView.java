@@ -16,10 +16,14 @@
  */
 package com.vaadin.componentfactory;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 import com.vaadin.componentfactory.toolbar.ToolbarDialog;
 import com.vaadin.componentfactory.toolbar.ToolbarPopover;
 import com.vaadin.componentfactory.toolbar.ToolbarSelectPopup;
@@ -64,7 +68,18 @@ public class ErtePlaygroundView extends HorizontalLayout {
         editor.setValueChangeMode(ValueChangeMode.TIMEOUT);
 
         // Tables addon
-        EnhancedRichTextEditorTables.enable(editor);
+        var tables = EnhancedRichTextEditorTables.enable(editor);
+
+        // Load sample templates for table styling
+        try (InputStream is = getClass().getClassLoader()
+                .getResourceAsStream("table-sample-templates.json")) {
+            if (is != null) {
+                tables.setTemplates(
+                        (ObjectNode) JsonMapper.builder().build().readTree(is));
+            }
+        } catch (IOException ignored) {
+            // Template loading is non-critical
+        }
 
         // Tabstops
         editor.setTabStops(List.of(
