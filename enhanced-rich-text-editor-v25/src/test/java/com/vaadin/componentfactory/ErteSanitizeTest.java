@@ -18,6 +18,8 @@ package com.vaadin.componentfactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Set;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -409,6 +411,145 @@ class ErteSanitizeTest {
             String result = sanitize(html);
             assertTrue(result.contains("float: left"),
                     "Quill image float alignment should survive: " + result);
+        }
+    }
+
+    // ================================================================
+    // Dynamic Allowed Classes
+    // ================================================================
+
+    @Nested
+    @DisplayName("Dynamic Allowed Classes")
+    class DynamicAllowedClasses {
+
+        @Test
+        void extraClassPreserved() {
+            String html = "<table class=\"template1\"><tr><td>text</td></tr></table>";
+            String result = EnhancedRichTextEditor.erteSanitize(html,
+                    Set.of("template1"));
+            assertTrue(result.contains("template1"),
+                    "Dynamic class preserved: " + result);
+        }
+
+        @Test
+        void extraClassStrippedWithoutRegistration() {
+            String html = "<table class=\"template1\"><tr><td>text</td></tr></table>";
+            String result = sanitize(html);
+            assertFalse(result.contains("class=\"template1\""),
+                    "Unregistered class stripped: " + result);
+        }
+
+        @Test
+        void multipleExtraClasses() {
+            String html = "<table class=\"template1 template2\"><tr><td>text</td></tr></table>";
+            String result = EnhancedRichTextEditor.erteSanitize(html,
+                    Set.of("template1", "template2"));
+            assertTrue(result.contains("template1"),
+                    "template1 preserved: " + result);
+            assertTrue(result.contains("template2"),
+                    "template2 preserved: " + result);
+        }
+
+        @Test
+        void mixedStaticAndDynamic() {
+            String html = "<span class=\"ql-readonly template1\">text</span>";
+            String result = EnhancedRichTextEditor.erteSanitize(html,
+                    Set.of("template1"));
+            assertTrue(result.contains("ql-readonly"),
+                    "Static class preserved: " + result);
+            assertTrue(result.contains("template1"),
+                    "Dynamic class preserved: " + result);
+        }
+
+        @Test
+        void emptyExtraSetBehavesLikeSingleArg() {
+            String html = "<span class=\"ql-readonly evil-class\">text</span>";
+            String noExtras = sanitize(html);
+            String emptySet = EnhancedRichTextEditor.erteSanitize(html,
+                    Set.of());
+            assertEquals(noExtras, emptySet);
+        }
+
+        @Test
+        void caseSensitive() {
+            String html = "<table class=\"Template1\"><tr><td>text</td></tr></table>";
+            String result = EnhancedRichTextEditor.erteSanitize(html,
+                    Set.of("template1"));
+            assertFalse(result.contains("Template1"),
+                    "Case-sensitive: 'Template1' not matched by 'template1': "
+                            + result);
+        }
+
+        @Test
+        void classOnTdElement() {
+            String html = "<table><tr><td class=\"template1\">text</td></tr></table>";
+            String result = EnhancedRichTextEditor.erteSanitize(html,
+                    Set.of("template1"));
+            assertTrue(result.contains("template1"),
+                    "Dynamic class on td preserved: " + result);
+        }
+    }
+
+    // ================================================================
+    // Class Name Validation
+    // ================================================================
+
+    @Nested
+    @DisplayName("Class Name Validation")
+    class ClassNameValidation {
+
+        @Test
+        void rejectsQlPrefix() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> EnhancedRichTextEditor.validateClassName(
+                            "ql-custom"));
+        }
+
+        @Test
+        void rejectsNull() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> EnhancedRichTextEditor.validateClassName(null));
+        }
+
+        @Test
+        void rejectsEmpty() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> EnhancedRichTextEditor.validateClassName(""));
+        }
+
+        @Test
+        void rejectsSpaces() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> EnhancedRichTextEditor.validateClassName(
+                            "has spaces"));
+        }
+
+        @Test
+        void rejectsStartingWithDigit() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> EnhancedRichTextEditor.validateClassName(
+                            "1template"));
+        }
+
+        @Test
+        void rejectsUnderscore() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> EnhancedRichTextEditor.validateClassName(
+                            "my_template"));
+        }
+
+        @Test
+        void acceptsValidNames() {
+            assertDoesNotThrow(
+                    () -> EnhancedRichTextEditor.validateClassName(
+                            "template1"));
+            assertDoesNotThrow(
+                    () -> EnhancedRichTextEditor.validateClassName(
+                            "my-template"));
+            assertDoesNotThrow(
+                    () -> EnhancedRichTextEditor.validateClassName("T"));
+            assertDoesNotThrow(
+                    () -> EnhancedRichTextEditor.validateClassName("A-1"));
         }
     }
 }

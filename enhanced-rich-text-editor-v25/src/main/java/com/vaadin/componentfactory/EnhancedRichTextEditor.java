@@ -155,20 +155,38 @@ public class EnhancedRichTextEditor extends RichTextEditor {
     private static final Pattern DATA_SRC_PATTERN = Pattern.compile(
             "src=\"data:\\s*([^;\"]+)[^\"]*\"",
             Pattern.CASE_INSENSITIVE);
+    private static final Pattern VALID_CLASS_NAME = Pattern
+            .compile("[A-Za-z][A-Za-z0-9\\-]*");
     private List<Placeholder> placeholders;
 
     private boolean ertePendingPresentationUpdate;
+    private final Set<String> dynamicAllowedClasses = new LinkedHashSet<>();
 
     /**
-     * Sanitizes HTML with ERTE's extended whitelist. Extends RTE 2's safelist
-     * with {@code span[class]}, {@code span[contenteditable]} and then
-     * post-filters to only allow known ERTE classes and
-     * {@code contenteditable="false"}.
+     * Sanitizes HTML with ERTE's extended whitelist using only static allowed
+     * classes. Equivalent to {@code erteSanitize(html, Set.of())}.
      *
      * @param html the raw HTML
      * @return sanitized HTML safe for ERTE rendering
      */
     protected static String erteSanitize(String html) {
+        return erteSanitize(html, Set.of());
+    }
+
+    /**
+     * Sanitizes HTML with ERTE's extended whitelist plus additional dynamic
+     * classes.
+     * <p>
+     * The {@code extraClasses} set is trusted (no validation) — callers are
+     * responsible for ensuring class names are safe. The public API
+     * {@link #addAllowedHtmlClasses(String...)} performs validation.
+     *
+     * @param html         the raw HTML
+     * @param extraClasses additional CSS classes to preserve (may be empty)
+     * @return sanitized HTML safe for ERTE rendering
+     */
+    protected static String erteSanitize(String html,
+            Set<String> extraClasses) {
         if (html == null || html.isEmpty()) {
             return html;
         }
@@ -196,7 +214,7 @@ public class EnhancedRichTextEditor extends RichTextEditor {
         String safe = Jsoup.clean(html, "", safelist, settings);
 
         // Post-filter: only allow known ERTE classes, strip unknown ones
-        safe = filterErteClasses(safe);
+        safe = filterErteClasses(safe, extraClasses);
 
         // Post-filter: restrict style attributes to safe CSS properties
         safe = filterStyleAttributes(safe);
@@ -213,9 +231,11 @@ public class EnhancedRichTextEditor extends RichTextEditor {
 
     /**
      * Filters class attributes to only keep standard Quill classes
-     * (ql-align-*, ql-indent-*) and known ERTE classes.
+     * (ql-align-*, ql-indent-*), known ERTE classes, and dynamic extra
+     * classes registered via {@link #addAllowedHtmlClasses(String...)}.
      */
-    private static String filterErteClasses(String html) {
+    private static String filterErteClasses(String html,
+            Set<String> extraClasses) {
         Matcher m = CLASS_ATTR_PATTERN.matcher(html);
         StringBuilder sb = new StringBuilder();
         while (m.find()) {
@@ -232,6 +252,12 @@ public class EnhancedRichTextEditor extends RichTextEditor {
                 }
                 // Keep known ERTE classes
                 else if (ALLOWED_ERTE_CLASSES.contains(cls)) {
+                    if (filtered.length() > 0) filtered.append(' ');
+                    filtered.append(cls);
+                }
+                // Keep dynamic extra classes (e.g., template IDs)
+                else if (!extraClasses.isEmpty()
+                        && extraClasses.contains(cls)) {
                     if (filtered.length() > 0) filtered.append(' ');
                     filtered.append(cls);
                 }
@@ -322,6 +348,74 @@ public class EnhancedRichTextEditor extends RichTextEditor {
         return sb.toString();
     }
 
+    // ---- Dynamic Allowed HTML Classes API ----
+
+    /**
+     * Registers additional CSS class names to be preserved by the sanitizer.
+     * Used by addons (e.g., Tables) to whitelist template classes dynamically.
+     * <p>
+     * Class names must match {@code [A-Za-z][A-Za-z0-9-]*} (same pattern as
+     * template IDs) and must not start with {@code "ql-"} (reserved for Quill
+     * internals). Note: underscores are not permitted — this matches the
+     * template ID validation in the Tables addon.
+     * <p>
+     * Must be called from the Vaadin session (UI) thread.
+     *
+     * @param classNames one or more CSS class names
+     * @throws IllegalArgumentException if a class name is invalid
+     * @since 6.0.0
+     */
+    public void addAllowedHtmlClasses(String... classNames) {
+        for (String cls : classNames) {
+            validateClassName(cls);
+            dynamicAllowedClasses.add(cls);
+        }
+    }
+
+    /**
+     * Removes previously registered dynamic CSS class names.
+     *
+     * @param classNames one or more CSS class names to remove
+     * @since 6.0.0
+     */
+    public void removeAllowedHtmlClasses(String... classNames) {
+        for (String cls : classNames) {
+            dynamicAllowedClasses.remove(cls);
+        }
+    }
+
+    /**
+     * Returns the currently registered dynamic allowed classes (unmodifiable
+     * view).
+     *
+     * @return unmodifiable set of registered class names
+     * @since 6.0.0
+     */
+    public Set<String> getAllowedHtmlClasses() {
+        return Collections.unmodifiableSet(dynamicAllowedClasses);
+    }
+
+    /**
+     * Validates a CSS class name for use with {@link #addAllowedHtmlClasses}.
+     * Package-private for test access.
+     */
+    static void validateClassName(String cls) {
+        if (cls == null || cls.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Class name must not be null or empty");
+        }
+        if (cls.startsWith("ql-")) {
+            throw new IllegalArgumentException(
+                    "Class name must not start with 'ql-' (reserved for "
+                            + "Quill): " + cls);
+        }
+        if (!VALID_CLASS_NAME.matcher(cls).matches()) {
+            throw new IllegalArgumentException(
+                    "Invalid class name (must match "
+                            + "[A-Za-z][A-Za-z0-9-]*): " + cls);
+        }
+    }
+
     /**
      * Override server→client HTML path to use ERTE sanitizer instead of
      * parent's package-private {@code sanitize()}.
@@ -338,7 +432,8 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      */
     @Override
     protected void setPresentationValue(String newPresentationValue) {
-        String sanitized = erteSanitize(newPresentationValue);
+        String sanitized = erteSanitize(newPresentationValue,
+                dynamicAllowedClasses);
         getElement().setProperty("htmlValue", sanitized);
         if (!ertePendingPresentationUpdate) {
             ertePendingPresentationUpdate = true;
@@ -392,7 +487,8 @@ public class EnhancedRichTextEditor extends RichTextEditor {
         // tables before passing the value here.
         String rawHtml = getElement().getProperty("htmlValue", "");
         if (rawHtml != null && !rawHtml.isEmpty()) {
-            super.setModelValue(erteSanitize(rawHtml), fromClient);
+            super.setModelValue(erteSanitize(rawHtml,
+                    dynamicAllowedClasses), fromClient);
         } else {
             super.setModelValue(newModelValue, fromClient);
         }

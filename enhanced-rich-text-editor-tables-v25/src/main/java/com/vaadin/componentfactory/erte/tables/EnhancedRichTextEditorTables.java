@@ -85,6 +85,7 @@ public class EnhancedRichTextEditorTables {
     private String cellHoverColor;
     private ToolbarSelectPopup modifyTableSelectPopup;
     private ToolbarPopover addTablePopup;
+    private Set<String> registeredTemplateClasses = new HashSet<>();
 
     /**
      * Extends the given ERTE instance with table functionality. Uses the given i18n instance to initialize
@@ -326,8 +327,33 @@ public class EnhancedRichTextEditorTables {
      */
     private void onTemplateModificationByTemplateDialog() {
         ObjectNode templates = getTemplates();
+        updateAllowedTemplateClasses(templates);
         String string = TemplateParser.convertToCss(templates);
         refreshClientSideStyles(string);
+    }
+
+    /**
+     * Syncs template class names with the editor's sanitizer allowed-classes
+     * set. Removes previously registered classes, then registers current
+     * template IDs.
+     */
+    private void updateAllowedTemplateClasses(ObjectNode templates) {
+        // Remove previously registered
+        if (!registeredTemplateClasses.isEmpty()) {
+            rte.removeAllowedHtmlClasses(
+                    registeredTemplateClasses.toArray(String[]::new));
+            registeredTemplateClasses.clear();
+        }
+        // Register current template IDs
+        if (templates != null) {
+            for (String name : templates.propertyNames()) {
+                registeredTemplateClasses.add(name);
+            }
+            if (!registeredTemplateClasses.isEmpty()) {
+                rte.addAllowedHtmlClasses(
+                        registeredTemplateClasses.toArray(String[]::new));
+            }
+        }
     }
 
     /**
@@ -339,6 +365,7 @@ public class EnhancedRichTextEditorTables {
         if (templatesDialog != null) {
             templatesDialog.setTemplates(templates);
         }
+        updateAllowedTemplateClasses(templates);
         String cssString = TemplateParser.convertToCss(templates);
         refreshClientSideStyles(cssString);
         fireEvent(new TemplatesInitializedEvent(this, false, templates, cssString));
