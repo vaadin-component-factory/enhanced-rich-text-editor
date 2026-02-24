@@ -287,6 +287,13 @@ public abstract class RteExtensionBase extends RichTextEditor {
      * <p>
      * Replicates the parent's debounce pattern (own flag since parent's
      * {@code pendingPresentationUpdate} is private).
+     * <p>
+     * When the delta value property is set (via {@code asDelta().setValue()}),
+     * the client-side {@code _valueChanged} observer already applies the content
+     * directly via {@code setContents()}. In that case, we skip the
+     * {@code dangerouslySetHtmlValue} call to avoid an HTML roundtrip that would
+     * lose table structure data (template classes, cell IDs via clipboard
+     * re-conversion).
      */
     @Override
     protected void setPresentationValue(String newPresentationValue) {
@@ -295,6 +302,17 @@ public abstract class RteExtensionBase extends RichTextEditor {
         if (!ertePendingPresentationUpdate) {
             ertePendingPresentationUpdate = true;
             runBeforeClientResponse(ui -> {
+                // If a non-empty delta value is set, the client-side _valueChanged
+                // observer will have already applied the content via setContents().
+                // Skip dangerouslySetHtmlValue to avoid overwriting with the HTML
+                // roundtrip, which loses table template classes and can corrupt
+                // table structure through clipboard re-conversion.
+                String deltaValue = getElement().getProperty("value");
+                if (deltaValue != null && !deltaValue.isEmpty()
+                        && !"[{\"insert\":\"\\n\"}]".equals(deltaValue)) {
+                    ertePendingPresentationUpdate = false;
+                    return;
+                }
                 getElement().callJsFunction("dangerouslySetHtmlValue",
                         getElement().getProperty("htmlValue"));
                 ertePendingPresentationUpdate = false;

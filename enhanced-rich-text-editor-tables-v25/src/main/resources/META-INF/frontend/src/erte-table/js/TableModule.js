@@ -25,7 +25,12 @@ export function initTableModule(quill, Quill) {
   const Delta = Quill.import('delta');
   const clipboard = quill.getModule('clipboard');
 
-  // TABLE matcher — records metadata for optimize(), passes delta through
+  // TABLE matcher — records metadata for optimize(), strips 'table' block format.
+  // When Quill's clipboard encounters <table>, it adds a 'table: N' (numeric counter)
+  // block format. Table.create(N) would take the auto-wrap path with random IDs,
+  // conflicting with the correct IDs from the 'td' format on each cell.
+  // The 'td' format already contains all structure info; its optimize() reconstructs
+  // the table > tr > td hierarchy. So we strip the 'table' format here.
   clipboard.addMatcher('TABLE', function(node, delta) {
     const isPastedData = node.closest('.ql-editor') === null;
     const tableId = node.getAttribute('table_id');
@@ -36,6 +41,12 @@ export function initTableModule(quill, Quill) {
         cell_counter: node.querySelectorAll('td').length
       };
     }
+    delta.ops.forEach(op => {
+      if (op.attributes) {
+        delete op.attributes.table;
+        delete op.attributes.tr;
+      }
+    });
     return delta;
   });
 

@@ -25,6 +25,12 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Test view for the Tables addon (Phase 4).
@@ -50,6 +56,18 @@ public class ErteTablesTestView extends VerticalLayout {
 
         // Enable tables addon
         EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(editor);
+
+        // Load sample templates from classpath
+        ObjectNode sampleTemplates = loadJsonResource("table-sample-templates.json");
+        if (sampleTemplates != null) {
+            tables.setTemplates(sampleTemplates);
+        }
+
+        // Load sample delta from classpath
+        String sampleDelta = loadTextResource("table-sample-delta.json");
+        if (sampleDelta != null) {
+            editor.asDelta().setValue(sampleDelta);
+        }
 
         // Event listeners
         tables.addTableSelectedListener(e -> {
@@ -106,14 +124,58 @@ public class ErteTablesTestView extends VerticalLayout {
         });
         readDelta.setId("read-delta-btn");
 
-        HorizontalLayout deltaButtons = new HorizontalLayout(loadDelta, readDelta);
+        // Template JSON display
+        TextArea templateOutput = new TextArea("Template JSON");
+        templateOutput.setId("template-output");
+        templateOutput.setWidthFull();
+        templateOutput.setMaxHeight("200px");
 
-        add(editor, deltaInput, deltaButtons, htmlOutput, eventLog);
+        Button readTemplates = new Button("Read Templates", e -> {
+            ObjectNode t = tables.getTemplates();
+            templateOutput.setValue(t != null ? t.toString() : "null");
+        });
+        readTemplates.setId("read-templates-btn");
+
+        Button loadTemplates = new Button("Load Templates", e -> {
+            String json = templateOutput.getValue();
+            if (json != null && !json.isBlank()) {
+                try {
+                    ObjectNode t = (ObjectNode) JsonMapper.builder().build().readTree(json);
+                    tables.setTemplates(t);
+                    eventLog.add(new Div(new com.vaadin.flow.component.html.Span("Templates loaded successfully")));
+                } catch (Exception ex) {
+                    eventLog.add(new Div(new com.vaadin.flow.component.html.Span("Error loading templates: " + ex.getMessage())));
+                }
+            }
+        });
+        loadTemplates.setId("load-templates-btn");
+
+        HorizontalLayout deltaButtons = new HorizontalLayout(loadDelta, readDelta, readTemplates, loadTemplates);
+
+        add(editor, deltaInput, deltaButtons, templateOutput, htmlOutput, eventLog);
 
         // Hidden ready indicator
         Div ready = new Div();
         ready.setId("test-ready");
         ready.getStyle().set("display", "none");
         add(ready);
+    }
+
+    private ObjectNode loadJsonResource(String resourceName) {
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(resourceName)) {
+            if (is == null) return null;
+            return (ObjectNode) JsonMapper.builder().build().readTree(is);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private String loadTextResource(String resourceName) {
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(resourceName)) {
+            if (is == null) return null;
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            return null;
+        }
     }
 }

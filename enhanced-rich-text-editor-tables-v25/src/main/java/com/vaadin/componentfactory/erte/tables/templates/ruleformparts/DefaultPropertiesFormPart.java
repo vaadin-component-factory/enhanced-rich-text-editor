@@ -17,22 +17,72 @@
 package com.vaadin.componentfactory.erte.tables.templates.ruleformparts;
 
 import com.vaadin.componentfactory.erte.tables.templates.TemplateDialog;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.Binder;
 import tools.jackson.databind.node.ObjectNode;
 
 public abstract class DefaultPropertiesFormPart extends RuleFormPart {
+
+    private TextField textColorField;
+    private TextField backgroundColorField;
+    private TextField borderField;
 
     public DefaultPropertiesFormPart(TemplateDialog templateDialog) {
         super(templateDialog);
     }
 
     @Override
-    protected void readTemplate(ObjectNode template, Object binder) {
-        // TODO Phase 4.3
+    void initForm(Binder<ObjectNode> binder) {
+        textColorField = createTextColorField();
+        backgroundColorField = createBackgroundColorField();
+        borderField = createBorderField();
+        HorizontalLayout row = createRow(
+                textColorField,
+                backgroundColorField,
+                borderField
+        );
+        if (hasWidthInputs()) {
+            row.add(createWidthField());
+        }
+        if (hasHeightInputs()) {
+            row.add(createHeightField());
+        }
+
+        add(row);
+    }
+
+    /**
+     * Returns the input field for the text color.
+     * @return text color field
+     */
+    public TextField getTextColorField() {
+        return textColorField;
+    }
+
+    /**
+     * Returns the input field for the background color.
+     * @return background color field
+     */
+    public TextField getBackgroundColorField() {
+        return backgroundColorField;
+    }
+
+    /**
+     * Returns the input field for the border.
+     * @return border field
+     */
+    public TextField getBorderField() {
+        return borderField;
     }
 
     @Override
-    public boolean hasWidthInputs() { return false; }
+    public boolean hasWidthInputs() {
+        return false;
+    }
 
     @Override
-    public boolean hasHeightInputs() { return false; }
+    public boolean hasHeightInputs() {
+        return false;
+    }
 }
