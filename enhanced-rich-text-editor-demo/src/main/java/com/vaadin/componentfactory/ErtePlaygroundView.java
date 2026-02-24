@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
-import tools.jackson.databind.json.JsonMapper;
+import com.vaadin.componentfactory.erte.tables.templates.TemplateParser;
 import tools.jackson.databind.node.ObjectNode;
 import com.vaadin.componentfactory.toolbar.ToolbarDialog;
 import com.vaadin.componentfactory.toolbar.ToolbarPopover;
@@ -74,8 +74,8 @@ public class ErtePlaygroundView extends HorizontalLayout {
         try (InputStream is = getClass().getClassLoader()
                 .getResourceAsStream("table-sample-templates.json")) {
             if (is != null) {
-                tables.setTemplates(
-                        (ObjectNode) JsonMapper.builder().build().readTree(is));
+                String json = new String(is.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                tables.setTemplates(TemplateParser.parseJson(json));
             }
         } catch (IOException ignored) {
             // Template loading is non-critical

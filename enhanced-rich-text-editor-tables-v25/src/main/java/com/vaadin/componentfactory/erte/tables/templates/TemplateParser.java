@@ -18,6 +18,7 @@ package com.vaadin.componentfactory.erte.tables.templates;
 
 import org.slf4j.LoggerFactory;
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.JsonNodeType;
@@ -36,6 +37,19 @@ public final class TemplateParser {
     private String currentTemplateName;
 
     /**
+     * Parses the given template JSON string and creates a css string out of it.
+     * <p/>
+     * Convenience overload that parses the JSON string first.
+     * @param templateJson JSON string representing the templates
+     * @return css string
+     */
+    public static String convertToCss(String templateJson) {
+        if (templateJson == null || templateJson.trim().isEmpty()) return "";
+        ObjectNode parsed = (ObjectNode) JsonMapper.builder().build().readTree(templateJson);
+        return convertToCss(parsed);
+    }
+
+    /**
      * Parses the given template and creates a css string out of it.
      * <p/>
      * The given object will NOT be modified in any way beforehand. If you want
@@ -46,6 +60,32 @@ public final class TemplateParser {
      */
     public static String convertToCss(ObjectNode templates) {
         return templates == null ? "" : new TemplateParser(templates).toCss();
+    }
+
+    /**
+     * Parses the given JSON string into an ObjectNode.
+     * @param templateJson JSON string
+     * @return parsed ObjectNode, or empty ObjectNode if input is null/blank
+     */
+    public static ObjectNode parseJson(String templateJson) {
+        if (templateJson == null || templateJson.trim().isEmpty()) {
+            return JsonNodeFactory.instance.objectNode();
+        }
+        return (ObjectNode) JsonMapper.builder().build().readTree(templateJson);
+    }
+
+    /**
+     * Parses the given JSON string into an ObjectNode, optionally removing empty children.
+     * @param templateJson JSON string
+     * @param removeEmptyChildren if true, empty children will be removed from the result
+     * @return parsed ObjectNode, or empty ObjectNode if input is null/blank
+     */
+    public static ObjectNode parseJson(String templateJson, boolean removeEmptyChildren) {
+        ObjectNode object = parseJson(templateJson);
+        if (removeEmptyChildren) {
+            removeEmptyChildren(object);
+        }
+        return object;
     }
 
     /**

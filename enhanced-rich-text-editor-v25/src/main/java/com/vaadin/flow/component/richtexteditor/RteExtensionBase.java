@@ -122,8 +122,20 @@ public abstract class RteExtensionBase extends RichTextEditor {
      */
     @Override
     protected void setModelValue(String newModelValue, boolean fromClient) {
-        if (fromClient) {
-            String rawHtml = getElement().getProperty("htmlValue", "");
+        // Always re-sanitize using erteSanitize instead of parent's sanitize().
+        // The parent's presentationToModel converter (RichTextEditor::sanitize)
+        // strips <table>, <tr>, <td> elements. We intercept here and re-read
+        // the raw htmlValue from the element property, then apply erteSanitize()
+        // which preserves table structure and ERTE-specific attributes.
+        //
+        // This override fires in two scenarios:
+        // 1. fromClient=true: html-value-changed event from the client
+        // 2. fromClient=false: property change triggered by setPresentationValue
+        //    setting the htmlValue element property (server-side)
+        // Both need re-sanitization because the parent's converter always strips
+        // tables before passing the value here.
+        String rawHtml = getElement().getProperty("htmlValue", "");
+        if (rawHtml != null && !rawHtml.isEmpty()) {
             super.setModelValue(erteSanitize(rawHtml), fromClient);
         } else {
             super.setModelValue(newModelValue, fromClient);

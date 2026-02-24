@@ -17,6 +17,7 @@
 package com.vaadin.componentfactory;
 
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
+import com.vaadin.componentfactory.erte.tables.templates.TemplateParser;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Pre;
@@ -25,7 +26,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
-import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
@@ -140,8 +140,7 @@ public class ErteTablesTestView extends VerticalLayout {
             String json = templateOutput.getValue();
             if (json != null && !json.isBlank()) {
                 try {
-                    ObjectNode t = (ObjectNode) JsonMapper.builder().build().readTree(json);
-                    tables.setTemplates(t);
+                    tables.setTemplates(TemplateParser.parseJson(json));
                     eventLog.add(new Div(new com.vaadin.flow.component.html.Span("Templates loaded successfully")));
                 } catch (Exception ex) {
                     eventLog.add(new Div(new com.vaadin.flow.component.html.Span("Error loading templates: " + ex.getMessage())));
@@ -164,7 +163,8 @@ public class ErteTablesTestView extends VerticalLayout {
     private ObjectNode loadJsonResource(String resourceName) {
         try (InputStream is = getClass().getClassLoader().getResourceAsStream(resourceName)) {
             if (is == null) return null;
-            return (ObjectNode) JsonMapper.builder().build().readTree(is);
+            String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            return TemplateParser.parseJson(json);
         } catch (IOException e) {
             return null;
         }
