@@ -211,7 +211,32 @@ public class V25DemoView extends VerticalLayout {
                     "reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla " +
                     "pariatur. Excepteur sint occaecat cupidatat non proident, sunt in " +
                     "culpa qui officia deserunt mollit anim id est laborum.\"}," +
-                "{\"insert\":\"\\n\",\"attributes\":{\"align\":\"justify\"}}" +
+                "{\"insert\":\"\\n\",\"attributes\":{\"align\":\"justify\"}}," +
+                // --- Sample Table (3 columns × 3 rows) ---
+                "{\"insert\":\"\\n\"}," +
+                "{\"insert\":\"Sample Table\",\"attributes\":{\"bold\":true}}," +
+                "{\"insert\":\"\\n\"}," +
+                // Row 1 — Header
+                "{\"insert\":\"Feature\",\"attributes\":{\"bold\":true}}," +
+                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r1|c1||||\"}}," +
+                "{\"insert\":\"Status\",\"attributes\":{\"bold\":true}}," +
+                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r1|c2||||\"}}," +
+                "{\"insert\":\"Notes\",\"attributes\":{\"bold\":true}}," +
+                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r1|c3||||\"}}," +
+                // Row 2
+                "{\"insert\":\"Tabstops\"}," +
+                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r2|c1||||\"}}," +
+                "{\"insert\":\"Complete\"}," +
+                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r2|c2||||\"}}," +
+                "{\"insert\":\"Left, right, center alignment\"}," +
+                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r2|c3||||\"}}," +
+                // Row 3
+                "{\"insert\":\"Placeholders\"}," +
+                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r3|c1||||\"}}," +
+                "{\"insert\":\"Complete\"}," +
+                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r3|c2||||\"}}," +
+                "{\"insert\":\"Insert via dialog or shortcut\"}," +
+                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r3|c3||||\"}}" +
             "]"
         );
 

@@ -48,12 +48,54 @@ import tableCss from './css/erte-table-styles.css?inline';
     console.log(TAG, 'Initializing table module');
     initTableModule(editor, Quill);
 
-    // Wire mouse events for cell selection
     const quill = editor;
-    quill.container.addEventListener('mousedown', e => TableSelection.mouseDown(quill, e));
-    quill.container.addEventListener('mousemove', e => TableSelection.mouseMove(quill, e));
-    document.addEventListener('mouseup', e => TableSelection.mouseUp(quill, e));
+    const container = quill.container;
+    // Find host element (vcf-enhanced-rich-text-editor) for lifecycle hooks
+    const host = container.getRootNode()?.host;
+
+    // --- Named handlers for cleanup ---
+    const onMouseDown = e => TableSelection.mouseDown(quill, e);
+    const onMouseMove = e => TableSelection.mouseMove(quill, e);
+    const onMouseUp = e => TableSelection.mouseUp(quill, e);
+    const onKeyDown = e => {
+      if ((e.key === 'Control' || e.key === 'Meta') && !container.classList.contains('erte-ctrl-select')) {
+        container.classList.add('erte-ctrl-select');
+      }
+    };
+    const onKeyUp = e => {
+      if (e.key === 'Control' || e.key === 'Meta') {
+        container.classList.remove('erte-ctrl-select');
+      }
+    };
+    const onWindowBlur = () => {
+      container.classList.remove('erte-ctrl-select');
+    };
+
+    // Wire mouse events for cell selection
+    container.addEventListener('mousedown', onMouseDown);
+    container.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
     quill.on('selection-change', (range, oldRange) => TableSelection.selectionChange(quill, range, oldRange));
+
+    // Toggle cell-select cursor on Ctrl key press/release
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', onWindowBlur);
+
+    // --- Cleanup on disconnectedCallback ---
+    if (host) {
+      const origDisconnected = host.disconnectedCallback?.bind(host);
+      host.disconnectedCallback = function() {
+        container.removeEventListener('mousedown', onMouseDown);
+        container.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        document.removeEventListener('keydown', onKeyDown);
+        document.removeEventListener('keyup', onKeyUp);
+        window.removeEventListener('blur', onWindowBlur);
+        console.log(TAG, 'Cleaned up document/window listeners');
+        if (origDisconnected) origDisconnected.call(this);
+      };
+    }
   });
 
   // Connector namespace for Java executeJs calls

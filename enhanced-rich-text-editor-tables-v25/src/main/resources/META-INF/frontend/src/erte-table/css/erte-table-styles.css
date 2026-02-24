@@ -19,6 +19,10 @@ table td.td-q {
   min-height: 1.625em;
   vertical-align: top;
   white-space: pre-wrap;
+}
+
+/* Cell selection cursor — only shown when Ctrl is held */
+.erte-ctrl-select table td.td-q {
   cursor: cell;
 }
 
