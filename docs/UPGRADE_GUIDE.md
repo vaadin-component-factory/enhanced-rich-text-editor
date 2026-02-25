@@ -1706,6 +1706,15 @@ being migrated separately to V25 (`enhanced-rich-text-editor-tables-v25`, versio
 If you use the tables extension, wait for its V25 release before migrating. The
 tables extension requires the core ERTE 2 component.
 
+> **Breaking Change — Table Delta Format:** The Delta JSON produced by ERTE 2
+> tables differs from ERTE 1. While tables can still be loaded from V24 deltas
+> (the `td` pipe-separated attribute format is unchanged), the surrounding delta
+> ops (inserts, attributes, line formats) may differ due to Quill 2's updated
+> serialization. If you parse or process table deltas outside of ERTE (e.g., in
+> a backend service, export pipeline, or reporting tool), you must verify
+> compatibility with the new delta output. No automated converter is provided —
+> the deltas are structurally compatible but not byte-identical.
+
 ### 9.2 Performance
 
 ERTE 2 benefits from several performance improvements:
