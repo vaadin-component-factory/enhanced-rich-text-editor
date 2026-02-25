@@ -264,3 +264,187 @@ export async function waitForEmbedCount(
     { timeout }
   );
 }
+
+// ========= Table Helpers =========
+
+/**
+ * Get the table locator inside the editor.
+ */
+export function getTable(page: Page, id = 'test-editor'): Locator {
+  return page.locator(`#${id}`).locator('.ql-editor table');
+}
+
+/**
+ * Get all table cells (td.td-q) in the editor.
+ */
+export function getTableCells(page: Page, id = 'test-editor'): Locator {
+  return page.locator(`#${id}`).locator('.ql-editor td.td-q');
+}
+
+/**
+ * Get a table cell by its visible text content.
+ */
+export function getTableCellByText(page: Page, text: string, id = 'test-editor'): Locator {
+  return page.locator(`#${id}`).locator('.ql-editor td.td-q').filter({ hasText: new RegExp(`^${text}$`) });
+}
+
+/**
+ * Get cell text by row and column index (0-based).
+ */
+export async function getCellText(page: Page, row: number, col: number, id = 'test-editor'): Promise<string> {
+  return await page.evaluate(({ elId, r, c }) => {
+    const el = document.getElementById(elId) as any;
+    const editor = el?.shadowRoot?.querySelector('.ql-editor') || el?.querySelector('.ql-editor');
+    const rows = editor?.querySelectorAll('table tr');
+    if (!rows || !rows[r]) return '';
+    const cells = rows[r].querySelectorAll('td.td-q');
+    if (!cells || !cells[c]) return '';
+    return cells[c].textContent?.trim() || '';
+  }, { elId: id, r: row, c: col });
+}
+
+/**
+ * Get all table rows.
+ */
+export function getTableRows(page: Page, id = 'test-editor'): Locator {
+  return page.locator(`#${id}`).locator('.ql-editor table tr');
+}
+
+/**
+ * Click on a cell to place cursor inside it.
+ */
+export async function clickCell(page: Page, text: string, id = 'test-editor'): Promise<void> {
+  await getTableCellByText(page, text, id).click();
+}
+
+/**
+ * Ctrl+Click a cell for cell selection.
+ */
+export async function ctrlClickCell(page: Page, text: string, id = 'test-editor'): Promise<void> {
+  await getTableCellByText(page, text, id).click({ modifiers: ['Control'] });
+}
+
+/**
+ * Ctrl+Drag from one cell to another for range selection.
+ * Uses boundingBox() for precise viewport coordinates.
+ */
+export async function ctrlDragCells(page: Page, fromText: string, toText: string, id = 'test-editor'): Promise<void> {
+  const fromCell = getTableCellByText(page, fromText, id);
+  const toCell = getTableCellByText(page, toText, id);
+
+  const fromBox = await fromCell.boundingBox();
+  const toBox = await toCell.boundingBox();
+  if (!fromBox || !toBox) throw new Error(`Cannot get bounding box for cells "${fromText}" or "${toText}"`);
+
+  const fromX = fromBox.x + fromBox.width / 2;
+  const fromY = fromBox.y + fromBox.height / 2;
+  const toX = toBox.x + toBox.width / 2;
+  const toY = toBox.y + toBox.height / 2;
+
+  await page.keyboard.down('Control');
+  await page.mouse.move(fromX, fromY);
+  await page.mouse.down();
+  await page.mouse.move(toX, toY, { steps: 5 });
+  await page.mouse.up();
+  await page.keyboard.up('Control');
+}
+
+/**
+ * Get count of selected cells (with ql-cell-selected class).
+ */
+export async function getSelectedCellCount(page: Page, id = 'test-editor'): Promise<number> {
+  return await page.locator(`#${id}`).locator('.ql-editor td.ql-cell-selected').count();
+}
+
+/**
+ * Get the number of rows in the table.
+ */
+export async function getRowCount(page: Page, id = 'test-editor'): Promise<number> {
+  return await page.locator(`#${id}`).locator('.ql-editor table tr').count();
+}
+
+/**
+ * Get the number of columns via colgroup > col elements.
+ */
+export async function getColCount(page: Page, id = 'test-editor'): Promise<number> {
+  return await page.locator(`#${id}`).locator('.ql-editor table colgroup col').count();
+}
+
+/**
+ * Filter delta ops that have a `td` attribute.
+ */
+export function getTdOps(delta: any): any[] {
+  return delta.ops.filter((op: any) => op.attributes && op.attributes.td);
+}
+
+/**
+ * Parse the 7-field pipe-separated td metadata string.
+ * Format: tableId|rowId|cellId|mergeId|colspan|rowspan|tableClassName
+ */
+export function parseTdMetadata(value: string): {
+  tableId: string;
+  rowId: string;
+  cellId: string;
+  mergeId: string;
+  colspan: string;
+  rowspan: string;
+  tableClassName: string;
+} {
+  const parts = value.split('|');
+  return {
+    tableId: parts[0] || '',
+    rowId: parts[1] || '',
+    cellId: parts[2] || '',
+    mergeId: parts[3] || '',
+    colspan: parts[4] || '',
+    rowspan: parts[5] || '',
+    tableClassName: parts[6] || '',
+  };
+}
+
+/**
+ * Check if a cell has the focused-cell class.
+ */
+export async function hasFocusedCell(page: Page, id = 'test-editor'): Promise<boolean> {
+  return (await page.locator(`#${id}`).locator('.ql-editor td.focused-cell').count()) > 0;
+}
+
+/**
+ * Open the Modify Table dropdown menu. Clicks the button and waits for the menu.
+ * The ToolbarSelectPopup renders as a role="menu" with role="menuitem" children.
+ */
+export async function openModifyTableMenu(page: Page, id = 'test-editor'): Promise<void> {
+  // Wait for the button to be enabled (requires TableSelected event round-trip)
+  await page.locator(`#${id}`).locator('#erte-modify-table-btn:not([disabled])').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator(`#${id}`).locator('#erte-modify-table-btn').click();
+  // Wait for menu to appear (renders as role="menu")
+  await page.getByRole('menu').waitFor({ state: 'visible', timeout: 5000 });
+}
+
+/**
+ * Click a menu item inside the Modify Table context menu.
+ */
+export async function clickModifyTableMenuItem(page: Page, itemText: string): Promise<void> {
+  await page.getByRole('menuitem', { name: itemText }).click();
+}
+
+/**
+ * Get the Add Table toolbar button locator.
+ */
+export function getAddTableButton(page: Page, id = 'test-editor'): Locator {
+  return page.locator(`#${id}`).locator('#erte-add-table-btn');
+}
+
+/**
+ * Get the Modify Table toolbar button locator.
+ */
+export function getModifyTableButton(page: Page, id = 'test-editor'): Locator {
+  return page.locator(`#${id}`).locator('#erte-modify-table-btn');
+}
+
+/**
+ * Get the Style Templates toolbar button locator.
+ */
+export function getStyleTemplatesButton(page: Page, id = 'test-editor'): Locator {
+  return page.locator(`#${id}`).locator('#erte-style-templates-btn');
+}

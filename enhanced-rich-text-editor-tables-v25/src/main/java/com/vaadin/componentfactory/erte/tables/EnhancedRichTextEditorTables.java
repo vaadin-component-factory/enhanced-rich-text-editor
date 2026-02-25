@@ -191,6 +191,7 @@ public class EnhancedRichTextEditorTables {
 
         addTableButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.PLUS);
         addTableButton.setTooltipText(getI18nOrDefault(TablesI18n::getInsertTableToolbarSwitchTooltip, "Add new table"));
+        addTableButton.setId("erte-add-table-btn");
 
         addTablePopup = ToolbarPopover.horizontal(addTableButton, Alignment.BASELINE, rows, new Span("x"), cols, add);
         addTablePopup.setAutofocus(false);
@@ -200,6 +201,7 @@ public class EnhancedRichTextEditorTables {
         modifyTableButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.TOOLS);
         modifyTableButton.setTooltipText(getI18nOrDefault(TablesI18n::getModifyTableToolbarSwitchTooltip, "Modify Table"));
         modifyTableButton.setEnabled(false);
+        modifyTableButton.setId("erte-modify-table-btn");
 
         modifyTableSelectPopup = new ToolbarSelectPopup(modifyTableButton);
         modifyTableSelectPopup.addItem(
@@ -249,6 +251,7 @@ public class EnhancedRichTextEditorTables {
         styleTemplatesDialogButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.EYE);
         styleTemplatesDialogButton.setTooltipText(getI18nOrDefault(TablesI18n::getTableTemplatesToolbarSwitchTooltip, "Style Templates"));
         styleTemplatesDialogButton.setEnabled(false);
+        styleTemplatesDialogButton.setId("erte-style-templates-btn");
         templatesDialog = new TemplateDialog(styleTemplatesDialogButton, i18n.getTemplatesI18n());
         templatesDialog.setWidth("26rem"); // turned out to be the best width by default - if not, change in future
 

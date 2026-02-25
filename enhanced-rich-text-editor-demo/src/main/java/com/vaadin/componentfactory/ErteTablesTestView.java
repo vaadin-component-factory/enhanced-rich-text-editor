@@ -82,16 +82,10 @@ public class ErteTablesTestView extends VerticalLayout {
             eventLog.add(new Div(new com.vaadin.flow.component.html.Span(msg)));
         });
 
-        // HTML output
+        // HTML output (hidden — tests read via textContent)
         Pre htmlOutput = new Pre();
         htmlOutput.setId("html-output");
-        htmlOutput.getStyle()
-                .set("white-space", "pre-wrap")
-                .set("font-size", "var(--lumo-font-size-xs)")
-                .set("max-height", "150px")
-                .set("overflow", "auto")
-                .set("background", "var(--lumo-contrast-5pct)")
-                .set("padding", "var(--lumo-space-s)");
+        htmlOutput.getStyle().set("display", "none");
         editor.addValueChangeListener(e -> htmlOutput.setText(e.getValue()));
 
         // Delta input area
@@ -153,11 +147,31 @@ public class ErteTablesTestView extends VerticalLayout {
 
         add(editor, deltaInput, deltaButtons, templateOutput, htmlOutput, eventLog);
 
+        // Delta output (hidden — tests read via textContent)
+        Pre deltaOutput = new Pre();
+        deltaOutput.setId("delta-output");
+        deltaOutput.getStyle().set("display", "none");
+
+        // Client-side JS for delta + HTML sync
+        editor.getElement().executeJs(
+                "const el = this;"
+                + "const deltaOut = document.getElementById('delta-output');"
+                + "const htmlOut = document.getElementById('html-output');"
+                + "if (el._editor) {"
+                + "  deltaOut.textContent = JSON.stringify(el._editor.getContents());"
+                + "  htmlOut.textContent = el._editor.root.innerHTML;"
+                + "  el._editor.on('text-change', function() {"
+                + "    deltaOut.textContent = JSON.stringify(el._editor.getContents());"
+                + "    htmlOut.textContent = el._editor.root.innerHTML;"
+                + "  });"
+                + "}");
+
         // Hidden ready indicator
         Div ready = new Div();
         ready.setId("test-ready");
         ready.getStyle().set("display", "none");
-        add(ready);
+        ready.getElement().setAttribute("data-ready", "true");
+        add(deltaOutput, ready);
     }
 
     private ObjectNode loadJsonResource(String resourceName) {
