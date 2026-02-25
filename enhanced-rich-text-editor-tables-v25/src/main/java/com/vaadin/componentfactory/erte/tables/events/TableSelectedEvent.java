@@ -18,6 +18,7 @@ package com.vaadin.componentfactory.erte.tables.events;
 
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTablesComponentEvent;
+import com.vaadin.componentfactory.erte.tables.templates.TemplateParser;
 
 /**
  * This event is fired, when a table has been (de-) selected in an ERTE instance. Contains additional information,
@@ -41,7 +42,7 @@ public class TableSelectedEvent extends EnhancedRichTextEditorTablesComponentEve
     ) {
         super(source, fromClient);
 
-        if (template != null && !template.isBlank() && !template.matches("[A-Za-z0-9\\-]+")) {
+        if (template != null && !template.isBlank() && !TemplateParser.isValidTemplateId(template)) {
             throw new IllegalArgumentException("Illegal template name: " + template);
         }
 

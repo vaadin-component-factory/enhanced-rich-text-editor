@@ -492,6 +492,7 @@ public class EnhancedRichTextEditorTables {
      * @param rows amount of rows
      * @param cols amount of cols
      * @param templateId template class name
+     * @throws IllegalArgumentException if rows or cols are less than 1, or if templateId is invalid
      */
     public void insertTableAtCurrentPosition(int rows, int cols, String templateId) {
         if (rows <= 0 || cols <= 0) {
@@ -592,42 +593,116 @@ public class EnhancedRichTextEditorTables {
         return ComponentUtil.addListener(rte, type, listener);
     }
 
+    /**
+     * Registers a listener that is notified when templates are initialized via {@link #setTemplates(ObjectNode)}.
+     * The event carries the templates and the generated CSS string.
+     *
+     * @param listener the listener to register
+     * @return a registration for removing the listener
+     */
     public Registration addTemplatesInitializedListener(ComponentEventListener<TemplatesInitializedEvent> listener) {
         return addListener(TemplatesInitializedEvent.class, listener);
     }
 
+    /**
+     * Registers a listener that is notified when a new template is created, either by the user clicking the
+     * create button in the template dialog or programmatically. The event carries the new template's ID and
+     * its JSON object.
+     *
+     * @param listener the listener to register
+     * @return a registration for removing the listener
+     */
     public Registration addTemplateCreatedListener(ComponentEventListener<TemplateCreatedEvent> listener) {
         return addListener(TemplateCreatedEvent.class, listener);
     }
 
+    /**
+     * Registers a listener that is notified when an existing template is copied. The event carries the new
+     * template's ID, the original template's ID, and the copied JSON object.
+     *
+     * @param listener the listener to register
+     * @return a registration for removing the listener
+     */
     public Registration addTemplateCopiedListener(ComponentEventListener<TemplateCopiedEvent> listener) {
         return addListener(TemplateCopiedEvent.class, listener);
     }
 
+    /**
+     * Registers a listener that is notified when a template is modified, for example when the user changes
+     * a style property or renames a template in the dialog. The event carries the template's ID and its
+     * updated JSON object.
+     *
+     * @param listener the listener to register
+     * @return a registration for removing the listener
+     */
     public Registration addTemplateUpdatedListener(ComponentEventListener<TemplateUpdatedEvent> listener) {
         return addListener(TemplateUpdatedEvent.class, listener);
     }
 
+    /**
+     * Registers a listener that is notified when a template is deleted, typically by the user clicking the
+     * delete button and confirming the deletion. The event carries the deleted template's ID and its JSON
+     * object before deletion.
+     *
+     * @param listener the listener to register
+     * @return a registration for removing the listener
+     */
     public Registration addTemplateDeletedListener(ComponentEventListener<TemplateDeletedEvent> listener) {
         return addListener(TemplateDeletedEvent.class, listener);
     }
 
+    /**
+     * Registers a listener that is notified when the active template for the currently selected table changes,
+     * for example when the user picks a different template from the dropdown. The event carries the newly
+     * selected template's ID (or null if unselected).
+     *
+     * @param listener the listener to register
+     * @return a registration for removing the listener
+     */
     public Registration addTemplateSelectedListener(ComponentEventListener<TemplateSelectedEvent> listener) {
         return addListener(TemplateSelectedEvent.class, listener);
     }
 
+    /**
+     * Registers a listener that is notified when a table is selected or deselected in the editor. The event
+     * indicates whether a table is selected, whether cell selection (Ctrl+Click) is active, and which template
+     * is applied to the table.
+     *
+     * @param listener the listener to register
+     * @return a registration for removing the listener
+     */
     public Registration addTableSelectedListener(ComponentEventListener<TableSelectedEvent> listener) {
         return addListener(TableSelectedEvent.class, listener);
     }
 
+    /**
+     * Registers a listener that is notified when the cursor moves to a different table cell. The event carries
+     * the new row and column indices (0-based), as well as the previous indices. Indices are null when no table
+     * is selected.
+     *
+     * @param listener the listener to register
+     * @return a registration for removing the listener
+     */
     public Registration addTableCellChangedListener(ComponentEventListener<TableCellChangedEvent> listener) {
         return addListener(TableCellChangedEvent.class, listener);
     }
 
+    /**
+     * Returns the ERTE instance that this table extension is attached to.
+     *
+     * @return the enhanced rich text editor instance
+     */
     public EnhancedRichTextEditor getRte() {
         return rte;
     }
 
+    /**
+     * Returns the i18n value for the given provider, falling back to the default value if not set.
+     *
+     * @param valueProvider the value provider to extract the i18n value
+     * @param defaultValue the default value to use if the i18n value is null
+     * @return the i18n value or the default value
+     */
     public String getI18nOrDefault(ValueProvider<TablesI18n, String> valueProvider, String defaultValue) {
         String value = valueProvider.apply(this.i18n);
         return value != null ? value : defaultValue;
@@ -641,22 +716,47 @@ public class EnhancedRichTextEditorTables {
         return templatesDialog;
     }
 
+    /**
+     * Returns the toolbar button for adding new tables.
+     *
+     * @return the add table toolbar button
+     */
     public ToolbarSwitch getAddTableToolbarButton() {
         return addTableButton;
     }
 
+    /**
+     * Returns the popover that opens when the Add Table button is clicked. Contains the rows/columns input fields.
+     *
+     * @return the add table popover
+     */
     public ToolbarPopover getAddTablePopup() {
         return addTablePopup;
     }
 
+    /**
+     * Returns the toolbar button for the table modification menu.
+     *
+     * @return the modify table toolbar button
+     */
     public ToolbarSwitch getModifyTableToolbarButton() {
         return modifyTableButton;
     }
 
+    /**
+     * Returns the context menu popup for table modification operations (row/column add/remove, merge, split, delete).
+     *
+     * @return the modify table select popup
+     */
     public ToolbarSelectPopup getModifyTableSelectPopup() {
         return modifyTableSelectPopup;
     }
 
+    /**
+     * Returns the toolbar button that opens the style templates dialog.
+     *
+     * @return the style templates dialog toolbar button
+     */
     public ToolbarSwitch getStyleTemplatesDialogToolbarButton() {
         return styleTemplatesDialogButton;
     }
@@ -665,6 +765,7 @@ public class EnhancedRichTextEditorTables {
      * This method activates a UX helping feature. When setting a css color, that color will be shown as
      * the table cells border, when the user hovers the table. Passing null will disable this feature.
      * @param hoverColor css color
+     * @throws IllegalArgumentException if the color format is invalid
      */
     public void setTableHoverColor(@Nullable String hoverColor) {
         if (hoverColor != null && !TemplateJsonConstants.isValidColor(hoverColor)) {
@@ -678,6 +779,7 @@ public class EnhancedRichTextEditorTables {
      * This method activates a UX helping feature. When setting a css color, that color will be shown as
      * a slight cell background color, when the user hovers a table cell. Passing null will disable this feature.
      * @param hoverColor css color
+     * @throws IllegalArgumentException if the color format is invalid
      */
     public void setTableCellHoverColor(@Nullable String hoverColor) {
         if (hoverColor != null && !TemplateJsonConstants.isValidColor(hoverColor)) {
@@ -691,6 +793,7 @@ public class EnhancedRichTextEditorTables {
      * This method activates a UX helping feature. When setting a css color, that color will be shown as
      * a slight cell background color, when the user focuses a table cell. Passing null will disable this feature.
      * @param focusColor css color
+     * @throws IllegalArgumentException if the color format is invalid
      */
     public void setTableCellFocusColor(@Nullable String focusColor) {
         if (focusColor != null && !TemplateJsonConstants.isValidColor(focusColor)) {
@@ -702,8 +805,9 @@ public class EnhancedRichTextEditorTables {
 
     /**
      * This method activates a UX helping feature. When setting a css color, that color will be shown as
-     * a the table border color, when the user focuses a table cell. Passing null will disable this feature.
+     * the table border color, when the user focuses a table cell. Passing null will disable this feature.
      * @param focusColor css color
+     * @throws IllegalArgumentException if the color format is invalid
      */
     public void setTableFocusColor(@Nullable String focusColor) {
         if (focusColor != null && !TemplateJsonConstants.isValidColor(focusColor)) {

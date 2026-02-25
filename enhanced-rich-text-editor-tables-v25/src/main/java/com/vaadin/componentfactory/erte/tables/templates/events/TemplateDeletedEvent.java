@@ -19,6 +19,10 @@ package com.vaadin.componentfactory.erte.tables.templates.events;
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
 import tools.jackson.databind.node.ObjectNode;
 
+/**
+ * Fired when a template is deleted, typically after the user confirms deletion
+ * in the template dialog.
+ */
 public class TemplateDeletedEvent extends TemplateModificationEvent {
     public TemplateDeletedEvent(EnhancedRichTextEditorTables source, boolean fromClient,
                                 String templateId, ObjectNode deletedTemplate) {

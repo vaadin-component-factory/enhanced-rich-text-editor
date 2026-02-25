@@ -26,25 +26,42 @@ import java.util.regex.Pattern;
  * Contains constants definitions for the template json.
  */
 public final class TemplateJsonConstants {
+    /** Property key for background color in template declarations. Maps to CSS {@code background-color}. */
     public static final String P_BACKGROUND = "bgColor";
+    /** Property key for text color in template declarations. Maps to CSS {@code color}. */
     public static final String P_COLOR = "color";
+    /** Property key for width in template declarations. Maps to CSS {@code width}. */
     public static final String P_WIDTH = "width";
+    /** Property key for height in template declarations. Maps to CSS {@code height}. */
     public static final String P_HEIGHT = "height";
+    /** Property key for border in template declarations. Maps to CSS {@code border}. */
     public static final String P_BORDER = "border";
+    /** Property key for cell border in table-level declarations. Applied to all cells within the table. */
     public static final String P_BORDER_CELLS = "borderCells";
 
+    /** JSON key for the table section in template JSON. */
     public static final String TABLE = "table";
+    /** JSON key for the rows section in template JSON. */
     public static final String ROWS = "rows";
+    /** JSON key for the cells section in template JSON. */
     public static final String CELLS = "cells";
+    /** JSON key for the columns section in template JSON. */
     public static final String COLUMNS = "cols";
 
+    /** JSON key for cell X coordinate in cell-specific declarations. */
     public static final String CELL_X = "x";
+    /** JSON key for cell Y coordinate in cell-specific declarations. */
     public static final String CELL_Y = "y";
+    /** JSON key for index in row/column-specific declarations. */
     public static final String INDEX = "index";
+    /** JSON key for template name/display name. */
     public static final String NAME = "name";
+    /** JSON key for specifying counting from bottom/end in row/column declarations. */
     public static final String FROM_BOTTOM = "last";
+    /** JSON key for style declarations section. */
     public static final String DECLARATIONS = "declarations";
 
+    /** Pattern for valid template IDs. Must start with a letter, followed by letters, digits, or hyphens. */
     public static final Pattern PATTERN_TEMPLATE_ID = Pattern.compile("[A-Za-z][A-Za-z0-9\\-]*");
 
     // source https://stackoverflow.com/a/63856391/11016302
@@ -59,6 +76,7 @@ public final class TemplateJsonConstants {
     /** CSS custom properties (var(--name)) */
     public static final Pattern PATTERN_P_COLOR_5 = Pattern.compile("var\\(--[a-zA-Z][a-zA-Z0-9-]*\\)");
 
+    /** Map of allowed property keys per context (table, rows, cols, cells). Used for validation during CSS generation. */
     public static final Map<String, Set<String>> ALLOWED_PROPERTIES;
 
     static {

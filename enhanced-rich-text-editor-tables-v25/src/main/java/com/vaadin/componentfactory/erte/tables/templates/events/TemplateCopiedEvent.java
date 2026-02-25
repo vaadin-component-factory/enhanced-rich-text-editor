@@ -29,6 +29,11 @@ public class TemplateCopiedEvent extends TemplateCreatedEvent {
         this.copiedTemplateId = copiedTemplateId;
     }
 
+    /**
+     * Returns the ID of the original template that was copied, wrapped in an Optional.
+     *
+     * @return an Optional containing the original template ID, or empty if not available
+     */
     public Optional<String> getCopiedTemplateId() {
         return Optional.ofNullable(copiedTemplateId);
     }

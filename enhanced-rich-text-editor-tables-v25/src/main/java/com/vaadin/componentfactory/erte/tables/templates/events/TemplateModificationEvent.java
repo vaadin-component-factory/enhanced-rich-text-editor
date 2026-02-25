@@ -20,6 +20,10 @@ import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTablesComponentEvent;
 import tools.jackson.databind.node.ObjectNode;
 
+/**
+ * Abstract base class for template modification events (create, copy, update, delete).
+ * Carries the affected template's ID and its JSON object.
+ */
 public abstract class TemplateModificationEvent extends EnhancedRichTextEditorTablesComponentEvent {
     private final String templateId;
     private final ObjectNode template;
@@ -31,10 +35,20 @@ public abstract class TemplateModificationEvent extends EnhancedRichTextEditorTa
         this.template = template != null ? template.deepCopy() : null;
     }
 
+    /**
+     * Returns the ID of the affected template.
+     *
+     * @return the template ID
+     */
     public String getTemplateId() {
         return templateId;
     }
 
+    /**
+     * Returns the JSON object of the affected template.
+     *
+     * @return the template JSON object, or null if not available
+     */
     public ObjectNode getTemplate() {
         return template;
     }

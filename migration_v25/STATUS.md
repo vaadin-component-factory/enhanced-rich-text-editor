@@ -1,6 +1,6 @@
 # V25 Migration Status
 
-**Current: Phase 4.5 — Tables Documentation**
+**Current: Phase 5 — Final QA & Restructuring**
 
 > **Note:** ERTE 6.0.0 focuses on Lumo theme support only. Multi-theme support (Aura, Material) is planned for post-6.0.0 releases (Phase 6).
 
@@ -42,7 +42,7 @@
 | 3.5b     | User Documentation                 | COMPLETE                               |
 | 3.5c     | Developer Documentation            | COMPLETE                               |
 | 3.5d     | README & Project Docs              | COMPLETE                               |
-| **4**    | **Tables Addon**                   | IN PROGRESS                            |
+| **4**    | **Tables Addon**                   | COMPLETE                               |
 | 4.1      | Project Setup & Base               | COMPLETE                               |
 | 4.2      | Blot Migration                     | COMPLETE                               |
 | **4.3a** | Table Operations, CSS, Java API    | COMPLETE                               |

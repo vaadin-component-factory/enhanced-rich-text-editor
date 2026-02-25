@@ -20,6 +20,10 @@ import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTablesComponentEvent;
 import tools.jackson.databind.node.ObjectNode;
 
+/**
+ * Fired after {@link com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables#setTemplates(ObjectNode)}
+ * is called. Carries the templates and the generated CSS string.
+ */
 public class TemplatesInitializedEvent extends EnhancedRichTextEditorTablesComponentEvent {
     private final ObjectNode templates;
     private final String cssString;
@@ -31,10 +35,20 @@ public class TemplatesInitializedEvent extends EnhancedRichTextEditorTablesCompo
         this.cssString = cssString;
     }
 
+    /**
+     * Returns the templates that were set, as a Jackson ObjectNode.
+     *
+     * @return the templates JSON object
+     */
     public ObjectNode getTemplates() {
         return templates;
     }
 
+    /**
+     * Returns the CSS string generated from the templates.
+     *
+     * @return the generated CSS string
+     */
     public String getCssString() {
         return cssString;
     }

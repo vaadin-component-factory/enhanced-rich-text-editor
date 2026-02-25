@@ -19,6 +19,11 @@ package com.vaadin.componentfactory.erte.tables;
 import com.vaadin.componentfactory.EnhancedRichTextEditor;
 import com.vaadin.flow.component.ComponentEvent;
 
+/**
+ * Base class for all table extension events. Extends {@code ComponentEvent<EnhancedRichTextEditor>}
+ * to allow registration on the editor component via {@code ComponentUtil}. Use {@link #getTableExtension()}
+ * to access the {@link EnhancedRichTextEditorTables} instance that fired the event.
+ */
 public abstract class EnhancedRichTextEditorTablesComponentEvent extends ComponentEvent<EnhancedRichTextEditor> {
     private final EnhancedRichTextEditorTables tables;
 
@@ -27,6 +32,12 @@ public abstract class EnhancedRichTextEditorTablesComponentEvent extends Compone
         tables = source;
     }
 
+    /**
+     * Returns the table extension instance that fired this event. Use this to access table-specific API
+     * methods from within event handlers.
+     *
+     * @return the table extension instance
+     */
     public EnhancedRichTextEditorTables getTableExtension() {
         return tables;
     }

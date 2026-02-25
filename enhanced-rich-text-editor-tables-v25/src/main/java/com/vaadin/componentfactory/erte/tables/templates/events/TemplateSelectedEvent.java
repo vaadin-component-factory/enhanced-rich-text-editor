@@ -27,6 +27,11 @@ public class TemplateSelectedEvent extends EnhancedRichTextEditorTablesComponent
         this.templateId = templateId;
     }
 
+    /**
+     * Returns the ID of the newly selected template, or null if no template is selected.
+     *
+     * @return the template ID, or null
+     */
     public String getTemplateId() {
         return templateId;
     }

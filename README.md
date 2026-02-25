@@ -84,6 +84,12 @@ To enable table functionality, add the separate Tables Extension addon:
 </dependency>
 ```
 
+```java
+EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte);
+```
+
+See the [Tables Guide](enhanced-rich-text-editor-tables-v25/docs/TABLES_GUIDE.md) for full documentation, and the [Tables Upgrade Guide](enhanced-rich-text-editor-tables-v25/docs/TABLES_UPGRADE_GUIDE.md) for V1 → V2 migration.
+
 ## Running the Demo
 
 ```bash

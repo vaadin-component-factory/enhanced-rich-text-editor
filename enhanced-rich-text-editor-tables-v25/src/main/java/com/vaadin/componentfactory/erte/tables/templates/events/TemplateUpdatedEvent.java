@@ -19,6 +19,10 @@ package com.vaadin.componentfactory.erte.tables.templates.events;
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
 import tools.jackson.databind.node.ObjectNode;
 
+/**
+ * Fired when an existing template is modified, for example when the user changes
+ * a style property or renames a template in the dialog.
+ */
 public class TemplateUpdatedEvent extends TemplateModificationEvent {
     public TemplateUpdatedEvent(EnhancedRichTextEditorTables source, boolean fromClient,
                                 String templateId, ObjectNode updatedTemplate) {

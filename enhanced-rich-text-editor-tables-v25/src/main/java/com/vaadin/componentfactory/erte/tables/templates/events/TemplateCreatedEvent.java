@@ -19,6 +19,10 @@ package com.vaadin.componentfactory.erte.tables.templates.events;
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
 import tools.jackson.databind.node.ObjectNode;
 
+/**
+ * Fired when a new template is created, either by the user clicking the Create button
+ * in the template dialog or programmatically.
+ */
 public class TemplateCreatedEvent extends TemplateModificationEvent {
     public TemplateCreatedEvent(EnhancedRichTextEditorTables source, boolean fromClient,
                                 String templateId, ObjectNode template) {
