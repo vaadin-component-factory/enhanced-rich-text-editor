@@ -1,18 +1,18 @@
-# Phase 5 Spike: Aura Style Proxy Prototype
+# Phase 6 Spike: Aura Style Proxy Prototype
 
 **Status:** COMPLETE
 **Type:** Technical Spike / Proof of Concept
 **Priority:** DEFERRED — Post-6.0.0 feature
 **Created:** 2026-02-21
-**Updated:** 2026-02-22 (Phase 5.1 Aura Theme Support moved from Phase 3.4j)
+**Updated:** 2026-02-25 (renumbered from Phase 5 → Phase 6)
 
-> **Note:** ERTE 6.0.0 focuses on Lumo theme support only. This spike validates the technical approach for Aura theme support, planned for a post-6.0.0 release (Phase 5.1).
+> **Note:** ERTE 6.0.0 focuses on Lumo theme support only. This spike validates the technical approach for Aura theme support, planned for a post-6.0.0 release (Phase 6.1).
 
 ---
 
 ## Objective
 
-Prototype the Aura Style Proxy mechanism to verify technical feasibility before full implementation in Phase 5.1. Validate that:
+Prototype the Aura Style Proxy mechanism to verify technical feasibility before full implementation in Phase 6.1. Validate that:
 1. Runtime stylesheet scanning works reliably
 2. Rule cloning and selector replacement functions correctly
 3. Performance impact is acceptable
@@ -339,7 +339,7 @@ Compare Stock RTE and ERTE side-by-side:
 
 **If successful:**
 1. Clean up prototype code (remove debug logging, extract to dedicated method)
-2. Proceed with Phase 5.1 implementation
+2. Proceed with Phase 6.1 implementation
 3. Add production error handling
 4. Add comprehensive documentation
 
@@ -347,7 +347,7 @@ Compare Stock RTE and ERTE side-by-side:
 1. Document the issue in spike report
 2. Adjust approach (e.g., mutation observer for timing, specificity boost for cloned rules)
 3. Re-run spike with adjusted implementation
-4. Update Phase 5.1 plan based on findings
+4. Update Phase 6.1 plan based on findings
 
 ---
 
@@ -407,7 +407,7 @@ Compare Stock RTE and ERTE side-by-side:
 
 **Solution:** Use `@StyleSheet(Aura.STYLESHEET)` from `com.vaadin.flow.theme.aura.Aura` instead of `@StyleSheet(Lumo.STYLESHEET)`. The `vaadin-aura-theme` JAR is already a transitive dependency of `com.vaadin:vaadin`.
 
-**Impact on Phase 5.1:** The Aura theme is activated by replacing the `@StyleSheet` annotation, not `@Theme`. This is the user's responsibility, not ERTE's. ERTE only needs to proxy the resulting CSS rules. No ERTE code change needed for theme activation.
+**Impact on Phase 6.1:** The Aura theme is activated by replacing the `@StyleSheet` annotation, not `@Theme`. This is the user's responsibility, not ERTE's. ERTE only needs to proxy the resulting CSS rules. No ERTE code change needed for theme activation.
 
 #### Issue 2: CSS Custom Property Name Collision (CRITICAL)
 
@@ -421,7 +421,7 @@ Compare Stock RTE and ERTE side-by-side:
 - But the shadow DOM internal CSS references: `color: var(--vaadin-rich-text-editor-toolbar-button-text-color, ...)`
 - The renamed `--vcf-*` variable is NOT what the shadow DOM reads, so the disabled state is never applied.
 
-**Fix for Phase 5.1:** Use a smarter replacement strategy:
+**Fix for Phase 6.1:** Use a smarter replacement strategy:
 ```javascript
 // Only replace tag name in selectors, NOT in CSS custom property names
 // Option A: Negative lookbehind for --
@@ -432,13 +432,13 @@ original.replace(/(?<!--)vaadin-rich-text-editor/g, 'vcf-enhanced-rich-text-edit
 // 2. Keep CSS custom property names (--vaadin-rich-text-editor-*) unchanged
 ```
 
-**Impact:** This is the most significant finding. The replacement regex must be refined. The fix is straightforward (negative lookbehind regex) and will be the primary change in Phase 5.1.
+**Impact:** This is the most significant finding. The replacement regex must be refined. The fix is straightforward (negative lookbehind regex) and will be the primary change in Phase 6.1.
 
 #### Issue 3: Lumo Proxy Injects Unnecessary Rules
 
 **Problem:** Under Lumo theme, the proxy finds 2 rules (Lumo injector's `@media lumo_components_rich-text-editor { :host { ... } }`) and clones them. These are `:host`-scoped shadow DOM rules that only affect the component's shadow root, so the cloned document-level rules are harmless but unnecessary.
 
-**Fix for Phase 5.1:** Consider detecting the active theme (`--vaadin-aura-theme: 1` CSS property) and only running the proxy when Aura is detected. This also improves performance (no unnecessary scanning under Lumo).
+**Fix for Phase 6.1:** Consider detecting the active theme (`--vaadin-aura-theme: 1` CSS property) and only running the proxy when Aura is detected. This also improves performance (no unnecessary scanning under Lumo).
 
 ### Recommendations
 
@@ -475,7 +475,7 @@ Both critical findings from the spike have been applied and committed to the cod
 
 **Performance validated:** 1.2ms average (spike measurements), well within <20ms target.
 
-**Next step:** Proceed with Phase 5.1 full implementation based on validated approach. Theme detection (Aura vs Lumo) and production cleanup recommended but not blocking.
+**Next step:** Proceed with Phase 6.1 full implementation based on validated approach. Theme detection (Aura vs Lumo) and production cleanup recommended but not blocking.
 
 ---
 

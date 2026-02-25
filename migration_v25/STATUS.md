@@ -49,8 +49,8 @@
 | **4.3b** | Template System                    | COMPLETE                               |
 | **4.4**  | **Tables Tests**                   | COMPLETE *(82 tests: 71 pass, 11 fixme)* |
 | 4.5      | Documentation                      | NOT STARTED                            |
-| 4.6      | Custom Properties for Tables       | NOT STARTED                            |
-| 4.7      | Demo Migration (Tables)            | NOT STARTED *(table samples from V24)* |
+| 4.6      | Custom Properties for Tables       | COMPLETE                               |
+| ~~4.7~~  | ~~Demo Migration (Tables)~~        | SKIPPED *(covered by Phase 5.1 + playground)* |
 | **5**    | **Final QA & Restructuring**       | NOT STARTED                            |
 | 5.0      | Public API Breaking Changes Audit  | NOT STARTED                            |
 | 5.1      | V24 Sample Views Migration         | NOT STARTED *(migrate V24 demo views to V25 demo placeholder)* |
