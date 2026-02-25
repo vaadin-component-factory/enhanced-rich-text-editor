@@ -58,6 +58,10 @@ html {
   /* --vaadin-erte-ruler-marker-size: 0.9375rem; */
   /* Color of tabstop marker icons on the ruler */
   /* --vaadin-erte-ruler-marker-color: inherit; */
+  /* Width of the vertical ruler on the left side */
+  /* --vaadin-erte-ruler-vertical-width: 0.9375rem; */
+  /* Background image of the vertical ruler (tick marks) */
+  /* --vaadin-erte-ruler-vertical-background: url('data:image/png;base64,...'); */
 
   /* ========================================================================
      Tables Properties

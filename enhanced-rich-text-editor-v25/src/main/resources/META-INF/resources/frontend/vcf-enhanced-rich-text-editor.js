@@ -2496,13 +2496,17 @@ class VcfEnhancedRichTextEditor extends RteBase {
   }
 
   /**
-   * Observer for noRulers property. Toggles ruler wrapper visibility.
+   * Observer for noRulers property. Toggles ruler visibility.
    * @protected
    */
   _onNoRulersChanged(noRulers) {
     const rulerWrapper = this.shadowRoot.querySelector('[part="ruler-wrapper"]');
     if (rulerWrapper) {
       rulerWrapper.style.display = noRulers ? 'none' : '';
+    }
+    const verticalRuler = this.shadowRoot.querySelector('[part="verticalRuler"]');
+    if (verticalRuler) {
+      verticalRuler.style.display = noRulers ? 'none' : '';
     }
   }
 
@@ -2511,8 +2515,8 @@ class VcfEnhancedRichTextEditor extends RteBase {
   // ==========================================================================
 
   /**
-   * Injects the ruler DOM (wrapper, corner, horizontal ruler) between the
-   * toolbar and the content area in the shadow DOM.
+   * Injects the ruler DOM (horizontal ruler above content, vertical ruler
+   * to the left of content) into the shadow DOM.
    * @protected
    */
   _injectRuler() {
@@ -2537,9 +2541,21 @@ class VcfEnhancedRichTextEditor extends RteBase {
     // Insert wrapper before the content div
     contentDiv.parentNode.insertBefore(wrapper, contentDiv);
 
+    // Vertical ruler: sits to the left of the content area.
+    // Wrap [content] in a flex container with [verticalRuler] + [content].
+    const contentWrapper = document.createElement('div');
+    contentWrapper.setAttribute('part', 'content-wrapper');
+    contentDiv.parentNode.insertBefore(contentWrapper, contentDiv);
+
+    const verticalRuler = document.createElement('div');
+    verticalRuler.setAttribute('part', 'verticalRuler');
+    contentWrapper.appendChild(verticalRuler);
+    contentWrapper.appendChild(contentDiv);
+
     // Apply initial noRulers state
     if (this.noRulers) {
       wrapper.style.display = 'none';
+      verticalRuler.style.display = 'none';
     }
   }
 

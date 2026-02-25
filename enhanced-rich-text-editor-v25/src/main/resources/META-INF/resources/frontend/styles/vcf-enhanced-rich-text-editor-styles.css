@@ -48,6 +48,8 @@
   --vaadin-erte-ruler-background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAV4AAAAPBAMAAABeoLrPAAAAA3NCSVQICAjb4U/gAAAAHlBMVEXS0tLR0dHQ0NCerLmfq7eeqrafqbOdqbWcqLT///9ePaWcAAAACnRSTlP///////////8AsswszwAAAAlwSFlzAAALEgAACxIB0t1+/AAAACB0RVh0U29mdHdhcmUATWFjcm9tZWRpYSBGaXJld29ya3MgTVi7kSokAAAAFnRFWHRDcmVhdGlvbiBUaW1lADA1LzEwLzEyhpCxGgAAAKtJREFUeJztksENgCAMRXt1BEZgICdwBvco3NxWqwYDFGMrajT2QOD/0v8kwvCugqcBhPXzXluf4XViA+uNKmfIeX09Q5Eh5y0+o9xQZFT8H24xINgXLwmMdtl4fVjcruYO9nEans6YeA2NMSQaEtedYzQMx0RLbkTzbHmeImPibWhrY8cy2to3IyRalM7P89ldVQZk39ksPZhpXJ9hUHfeDanlVAZ0ffumGgEWlrgeDxx/xAAAAABJRU5ErkJggg==') repeat-x;
   --vaadin-erte-ruler-marker-size: 0.9375rem;
   --vaadin-erte-ruler-marker-color: inherit;
+  --vaadin-erte-ruler-vertical-width: 0.9375rem;
+  --vaadin-erte-ruler-vertical-background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAyBAMAAABxHJwKAAAAA3NCSVQICAjb4U/gAAAAG1BMVEXS0tLR0dHQ0NCfq7eeqradq7idqbWcqLT///+TeDeAAAAACXRSTlP//////////wBTT3gSAAAACXBIWXMAAAsSAAALEgHS3X78AAAAIHRFWHRTb2Z0d2FyZQBNYWNyb21lZGlhIEZpcmV3b3JrcyBNWLuRKiQAAAAWdEVYdENyZWF0aW9uIFRpbWUAMDUvMTAvMTKGkLEaAAAATklEQVR4nGPogIAABijDAMZwQGM0CqKLYGNAtDcK4lOcgGGyAS4pDF1NgoIJuJ2KLtKIUIxpcgKGmzHV4AkNTClc2pFDo4Bq4awoCAYOAKbZvafXusxYAAAAAElFTkSuQmCC') repeat-y;
 }
 
 /* ============================================================================
@@ -312,7 +314,7 @@
   border-color: var(--vaadin-erte-ruler-border-color);
   border-style: solid;
   border-width: 0 1px 1px 0;
-  width: calc(var(--vaadin-erte-ruler-height) - 1px);
+  width: calc(var(--vaadin-erte-ruler-vertical-width) - 1px);
   height: calc(var(--vaadin-erte-ruler-height) - 1px);
 }
 
@@ -325,6 +327,21 @@
   height: var(--vaadin-erte-ruler-height);
   padding: 0;
   cursor: crosshair;
+}
+
+/* Content wrapper: flex row for vertical ruler + content area */
+[part~="content-wrapper"] {
+  display: flex;
+  flex: auto;
+  overflow: hidden;
+}
+
+[part~="verticalRuler"] {
+  overflow: hidden;
+  box-sizing: content-box;
+  background: var(--vaadin-erte-ruler-vertical-background);
+  width: var(--vaadin-erte-ruler-vertical-width);
+  flex-shrink: 0;
 }
 
 /* Tabstop marker icons — translateX(-50%) for automatic centering */

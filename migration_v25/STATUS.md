@@ -59,8 +59,7 @@
 
 ### Phase 5 QA Notes (zu untersuchen)
 
-- **a) TabConverter vs TableDeltaConverter Konflikt?** — Prüfen ob sich TabConverter und ein potentieller TableDeltaConverter gegenseitig stören
-- **b) Left Ruler fehlt** — Issue: der linke Ruler wird nicht angezeigt
+- ~~**b) Left Ruler fehlt**~~ — FIXED: vertical ruler added (content-wrapper + verticalRuler parts, 2 custom properties)
 - **c) Dev-Doku dramatisch einkürzen** — Nur ERTE-spezifische Inhalte behalten; Quill 2- und RTE 2-Inhalte rausnehmen (gehören nicht in ERTE-Doku)
 - **d) TabConverter entfernen (Breaking Change)** — TabConverter rausnehmen. Als potentieller Breaking Change dokumentieren: betrifft nur Deltas die vor ERTE 5.2.0 erstellt wurden. Prüfen ob Delta-Versionierung möglich wäre, um solche Migrationen in Zukunft automatisieren zu können.
 | **6**    | **Theme Support (Post-6.0.0)**     | NOT STARTED                            |
