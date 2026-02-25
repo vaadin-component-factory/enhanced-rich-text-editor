@@ -1,0 +1,91 @@
+/**
+ * ERTE Demo — Global Styles
+ *
+ * All ERTE custom properties are listed below (commented out) for reference.
+ * Uncomment and adjust values to customize the editor appearance globally.
+ * These properties can also be set on individual editor instances via CSS selectors.
+ */
+
+html {
+  /* ========================================================================
+     Core ERTE Properties
+     ======================================================================== */
+
+  /* --- Readonly sections --- */
+  /* Text color inside readonly spans */
+  /* --vaadin-erte-readonly-color: var(--vaadin-text-color-secondary); */
+  /* Background color of readonly spans */
+  /* --vaadin-erte-readonly-background: var(--vaadin-background-container); */
+  /* Border color around readonly spans */
+  /* --vaadin-erte-readonly-border-color: var(--vaadin-border-color-secondary); */
+  /* Border thickness of readonly spans */
+  /* --vaadin-erte-readonly-border-width: 1px; */
+  /* Corner rounding of readonly spans */
+  /* --vaadin-erte-readonly-border-radius: var(--lumo-border-radius-s); */
+  /* Inline padding inside readonly spans */
+  /* --vaadin-erte-readonly-padding: calc(var(--vaadin-padding-xs) / 2); */
+
+  /* --- Placeholders --- */
+  /* Text color of placeholder tokens */
+  /* --vaadin-erte-placeholder-color: inherit; */
+  /* Background color of placeholder tokens */
+  /* --vaadin-erte-placeholder-background: var(--lumo-primary-color-10pct); */
+  /* Border color around placeholder tokens */
+  /* --vaadin-erte-placeholder-border-color: transparent; */
+  /* Border thickness of placeholder tokens */
+  /* --vaadin-erte-placeholder-border-width: 0; */
+  /* Corner rounding of placeholder tokens */
+  /* --vaadin-erte-placeholder-border-radius: var(--lumo-border-radius-s); */
+  /* Inline padding inside placeholder tokens */
+  /* --vaadin-erte-placeholder-padding: calc(var(--vaadin-padding-xs) / 2); */
+
+  /* --- Whitespace indicators --- */
+  /* Color of space/tab indicator dots */
+  /* --vaadin-erte-whitespace-indicator-color: var(--lumo-contrast-40pct, rgba(0, 0, 0, 0.38)); */
+  /* Color of paragraph-end indicator (pilcrow) */
+  /* --vaadin-erte-whitespace-paragraph-indicator-color: var(--lumo-contrast-30pct, rgba(0, 0, 0, 0.26)); */
+  /* Spacing around whitespace indicator symbols */
+  /* --vaadin-erte-whitespace-indicator-spacing: calc(var(--vaadin-padding-xs) / 2); */
+
+  /* --- Ruler --- */
+  /* Height of the horizontal ruler bar */
+  /* --vaadin-erte-ruler-height: 0.9375rem; */
+  /* Border color of the ruler */
+  /* --vaadin-erte-ruler-border-color: var(--vaadin-border-color, var(--lumo-contrast-20pct)); */
+  /* Background image of the ruler (tick marks) */
+  /* --vaadin-erte-ruler-background: url('data:image/png;base64,...'); */
+  /* Size of tabstop marker icons on the ruler */
+  /* --vaadin-erte-ruler-marker-size: 0.9375rem; */
+  /* Color of tabstop marker icons on the ruler */
+  /* --vaadin-erte-ruler-marker-color: inherit; */
+
+  /* ========================================================================
+     Tables Properties
+     ======================================================================== */
+
+  /* --- Cell appearance --- */
+  /* Border color of table cells */
+  /* --vaadin-erte-table-border-color: var(--vaadin-border-color, var(--lumo-contrast-30pct)); */
+  /* Border thickness of table cells */
+  /* --vaadin-erte-table-border-width: 1px; */
+  /* Border line style of table cells (solid, dashed, dotted) */
+  /* --vaadin-erte-table-border-style: solid; */
+  /* Content padding inside table cells */
+  /* --vaadin-erte-table-cell-padding: 2px 5px; */
+  /* Minimum height of table cells/rows */
+  /* --vaadin-erte-table-cell-min-height: 1.625em; */
+  /* Default background color of table cells */
+  /* --vaadin-erte-table-cell-background: transparent; */
+  /* Vertical content alignment in cells (top, middle, bottom) */
+  /* --vaadin-erte-table-cell-vertical-align: top; */
+
+  /* --- Cell states --- */
+  /* Background overlay for multi-cell selection */
+  /* --vaadin-erte-table-cell-selected-background: var(--lumo-primary-color-10pct, rgba(25, 118, 210, 0.1)); */
+  /* Background color on cell hover */
+  /* --vaadin-erte-table-cell-hover-background: transparent; */
+  /* Focus outline color for keyboard-focused cell */
+  /* --vaadin-erte-table-cell-focus-color: var(--vaadin-focus-ring-color, var(--lumo-primary-color-50pct)); */
+  /* Focus outline thickness for keyboard-focused cell */
+  /* --vaadin-erte-table-cell-focus-width: var(--vaadin-focus-ring-width, 2px); */
+}
