@@ -48,7 +48,7 @@
 | **4.3a** | Table Operations, CSS, Java API    | COMPLETE                               |
 | **4.3b** | Template System                    | COMPLETE                               |
 | **4.4**  | **Tables Tests**                   | COMPLETE *(82 tests: 71 pass, 11 fixme)* |
-| 4.5      | Documentation                      | NOT STARTED                            |
+| 4.5      | Documentation                      | COMPLETE                               |
 | 4.6      | Custom Properties for Tables       | COMPLETE                               |
 | ~~4.7~~  | ~~Demo Migration (Tables)~~        | SKIPPED *(covered by Phase 5.1 + playground)* |
 | **5**    | **Final QA & Restructuring**       | NOT STARTED                            |
