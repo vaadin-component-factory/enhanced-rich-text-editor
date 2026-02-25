@@ -1,12 +1,11 @@
 # ERTE Test Suite Inventory
 
-> **V25 Migration Status (Phase 3.3g complete):** 205 tests passing, 10 skipped.
-> Implemented: Shell (6), Toolbar (26), Readonly (18), Tabstops (67 pass, 14 skip), Placeholders (30 pass, 2 skip), extendOptions (4), Whitespace (7 pass, 2 skip), Sanitizer (11), I18n (2), Replace Icons (10).
-> Features.spec.ts: 32 pass, 1 fail (focus=unrelated to features).
-> Skipped tests document known Quill 2/Parchment 3 limitations and deferred features, not ERTE bugs.
+> **V25 Migration Status (Phase 4.4 complete):** 292 pass, 21 skip, 0 fail across 313 tests.
+> Implemented: Shell (7), Toolbar (26), Readonly (18), Tabstops (67 pass, 14 skip), Placeholders (30 pass, 2 skip), extendOptions (4), Whitespace (7 pass, 2 skip), Sanitizer (11), I18n (2), Replace Icons (10), Features (32), Tables (71 pass, 11 skip).
+> Skipped tests document known component bugs and Quill 2/Parchment 3 limitations, not ERTE core bugs.
 
-Total: 277 tests (75 prototype + 202 ERTE)
-V25 status: 205 passed, 10 skipped across all feature specs
+Total: 388 tests (75 prototype + 313 ERTE including Tables)
+V25 status: 292 passed, 21 skipped, 0 failed
 
 ---
 
@@ -323,6 +322,126 @@ Phase 3.3g — `replaceStandardToolbarButtonIcon()` enum-based API.
 | 10 | Enum API provides compile-time safety | PASS |
 
 **Total:** 10 tests, all passing
+
+---
+
+## Tables (82 tests) — `erte/tables.spec.ts`
+
+Phase 4 — Tables addon for ERTE. Full CRUD operations, cell selection, keyboard navigation, templates, and events.
+
+### Table Structure (Initial State) — 6 tests
+- Pre-loaded table has 6 rows and 5 columns
+- Cells contain numbered text 1-30
+- All cells have table_id, row_id, cell_id attributes
+- All cells share same table_id
+- Cells in same row share row_id
+- Table has colgroup with 5 col elements
+
+### Table Creation — 4 tests
+- Insert table via toolbar popover (3x3)
+- New table cells have unique IDs
+- Table with template class at creation
+- Add Table popover fields accept valid values
+
+### Row Operations — 5 tests
+- Add row below current cell
+- Add row above current cell
+- Remove current row
+- Row IDs preserved after add
+- Content preserved in adjacent rows after removal
+
+### Column Operations — 5 tests
+- Add column after current cell
+- Add column before current cell
+- Remove current column
+- Colgroup updates after column add
+- Colgroup updates after column remove
+
+### Cell Merge and Split — 6 tests
+- Merge 2x1 horizontal
+- Merge 1x2 vertical
+- Merge 2x2 rectangle
+- ~~Split merged cell~~ *(fixme: BUG — split doesn't reset colspan on original merged cell)*
+- Merged cell content combines sources
+- Merge menu disabled without multi-cell selection
+
+### Cell Selection — 8 tests
+- Ctrl+Click selects single cell
+- Ctrl+Drag selects rectangle
+- Selection highlight visible
+- ~~Escape clears selection~~ *(fixme: needs investigation)*
+- Click outside table clears selection
+- Ctrl key shows cell cursor
+- Click in cell shows focused-cell indicator
+- ~~Selection fires TableSelected with cellSelection=true~~ *(fixme: needs investigation)*
+
+### Keyboard Navigation — 8 tests
+- Tab moves to next cell
+- Tab at end of row wraps to next row
+- Shift+Tab moves to previous cell
+- Shift+Tab at row start wraps to previous row
+- Tab at last cell exits table
+- ~~Backspace at cell start doesn't cross boundary~~ *(fixme: BUG — backspace crosses cell boundary)*
+- Delete at cell end doesn't cross boundary
+- Ctrl+A selects cell text only
+
+### Toolbar Controls — 6 tests
+- Add Table button enabled when not in table
+- Add Table button disabled when in table
+- Modify Table enabled when in table
+- Modify Table disabled when not in table
+- Style Templates enabled when in table
+- Style Templates disabled when not in table
+
+### Template System — 5 tests
+- Pre-loaded table has template1 class
+- Template CSS applied (background colors)
+- Read Templates returns JSON with 3 templates
+- Template class in delta td attribute
+- Template class preserved in HTML output
+
+### Template Dialog — 4 tests
+- Style Templates button opens template dialog
+- Template ComboBox lists all templates
+- Change template for current table
+- Close dialog with close button
+
+### Events — 5 tests
+- TableSelected fires on click into table
+- TableSelected fires on leaving table
+- CellChanged fires with row/col indices
+- CellChanged includes old coordinates
+- TableSelected reports template class
+
+### Undo/Redo — 5 tests
+- Undo add row
+- ~~Undo remove table~~ *(fixme: DOM history produces different structure)*
+- ~~Redo after undo~~ *(fixme: DOM history produces different structure)*
+- ~~Undo merge~~ *(fixme: DOM history produces different structure)*
+- ~~Multiple undo steps~~ *(fixme: DOM history produces different structure)*
+
+### Value Round-Trip — 5 tests
+- Delta has 30 td ops for 6x5 table
+- Each td op has valid metadata format
+- HTML output contains table structure
+- Load delta restores table
+- Template class survives delta round-trip
+
+### Border Toggle — 2 tests (fixme)
+- ~~Border toggle hides table borders~~ *(fixme: no UI button)*
+- ~~Border toggle restores table borders~~ *(fixme: no UI button)*
+
+### Edge Cases — 8 tests
+- Type text inside cell
+- Bold text inside cell
+- Remove table clears table content
+- Table survives editor readonly mode
+- Table cells not editable in readonly mode
+- ~~Delete last row removes entire table~~ *(fixme: BUG — deleting last row doesn't auto-remove table)*
+- Single-cell table operations
+- Empty cell remains functional
+
+**Total:** 82 tests — 71 pass, 11 fixme (known bugs and undo/redo history issues), 0 fail
 
 ---
 

@@ -1,6 +1,6 @@
 # V25 Migration Status
 
-**Current: Phase 4.3 — Tables UI Controls & Java API**
+**Current: Phase 4.5 — Tables Documentation**
 
 > **Note:** ERTE 6.0.0 focuses on Lumo theme support only. Multi-theme support (Aura, Material) is planned for post-6.0.0 releases (Phase 6).
 
@@ -47,7 +47,7 @@
 | 4.2      | Blot Migration                     | COMPLETE                               |
 | **4.3a** | Table Operations, CSS, Java API    | COMPLETE                               |
 | **4.3b** | Template System                    | COMPLETE                               |
-| 4.4      | Tests                              | NOT STARTED                            |
+| **4.4**  | **Tables Tests**                   | COMPLETE *(82 tests: 71 pass, 11 fixme)* |
 | 4.5      | Documentation                      | NOT STARTED                            |
 | 4.6      | Custom Properties for Tables       | NOT STARTED                            |
 | 4.7      | Demo Migration (Tables)            | NOT STARTED *(table samples from V24)* |
@@ -56,6 +56,13 @@
 | 5.1      | V24 Sample Views Migration         | NOT STARTED *(migrate V24 demo views to V25 demo placeholder)* |
 | 5.2      | Test Views → Module IT             | NOT STARTED *(move test views + Playwright tests from demo into module test infrastructure)* |
 | 5.3      | Documentation Humanization Review  | NOT STARTED *(rewrite docs for human readers, reduce machine-generated tone)* |
+
+### Phase 5 QA Notes (zu untersuchen)
+
+- **a) TabConverter vs TableDeltaConverter Konflikt?** — Prüfen ob sich TabConverter und ein potentieller TableDeltaConverter gegenseitig stören
+- **b) Left Ruler fehlt** — Issue: der linke Ruler wird nicht angezeigt
+- **c) Dev-Doku dramatisch einkürzen** — Nur ERTE-spezifische Inhalte behalten; Quill 2- und RTE 2-Inhalte rausnehmen (gehören nicht in ERTE-Doku)
+- **d) TabConverter entfernen (Breaking Change)** — TabConverter rausnehmen. Als potentieller Breaking Change dokumentieren: betrifft nur Deltas die vor ERTE 5.2.0 erstellt wurden. Prüfen ob Delta-Versionierung möglich wäre, um solche Migrationen in Zukunft automatisieren zu können.
 | **6**    | **Theme Support (Post-6.0.0)**     | NOT STARTED                            |
 | 6.1      | Aura Theme Support                 | NOT STARTED                            |
 | 6.2      | Material Theme Support             | NOT STARTED                            |
