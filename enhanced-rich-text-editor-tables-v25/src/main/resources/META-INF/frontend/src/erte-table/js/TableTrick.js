@@ -128,7 +128,10 @@ export default class TableTrick {
       const table_id = table.domNode.getAttribute('table_id');
       let managed_merged_cells = [];
 
-      table.domNode.querySelector("colgroup").append(document.createElement("col"));
+      const colgroup = table.domNode.querySelector("colgroup");
+      const newCol = document.createElement("col");
+      colgroup.append(newCol);
+      TableHistory.register('insert', { node: newCol, parentNode: colgroup });
 
       table.children.forEach(function (tr) {
         const row_id = tr.domNode.getAttribute('row_id');
@@ -291,11 +294,14 @@ export default class TableTrick {
       // Remove all TDs with the colIndex and repeat it colsToRemove times if there are multiple columns to delete
 
       // also update the colgroup
-      const cols = table.domNode.querySelector("colgroup").children;
+      const colgroup = table.domNode.querySelector("colgroup");
+      const cols = colgroup.children;
 
       for (let i = 0; i < colsToRemove; i++) {
         if (cols.length > 1) { // never delete the last col, since the table will automatically keep the last column
-          cols[cols.length - 1].remove();
+          const removedCol = cols[cols.length - 1];
+          TableHistory.register('remove', { node: removedCol, parentNode: colgroup });
+          removedCol.remove();
         }
 
         table.children.forEach(function (tr) {
@@ -356,9 +362,11 @@ export default class TableTrick {
       });
     };
 
+    let tableNode = null; // Capture table reference before rows are removed
     if (coords) {
       // if we have a selection, remove all selected rows
       const table = TableSelection.selectionStartElement.closest('table');
+      tableNode = table;
       const rowIndex = coords.minY;
       const rowsToRemove = coords.maxY - coords.minY + 1;
 
@@ -378,6 +386,7 @@ export default class TableTrick {
       const td = TableTrick.find_td(quill);
       if (td) {
         const tr = td.parent;
+        tableNode = tr.parent.domNode;
         manageMergedCells(tr.domNode);
         TableHistory.register('remove', { node: tr.domNode, nextNode: tr.next ? tr.next.domNode : null, parentNode: tr.parent.domNode });
         const _tr = Quill.find(tr.domNode);
@@ -386,6 +395,18 @@ export default class TableTrick {
         }
       }
     }
+
+    // Check if table is now empty (all rows removed) — if so, remove entire table
+    if (tableNode && tableNode.parentNode && tableNode.querySelectorAll('tr').length === 0) {
+      const tableBlot = Quill.find(tableNode);
+      if (tableBlot) {
+        TableHistory.register('remove', {
+          node: tableNode, nextNode: tableNode.nextSibling, parentNode: tableNode.parentNode
+        });
+        tableBlot.remove();
+      }
+    }
+
     TableSelection.selectionStartElement = TableSelection.selectionEndElement = null;
     TableHistory.add(quill);
   }
@@ -400,14 +421,30 @@ export default class TableTrick {
       td = Quill.find(_td);
     }
 
-    if (td && TableTrick._split(td.domNode)) {
-      // add changes to history
-      // TableTrick._split already register 'split' change to history
-      TableSelection.selectionStartElement = TableSelection.selectionEndElement = null;
-      // Security fix: emit text-change instead of innerHTML = innerHTML
+    if (td) {
+      // Capture delta BEFORE DOM mutation so emitTextChange computes a real diff
       const oldDelta = quill.getContents();
-      TableTrick.emitTextChange(quill, oldDelta);
-      TableHistory.add(quill);
+      if (TableTrick._split(td.domNode)) {
+        // Sync Quill's blot tree with the DOM changes made by _split
+        quill.update();
+        // Parchment 3 caches delta() results in BlockBlot.cache.delta.
+        // After _split() modifies TD attributes (removing colspan/rowspan),
+        // the cached deltas still contain stale values. Clear all block caches
+        // and rebuild the editor's delta from the blot tree.
+        const Delta = Quill.import('delta');
+        quill.scroll.lines().forEach(line => {
+          if (line.cache) line.cache = {};
+        });
+        quill.editor.delta = quill.scroll.lines().reduce(
+          (delta, line) => delta.concat(line.delta()), new Delta()
+        );
+        // add changes to history
+        // TableTrick._split already register 'split' change to history
+        TableSelection.selectionStartElement = TableSelection.selectionEndElement = null;
+        // Security fix: emit text-change instead of innerHTML = innerHTML
+        TableTrick.emitTextChange(quill, oldDelta);
+        TableHistory.add(quill);
+      }
     }
   }
 
@@ -699,9 +736,13 @@ export default class TableTrick {
       case 'remove-selection':
         TableTrick.removeSelection(quill);
         break;
-      case 'border-toggle':
-        TableTrick.borderToggle(quill, !TableSelection.selectionStartElement?.closest('table')?.classList.contains(HIDDEN_BORDER_CLASS));
+      case 'border-toggle': {
+        // Use same table lookup fallback as borderToggle itself
+        const btTable = TableSelection.selectionStartElement?.closest('table') ||
+            (TableTrick.find_td(quill)?.domNode.closest('table'));
+        TableTrick.borderToggle(quill, !btTable?.classList.contains(HIDDEN_BORDER_CLASS));
         break;
+      }
       case 'undo':
         if (quill.history.stack.undo.length) {
           const entry = quill.history.stack.undo[quill.history.stack.undo.length - 1];

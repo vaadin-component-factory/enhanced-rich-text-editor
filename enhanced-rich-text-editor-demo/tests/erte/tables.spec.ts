@@ -401,8 +401,7 @@ test.describe('ERTE Tables', () => {
       expect(firstCell.rowspan).toBe('2');
     });
 
-    test.fixme('Split merged cell', async ({ page }) => {
-      // BUG: Split doesn't reset colspan on the original merged cell
+    test('Split merged cell', async ({ page }) => {
       // First merge
       await clickCell(page, '1'); // Enable Modify button via TableSelected
       await ctrlDragCells(page, '1', '2');
@@ -475,8 +474,7 @@ test.describe('ERTE Tables', () => {
       expect(hasClass).toBe(true);
     });
 
-    test.fixme('Escape clears selection', async ({ page }) => {
-      // Note: Escape may not clear cell selection in current implementation
+    test('Escape clears selection', async ({ page }) => {
       await ctrlClickCell(page, '13');
       await page.waitForTimeout(200);
       expect(await getSelectedCellCount(page)).toBe(1);
@@ -521,11 +519,10 @@ test.describe('ERTE Tables', () => {
       expect(hasFocused).toBe(true);
     });
 
-    test.fixme('Selection fires TableSelected with cellSelection=true', async ({ page }) => {
-      // Note: The table-selected event may fire before cell selection completes
+    test('Selection fires TableSelected with cellSelection=true', async ({ page }) => {
       await clearEventLog(page);
       await ctrlClickCell(page, '13');
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
 
       const events = await getEventLog(page);
       const selectionEvent = events.find(e => e.includes('cellSelection=true'));
@@ -588,8 +585,7 @@ test.describe('ERTE Tables', () => {
       expect(hasFocused).toBe(false);
     });
 
-    test.fixme('Backspace at cell start does not cross boundary', async ({ page }) => {
-      // Known issue: Backspace at cell start crosses cell boundary in Quill 2
+    test('Backspace at cell start does not cross boundary', async ({ page }) => {
       await clickCell(page, '13');
       // Move cursor to start of cell
       await page.keyboard.press('Home');
@@ -889,82 +885,78 @@ test.describe('ERTE Tables', () => {
       expect(await getRowCount(page)).toBe(6);
     });
 
-    test.fixme('Undo remove table', async ({ page }) => {
-      // Known issue: DOM history may differ slightly
+    test('Undo remove table', async ({ page }) => {
       await clickCell(page, '13');
       await openModifyTableMenu(page);
       await page.getByRole('menuitem', { name: 'Remove table' }).click();
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
 
       expect(await getTable(page).count()).toBe(0);
 
       await page.keyboard.press('Control+z');
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
 
       expect(await getTable(page).count()).toBe(1);
     });
 
-    test.fixme('Redo after undo', async ({ page }) => {
-      // Known issue: Quill table redo may not fully restore table state
+    test('Redo after undo', async ({ page }) => {
       await clickCell(page, '13');
       await openModifyTableMenu(page);
       await page.getByRole('menuitem', { name: 'Append row below' }).click();
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
 
       await page.keyboard.press('Control+z');
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
       expect(await getRowCount(page)).toBe(6);
 
       await page.keyboard.press('Control+y');
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
       expect(await getRowCount(page)).toBe(7);
     });
 
-    test.fixme('Undo merge', async ({ page }) => {
-      // Known issue: Quill history doesn't fully restore merged cell state
+    test('Undo merge', async ({ page }) => {
       await clickCell(page, '1');
       await ctrlDragCells(page, '1', '2');
       await openModifyTableMenu(page);
       await page.getByRole('menuitem', { name: 'Merge selected cells' }).click();
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
 
       const deltaBefore = await getDeltaFromEditor(page);
       const firstCellBefore = parseTdMetadata(getTdOps(deltaBefore)[0].attributes.td);
       expect(firstCellBefore.colspan).toBe('2');
 
       await page.keyboard.press('Control+z');
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
 
       const deltaAfter = await getDeltaFromEditor(page);
       const firstCellAfter = parseTdMetadata(getTdOps(deltaAfter)[0].attributes.td);
       expect(firstCellAfter.colspan).toBe('');
     });
 
-    test.fixme('Multiple undo steps', async ({ page }) => {
-      // Known issue: Multiple undo steps with column operations may not restore correct count
+    test('Multiple undo steps', async ({ page }) => {
       await clickCell(page, '13');
 
       // Step 1: Add row
       await openModifyTableMenu(page);
       await page.getByRole('menuitem', { name: 'Append row below' }).click();
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
 
       // Step 2: Add column
       await openModifyTableMenu(page);
       await page.getByRole('menuitem', { name: 'Append column after' }).click();
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
 
       expect(await getRowCount(page)).toBe(7);
       expect(await getColCount(page)).toBe(6);
 
       // Undo column add
       await page.keyboard.press('Control+z');
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
       expect(await getColCount(page)).toBe(5);
 
       // Undo row add
       await page.keyboard.press('Control+z');
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
       expect(await getRowCount(page)).toBe(6);
     });
   });
@@ -1045,13 +1037,54 @@ test.describe('ERTE Tables', () => {
   // 3.14 Border Toggle
   // ============================================
   test.describe('Border Toggle', () => {
-    test.fixme('Border toggle hides table borders', async ({ page }) => {
-      // Note: Border toggle has no UI button yet - action exists but not in menu
-      // This test requires executeJs to call the connector action directly
+    test('Border toggle hides table borders', async ({ page }) => {
+      await clickCell(page, '13');
+      await page.waitForTimeout(200);
+
+      // Call border-toggle via connector action
+      await page.evaluate((elId) => {
+        const el = document.getElementById(elId) as any;
+        const connector = (window as any).Vaadin.Flow.vcfEnhancedRichTextEditor.extensions.tables;
+        connector.action(el, 'border-toggle');
+      }, 'test-editor');
+      await page.waitForTimeout(200);
+
+      // Verify table has hidden border class
+      const hasHiddenBorder = await page.evaluate((elId) => {
+        const el = document.getElementById(elId) as any;
+        const table = el._editor.root.querySelector('table');
+        return table?.classList.contains('ql-editor__table--hideBorder');
+      }, 'test-editor');
+      expect(hasHiddenBorder).toBe(true);
     });
 
-    test.fixme('Border toggle restores table borders', async ({ page }) => {
-      // Note: Border toggle has no UI button yet
+    test('Border toggle restores table borders', async ({ page }) => {
+      await clickCell(page, '13');
+      await page.waitForTimeout(200);
+
+      // Toggle on (hide borders)
+      await page.evaluate((elId) => {
+        const el = document.getElementById(elId) as any;
+        const connector = (window as any).Vaadin.Flow.vcfEnhancedRichTextEditor.extensions.tables;
+        connector.action(el, 'border-toggle');
+      }, 'test-editor');
+      await page.waitForTimeout(200);
+
+      // Toggle off (restore borders)
+      await page.evaluate((elId) => {
+        const el = document.getElementById(elId) as any;
+        const connector = (window as any).Vaadin.Flow.vcfEnhancedRichTextEditor.extensions.tables;
+        connector.action(el, 'border-toggle');
+      }, 'test-editor');
+      await page.waitForTimeout(200);
+
+      // Verify table no longer has hidden border class
+      const hasHiddenBorder = await page.evaluate((elId) => {
+        const el = document.getElementById(elId) as any;
+        const table = el._editor.root.querySelector('table');
+        return table?.classList.contains('ql-editor__table--hideBorder');
+      }, 'test-editor');
+      expect(hasHiddenBorder).toBe(false);
     });
   });
 
@@ -1120,8 +1153,7 @@ test.describe('ERTE Tables', () => {
       expect(cellText).toBe('13');
     });
 
-    test.fixme('Delete last row removes entire table', async ({ page }) => {
-      // BUG: Removing last row should remove the entire table but currently doesn't
+    test('Delete last row removes entire table', async ({ page }) => {
       // Remove rows until only one left
       for (let i = 0; i < 5; i++) {
         await clickCell(page, await getCellText(page, 0, 0)); // Always click first cell
@@ -1146,10 +1178,12 @@ test.describe('ERTE Tables', () => {
       await getEditor(page).locator('p').last().click();
       await getAddTableButton(page).click();
 
-      const rowsField = page.locator('vaadin-integer-field').first();
-      const colsField = page.locator('vaadin-integer-field').nth(1);
-      await rowsField.locator('input').fill('1');
-      await colsField.locator('input').fill('1');
+      const rowsInput = page.locator('vaadin-integer-field').first().locator('input');
+      const colsInput = page.locator('vaadin-integer-field').nth(1).locator('input');
+      await rowsInput.click({ clickCount: 3 });
+      await rowsInput.pressSequentially('1');
+      await colsInput.click({ clickCount: 3 });
+      await colsInput.pressSequentially('1');
 
       await page.getByRole('dialog').getByRole('button').click();
       await page.waitForTimeout(500);

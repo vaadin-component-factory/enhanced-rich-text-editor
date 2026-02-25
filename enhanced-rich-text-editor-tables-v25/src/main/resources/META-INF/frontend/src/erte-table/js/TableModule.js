@@ -199,6 +199,7 @@ export function initTableModule(quill, Quill) {
         if (TableSelection.getSelectionCoords()) return false;
 
         let nodeRemoved = false;
+        let atCellBoundary = false;
         resultNodes.forEach(resultNode => {
           if (resultNode.previousSibling) {
             if (resultNode.previousSibling.nodeName === 'TABLE') {
@@ -208,12 +209,12 @@ export function initTableModule(quill, Quill) {
               }
             }
           } else if (resultNode.parentNode.nodeName === 'TD') {
-            if (TableTrick._removeCell(resultNode.parentNode)) {
-              nodeRemoved = true;
-            }
+            // At cell boundary — block backspace to prevent cell destruction
+            atCellBoundary = true;
           }
         });
 
+        if (atCellBoundary) return false;
         if (nodeRemoved) TableHistory.add(quill);
         return !nodeRemoved;
       }
@@ -287,6 +288,16 @@ export function initTableModule(quill, Quill) {
     }
   }, ...existingUndo];
 
+  // Ctrl+Y — redo (alternative to Ctrl+Shift+Z)
+  const existingY = keyboard.bindings['y'] ? [...keyboard.bindings['y']] : [];
+  keyboard.bindings['y'] = [{
+    key: 'y',
+    [SHORTKEY]: true,
+    handler: function(range, context) {
+      return TableTrick.table_handler('redo', quill);
+    }
+  }, ...existingY];
+
   // Escape — clear cell selection
   const existingEscape = keyboard.bindings['Escape'] ? [...keyboard.bindings['Escape']] : [];
   keyboard.bindings['Escape'] = [{
@@ -295,6 +306,7 @@ export function initTableModule(quill, Quill) {
       if (TableSelection.selectionStartElement || TableSelection.selectionEndElement) {
         TableSelection.resetSelection(quill.container);
         TableSelection.selectionStartElement = TableSelection.selectionEndElement = null;
+        TableSelection.selectionChange(quill);
         return false;
       }
       return true;

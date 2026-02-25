@@ -174,7 +174,9 @@ class TableSelection {
     const selection = host.shadowRoot.getSelection ? host.shadowRoot.getSelection() : document.getSelection();
     const selectedNode = selection.anchorNode ? (selection.anchorNode.nodeType === Node.TEXT_NODE ? selection.anchorNode.parentElement : selection.anchorNode) : null;
     const editor = selectedNode?.closest(".ql-editor");
-    if (editor) { // we are in quill context, so fine to fire events
+    // Cell selection (Ctrl+Click) bypasses editor focus check — e.preventDefault() in mouseDown
+    // prevents the browser from placing the selection inside the editor, but cell selection is valid
+    if (editor || TableSelection.selectionStartElement) {
       let isInTable = TableSelection.selectionStartElement != null || TableSelection.selectionEndElement != null;
       let tableTemplate = "";
 

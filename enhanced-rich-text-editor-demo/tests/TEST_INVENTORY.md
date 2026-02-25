@@ -1,11 +1,11 @@
 # ERTE Test Suite Inventory
 
-> **V25 Migration Status (Phase 4.4 complete):** 292 pass, 21 skip, 0 fail across 313 tests.
-> Implemented: Shell (7), Toolbar (26), Readonly (18), Tabstops (67 pass, 14 skip), Placeholders (30 pass, 2 skip), extendOptions (4), Whitespace (7 pass, 2 skip), Sanitizer (11), I18n (2), Replace Icons (10), Features (32), Tables (71 pass, 11 skip).
+> **V25 Migration Status (Phase 5 QA — tables fixme complete):** 296 pass, 10 skip, 0 fail across 306 tests.
+> Implemented: Shell (7), Toolbar (26), Readonly (18), Tabstops (67 pass, 14 skip), Placeholders (30 pass, 2 skip), extendOptions (4), Whitespace (7 pass, 2 skip), Sanitizer (11), I18n (2), Replace Icons (10), Features (32), Tables (82 pass, 0 skip).
 > Skipped tests document known component bugs and Quill 2/Parchment 3 limitations, not ERTE core bugs.
 
-Total: 388 tests (75 prototype + 313 ERTE including Tables)
-V25 status: 292 passed, 21 skipped, 0 failed
+Total: 381 tests (75 prototype + 306 ERTE including Tables)
+V25 status: 296 passed, 10 skipped, 0 failed
 
 ---
 
@@ -361,7 +361,7 @@ Phase 4 — Tables addon for ERTE. Full CRUD operations, cell selection, keyboar
 - Merge 2x1 horizontal
 - Merge 1x2 vertical
 - Merge 2x2 rectangle
-- ~~Split merged cell~~ *(fixme: BUG — split doesn't reset colspan on original merged cell)*
+- Split merged cell
 - Merged cell content combines sources
 - Merge menu disabled without multi-cell selection
 
@@ -369,11 +369,11 @@ Phase 4 — Tables addon for ERTE. Full CRUD operations, cell selection, keyboar
 - Ctrl+Click selects single cell
 - Ctrl+Drag selects rectangle
 - Selection highlight visible
-- ~~Escape clears selection~~ *(fixme: needs investigation)*
+- Escape clears selection
 - Click outside table clears selection
 - Ctrl key shows cell cursor
 - Click in cell shows focused-cell indicator
-- ~~Selection fires TableSelected with cellSelection=true~~ *(fixme: needs investigation)*
+- Selection fires TableSelected with cellSelection=true
 
 ### Keyboard Navigation — 8 tests
 - Tab moves to next cell
@@ -381,7 +381,7 @@ Phase 4 — Tables addon for ERTE. Full CRUD operations, cell selection, keyboar
 - Shift+Tab moves to previous cell
 - Shift+Tab at row start wraps to previous row
 - Tab at last cell exits table
-- ~~Backspace at cell start doesn't cross boundary~~ *(fixme: BUG — backspace crosses cell boundary)*
+- Backspace at cell start doesn't cross boundary
 - Delete at cell end doesn't cross boundary
 - Ctrl+A selects cell text only
 
@@ -415,10 +415,10 @@ Phase 4 — Tables addon for ERTE. Full CRUD operations, cell selection, keyboar
 
 ### Undo/Redo — 5 tests
 - Undo add row
-- ~~Undo remove table~~ *(fixme: DOM history produces different structure)*
-- ~~Redo after undo~~ *(fixme: DOM history produces different structure)*
-- ~~Undo merge~~ *(fixme: DOM history produces different structure)*
-- ~~Multiple undo steps~~ *(fixme: DOM history produces different structure)*
+- Undo remove table
+- Redo after undo
+- Undo merge
+- Multiple undo steps
 
 ### Value Round-Trip — 5 tests
 - Delta has 30 td ops for 6x5 table
@@ -427,9 +427,9 @@ Phase 4 — Tables addon for ERTE. Full CRUD operations, cell selection, keyboar
 - Load delta restores table
 - Template class survives delta round-trip
 
-### Border Toggle — 2 tests (fixme)
-- ~~Border toggle hides table borders~~ *(fixme: no UI button)*
-- ~~Border toggle restores table borders~~ *(fixme: no UI button)*
+### Border Toggle — 2 tests
+- Border toggle hides table borders
+- Border toggle restores table borders
 
 ### Edge Cases — 8 tests
 - Type text inside cell
@@ -437,11 +437,11 @@ Phase 4 — Tables addon for ERTE. Full CRUD operations, cell selection, keyboar
 - Remove table clears table content
 - Table survives editor readonly mode
 - Table cells not editable in readonly mode
-- ~~Delete last row removes entire table~~ *(fixme: BUG — deleting last row doesn't auto-remove table)*
+- Delete last row removes entire table
 - Single-cell table operations
 - Empty cell remains functional
 
-**Total:** 82 tests — 71 pass, 11 fixme (known bugs and undo/redo history issues), 0 fail
+**Total:** 82 tests — 82 pass, 0 fixme, 0 fail
 
 ---
 

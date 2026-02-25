@@ -54,8 +54,9 @@ class TableHistory {
     const entry = quill.history.tableStack[id];
     if (typeof entry !== 'undefined') {
       // apply changes from last change to first change (undo)
-      entry.reverse().forEach(change => {
-        const oldDelta = quill.getContents();
+      // Use slice() to avoid mutating the original array (needed for redo)
+      const oldDelta = quill.getContents();
+      [...entry].reverse().forEach(change => {
         switch (change.type) {
           case 'insert':
             // remove node (undo)
@@ -66,13 +67,11 @@ class TableHistory {
             TableHistory.insert(quill, change);
             break;
           case 'split':
-            // merge cell (redo)
+            // merge cell (undo → re-merge)
             TableHistory.merge(change, true);
-            // force triggering text-change event
-            TableTrick.emitTextChange(quill, oldDelta);
             break;
           case 'merge':
-            // split cell (redo)
+            // split cell (undo → re-split)
             TableHistory.split(change, true);
             break;
           case 'propertyChange':
@@ -81,13 +80,18 @@ class TableHistory {
             break;
         }
       });
+      // Sync blot tree with all DOM changes
+      quill.update();
+      // Emit text-change so UI (delta output, HTML) reflects the undo
+      TableTrick.emitTextChange(quill, oldDelta);
     }
 
-    // wait history update
+    // Move entry from undo to redo stack synchronously so consecutive
+    // Ctrl+Z presses find the correct next entry immediately.
+    const historyEntry = quill.history.stack.undo.pop();
+    quill.history.stack.redo.push(historyEntry);
+    // Reset ignoreChange asynchronously (after Quill's internal processing)
     setTimeout(() => {
-      // update history
-      const historyEntry = quill.history.stack.undo.pop();
-      quill.history.stack.redo.push(historyEntry);
       quill.history.ignoreChange = historyChangeStatus;
     }, 0);
   }
@@ -98,6 +102,7 @@ class TableHistory {
 
     const entry = quill.history.tableStack[id];
     if (typeof entry !== 'undefined') {
+      const oldDelta = quill.getContents();
       // apply changes from first change to last change (redo)
       entry.forEach(change => {
         switch (change.type) {
@@ -123,13 +128,18 @@ class TableHistory {
             break;
         }
       });
+      // Sync blot tree with all DOM changes
+      quill.update();
+      // Emit text-change so UI (delta output, HTML) reflects the redo
+      TableTrick.emitTextChange(quill, oldDelta);
     }
 
-    // wait history update
+    // Move entry from redo to undo stack synchronously so consecutive
+    // Ctrl+Y presses find the correct next entry immediately.
+    const historyEntry = quill.history.stack.redo.pop();
+    quill.history.stack.undo.push(historyEntry);
+    // Reset ignoreChange asynchronously (after Quill's internal processing)
     setTimeout(() => {
-      // update history
-      const historyEntry = quill.history.stack.redo.pop();
-      quill.history.stack.undo.push(historyEntry);
       quill.history.ignoreChange = historyChangeStatus;
     }, 0);
   }

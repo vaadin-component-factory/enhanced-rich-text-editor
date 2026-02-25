@@ -61,6 +61,14 @@ import tableCss from './css/erte-table-styles.css?inline';
       if ((e.key === 'Control' || e.key === 'Meta') && !container.classList.contains('erte-ctrl-select')) {
         container.classList.add('erte-ctrl-select');
       }
+      // Escape — clear cell selection (DOM-level handler since Quill's keyboard module
+      // requires editor focus, which may not exist after Ctrl+Click e.preventDefault())
+      if (e.key === 'Escape' && (TableSelection.selectionStartElement || TableSelection.selectionEndElement)) {
+        TableSelection.resetSelection(container);
+        TableSelection.selectionStartElement = TableSelection.selectionEndElement = null;
+        TableSelection.selectionChange(quill);
+        e.preventDefault();
+      }
     };
     const onKeyUp = e => {
       if (e.key === 'Control' || e.key === 'Meta') {
