@@ -870,29 +870,7 @@ ERTE includes a server-side HTML sanitizer that prevents XSS attacks while prese
 
 ### 4.4 Testing
 
-The demo module includes comprehensive Playwright tests that demonstrate testing patterns:
-
-```bash
-# Build and start the demo server
-bash v25-build.sh
-bash v25-server-start.sh
-
-# Run all ERTE tests
-cd enhanced-rich-text-editor-demo
-npx playwright test tests/erte/
-
-# Run specific test file
-npx playwright test tests/erte/toolbar.spec.ts
-
-# Stop server
-bash v25-server-stop.sh
-```
-
-**Key test patterns:**
-- Wait for the editor's ready indicator: `page.locator('#test-ready').waitFor({ state: 'attached' })`
-- Shadow DOM: Playwright locators pierce shadow DOM, but `page.evaluate()` does not -- use `el.shadowRoot.querySelector()`
-- Readonly blot is a format attribute, not an embed: `{"attributes": {"readonly": true}}`
-- Placeholder dialog: disambiguate with `[aria-label="Placeholders"]`
+The `enhanced-rich-text-editor-it/` module contains 306 Playwright tests covering all ERTE features. For setup, commands, test architecture, and debugging tips, see [CONTRIBUTING.md — Test Architecture](CONTRIBUTING.md#test-architecture).
 
 ---
 
@@ -946,6 +924,6 @@ These limitations are inherent to Quill 2 and documented in the test suite:
 - **Upgrade Guide:** [docs/UPGRADE_GUIDE.md](UPGRADE_GUIDE.md) for migration from v5.x
 - **API Reference:** [docs/API_REFERENCE.md](API_REFERENCE.md) for complete API surface
 - **Configuration:** [docs/CONFIGURATION.md](CONFIGURATION.md) for toolbar, i18n, theming patterns
-- **Test examples:** See `enhanced-rich-text-editor-demo/src/main/java/com/vaadin/componentfactory/` for working test views
+- **Test examples:** See `enhanced-rich-text-editor-it/src/main/java/com/vaadin/componentfactory/` for working test views
 - **Issue tracker:** GitHub issues on the repository
 - **Commercial support:** [vaadin.com](https://vaadin.com)

@@ -10,126 +10,19 @@ This document describes how to extend the Enhanced Rich Text Editor (ERTE) with 
 
 A blot in Quill 2 represents a format or embed — either an inline style (like bold or readonly) or a discrete element (like a tab or image). ERTE includes examples of both types.
 
-### Inline Format Blot (like ReadOnlyBlot)
+For comprehensive Quill 2 blot development fundamentals, see [quilljs.com](https://quilljs.com/) and [Parchment 3](https://github.com/quilljs/parchment). This section covers only ERTE-specific patterns.
 
-An inline format is a formatting attribute applied to text without inserting a new element. Example: `ReadOnlyBlot` marks text as read-only while preserving the text itself.
-
-**Structure:**
-
-```javascript
-// 1. Import Inline base class
-const Inline = Quill.import('blots/inline');
-
-// 2. Define the blot class
-class MyFormatBlot extends Inline {
-  static blotName = 'myformat';        // Internal name for Quill
-  static className = 'ql-myformat';    // CSS class for styling
-
-  // 3. Create: called when the format is applied
-  static create(value) {
-    const node = super.create(value);
-    if (value) {
-      node.setAttribute('data-custom', 'value');
-      // Optional: contenteditable="false" if the format should prevent editing
-      node.setAttribute('contenteditable', 'false');
-    }
-    return node;
-  }
-
-  // 4. Formats: called to read the format from DOM
-  static formats(domNode) {
-    return domNode.classList.contains('ql-myformat');
-  }
-}
-
-// 5. Register globally with Quill
-Quill.register('formats/myformat', MyFormatBlot, true);
-```
-
-**Java integration:**
-- Add `MyFormatBlot` to `ERTE_PRESERVED_CLASSES` array in `vcf-enhanced-rich-text-editor.js`
-- Add `'ql-myformat'` to `ALLOWED_ERTE_CLASSES` set in `RteExtensionBase.java`
-- If style attributes are used, add allowed properties to `ALLOWED_CSS_PROPERTIES` in `RteExtensionBase.java`
-
-### Embed Blot (like TabBlot or PlaceholderBlot)
+### Embed Blot Gotchas (like TabBlot or PlaceholderBlot)
 
 An embed is a discrete element (not applied to existing text). Example: `TabBlot` is an embed that represents a tabstop position. Embeds can have arbitrary content and lifecycle.
 
-**Critical pattern:** Quill 2 Embed constructor creates `leftGuard` and `rightGuard` guard nodes (zero-width text `\uFEFF`) and `contentNode`. The `constructor()` runs **after** `static create()`.
+**Three ERTE-critical patterns:**
 
-**Structure:**
+1. **Lifecycle timing:** `static create()` runs **before** the constructor. The `contentNode` is created by Embed's constructor, so do not try to access it in `create()` — initialize your outer DOM structure there, then configure `contentNode` in `constructor()`.
 
-```javascript
-const Embed = Quill.import('blots/embed');
+2. **Guard nodes (Quill 2 only):** Quill 2 places zero-width guard text (`\uFEFF`) **inside** the Embed's domNode to mark logical boundaries. Never set `contenteditable="false"` on the outer domNode — this makes guard nodes non-editable, breaking cursor placement adjacent to the embed. The inner `contentNode` already has `contenteditable="false"`, which is sufficient.
 
-class MyEmbedBlot extends Embed {
-  static blotName = 'myembed';
-  static tagName = 'span';
-  static className = 'ql-myembed';
-
-  // 1. Create: initialize DOM (runs BEFORE constructor)
-  static create(value) {
-    const node = super.create();
-    // WARNING: contentNode doesn't exist yet!
-    // Do NOT set contenteditable="false" on the outer node — see TabBlot comment.
-    // Guard nodes (zero-width text inside domNode) must remain editable.
-    // The inner contentNode already has contenteditable="false".
-    return node;
-  }
-
-  // 2. Value: convert DOM to Quill value
-  static value(node) {
-    return JSON.parse(node.dataset.embed || 'null');
-  }
-
-  // 3. Constructor: run AFTER Embed constructor creates contentNode and guards
-  constructor(scroll, node) {
-    super(scroll, node);
-    // Now contentNode exists and can be manipulated
-    if (this.contentNode) {
-      this.contentNode.textContent = 'Embed content';
-    }
-  }
-
-  // 4. Position: (optional) customize cursor position
-  position(index, inclusive) {
-    if (index > 0) {
-      // Return position after the embed
-      const nextNode = this.domNode.nextSibling;
-      if (nextNode?.nodeType === Node.TEXT_NODE) {
-        return [nextNode, 0];
-      }
-    }
-    return super.position(index, inclusive);
-  }
-
-  // 5. Detach: cleanup (called when blot is removed)
-  detach() {
-    if (this.domNode._handler) {
-      this.domNode.removeEventListener('click', this.domNode._handler);
-      delete this.domNode._handler;
-    }
-    super.detach();
-  }
-}
-
-Quill.register('formats/myembed', MyEmbedBlot, true);
-```
-
-**Key points:**
-- `static create()` — Initialize DOM structure. Does NOT have access to `contentNode` or guard nodes yet.
-- `constructor()` — Set up `contentNode` content and event handlers. Guard nodes are present but wrapped by this point if needed.
-- `position(index, inclusive)` — Override if the embed's cursor position needs custom logic (e.g., always place after the embed element).
-- `detach()` — Clean up event listeners before removal.
-
-### Parchment 3 API Changes (vs Quill 1 / Parchment 2)
-
-- ✅ Use `static blotName`, `static tagName`, `static className` — same as Parchment 2
-- ✅ Use `this.contentNode` — the inner `<span contenteditable="false">` created by Embed
-- ✅ Use `this.leftGuard`, `this.rightGuard` — zero-width guard nodes for boundaries
-- ❌ **Do NOT use `Parchment.create()`** — removed in Parchment 3; use `scroll.create(blotName, value)` instead
-- ❌ **Do NOT use `allowedChildren`** — removed; Parchment 3 doesn't enforce child type restrictions
-- ✅ Use `Quill.import()` to access base classes — `Quill.import('blots/inline')`, `Quill.import('blots/embed')`
+3. **Cursor placement:** Override `position(index, inclusive)` if the embed's cursor placement logic needs customization (e.g., always place after the embed). Default behavior is often sufficient.
 
 ### Server-Side Sanitization Integration
 
@@ -455,56 +348,27 @@ editor.replaceStandardToolbarButtonIcon(
     null);
 ```
 
-### Inline Blot CSS Patterns
+### Inline Blot CSS & Lumo Compatibility
 
-Inline blots are styled via class selectors in `<style>` tags in the JS file:
+Blot styles go in `static get styles()` (Lit CSS) in your JS blot class. Use `--vaadin-*` custom properties referencing `--lumo-*` tokens to ensure light/dark theme compatibility:
 
-```javascript
-class MyInlineBlot extends Inline {
-  // ...
-}
-```
-
-CSS in `static get styles()` (Lit):
 ```javascript
 static get styles() {
   return css`
     .ql-myformat {
-      background-color: var(--my-format-bg, yellow);
-      padding: 2px 4px;
+      color: var(--vaadin-my-format-color, var(--lumo-primary-color));
+      background-color: var(--vaadin-my-format-bg, var(--lumo-primary-color-10pct));
     }
   `;
 }
 ```
 
-**Important:** Shadow DOM CSS does not apply to slotted content. To style inline blots in the editor, use CSS in the main document or in the RTE 2's shadow DOM scope. ERTE's blot styles are defined in `vcf-enhanced-rich-text-editor.js` as Lit styles that apply within the RTE 2 component.
-
-### Lumo Theme Compatibility
-
-ERTE automatically inherits Lumo's toolbar icons and colors via Vaadin's `LumoInjector`. To customize Lumo integration for a custom blot:
-
-1. **Add CSS custom property defaults** in `vcf-enhanced-rich-text-editor-styles.css`:
-   ```css
-   :host {
-     --vaadin-my-custom-property: var(--lumo-contrast-90pct);
-   }
-   ```
-
-2. **Use the property in your blot CSS**:
-   ```css
-   .ql-mycustom {
-     color: var(--vaadin-my-custom-property);
-   }
-   ```
-
-This ensures your blot respects light/dark Lumo themes.
-
 ## Example: Custom Tag Embed
 
-Here's a complete example of a custom embed that inserts semantic tags:
+Here's a complete example of a custom embed:
 
 ```javascript
-// JavaScript: Add to vcf-enhanced-rich-text-editor.js
+// JavaScript: vcf-enhanced-rich-text-editor.js
 
 class TagBlot extends Embed {
   static blotName = 'tag';
@@ -532,12 +396,12 @@ class TagBlot extends Embed {
 
 Quill.register('formats/tag', TagBlot, true);
 
-// Add to ERTE_PRESERVED_CLASSES
+// Preserve in ERTE_PRESERVED_CLASSES (line ~385)
 const ERTE_PRESERVED_CLASSES = ['ql-readonly', 'ql-tag', ...];
 ```
 
 ```java
-// Java: In your custom extension class
+// Java: Insertion method
 
 public void insertTag(String tagName) {
     editor.getElement().executeJs(
@@ -547,21 +411,16 @@ public void insertTag(String tagName) {
 ```
 
 ```css
-/* CSS: In custom stylesheet or vcf-enhanced-rich-text-editor-styles.css */
+/* CSS: static get styles() in JS */
 
 .ql-tag {
-  color: var(--lumo-primary-color);
+  color: var(--vaadin-tag-color, var(--lumo-primary-color));
   font-weight: bold;
   font-family: monospace;
 }
-
-.ql-tag [contenteditable="false"] {
-  font-size: inherit;
-  line-height: inherit;
-}
 ```
 
-This example shows all the key patterns: blot creation, value storage, content initialization, sanitizer integration, and styling.
+Add `'ql-tag'` to `ALLOWED_ERTE_CLASSES` in `RteExtensionBase.java` (line ~49) for sanitizer support.
 
 ---
 

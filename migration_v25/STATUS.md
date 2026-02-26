@@ -60,7 +60,7 @@
 ### Phase 5 QA Notes (zu untersuchen)
 
 - ~~**b) Left Ruler fehlt**~~ — FIXED: vertical ruler added (content-wrapper + verticalRuler parts, 2 custom properties)
-- **c) Dev-Doku dramatisch einkürzen** — Nur ERTE-spezifische Inhalte behalten; Quill 2- und RTE 2-Inhalte rausnehmen (gehören nicht in ERTE-Doku)
+- ~~**c) Dev-Doku dramatisch einkürzen**~~ — DONE: Non-ERTE content removed, module paths fixed (demo→IT), test counts updated (306/381). DEVELOPER_GUIDE 467→214 lines, EXTENDING 572→431, CONTRIBUTING 518→506 (absorbed test architecture)
 - ~~**d) TabConverter (Breaking Change)**~~ — DONE: TabConverter portiert (Jackson 3), automatischer Aufruf in setValue() entfernt. Utility-Klasse bleibt für manuelle Nutzung. Dokumentiert als Breaking Change 3.15 im Upgrade Guide.
 | **6**    | **Theme Support (Post-6.0.0)**     | NOT STARTED                            |
 | 6.1      | Aura Theme Support                 | NOT STARTED                            |

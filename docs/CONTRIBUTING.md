@@ -35,8 +35,11 @@ This guide explains how to contribute to the Enhanced Rich Text Editor (ERTE) pr
    ```
 5. **Run tests to verify your environment:**
    ```bash
-   cd enhanced-rich-text-editor-demo
+   bash v25-build-it.sh
+   bash v25-it-server-start.sh
+   cd enhanced-rich-text-editor-it
    npx playwright test tests/erte/
+   bash v25-it-server-stop.sh
    ```
 
 See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for detailed setup steps.
@@ -211,163 +214,128 @@ test.describe('Tabstop Alignment', () => {
 
 ## Architecture Constraints
 
-These are **hard requirements** enforced in code review. Violating them breaks updatability or introduces security issues.
+**Hard requirements enforced in code review. Violating them breaks updatability or introduces security issues.**
 
 ### 1. Never Copy RTE 2 Source Code
 
-ERTE extends Vaadin's RTE 2 at runtime. Do NOT copy RTE 2 classes into ERTE.
+Extend via inheritance, not copying:
 
 ```java
-// WRONG: copying RTE 2 code
-public class ErteRichTextEditor extends RichTextEditor {
-    // ... copy of RTE 2's toolbar HTML here ...
-}
-
-// CORRECT: extend via inheritance and override methods
+// CORRECT: extend via inheritance
 public class EnhancedRichTextEditor extends RteExtensionBase {
     @Override
     protected void runBeforeClientResponse(ExecutableFunction function) {
         // Extend, don't copy
     }
 }
-```
 
-**Why:** Copied code breaks with RTE updates. Inheritance allows updates to flow automatically.
+// WRONG: copying RTE 2 classes breaks with RTE updates
+public class ErteRichTextEditor extends RichTextEditor {
+    // ... RTE 2 source code copied here ...
+}
+```
 
 ### 2. Single Foreign Package Class
 
-Only ONE class may live in a foreign package (Vaadin's RTE 2 package). This is `RteExtensionBase`:
+Only `RteExtensionBase` lives in Vaadin's RTE 2 package. All ERTE logic goes in `EnhancedRichTextEditor`:
 
 ```java
-// CORRECT: single bridge class
+// CORRECT
 package com.vaadin.flow.component.richtexteditor;
 public class RteExtensionBase extends RichTextEditor { }
 
-// CORRECT: all ERTE logic here
 package com.vaadin.componentfactory;
 public class EnhancedRichTextEditor extends RteExtensionBase { }
 
-// WRONG: don't put multiple ERTE classes in the foreign package
+// WRONG: don't add other ERTE classes to Vaadin's package
 package com.vaadin.flow.component.richtexteditor;
-public class ErteHelper { } // Don't do this!
+public class TabStopHelper { } // Don't do this!
 ```
 
-**Why:** Minimizes tight coupling to Vaadin internals.
+### 3. Java Value Sync Timing
 
-### 3. Global Quill Registration
-
-Custom blots must be registered globally BEFORE element creation:
-
-```javascript
-// CORRECT: register before instantiation
-Quill.register(TabBlot);
-Quill.register(PlaceholderBlot);
-
-// Then create editor
-const editor = new Quill(...);
-
-// WRONG: registering after creation
-const editor = new Quill(...);
-Quill.register(TabBlot); // Won't work!
-```
-
-**Why:** Quill caches blot registrations at editor init time.
-
-### 4. DOM Manipulation Rules
-
-- **DO use:** `createElement()`, `appendChild()`, `removeChild()`
-- **DO NOT use:** `innerHTML` with dynamic content (XSS risk)
-- **DO NOT use:** Direct `domNode` property access (use `Quill.find()`)
-
-```javascript
-// CORRECT
-const span = document.createElement('span');
-span.textContent = userInput; // Safe: textContent auto-escapes
-span.classList.add('ql-placeholder');
-container.appendChild(span);
-
-// WRONG: XSS vulnerability
-const span = document.createElement('span');
-span.innerHTML = userInput; // Dangerous!
-container.appendChild(span);
-```
-
-### 5. Keyboard Key Names (No Numeric Codes)
-
-Use string key names (`'Tab'`, `'Enter'`, etc.), never numeric keyCodes:
-
-```javascript
-// CORRECT
-const binding = {
-  key: 'Tab',
-  handler: () => insertTab(),
-};
-
-// WRONG: numeric code creates binding under wrong key
-const binding = {
-  key: 9, // Silent failure — Tab bindings ignored!
-  handler: () => insertTab(),
-};
-```
-
-### 6. Parchment 3 API (No Parchment.create)
-
-In Quill 2, use `scroll.create()` instead of `Parchment.create()` (removed in Parchment 3):
-
-```javascript
-// CORRECT: Quill 2 / Parchment 3
-const node = this.scroll.create('blot-name', value);
-
-// WRONG: Parchment 2 API (removed in Parchment 3)
-const node = Parchment.create('blot-name', value);
-```
-
-### 7. Java Value Sync Timing
-
-Never set editor content in `ready()` — it gets overwritten by Java value sync:
+Never set content in `ready()` — it gets overwritten by Java value sync. Set via `setPresentationValue()`:
 
 ```java
 // WRONG: content gets overwritten
-@Override
-protected void onAttach(AttachEvent attachEvent) {
-    super.onAttach(attachEvent);
-    setValue("<p>Content</p>"); // Overwritten by Java sync!
-}
+setValue("<p>Content</p>"); // in ready(), attached, etc.
 
-// CORRECT: set value via normal component binding
+// CORRECT: react to value in setPresentationValue
 @Override
 protected void setPresentationValue(String value) {
     super.setPresentationValue(value);
-    // Value is already set, safe to react to it
+    // Value is already set, safe to react here
 }
 ```
 
-### 8. Embed contenteditable (Quill 2 Guard Nodes)
+### 4. Embed Guard Nodes (Quill 2)
 
-Do NOT set `contenteditable="false"` on Embed blot outer `domNode`. Quill 2 places guard nodes (zero-width text) inside, which must remain editable:
+Never set `contenteditable="false"` on Embed outer domNode — Quill 2 guard nodes inside must stay editable. See [EXTENDING.md — Embed Blot Gotchas](EXTENDING.md#embed-blot-gotchas) for details and code examples.
 
-```javascript
-// WRONG: breaks cursor placement adjacent to embed
-class MyBlot extends Quill.import('blots/embed') {
-  static create() {
-    const node = super.create();
-    node.contentEditable = 'false'; // Breaks guard nodes!
-    return node;
-  }
-}
+See [CLAUDE.md](../CLAUDE.md) for the complete list of confirmed patterns and architecture decisions.
 
-// CORRECT: inner contentNode already has contenteditable="false"
-class MyBlot extends Quill.import('blots/embed') {
-  static create() {
-    const node = super.create();
-    // Don't set contenteditable on outer node
-    const content = document.createElement('span');
-    content.contentEditable = 'false'; // Safe on inner element
-    node.appendChild(content);
-    return node;
-  }
-}
-```
+---
+
+## Test Architecture
+
+ERTE tests consist of Java test views (the backend) and Playwright specs (the test scripts).
+
+### Test Commands
+
+Run tests from the `enhanced-rich-text-editor-it/` directory:
+
+| Command | Purpose |
+|---------|---------|
+| `npx playwright test` | Run all tests (prototype + ERTE) |
+| `npx playwright test tests/erte/` | Run only ERTE feature tests |
+| `npx playwright test tests/erte/tabstops.spec.ts` | Run one specific spec file |
+| `npx playwright test --ui` | Interactive UI mode (debug with browser) |
+| `npx playwright test --headed` | Run with visible browser (not headless) |
+
+### Test Results Baseline
+
+| Category | Count | Notes |
+|----------|-------|-------|
+| Prototype tests | 75 | In demo module, all passing |
+| ERTE feature tests | 306 | See TEST_INVENTORY.md for breakdown |
+| **Total** | **381** | Some tests marked `.fixme` for known Quill 2 limitations |
+
+### Test View Pattern
+
+Java test views live in `enhanced-rich-text-editor-it/src/main/java/com/vaadin/componentfactory/`:
+
+| View | Route | Purpose |
+|------|-------|---------|
+| `ErteTabStopTestView` | `/erte-test/tabstops` | Tabstops, rulers, soft-break |
+| `ErteReadonlyTestView` | `/erte-test/readonly` | Readonly sections |
+| `ErtePlaceholderTestView` | `/erte-test/placeholder` | Placeholders |
+| `ErteToolbarTestView` | `/erte-test/toolbar` | Toolbar slots & visibility |
+| `ErteFeatureTestView` | `/erte-test/features` | Misc features (NBSP, i18n, align) |
+
+Each test view provides: `#test-editor`, `#delta-output`, `#html-output`, `#event-log`, `#test-ready`.
+
+### Key Test Helpers
+
+From `enhanced-rich-text-editor-it/tests/erte/helpers.ts`:
+
+| Helper | Purpose |
+|--------|---------|
+| `waitForEditor(page)` | Wait for editor to be fully initialized |
+| `getEditor(page)` | Get editor locator |
+| `getTabs(page)`, `getSoftBreaks(page)` | Get embed locators |
+| `getDelta(page)` | Get Delta JSON from `#delta-output` |
+| `getDeltaFromEditor(page)` | Get Delta directly from Quill |
+| `getRuler(page)`, `getRulerMarkers(page)` | Access tabstop ruler |
+
+### Debugging Tips
+
+**Shadow DOM:** Playwright locators pierce shadow DOM, but `page.evaluate()` does not — use `el.shadowRoot.querySelector()`.
+
+**Ready indicator:** `#test-ready` has `display:none` — use `state: 'attached'` (not `visible`).
+
+**Delta timing:** After typing, use `getDelta()` (from `#delta-output`). After server-side updates, use `getDeltaFromEditor()` (reads directly from Quill).
+
+**Server errors:** `bash v25-it-server-logs.sh -errors`
 
 ---
 
@@ -377,7 +345,7 @@ Every feature change must include tests.
 
 ### Test Views
 
-Create a new test view in `enhanced-rich-text-editor-demo/src/main/java/com/vaadin/componentfactory/` following the pattern:
+Create a new test view in `enhanced-rich-text-editor-it/src/main/java/com/vaadin/componentfactory/` following the pattern:
 
 ```java
 @Route("erte-test/my-feature")
@@ -417,7 +385,7 @@ public class ErteMyFeatureTestView extends VerticalLayout {
 
 ### Playwright Tests
 
-Create specs in `enhanced-rich-text-editor-demo/tests/erte/` following the pattern:
+Create specs in `enhanced-rich-text-editor-it/tests/erte/` following the pattern:
 
 ```typescript
 import { test, expect } from '@playwright/test';
@@ -449,24 +417,7 @@ test.describe('ERTE My Feature', () => {
 - Simulate **real user interactions** (`click()`, `type()`, `press()`) — never programmatic shortcuts
 - Test both visual appearance and underlying data (delta)
 
-### Running Tests Before PR
-
-```bash
-# Build
-bash v25-build.sh
-
-# Start server
-bash v25-server-start.sh
-
-# Run tests
-cd enhanced-rich-text-editor-demo
-npx playwright test tests/erte/
-
-# Stop server
-bash v25-server-stop.sh
-```
-
-**All tests must pass before submitting a PR.** If a test is deferred or known to fail, mark it with `.skip` and document why in the test comment.
+**All tests must pass before submitting a PR.** If a test is deferred or known to fail, mark it with `.skip` and document why in the test comment. See [Pull Request Process](#pull-request-process) step 3 for the exact commands.
 
 ---
 
@@ -480,15 +431,15 @@ bash v25-server-stop.sh
 2. **Implement the feature** with tests:
    - Add Java code in `enhanced-rich-text-editor-v25/src/main/java/`
    - Add JavaScript in `enhanced-rich-text-editor-v25/src/main/resources/META-INF/resources/`
-   - Add test view in `enhanced-rich-text-editor-demo/src/main/java/com/vaadin/componentfactory/`
-   - Add Playwright spec in `enhanced-rich-text-editor-demo/tests/erte/`
+   - Add test view in `enhanced-rich-text-editor-it/src/main/java/com/vaadin/componentfactory/`
+   - Add Playwright spec in `enhanced-rich-text-editor-it/tests/erte/`
 
 3. **Run the full test suite** locally:
    ```bash
-   bash v25-build.sh
-   bash v25-server-start.sh
-   cd enhanced-rich-text-editor-demo && npx playwright test tests/erte/
-   bash v25-server-stop.sh
+   bash v25-build-it.sh
+   bash v25-it-server-start.sh
+   cd enhanced-rich-text-editor-it && npx playwright test tests/erte/
+   bash v25-it-server-stop.sh
    ```
 
 4. **Push and create PR** targeting `v25`:

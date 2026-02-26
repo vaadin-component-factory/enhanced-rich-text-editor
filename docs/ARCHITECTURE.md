@@ -36,19 +36,22 @@ ERTE V25 is built on Vaadin 25's Rich Text Editor (RTE 2) component, which is ba
 
 The ERTE V25 project consists of:
 
-- **`enhanced-rich-text-editor-v25/`** — Core addon module (Spring Boot compatible)
+- **`enhanced-rich-text-editor-v25/`** — Core addon module
   - Java classes in `com.vaadin.componentfactory` (main) and `com.vaadin.flow.component.richtexteditor` (bridge)
   - JavaScript frontend in `frontend/` (2635 lines)
   - CSS custom properties in `frontend/styles/vcf-enhanced-rich-text-editor-styles.css`
   - Compiled as `.jar` artifact in Maven build
 
 - **`enhanced-rich-text-editor-tables-v25/`** — Tables addon (extends core ERTE with table support)
-  - Separate module depending on core ERTE
-  - Reuses same Quill 2 infrastructure
 
 - **`enhanced-rich-text-editor-demo/`** — Demo application
-  - Spring Boot application with test views
-  - Playwright test suite (255+ tests)
+  - Spring Boot application with sample views (V25DemoView, etc.)
+  - Prototype tests (75 tests)
+
+- **`enhanced-rich-text-editor-it/`** — Integration tests
+  - Test views (Java, package `com.vaadin.componentfactory`)
+  - Playwright test suite (306 ERTE tests)
+  - Runs on port 8081
 
 - **Legacy modules** (`enhanced-rich-text-editor`, `enhanced-rich-text-editor-tables`)
   - V24 reference code (Vaadin 24, Quill 1)
@@ -93,9 +96,7 @@ Five custom blots are registered globally via `Quill.register()` **before elemen
 | **PlaceholderBlot** | Embed | Configurable placeholder token | `<span class="ql-placeholder">` |
 | **NbspBlot** | Embed | Non-breaking space (Shift+Space) | `<span class="ql-nbsp">` |
 
-**Critical pattern:** All Embed blots have `constructor()` implementations that run **after** the parent's Embed constructor creates `contentNode` and guard nodes. Static methods like `create()` run **before** the constructor. This is why lifecycle-dependent setup (like wrapping guard nodes in TabBlot) happens in the constructor, not `create()`.
-
-**Guard nodes:** Quill 2 places zero-width guard TextNodes (`\uFEFF`) **inside** the Embed's domNode to mark logical boundaries. TabBlot wraps these in named `<span class="ql-tab-guard">` elements to make them visible for caret rendering. Never set `contenteditable="false"` on the outer domNode — the inner `contentNode` already has it, and guard nodes must remain editable for cursor placement.
+**Guard nodes:** Quill 2 places zero-width guard TextNodes (`\uFEFF`) **inside** the Embed's domNode to mark logical boundaries. Never set `contenteditable="false"` on the outer domNode — guard nodes must remain editable for cursor placement. See [EXTENDING.md](EXTENDING.md#embed-blot-gotchas) for guard node rules and cursor placement.
 
 ### Toolbar Slot System
 
