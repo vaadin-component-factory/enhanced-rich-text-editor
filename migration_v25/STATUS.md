@@ -52,7 +52,7 @@
 | 4.6      | Custom Properties for Tables       | COMPLETE                               |
 | ~~4.7~~  | ~~Demo Migration (Tables)~~        | SKIPPED *(covered by Phase 5.1 + playground)* |
 | **5**    | **Final QA & Restructuring**       | NOT STARTED                            |
-| 5.0      | Public API Breaking Changes Audit  | IN PROGRESS *(plan written)*           |
+| 5.0      | Public API Breaking Changes Audit  | COMPLETE *(7 rollbacks, 296 tests pass)* |
 | 5.1      | V24 Sample Views Migration         | NOT STARTED *(migrate V24 demo views to V25 demo placeholder)* |
 | 5.2      | Test Views → Module IT             | NOT STARTED *(move test views + Playwright tests from demo into module test infrastructure)* |
 | 5.3      | Documentation Humanization Review  | NOT STARTED *(rewrite docs for human readers, reduce machine-generated tone)* |
