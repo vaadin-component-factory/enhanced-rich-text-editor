@@ -54,14 +54,14 @@
 | **5**    | **Final QA & Restructuring**       | NOT STARTED                            |
 | 5.0      | Public API Breaking Changes Audit  | COMPLETE *(7 rollbacks, 296 tests pass)* |
 | 5.1      | V24 Sample Views Migration         | COMPLETE |
-| 5.2      | Test Views → Module IT             | NOT STARTED *(move test views + Playwright tests from demo into module test infrastructure)* |
+| 5.2      | Test Views → Module IT             | COMPLETE *(dedicated IT module, 296 pass, 10 skip)* |
 | 5.3      | Documentation Humanization Review  | NOT STARTED *(rewrite docs for human readers, reduce machine-generated tone)* |
 
 ### Phase 5 QA Notes (zu untersuchen)
 
 - ~~**b) Left Ruler fehlt**~~ — FIXED: vertical ruler added (content-wrapper + verticalRuler parts, 2 custom properties)
 - **c) Dev-Doku dramatisch einkürzen** — Nur ERTE-spezifische Inhalte behalten; Quill 2- und RTE 2-Inhalte rausnehmen (gehören nicht in ERTE-Doku)
-- **d) TabConverter entfernen (Breaking Change)** — TabConverter rausnehmen. Als potentieller Breaking Change dokumentieren: betrifft nur Deltas die vor ERTE 5.2.0 erstellt wurden. Prüfen ob Delta-Versionierung möglich wäre, um solche Migrationen in Zukunft automatisieren zu können.
+- ~~**d) TabConverter (Breaking Change)**~~ — DONE: TabConverter portiert (Jackson 3), automatischer Aufruf in setValue() entfernt. Utility-Klasse bleibt für manuelle Nutzung. Dokumentiert als Breaking Change 3.15 im Upgrade Guide.
 | **6**    | **Theme Support (Post-6.0.0)**     | NOT STARTED                            |
 | 6.1      | Aura Theme Support                 | NOT STARTED                            |
 | 6.2      | Material Theme Support             | NOT STARTED                            |

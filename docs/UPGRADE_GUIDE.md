@@ -682,6 +682,32 @@ editor.setValue(htmlString);          // was Delta, now HTML
 editor.addValueChangeListener(listener);
 ```
 
+### 3.15 TabConverter -- No Longer Applied Automatically
+
+**Impact:** Low -- affects only applications that store Deltas created with ERTE
+versions prior to 5.2.0 (the version that introduced the current tab format).
+
+In ERTE 1, `setValue()` automatically ran `TabConverter.convertIfNeeded()` to
+transform legacy tab blots (`tab`, `line-part`, `tabs-cont`, `pre-tab`) into the
+current format. This implicit conversion has been removed in ERTE 2.
+
+The `TabConverter` utility class is still available. Applications that need to
+convert old-format deltas must call it explicitly.
+
+```java
+// --- ERTE 1 (V24) ---
+// Automatic: old deltas converted transparently in setValue()
+editor.setValue(oldDeltaJson);
+
+// --- ERTE 2 (V25) ---
+// Manual: convert before passing to the editor
+String converted = TabConverter.convertIfNeeded(oldDeltaJson);
+editor.asDelta().setValue(converted);
+```
+
+> **Note:** This only affects deltas created before ERTE 5.2.0. Deltas created
+> with ERTE 5.2.0+ already use the current format and pass through unchanged.
+
 ---
 
 ## 4. Feature-by-Feature Migration
