@@ -30,14 +30,15 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.Pre;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -80,6 +81,29 @@ public class ErteSamplesView extends VerticalLayout {
         add(createEditorWithNoRulers());
         add(createEditorWithTableSample());
         add(createEditorWithTableI18nSample());
+
+        // Load Prism.js for Java syntax highlighting
+        UI.getCurrent().getPage().executeJs(
+                "if (!document.getElementById('prism-css')) {"
+                        + "  var link = document.createElement('link');"
+                        + "  link.id = 'prism-css';"
+                        + "  link.rel = 'stylesheet';"
+                        + "  link.href = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css';"
+                        + "  document.head.appendChild(link);"
+                        + "}"
+                        + "function loadPrism() {"
+                        + "  if (window.Prism) { Prism.highlightAll(); return; }"
+                        + "  var script = document.createElement('script');"
+                        + "  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js';"
+                        + "  script.onload = function() {"
+                        + "    var java = document.createElement('script');"
+                        + "    java.src = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js';"
+                        + "    java.onload = function() { Prism.highlightAll(); };"
+                        + "    document.head.appendChild(java);"
+                        + "  };"
+                        + "  document.head.appendChild(script);"
+                        + "}"
+                        + "loadPrism();");
     }
 
     private Component createDefaultEditor() {
@@ -137,8 +161,11 @@ public class ErteSamplesView extends VerticalLayout {
                 e -> valueBlock.setValue(rte.asDelta().getValue()));
         var setBtn = new Button("Set value",
                 e -> rte.asDelta().setValue(valueBlock.getValue()));
+        var buttonRow = new HorizontalLayout(saveBtn, setBtn);
+        buttonRow.setSpacing(true);
+        buttonRow.setPadding(false);
 
-        return createCard("Save Rich Text Editor value", rte, saveBtn, setBtn, valueBlock,
+        return createCard("Save Rich Text Editor value", rte, buttonRow, valueBlock,
                 createSourceCode("TextArea valueBlock = new TextArea();\n"
                         + "EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
                         + "Button saveBtn = new Button(\"Save value\",\n"
@@ -156,6 +183,7 @@ public class ErteSamplesView extends VerticalLayout {
                 htmlBlock.getElement().setProperty("innerHTML", rte.getValue());
             }
         });
+        showHtmlValue.getStyle().set("align-self", "flex-start");
 
         return createCard("Save Rich Text Editor htmlValue", rte, showHtmlValue, htmlBlock,
                 createSourceCode("Div htmlBlock = new Div();\n"
@@ -300,9 +328,8 @@ public class ErteSamplesView extends VerticalLayout {
             }
         });
 
-        var button = new Button("Click me", event -> {
-            Notification.show("Clicked");
-        });
+        var button = new Button("Click me", event -> Notification.show("Clicked"));
+        button.getStyle().set("align-self", "flex-start");
 
         return createCard("Rich Text Editor with Placeholders", rte, button, htmlHolder,
                 createSourceCode("EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
@@ -340,6 +367,7 @@ public class ErteSamplesView extends VerticalLayout {
 
         var removeBtn = new Button("Remove airplane",
                 event -> rte.removeToolbarComponent(ToolbarSlot.GROUP_CUSTOM, textButton1));
+        removeBtn.getStyle().set("align-self", "flex-start");
 
         return createCard("Rich Text Editor With Custom Buttons", rte, removeBtn,
                 createSourceCode("EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
@@ -568,13 +596,16 @@ public class ErteSamplesView extends VerticalLayout {
         return card;
     }
 
-    private Pre createSourceCode(String code) {
-        var pre = new Pre(code);
-        pre.getStyle().set("background", "var(--lumo-shade-5pct)")
-                .set("padding", "var(--lumo-space-s)")
-                .set("border-radius", "var(--lumo-border-radius-s)")
-                .set("font-size", "var(--lumo-font-size-xs)").set("overflow-x", "auto")
-                .set("margin", "0").set("white-space", "pre-wrap").set("word-break", "break-all");
-        return pre;
+    private Component createSourceCode(String code) {
+        String escaped = code
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+        var wrapper = new Div();
+        wrapper.getElement().setProperty("innerHTML",
+                "<pre style=\"border-radius:var(--lumo-border-radius-s);"
+                        + "font-size:var(--lumo-font-size-xs);margin:0;overflow-x:auto\">"
+                        + "<code class=\"language-java\">" + escaped + "</code></pre>");
+        return wrapper;
     }
 }

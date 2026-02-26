@@ -313,11 +313,43 @@ These patterns were validated in the spike (`SPIKE_RESULTS.md`). Use them as-is.
 - Do not set content in `ready()` — it gets overwritten by Java value sync
 - Do not set `contenteditable="false"` on Embed blot outer `domNode` — Quill 2's guard nodes (zero-width text inside the domNode) must remain editable for cursor placement. The inner `contentNode` already has `contenteditable="false"`. V24 pattern was safe (no guard nodes), V25 pattern breaks cursor.
 
-## MCP Tools — Use Before Asking
+## MCP Tools & Vaadin Skills — IMPORTANT, Use Before Asking
 
-**Always use available MCP tools to look things up instead of guessing or asking the user.**
+**Always use available MCP tools and skills to look things up instead of guessing or asking the user.**
 
-- **Vaadin:** `search_vaadin_docs`, `get_component_java_api`, `get_component_web_component_api`, `get_component_styling`, `get_full_document` — for component APIs, docs, styling, internals
+### Vaadin MCP Plugin (always available)
+
+- `search_vaadin_docs` — Documentation search (hybrid: semantic + keyword)
+- `get_full_document` — Fetch complete documentation pages
+- `get_component_java_api` — Java API docs for any Vaadin component
+- `get_component_web_component_api` — Web Component/TypeScript API docs
+- `get_component_react_api` — React API docs
+- `get_component_styling` — Styling/theming docs per component
+- `get_vaadin_primer` — Primer for modern Vaadin development
+- `get_vaadin_version` — Current stable Vaadin version
+- `get_components_by_version` — Component list per version
+
+### Vaadin Skills (invoke via Skill tool when relevant)
+
+These skills load specialized context for Vaadin development tasks. **Use them proactively** when implementing Vaadin features — they contain up-to-date patterns and best practices.
+
+- `vaadin-claude:views-and-navigation` — `@Route`, AppLayout, `@Layout`, SideNav, navigation
+- `vaadin-claude:vaadin-layouts` — HorizontalLayout, VerticalLayout, alignment, flex
+- `vaadin-claude:forms-and-validation` — Binder, validation, converters
+- `vaadin-claude:data-providers` — Grid/ComboBox data binding, lazy loading
+- `vaadin-claude:theming` — Aura/Lumo themes, design tokens, dark mode
+- `vaadin-claude:frontend-design` — Visual polish, animations, styling beyond defaults
+- `vaadin-claude:responsive-layouts` — Responsive design, breakpoints, container queries
+- `vaadin-claude:reusable-components` — Component structure, Composite, extraction
+- `vaadin-claude:security` — Spring Security, login, OAuth2, `@RolesAllowed`
+- `vaadin-claude:signals` — Reactive state with ValueSignal, NumberSignal, ListSignal
+- `vaadin-claude:client-side-views` — React/Hilla views, `@BrowserCallable`
+- `vaadin-claude:third-party-components` — Web Components/React from npm
+- `vaadin-claude:testbench-testing` — End-to-end browser tests with TestBench
+- `vaadin-claude:ui-unit-testing` — Browser-free UI unit tests
+
+### Other MCP Tools
+
 - **Playwright:** `browser_snapshot`, `browser_navigate`, `browser_evaluate`, etc. — for verifying UI state, testing interactions, inspecting DOM
 - **General:** `WebSearch`, `WebFetch` — for any external docs, Quill/Parchment APIs, npm packages
 
