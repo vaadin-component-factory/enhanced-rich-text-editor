@@ -206,15 +206,15 @@ ERTE overrides `static get lumoInjector()` (line 428) to reuse parent's tag name
 | `vcf-enhanced-rich-text-editor.js` | 2651 | Web component, blots, toolbar injection, i18n |
 | `EnhancedRichTextEditor.java` | 1799 | Public API, events, configuration, sanitizer |
 | `ToolbarSlot.java` | 117 | Enum of 27 toolbar slots |
-| `ToolbarSwitch.java` | 119 | Toggle button helper (extends Button) |
+| `ToolbarSwitch.java` | 144 | Toggle button helper (extends Button) |
 | `ToolbarPopover.java` | 132 | Dropdown panel helper (extends Popover) |
 | `ToolbarDialog.java` | 230 | Modal dialog helper (extends Dialog) |
 | `ToolbarSelectPopup.java` | 59 | Context menu helper (extends ContextMenu) |
-| `SlotUtil.java` | 155 | Toolbar slot injection utilities |
-| `TabConverter.java` | ~60 | Delta ↔ Tab value conversion |
+| `SlotUtil.java` | 168 | Toolbar slot injection utilities |
+| `TabConverter.java` | 219 | Delta ↔ Tab value conversion |
 | `Placeholder.java` | 158 | Placeholder data class |
 | `TabStop.java` | 77 | TabStop data class |
-| `vcf-enhanced-rich-text-editor-styles.css` | 338 | CSS custom properties, blot styles, slots |
+| `vcf-enhanced-rich-text-editor-styles.css` | 355 | CSS custom properties, blot styles, slots |
 
 ---
 
