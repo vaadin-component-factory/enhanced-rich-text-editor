@@ -1325,8 +1325,8 @@ vcf-enhanced-rich-text-editor {
 
 | Property | Default |
 |----------|---------|
-| `--vaadin-erte-whitespace-indicator-color` | `var(--lumo-contrast-40pct)` |
-| `--vaadin-erte-whitespace-paragraph-indicator-color` | `var(--lumo-contrast-30pct)` |
+| `--vaadin-erte-whitespace-indicator-color` | `var(--lumo-contrast-40pct, rgba(0, 0, 0, 0.38))` |
+| `--vaadin-erte-whitespace-paragraph-indicator-color` | `var(--lumo-contrast-30pct, rgba(0, 0, 0, 0.26))` |
 | `--vaadin-erte-whitespace-indicator-spacing` | `calc(var(--vaadin-padding-xs) / 2)` |
 
 ### Ruler
@@ -1357,7 +1357,7 @@ Server-side sanitizer (`erteSanitize()`) extends Vaadin RTE 2's safelist.
 
 **CSS functions:** `rgb()`, `rgba()`, `hsl()`, `hsla()`, `calc()`
 
-**Image data URLs:** `image/png`, `image/jpeg`, `image/gif`, `image/webp`, `image/bmp`, `image/x-icon`
+**Image data URLs:** `image/png`, `image/jpeg`, `image/jpg`, `image/gif`, `image/webp`, `image/bmp`, `image/x-icon`
 
 **Stripped:** `<script>`, `<iframe>`, event handlers, dangerous CSS functions (`url()`, `var()`, `@import`), SVG data URLs, CSS comments, `contenteditable="true"`
 

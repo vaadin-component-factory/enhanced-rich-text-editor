@@ -38,12 +38,12 @@ ERTE extends Vaadin 25's Rich Text Editor (RTE 2, built on Quill 2 and Parchment
 - **`enhanced-rich-text-editor-tables-v25/`** — Tables addon (extends core ERTE with table support)
 
 - **`enhanced-rich-text-editor-demo/`** — Demo application
-  - Spring Boot application with sample views (V25DemoView, etc.)
-  - Prototype tests (75 tests)
+  - Spring Boot application with sample views (ErteSamplesView, ErtePlaygroundView, etc.)
+  - Prototype tests
 
 - **`enhanced-rich-text-editor-it/`** — Integration tests
   - Test views (Java, package `com.vaadin.componentfactory`)
-  - Playwright test suite (306 ERTE tests)
+  - Playwright test suite (see TEST_INVENTORY.md)
   - Runs on port 8081
 
 - **Legacy modules** (`enhanced-rich-text-editor`, `enhanced-rich-text-editor-tables`)

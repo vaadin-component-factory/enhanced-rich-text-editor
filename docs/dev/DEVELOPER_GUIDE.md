@@ -102,7 +102,7 @@ bash v25-server-stop.sh
 
 ## Running Tests
 
-ERTE tests (306 tests) in `enhanced-rich-text-editor-it/`, IT server on port 8081.
+ERTE tests in `enhanced-rich-text-editor-it/`, IT server on port 8081.
 
 ```bash
 bash v25-build-it.sh                          # Build IT module
@@ -112,7 +112,7 @@ npx playwright test tests/erte/               # Run tests
 bash v25-it-server-stop.sh                    # Stop IT server
 ```
 
-Baseline: **306 ERTE tests** + 75 prototype tests = 381 total. See [TEST_INVENTORY.md](../../enhanced-rich-text-editor-it/tests/TEST_INVENTORY.md).
+See [TEST_INVENTORY.md](../../enhanced-rich-text-editor-it/tests/TEST_INVENTORY.md) for current test counts.
 
 For architecture, debugging, and advanced commands, see [CONTRIBUTING.md](CONTRIBUTING.md#testing-requirements).
 

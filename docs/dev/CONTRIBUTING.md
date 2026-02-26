@@ -127,7 +127,7 @@ From `enhanced-rich-text-editor-it/`:
 
 ### Baseline
 
-306 ERTE tests + 75 prototype tests = 381 total. See TEST_INVENTORY.md.
+See TEST_INVENTORY.md for current test counts.
 
 ### Test Views
 
