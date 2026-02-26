@@ -1149,7 +1149,7 @@ vcf-enhanced-rich-text-editor {
 | Rulers | `ruler-height`, `-border-color`, `-background`, `-marker-size`, `-marker-color` | 5 |
 
 All properties have sensible Lumo-based defaults. See the
-[Configuration Guide](CONFIGURATION.md) for the full property reference.
+[API Reference — ERTE Custom Properties](API_REFERENCE.md#15-erte-custom-properties) for the full property reference.
 
 ### 4A.3 Toolbar Part-Based Styling
 

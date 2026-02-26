@@ -2,7 +2,7 @@
 
 This guide covers all features of the Enhanced Rich Text Editor (ERTE) v6.x for Vaadin 25. It is aimed at Java developers integrating ERTE into their Vaadin applications.
 
-**Scope:** Feature overview, working code examples, best practices, and troubleshooting. For the complete API surface, see [API Reference](API_REFERENCE.md). For configuration patterns, see [Configuration Guide](CONFIGURATION.md). For migrating from v5.x, see [Upgrade Guide](UPGRADE_GUIDE.md).
+**Scope:** Feature overview, working code examples, best practices, and troubleshooting. For the complete API surface and styling reference, see [API Reference](API_REFERENCE.md). For migrating from v5.x, see [Upgrade Guide](UPGRADE_GUIDE.md).
 
 ---
 
@@ -19,6 +19,7 @@ This guide covers all features of the Enhanced Rich Text Editor (ERTE) v6.x for 
   - [2.7 Soft-Break and Tab Copying](#27-soft-break-and-tab-copying)
   - [2.8 Programmatic Text Insertion](#28-programmatic-text-insertion)
   - [2.9 Align Justify](#29-align-justify)
+  - [2.10 Styling and Theming](#210-styling-and-theming)
 - [3. Advanced Features](#3-advanced-features)
   - [3.1 Value Formats (HTML vs Delta)](#31-value-formats-html-vs-delta)
   - [3.2 Extension Hooks](#32-extension-hooks)
@@ -253,7 +254,7 @@ editor.removeToolbarComponent(ToolbarSlot.START, startBtn);
 editor.removeToolbarComponent(ToolbarSlot.START, "slot-start-btn");
 ```
 
-> **Styling note:** All components added via `addToolbarComponents()` automatically receive `part="toolbar-custom-component"`. This enables consistent styling through ERTE's shadow DOM (hover, focus, active/pressed states for buttons). See [Configuration Guide -- Shadow Parts](CONFIGURATION.md#42-shadow-parts) for styling details.
+> **Styling note:** All components added via `addToolbarComponents()` automatically receive `part="toolbar-custom-component"`. This enables consistent styling through ERTE's shadow DOM (hover, focus, active/pressed states for buttons). See [API Reference — CSS Shadow Parts](API_REFERENCE.md#13-css-shadow-parts) for styling details.
 
 #### Toolbar Button Visibility
 
@@ -645,6 +646,31 @@ The justify button appears in the alignment group alongside left, center, and ri
 
 ---
 
+### 2.10 Styling and Theming
+
+ERTE uses the Vaadin Lumo theme and provides CSS custom properties for customizing the appearance of readonly sections, placeholders, whitespace indicators, and rulers.
+
+**Example: customize readonly section appearance**
+
+```css
+vcf-enhanced-rich-text-editor {
+    --vaadin-erte-readonly-background: lightyellow;
+    --vaadin-erte-readonly-border-color: orange;
+    --vaadin-erte-placeholder-background: #e8f4fd;
+    --vaadin-erte-ruler-height: 1.25rem;
+}
+```
+
+ERTE provides 20 CSS custom properties across 4 categories:
+- **Readonly sections** (6 properties) -- customize text color, background, border, padding, and border radius
+- **Placeholders** (6 properties) -- customize text color, background, border, padding, and border radius
+- **Whitespace indicators** (3 properties) -- customize indicator colors and spacing
+- **Ruler** (5 properties) -- customize height, colors, and marker styling
+
+> See [API Reference — ERTE Custom Properties](API_REFERENCE.md#15-erte-custom-properties) for the complete list of all 20 properties and their default values.
+
+---
+
 ## 3. Advanced Features
 
 ### 3.1 Value Formats (HTML vs Delta)
@@ -922,8 +948,7 @@ These limitations are inherent to Quill 2 and documented in the test suite:
 ### 5.3 Getting Help
 
 - **Upgrade Guide:** [docs/UPGRADE_GUIDE.md](UPGRADE_GUIDE.md) for migration from v5.x
-- **API Reference:** [docs/API_REFERENCE.md](API_REFERENCE.md) for complete API surface
-- **Configuration:** [docs/CONFIGURATION.md](CONFIGURATION.md) for toolbar, i18n, theming patterns
+- **API Reference:** [docs/API_REFERENCE.md](API_REFERENCE.md) for complete API surface, custom properties, and sanitization details
 - **Test examples:** See `enhanced-rich-text-editor-it/src/main/java/com/vaadin/componentfactory/` for working test views
 - **Issue tracker:** GitHub issues on the repository
 - **Commercial support:** [vaadin.com](https://vaadin.com)

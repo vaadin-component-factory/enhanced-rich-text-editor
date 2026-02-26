@@ -41,8 +41,7 @@ editor.setValue("<p>Hello, world!</p>");
 ## Documentation
 
 - [User Guide](../docs/user/USER_GUIDE.md)
-- [API Reference](../docs/user/API_REFERENCE.md)
-- [Configuration Guide](../docs/user/CONFIGURATION.md)
+- [API Reference](../docs/user/API_REFERENCE.md) — complete API, custom properties, sanitization
 - [Upgrade Guide](../docs/user/UPGRADE_GUIDE.md) (migrating from v5.x / Vaadin 24)
 
 ## License

@@ -9,8 +9,7 @@ Enhanced Rich Text Editor (ERTE) for Flow is an extended version of the Vaadin R
 ## Documentation
 
 - [User Guide](docs/user/USER_GUIDE.md) -- Features, examples, and best practices
-- [API Reference](docs/user/API_REFERENCE.md) -- Complete API surface (methods, events, enums)
-- [Configuration Guide](docs/user/CONFIGURATION.md) -- Toolbar, i18n, shortcuts, theming, sanitization
+- [API Reference](docs/user/API_REFERENCE.md) -- Complete API surface, custom properties, sanitization, keyboard shortcuts
 - [Upgrade Guide](docs/user/UPGRADE_GUIDE.md) -- Migrating from ERTE 1 (v5.x, Vaadin 24) to ERTE 2 (v6.x, Vaadin 25)
 
 ## Quick Start

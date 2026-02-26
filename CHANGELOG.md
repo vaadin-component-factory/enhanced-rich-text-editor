@@ -35,7 +35,7 @@ For migration instructions, see [Upgrade Guide](docs/user/UPGRADE_GUIDE.md).
 - **Toolbar Dialog** -- `ToolbarDialog` component for dialog-based toolbar controls
 - **Custom CSS Properties** -- 20 `--vaadin-erte-*` custom properties for styling readonly, placeholder, whitespace, and ruler elements
 - **Slotted Component Styling** -- `part="toolbar-custom-component"` with built-in hover, focus, active, and disabled states
-- **Full documentation suite** -- User Guide, API Reference, Configuration Guide, Upgrade Guide, Developer Guide, Architecture Guide, Contributing Guide
+- **Full documentation suite** -- User Guide, API Reference, Upgrade Guide, Developer Guide, Architecture Guide, Contributing Guide
 
 ### Changed
 
