@@ -16,7 +16,6 @@
  */
 package com.vaadin.componentfactory;
 
-import com.vaadin.componentfactory.EnhancedRichTextEditor.EnhancedRichTextEditorI18n;
 import com.vaadin.componentfactory.EnhancedRichTextEditor.ToolbarButton;
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
 import com.vaadin.componentfactory.erte.tables.TablesI18n;
@@ -24,9 +23,12 @@ import com.vaadin.componentfactory.erte.tables.templates.TemplateParser;
 import com.vaadin.componentfactory.toolbar.ToolbarSlot;
 import com.vaadin.componentfactory.toolbar.ToolbarSwitch;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Html;
+import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Pre;
 import com.vaadin.flow.component.html.Span;
@@ -34,19 +36,25 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
-import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
- * Migrated V24 demo samples view.
+ * V25 demo samples view matching the V24 original demo.
  * <p>
  * Contains 14 self-contained feature samples, each demonstrating one ERTE
- * feature with copy-paste-ready code.
+ * feature with rich pre-loaded content, interactive components, and copy-paste-ready code snippets.
  */
 @Route("erte-samples")
 @PageTitle("Enhanced RTE Samples")
@@ -58,361 +66,515 @@ public class ErteSamplesView extends VerticalLayout {
         setMaxWidth("1200px");
         getStyle().set("margin", "0 auto");
 
-        add(new H2("Enhanced RTE Samples"));
-        add(new Span(
-                "Individual feature samples — each card demonstrates one feature with copy-paste-ready code."));
-
-        add(createBasicEditor());
-        add(createTabStopsEditor());
-        add(createDeltaValueEditor());
-        add(createHtmlValueEditor());
-        add(createLimitedToolbarEditor());
-        add(createReadonlySectionsEditor());
-        add(createPlaceholdersEditor());
-        add(createAddTextEditor());
-        add(createToolbarSlotsEditor());
-        add(createCustomShortcutsEditor());
-        add(createIconReplacementEditor());
-        add(createNoRulersEditor());
-        add(createTableEditor());
-        add(createTableI18nEditor());
+        add(createDefaultEditor());
+        add(createEditorWithTabstops());
+        add(createGetValue());
+        add(createGetHtmlValue());
+        add(createEditorWithLimitedToolbar());
+        add(createEditorWithReadonlySections());
+        add(createEditorWithPlaceholders());
+        add(createEditorWithCustomButtons());
+        add(createEditorWithCustomButtonsExtended());
+        add(createEditorWithCustomShortcuts());
+        add(createEditorWithIconReplacement());
+        add(createEditorWithNoRulers());
+        add(createEditorWithTableSample());
+        add(createEditorWithTableI18nSample());
     }
 
-    private Component createBasicEditor() {
+    private Component createDefaultEditor() {
         var rte = new EnhancedRichTextEditor();
-        rte.setWidthFull();
-        return createCard("Basic Editor",
-                "Minimal setup — just create an instance.", rte);
+        rte.setMaxHeight("200px");
+
+        return createCard("Basic Rich Text Editor", rte,
+                createSourceCode(
+                        "EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
+                                + "rte.setMaxHeight(\"200px\");"));
     }
 
-    private Component createTabStopsEditor() {
+    private Component createEditorWithTabstops() {
         var rte = new EnhancedRichTextEditor();
-        rte.setWidthFull();
         rte.setTabStops(List.of(new TabStop(TabStop.Direction.LEFT, 150),
                 new TabStop(TabStop.Direction.RIGHT, 350),
                 new TabStop(TabStop.Direction.MIDDLE, 550)));
-        // Pre-load content with tab embeds
-        rte.asDelta().setValue("[" + "{\"insert\":\"Left-aligned\"},"
-                + "{\"insert\":{\"tab\":true}}," + "{\"insert\":\"Right-aligned\"},"
-                + "{\"insert\":{\"tab\":true}}," + "{\"insert\":\"Centered\"},"
+
+        // Rich content: 3rd tab stop demo + product table
+        rte.asDelta().setValue("["
+                + "{\"insert\":{\"tab\":true}},{\"insert\":{\"tab\":true}},{\"insert\":{\"tab\":true}},"
+                + "{\"insert\":\"3rd tab-stop\",\"attributes\":{\"underline\":true}},"
+                + "{\"insert\":\"\\n\\nThis line is just a normal text. Tab-stops are not affecting it.\\n\\n\"},"
+                // Product table header
+                + "{\"insert\":{\"tab\":true}},{\"insert\":\"Product\",\"attributes\":{\"bold\":true}},"
+                + "{\"insert\":{\"tab\":true}},{\"insert\":\"Price\",\"attributes\":{\"bold\":true}},"
+                + "{\"insert\":{\"tab\":true}},{\"insert\":\"Quantity\",\"attributes\":{\"bold\":true}},"
+                + "{\"insert\":\"\\n\"},"
+                // Row 1
+                + "{\"insert\":{\"tab\":true}},{\"insert\":\"Apples\"},"
+                + "{\"insert\":{\"tab\":true}},{\"insert\":\"2.00\"},"
+                + "{\"insert\":{\"tab\":true}},{\"insert\":\"5\"},"
+                + "{\"insert\":\"\\n\"},"
+                // Row 2
+                + "{\"insert\":{\"tab\":true}},{\"insert\":\"Salmon\"},"
+                + "{\"insert\":{\"tab\":true}},{\"insert\":\"25.00\"},"
+                + "{\"insert\":{\"tab\":true}},{\"insert\":\"2\"},"
                 + "{\"insert\":\"\\n\"}" + "]");
-        return createCard("Tab Stops",
-                "Three tab stops: left at 150px, right at 350px, center at 550px. Press Tab to insert tab characters.",
-                rte);
+
+        return createCard("Basic Rich Text Editor with Tab-stops", rte,
+                createSourceCode("EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
+                        + "List<TabStop> tabStops = new ArrayList<>();\n"
+                        + "tabStops.add(new TabStop(TabStop.Direction.LEFT, 150));\n"
+                        + "tabStops.add(new TabStop(TabStop.Direction.RIGHT, 350));\n"
+                        + "tabStops.add(new TabStop(TabStop.Direction.MIDDLE, 550));\n"
+                        + "rte.setTabStops(tabStops);\n"
+                        + "rte.asDelta().setValue(\"...\"); // Delta with tab embeds"));
     }
 
-    private Component createDeltaValueEditor() {
+    private Component createGetValue() {
+        var valueBlock = new TextArea();
+        valueBlock.setWidthFull();
         var rte = new EnhancedRichTextEditor();
-        rte.setWidthFull();
-        rte.asDelta().setValue(
-                "[{\"insert\":\"Hello, World!\",\"attributes\":{\"bold\":true}},{\"insert\":\"\\n\"}]");
+        var saveBtn = new Button("Save value",
+                e -> valueBlock.setValue(rte.asDelta().getValue()));
+        var setBtn = new Button("Set value",
+                e -> rte.asDelta().setValue(valueBlock.getValue()));
 
-        var output = new Pre();
-        output.getStyle().set("white-space", "pre-wrap")
-                .set("word-break", "break-all")
-                .set("font-size", "var(--lumo-font-size-xs)")
-                .set("background", "var(--lumo-shade-5pct)")
-                .set("padding", "var(--lumo-space-s)").set("margin", "0")
-                .set("max-height", "150px").set("overflow", "auto");
-        rte.asDelta().addValueChangeListener(e -> output.setText(e.getValue()));
-
-        var btn = new Button("Get Delta",
-                e -> output.setText(rte.asDelta().getValue()));
-
-        return createCard("Save Delta Value",
-                "Use asDelta().getValue() / asDelta().setValue() to read/write Quill Delta JSON.",
-                rte, btn, output);
+        return createCard("Save Rich Text Editor value", rte, saveBtn, setBtn, valueBlock,
+                createSourceCode("TextArea valueBlock = new TextArea();\n"
+                        + "EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
+                        + "Button saveBtn = new Button(\"Save value\",\n"
+                        + "    e -> valueBlock.setValue(rte.asDelta().getValue()));\n"
+                        + "Button setBtn = new Button(\"Set value\",\n"
+                        + "    e -> rte.asDelta().setValue(valueBlock.getValue()));"));
     }
 
-    private Component createHtmlValueEditor() {
+    private Component createGetHtmlValue() {
+        var htmlBlock = new Div();
         var rte = new EnhancedRichTextEditor();
-        rte.setWidthFull();
-        rte.setValue(
-                "<p><strong>Bold text</strong> and <em>italic text</em></p>");
+        var showHtmlValue = new Button("Show html value", e -> {
+            String exsValue = htmlBlock.getElement().getProperty("innerHTML");
+            if (exsValue == null || !exsValue.equals(rte.getValue())) {
+                htmlBlock.getElement().setProperty("innerHTML", rte.getValue());
+            }
+        });
 
-        var output = new Pre();
-        output.getStyle().set("white-space", "pre-wrap")
-                .set("word-break", "break-all")
-                .set("font-size", "var(--lumo-font-size-xs)")
-                .set("background", "var(--lumo-shade-5pct)")
-                .set("padding", "var(--lumo-space-s)").set("margin", "0")
-                .set("max-height", "150px").set("overflow", "auto");
-        rte.addValueChangeListener(e -> output.setText(e.getValue()));
-
-        var btn = new Button("Get HTML", e -> output.setText(rte.getValue()));
-
-        return createCard("HTML Value",
-                "In V25, getValue() returns HTML directly (primary format). Use asDelta() for Delta JSON.",
-                rte, btn, output);
+        return createCard("Save Rich Text Editor htmlValue", rte, showHtmlValue, htmlBlock,
+                createSourceCode("Div htmlBlock = new Div();\n"
+                        + "EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
+                        + "Button showHtmlValue = new Button(\"Show html value\", e -> {\n"
+                        + "    htmlBlock.getElement().setProperty(\"innerHTML\",\n"
+                        + "        rte.getValue());\n" + "});"));
     }
 
-    private Component createLimitedToolbarEditor() {
+    private Component createEditorWithLimitedToolbar() {
         var rte = new EnhancedRichTextEditor();
-        rte.setWidthFull();
-        rte.setToolbarButtonsVisibility(
-                Map.ofEntries(Map.entry(ToolbarButton.BOLD, true),
-                        Map.entry(ToolbarButton.ITALIC, true),
-                        Map.entry(ToolbarButton.UNDERLINE, true),
-                        Map.entry(ToolbarButton.H1, true),
-                        Map.entry(ToolbarButton.H2, true),
-                        Map.entry(ToolbarButton.CLEAN, true),
-                        // Hide everything else
-                        Map.entry(ToolbarButton.UNDO, false),
-                        Map.entry(ToolbarButton.REDO, false),
-                        Map.entry(ToolbarButton.STRIKE, false),
-                        Map.entry(ToolbarButton.COLOR, false),
-                        Map.entry(ToolbarButton.BACKGROUND, false),
-                        Map.entry(ToolbarButton.H3, false),
-                        Map.entry(ToolbarButton.SUBSCRIPT, false),
-                        Map.entry(ToolbarButton.SUPERSCRIPT, false),
-                        Map.entry(ToolbarButton.LIST_ORDERED, false),
-                        Map.entry(ToolbarButton.LIST_BULLET, false),
-                        Map.entry(ToolbarButton.OUTDENT, false),
-                        Map.entry(ToolbarButton.INDENT, false),
-                        Map.entry(ToolbarButton.ALIGN_LEFT, false),
-                        Map.entry(ToolbarButton.ALIGN_CENTER, false),
-                        Map.entry(ToolbarButton.ALIGN_RIGHT, false),
-                        Map.entry(ToolbarButton.IMAGE, false),
-                        Map.entry(ToolbarButton.LINK, false),
-                        Map.entry(ToolbarButton.BLOCKQUOTE, false),
-                        Map.entry(ToolbarButton.CODE_BLOCK, false)));
-        return createCard("Limited Toolbar",
-                "Only Bold, Italic, Underline, H1, H2, and Clean buttons visible. Groups with all buttons hidden auto-collapse.",
-                rte);
+        Map<ToolbarButton, Boolean> buttons = new HashMap<>();
+        buttons.put(ToolbarButton.CLEAN, false);
+        buttons.put(ToolbarButton.BLOCKQUOTE, false);
+        buttons.put(ToolbarButton.CODE_BLOCK, false);
+        buttons.put(ToolbarButton.IMAGE, false);
+        buttons.put(ToolbarButton.LINK, false);
+        buttons.put(ToolbarButton.STRIKE, false);
+        buttons.put(ToolbarButton.READONLY, false);
+        rte.setToolbarButtonsVisibility(buttons);
+
+        return createCard("Rich Text Editor with limited toolbar", rte,
+                createSourceCode("EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
+                        + "Map<ToolbarButton, Boolean> buttons = new HashMap<>();\n"
+                        + "buttons.put(ToolbarButton.CLEAN, false);\n"
+                        + "buttons.put(ToolbarButton.BLOCKQUOTE, false);\n"
+                        + "buttons.put(ToolbarButton.CODE_BLOCK, false);\n"
+                        + "buttons.put(ToolbarButton.IMAGE, false);\n"
+                        + "buttons.put(ToolbarButton.LINK, false);\n"
+                        + "buttons.put(ToolbarButton.STRIKE, false);\n"
+                        + "buttons.put(ToolbarButton.READONLY, false);\n"
+                        + "rte.setToolbarButtonsVisibility(buttons);"));
     }
 
-    private Component createReadonlySectionsEditor() {
+    private Component createEditorWithReadonlySections() {
         var rte = new EnhancedRichTextEditor();
-        rte.setWidthFull();
-        rte.asDelta().setValue("[" + "{\"insert\":\"Editable text before. \"},"
-                + "{\"insert\":\"This section is protected.\",\"attributes\":{\"readonly\":true}},"
-                + "{\"insert\":\" Editable text after.\\n\"}" + "]");
-        return createCard("Readonly Sections",
-                "Protected text uses the readonly format attribute. Toggle readonly via the lock toolbar button.",
-                rte);
+        rte.asDelta().setValue("["
+                + "{\"insert\":\"Some text\\n\"},"
+                + "{\"insert\":\"Some readonly text\\n\",\"attributes\":{\"readonly\":true}},"
+                + "{\"insert\":\"More text\\n\"},"
+                + "{\"insert\":\"More readonly text\\n\",\"attributes\":{\"readonly\":true}}"
+                + "]");
+
+        return createCard("Basic Rich Text Editor with readonly sections", rte,
+                createSourceCode("EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
+                        + "rte.asDelta().setValue(\"[\"\n"
+                        + "    + \"{\\\"insert\\\":\\\"Some text\\\\n\\\"},\"\n"
+                        + "    + \"{\\\"insert\\\":\\\"Some readonly text\\\\n\\\",\\\"attributes\\\":{\\\"readonly\\\":true}},\"\n"
+                        + "    + \"{\\\"insert\\\":\\\"More text\\\\n\\\"},\"\n"
+                        + "    + \"{\\\"insert\\\":\\\"More readonly text\\\\n\\\",\\\"attributes\\\":{\\\"readonly\\\":true}}\"\n"
+                        + "    + \"]\");"));
     }
 
-    private Component createPlaceholdersEditor() {
+    private Component createEditorWithPlaceholders() {
         var rte = new EnhancedRichTextEditor();
-        rte.setWidthFull();
 
-        var p1 = new Placeholder("{{name}}");
-        p1.getFormat().put("bold", true);
-        var p2 = new Placeholder("{{company}}");
-        p2.getFormat().put("italic", true);
-        var p3 = new Placeholder("{{date}}");
+        var p1 = new Placeholder();
+        p1.setText("N-1=Vaadin");
+        p1.getFormat().put("italic", true);
+        p1.getAltFormat().put("italic", false);
+        p1.getAltFormat().put("bold", true);
+
+        var p2 = new Placeholder();
+        p2.setText("A-1=Turku, 20540");
+        p2.getAltFormat().put("link", "https://goo.gl/maps/EX8RTEMUWeEAdkNN8");
+
+        var p3 = new Placeholder();
+        p3.setText("D-1=01-01-2000");
 
         rte.setPlaceholders(List.of(p1, p2, p3));
-        rte.setPlaceholderTags("@", "");
-        rte.addPlaceholderBeforeInsertListener(e -> {
-            Notification.show("Inserting: " + e.getPlaceholders().stream()
-                    .map(Placeholder::getText)
-                    .reduce((a, b) -> a + ", " + b).orElse(""));
-            e.insert();
-        });
-        rte.addPlaceholderInsertedListener(e -> Notification.show(
-                "Inserted: " + e.getPlaceholders().size() + " placeholder(s)"));
+        rte.setPlaceholderAltAppearance(true);
+        rte.setPlaceholderAltAppearancePattern("(?<=\\=).*$");
 
-        return createCard("Placeholders",
-                "Click the placeholder toolbar button to insert. Tags display as @name. Event listeners show notifications.",
-                rte);
-    }
-
-    private Component createAddTextEditor() {
-        var rte = new EnhancedRichTextEditor();
-        rte.setWidthFull();
-        rte.asDelta().setValue(
-                "[{\"insert\":\"Click a button to insert text.\"},{\"insert\":\"\\n\"}]");
-
-        var btnCursor = new Button("Insert at cursor",
-                e -> rte.addText("INSERTED "));
-        var btnPos = new Button("Insert at position 0",
-                e -> rte.addText("START ", 0));
-
-        return createCard("Programmatic Text Insertion",
-                "addText(text) inserts at cursor, addText(text, pos) at a specific position.",
-                rte, btnCursor, btnPos);
-    }
-
-    private Component createToolbarSlotsEditor() {
-        var rte = new EnhancedRichTextEditor();
-        rte.setWidthFull();
-
-        // START slot
-        var startBtn = new Button("S");
-        startBtn.getElement().setAttribute("title", "Start slot button");
-        rte.addToolbarComponents(ToolbarSlot.START, startBtn);
-
-        // AFTER_GROUP_HEADING slot
-        var headingBtn = new Button("H+");
-        headingBtn.getElement().setAttribute("title", "After heading group");
-        rte.addToolbarComponents(ToolbarSlot.AFTER_GROUP_HEADING, headingBtn);
-
-        // GROUP_CUSTOM
-        var wsSwitch = new ToolbarSwitch("WS");
-        wsSwitch.getElement().setAttribute("title", "Whitespace indicators");
-        rte.addCustomToolbarComponents(wsSwitch);
-
-        // END slot
-        var endBtn = new Button("E");
-        endBtn.getElement().setAttribute("title", "End slot button");
-        rte.addToolbarComponents(ToolbarSlot.END, endBtn);
-
-        return createCard("Toolbar Slots",
-                "Custom components in 4 slots: START (S), AFTER_GROUP_HEADING (H+), GROUP_CUSTOM (WS toggle), END (E).",
-                rte);
-    }
-
-    private Component createCustomShortcutsEditor() {
-        var rte = new EnhancedRichTextEditor();
-        rte.setWidthFull();
-
-        // F9 triggers center alignment
-        rte.addStandardToolbarButtonShortcut(ToolbarButton.ALIGN_CENTER, "F9",
-                false, false, false);
-        // Ctrl+G triggers bold
-        rte.addStandardToolbarButtonShortcut(ToolbarButton.BOLD, "G", true,
-                false, false);
-        // Shift+F10 focuses toolbar
-        rte.addToolbarFocusShortcut("F10", false, true, false);
-
-        return createCard("Custom Keyboard Shortcuts",
-                "F9 = center align, Ctrl+G = bold, Shift+F10 = focus toolbar. Uses string key names (V25 API).",
-                rte);
-    }
-
-    private Component createIconReplacementEditor() {
-        var rte = new EnhancedRichTextEditor();
-        rte.setWidthFull();
-        rte.replaceStandardToolbarButtonIcon(ToolbarButton.BOLD,
-                new Icon(VaadinIcon.BOLD));
-        rte.replaceStandardToolbarButtonIcon(ToolbarButton.ITALIC,
-                new Icon(VaadinIcon.ITALIC));
-        rte.replaceStandardToolbarButtonIcon(ToolbarButton.UNDO,
-                new Icon(VaadinIcon.ARROW_BACKWARD));
-        rte.replaceStandardToolbarButtonIcon(ToolbarButton.REDO,
-                new Icon(VaadinIcon.ARROW_FORWARD));
-
-        return createCard("Replace Toolbar Button Icons",
-                "replaceStandardToolbarButtonIcon() replaces default icons with custom Vaadin Icons.",
-                rte);
-    }
-
-    private Component createNoRulersEditor() {
-        var rte = new EnhancedRichTextEditor();
-        rte.setWidthFull();
-        rte.setNoRulers(true);
-        return createCard("No Rulers",
-                "setNoRulers(true) hides the horizontal and vertical rulers.", rte);
-    }
-
-    private Component createTableEditor() {
-        var rte = new EnhancedRichTextEditor();
-        rte.setWidthFull();
-
-        var tables = EnhancedRichTextEditorTables.enable(rte);
-
-        try (InputStream is = getClass().getClassLoader()
-                .getResourceAsStream("table-sample-templates.json")) {
-            if (is != null) {
-                String json = new String(is.readAllBytes(),
-                        java.nio.charset.StandardCharsets.UTF_8);
-                tables.setTemplates(TemplateParser.parseJson(json));
+        rte.addPlaceholderBeforeInsertListener(event -> {
+            StringBuilder texts = new StringBuilder();
+            for (Placeholder ph : event.getPlaceholders()) {
+                texts.append(" ").append(ph.getText());
+                texts.append(" at ").append(ph.getIndex());
             }
-        } catch (IOException ignored) {
+            Notification.show(texts + " to be inserted");
+            event.insert();
+        });
+
+        rte.addPlaceholderInsertedListener(event -> {
+            StringBuilder texts = new StringBuilder();
+            for (Placeholder ph : event.getPlaceholders()) {
+                texts.append(" ").append(ph.getText());
+                texts.append(" at ").append(ph.getIndex());
+            }
+            Notification.show(texts + " inserted");
+        });
+
+        rte.addPlaceholderBeforeRemoveListener(event -> {
+            StringBuilder texts = new StringBuilder();
+            for (Placeholder ph : event.getPlaceholders()) {
+                texts.append(" ").append(ph.getText());
+            }
+            Notification.show(texts + " to be removed");
+            if (!texts.toString().contains("Turku"))
+                event.remove();
+        });
+
+        rte.addPlaceholderSelectedListener(event -> {
+            StringBuilder texts = new StringBuilder();
+            for (Placeholder ph : event.getPlaceholders()) {
+                texts.append(" ").append(ph.getText());
+            }
+            Notification.show(texts + " selected");
+        });
+
+        rte.addPlaceholderLeaveListener(event -> Notification.show("Placeholder leaved"));
+
+        rte.addPlaceholderRemovedListener(event -> {
+            StringBuilder texts = new StringBuilder();
+            for (Placeholder ph : event.getPlaceholders()) {
+                texts.append(" ").append(ph.getText());
+            }
+            Notification.show(texts + " removed");
+        });
+
+        rte.addPlaceholderAppearanceChangedListener(event -> {
+            if (event.isFromClient())
+                Notification.show("Appearance changed to " + event.getAppearanceLabel());
+        });
+
+        // Pre-load content with placeholders (V25 delta format)
+        rte.asDelta().setValue("["
+                + "{\"insert\":\"The company \"},"
+                + "{\"insert\":{\"placeholder\":{\"text\":\"N-1=Vaadin\",\"format\":{\"italic\":true},\"altFormat\":{\"italic\":false,\"bold\":true}}}},"
+                + "{\"insert\":\", located in \"},"
+                + "{\"insert\":{\"placeholder\":{\"text\":\"A-1=Turku, 20540\",\"altFormat\":{\"link\":\"https://goo.gl/maps/EX8RTEMUWeEAdkNN8\"}}}},"
+                + "{\"insert\":\", was founded in \"},"
+                + "{\"insert\":{\"placeholder\":{\"text\":\"D-1=01-01-2000\"}}},"
+                + "{\"insert\":\".\\n\"}" + "]");
+
+        var htmlHolder = new Div();
+        rte.addValueChangeListener(event -> {
+            htmlHolder.removeAll();
+            String html = rte.getValue();
+            if (html != null && !html.isEmpty()) {
+                htmlHolder.add(new Html("<div>" + html + "</div>"));
+            }
+        });
+
+        var button = new Button("Click me", event -> {
+            Notification.show("Clicked");
+        });
+
+        return createCard("Rich Text Editor with Placeholders", rte, button, htmlHolder,
+                createSourceCode("EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
+                        + "Placeholder p1 = new Placeholder();\n"
+                        + "p1.setText(\"N-1=Vaadin\");\n"
+                        + "p1.getFormat().put(\"italic\", true);\n"
+                        + "p1.getAltFormat().put(\"bold\", true);\n"
+                        + "// ... more placeholders\n"
+                        + "rte.setPlaceholders(List.of(p1, p2, p3));\n"
+                        + "rte.setPlaceholderAltAppearance(true);\n"
+                        + "rte.setPlaceholderAltAppearancePattern(\"(?<=\\\\=).*$\");\n"
+                        + "rte.addPlaceholderBeforeInsertListener(e -> { e.insert(); });\n"
+                        + "rte.addPlaceholderBeforeRemoveListener(e -> {\n"
+                        + "    if (!texts.contains(\"Turku\")) e.remove();\n" + "});"));
+    }
+
+    private Component createEditorWithCustomButtons() {
+        var rte = new EnhancedRichTextEditor();
+
+        var textButton1 = new Button("");
+        textButton1.setIcon(VaadinIcon.AIRPLANE.create());
+        textButton1.addClickShortcut(Key.F8);
+        textButton1.getElement().setProperty("title", "Airplanes are flying machines.");
+        textButton1.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        textButton1.addClickListener(event -> rte.addText("Airplanes are flying machines. "));
+
+        var textButton2 = new Button("");
+        textButton2.setIcon(VaadinIcon.DENTAL_CHAIR.create());
+        textButton2.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        textButton2.getElement().setProperty("title", "Dentists are drilling people.");
+        textButton2.addClickShortcut(Key.F9);
+        textButton2.addClickListener(event -> rte.addText("Dentists are drilling people. "));
+
+        rte.addCustomToolbarComponents(textButton1, textButton2);
+
+        var removeBtn = new Button("Remove airplane",
+                event -> rte.removeToolbarComponent(ToolbarSlot.GROUP_CUSTOM, textButton1));
+
+        return createCard("Rich Text Editor With Custom Buttons", rte, removeBtn,
+                createSourceCode("EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
+                        + "Button textButton1 = new Button(\"\");\n"
+                        + "textButton1.setIcon(VaadinIcon.AIRPLANE.create());\n"
+                        + "textButton1.addClickShortcut(Key.F8);\n"
+                        + "textButton1.addClickListener(event ->\n"
+                        + "    rte.addText(\"Airplanes are flying machines. \"));\n"
+                        + "rte.addCustomToolbarComponents(textButton1, textButton2);"));
+    }
+
+    private Component createEditorWithCustomButtonsExtended() {
+        var rte = new EnhancedRichTextEditor();
+
+        var presets = new ComboBox<String>("", "Preset 1", "Preset 2", "Preset 3");
+        presets.setValue("Preset 1");
+        presets.setTooltipText("Custom component in '" + ToolbarSlot.START.getSlotName() + "' slot");
+        rte.addToolbarComponents(ToolbarSlot.START, presets);
+
+        var colors = new Select<String>();
+        colors.setItems("Red", "Green", "Blue");
+        colors.setValue("Red");
+        colors.setTooltipText("Custom component in '"
+                + ToolbarSlot.BEFORE_GROUP_GLYPH_TRANSFORMATION.getSlotName() + "' slot");
+        rte.addToolbarComponents(ToolbarSlot.BEFORE_GROUP_GLYPH_TRANSFORMATION, colors);
+
+        List<Button> slottedButtons = new LinkedList<>();
+        for (ToolbarSlot slot : ToolbarSlot.values()) {
+            if (slot == ToolbarSlot.GROUP_CUSTOM)
+                continue;
+
+            var btn = new Button(VaadinIcon.CIRCLE_THIN.create(),
+                    event -> Notification.show("Button in '" + slot.getSlotName() + "' slot"));
+            btn.setTooltipText("Button in '" + slot.getSlotName() + "' slot");
+            btn.setVisible(false);
+            btn.getStyle().set("color", "red");
+            slottedButtons.add(btn);
+            rte.addToolbarComponents(slot, btn);
         }
 
-        // Pre-load a simple table
-        rte.asDelta()
-                .setValue("["
-                        + "{\"insert\":\"Name\",\"attributes\":{\"bold\":true}},"
-                        + "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"t1|r1|c1||||\"}},"
-                        + "{\"insert\":\"Value\",\"attributes\":{\"bold\":true}},"
-                        + "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"t1|r1|c2||||\"}},"
-                        + "{\"insert\":\"Feature A\"},"
-                        + "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"t1|r2|c1||||\"}},"
-                        + "{\"insert\":\"Enabled\"},"
-                        + "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"t1|r2|c2||||\"}},"
-                        + "{\"insert\":\"\\n\"}" + "]");
+        var toolbarSwitch = new ToolbarSwitch(VaadinIcon.EYE.create());
+        toolbarSwitch.addActiveChangedListener(
+                event -> slottedButtons.forEach(b -> b.setVisible(event.isActive())));
+        toolbarSwitch.setTooltipText("Toggle slot buttons visibility");
+        rte.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, toolbarSwitch);
 
-        return createCard("Table Addon",
-                "EnhancedRichTextEditorTables.enable(editor) adds table support with templates.",
-                rte);
+        var info = new Span(
+                "Click the EYE Button to show/hide additional toolbar components between the standard button groups");
+
+        return createCard("Rich Text Editor With Custom Buttons (extended)", info, rte,
+                createSourceCode("EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
+                        + "ComboBox<String> presets = new ComboBox<>(\"\", ...);\n"
+                        + "rte.addToolbarComponents(ToolbarSlot.START, presets);\n\n"
+                        + "ToolbarSwitch toolbarSwitch = new ToolbarSwitch(VaadinIcon.EYE.create());\n"
+                        + "toolbarSwitch.addActiveChangedListener(event ->\n"
+                        + "    slottedButtons.forEach(b -> b.setVisible(event.isActive())));\n"
+                        + "rte.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, toolbarSwitch);"));
     }
 
-    private Component createTableI18nEditor() {
+    private Component createEditorWithCustomShortcuts() {
         var rte = new EnhancedRichTextEditor();
-        rte.setWidthFull();
 
-        // German ERTE I18n
-        rte.setI18n(new EnhancedRichTextEditorI18n().setBold("Fett")
-                .setItalic("Kursiv").setUnderline("Unterstrichen")
-                .setStrike("Durchgestrichen").setH1("Überschrift 1")
-                .setH2("Überschrift 2").setH3("Überschrift 3")
-                .setSubscript("Tiefgestellt").setSuperscript("Hochgestellt")
-                .setListOrdered("Nummerierte Liste").setListBullet("Aufzählung")
-                .setAlignLeft("Linksbündig").setAlignCenter("Zentriert")
-                .setAlignRight("Rechtsbündig").setAlignJustify("Blocksatz")
-                .setOutdent("Einzug verkleinern").setIndent("Einzug vergrößern")
-                .setImage("Bild").setLink("Link").setBlockquote("Zitat")
-                .setCodeBlock("Code-Block")
-                .setClean("Formatierung entfernen").setUndo("Rückgängig")
-                .setRedo("Wiederherstellen").setReadonly("Schreibschutz")
-                .setPlaceholder("Platzhalter")
-                .setWhitespace("Leerzeichen anzeigen"));
+        // Shift+F9 for align center
+        rte.addStandardToolbarButtonShortcut(ToolbarButton.ALIGN_CENTER, "F9", false, true, false);
+        // Shift+P for superscript
+        rte.addStandardToolbarButtonShortcut(ToolbarButton.SUPERSCRIPT, "P", false, true, false);
+        // Ctrl+B for header 1
+        rte.addStandardToolbarButtonShortcut(ToolbarButton.H1, "B", true, false, false);
+        // F9 to load an image
+        rte.addStandardToolbarButtonShortcut(ToolbarButton.IMAGE, "F9", false, false, false);
+        // Alt+G for code block
+        rte.addStandardToolbarButtonShortcut(ToolbarButton.CODE_BLOCK, "G", false, false, true);
+        // Shift+J to focus toolbar
+        rte.addToolbarFocusShortcut("J", false, true, false);
 
-        // German Tables I18n
-        var tablesI18n = new TablesI18n();
-        tablesI18n.setInsertTableRowsFieldLabel("Zeilen");
-        tablesI18n.setInsertTableColumnsFieldLabel("Spalten");
-        tablesI18n.setInsertTableAddButtonTooltip("Tabelle einfügen");
-        tablesI18n.setInsertTableToolbarSwitchTooltip("Tabelle einfügen");
-        tablesI18n.setModifyTableToolbarSwitchTooltip("Tabelle bearbeiten");
-        tablesI18n.setModifyTableAppendRowAboveItemLabel(
-                "Zeile darüber einfügen");
-        tablesI18n
-                .setModifyTableAppendRowBelowItemLabel("Zeile darunter einfügen");
-        tablesI18n.setModifyTableRemoveRowItemLabel("Zeile entfernen");
-        tablesI18n.setModifyTableAppendColumnBeforeItemLabel(
-                "Spalte davor einfügen");
-        tablesI18n.setModifyTableAppendColumnAfterItemLabel(
-                "Spalte danach einfügen");
-        tablesI18n.setModifyTableRemoveColumnItemLabel("Spalte entfernen");
-        tablesI18n.setModifyTableRemoveTableItemLabel("Tabelle entfernen");
-        tablesI18n.setModifyTableMergeCellsItemLabel("Zellen verbinden");
-        tablesI18n.setModifyTableSplitCellItemLabel("Zelle teilen");
-        tablesI18n
-                .setTableTemplatesToolbarSwitchTooltip("Tabellenvorlagen");
-
-        EnhancedRichTextEditorTables.enable(rte, tablesI18n);
-
-        return createCard("Table I18n (German)",
-                "Full German localization of ERTE labels and table addon labels using TablesI18n.",
-                rte);
+        return createCard("Rich Text Editor with custom shortcuts", rte,
+                createSourceCode("EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
+                        + "// Shift+F9 for align center\n"
+                        + "rte.addStandardToolbarButtonShortcut(\n"
+                        + "    ToolbarButton.ALIGN_CENTER, \"F9\", false, true, false);\n"
+                        + "// Shift+P for superscript\n"
+                        + "rte.addStandardToolbarButtonShortcut(\n"
+                        + "    ToolbarButton.SUPERSCRIPT, \"P\", false, true, false);\n"
+                        + "// Ctrl+B for header 1\n"
+                        + "rte.addStandardToolbarButtonShortcut(\n"
+                        + "    ToolbarButton.H1, \"B\", true, false, false);\n"
+                        + "// Shift+J to focus toolbar\n"
+                        + "rte.addToolbarFocusShortcut(\"J\", false, true, false);"));
     }
 
-    private Div createCard(String title, String description,
-            Component... content) {
+    private Component createEditorWithIconReplacement() {
+        var rte = new EnhancedRichTextEditor();
+
+        var newUndoIcon = new Icon(VaadinIcon.ARROW_BACKWARD);
+        newUndoIcon.setColor("grey");
+        newUndoIcon.setSize("1.25em");
+        rte.replaceStandardToolbarButtonIcon(ToolbarButton.UNDO, newUndoIcon);
+
+        var newRedoIcon = new Icon(VaadinIcon.ARROW_FORWARD);
+        newRedoIcon.setColor("grey");
+        newRedoIcon.setSize("1.25em");
+        rte.replaceStandardToolbarButtonIcon(ToolbarButton.REDO, newRedoIcon);
+
+        var imageIcon = new Icon(VaadinIcon.PICTURE);
+        imageIcon.setSize("1.25em");
+        rte.replaceStandardToolbarButtonIcon(ToolbarButton.IMAGE, imageIcon);
+
+        return createCard("Rich Text Editor with icon replacement", rte,
+                createSourceCode("EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
+                        + "Icon newUndoIcon = new Icon(VaadinIcon.ARROW_BACKWARD);\n"
+                        + "newUndoIcon.setColor(\"grey\");\n"
+                        + "newUndoIcon.setSize(\"1.25em\");\n"
+                        + "rte.replaceStandardToolbarButtonIcon(\n"
+                        + "    ToolbarButton.UNDO, newUndoIcon);\n" + "// ... same for REDO and IMAGE"));
+    }
+
+    private Component createEditorWithNoRulers() {
+        var rte = new EnhancedRichTextEditor();
+        rte.setMaxHeight("200px");
+        rte.setNoRulers(true);
+
+        return createCard("Rich Text Editor with no rulers", rte,
+                createSourceCode("EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
+                        + "rte.setMaxHeight(\"200px\");\n" + "rte.setNoRulers(true);"));
+    }
+
+    private Component createEditorWithTableSample() {
+        String deltaString;
+        String templatesString;
+        try (InputStream deltaStream = getClass().getClassLoader()
+                .getResourceAsStream("table-sample-delta.json");
+                InputStream templatesStream = getClass().getClassLoader()
+                        .getResourceAsStream("table-sample-templates.json")) {
+            Objects.requireNonNull(deltaStream);
+            Objects.requireNonNull(templatesStream);
+            deltaString = new String(deltaStream.readAllBytes(), StandardCharsets.UTF_8);
+            templatesString = new String(templatesStream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        var rte = new EnhancedRichTextEditor();
+        var tables = EnhancedRichTextEditorTables.enable(rte);
+        tables.setTemplates(TemplateParser.parseJson(templatesString));
+        rte.asDelta().setValue(deltaString);
+        rte.setMaxHeight("500px");
+        rte.setValueChangeMode(ValueChangeMode.EAGER);
+
+        return createCard("Rich Text Editor with Table Addon", rte,
+                createSourceCode("EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
+                        + "EnhancedRichTextEditorTables tables =\n"
+                        + "    EnhancedRichTextEditorTables.enable(rte);\n"
+                        + "tables.setTemplates(\n"
+                        + "    TemplateParser.parseJson(templatesString));"));
+    }
+
+    private Component createEditorWithTableI18nSample() {
+        String deltaString;
+        String templatesString;
+        try (InputStream deltaStream = getClass().getClassLoader()
+                .getResourceAsStream("table-sample-delta.json");
+                InputStream templatesStream = getClass().getClassLoader()
+                        .getResourceAsStream("table-sample-templates.json")) {
+            Objects.requireNonNull(deltaStream);
+            Objects.requireNonNull(templatesStream);
+            deltaString = new String(deltaStream.readAllBytes(), StandardCharsets.UTF_8);
+            templatesString = new String(templatesStream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        var rte = new EnhancedRichTextEditor();
+        var tablesI18n = new TablesI18n();
+        tablesI18n.setInsertTableToolbarSwitchTooltip("Neue Tabelle hinzufügen");
+        tablesI18n.setInsertTableRowsFieldLabel("Zeilen");
+        tablesI18n.setInsertTableRowsFieldTooltip("Anzahl der hinzuzufügenden Zeilen");
+        tablesI18n.setInsertTableColumnsFieldLabel("Spalten");
+        tablesI18n.setInsertTableColumnsFieldTooltip("Anzahl der hinzuzufügenden Spalten");
+        tablesI18n.setInsertTableAddButtonTooltip("Tabelle hinzufügen");
+        tablesI18n.setModifyTableToolbarSwitchTooltip("Tabelle anpassen");
+        tablesI18n.setTableTemplatesToolbarSwitchTooltip("Formatvorlagen");
+
+        var templatesI18n = tablesI18n.getTemplatesI18n();
+        templatesI18n.setCurrentTemplateSelectFieldLabel("Aktuelle Vorlage");
+        templatesI18n.setCurrentTemplateNameNotUniqueError(
+                "Es gibt bereits eine Vorlage mit diesem Namen!");
+        templatesI18n.setCreateNewTemplateButtonTooltip("Neue Vorlage hinzufügen");
+        templatesI18n.setCopyTemplateButtonTooltip("Vorlage kopieren");
+        templatesI18n.setDeleteTemplateButtonTooltip("Vorlage löschen");
+        templatesI18n.setDeleteTemplateConfirmTitle("Vorlage löschen");
+        templatesI18n.setDeleteTemplateConfirmText("Möchten Sie die ausgewählte Vorlage löschen?");
+        templatesI18n.setDeleteTemplateConfirmYesButton("Löschen");
+        templatesI18n.setDeleteTemplateConfirmNoButton("Abbrechen");
+
+        var tables = EnhancedRichTextEditorTables.enable(rte, tablesI18n);
+        tables.setTemplates(TemplateParser.parseJson(templatesString));
+        rte.asDelta().setValue(deltaString);
+        rte.setMaxHeight("500px");
+        rte.setValueChangeMode(ValueChangeMode.EAGER);
+
+        return createCard("Rich Text Editor with Table Addon - I18n Sample", rte,
+                createSourceCode("TablesI18n tablesI18n = new TablesI18n();\n"
+                        + "tablesI18n.setInsertTableToolbarSwitchTooltip(\n"
+                        + "    \"Neue Tabelle hinzufügen\");\n"
+                        + "tablesI18n.setInsertTableRowsFieldLabel(\"Zeilen\");\n"
+                        + "// ... more i18n settings\n"
+                        + "EnhancedRichTextEditorTables tables =\n"
+                        + "    EnhancedRichTextEditorTables.enable(rte, tablesI18n);"));
+    }
+
+    private Div createCard(String title, Component... content) {
         var card = new Div();
         card.getStyle().set("border", "1px solid var(--lumo-contrast-10pct)")
                 .set("border-radius", "var(--lumo-border-radius-l)")
                 .set("padding", "var(--lumo-space-l)")
-                .set("background", "var(--lumo-base-color)")
-                .set("display", "flex").set("flex-direction", "column")
-                .set("gap", "var(--lumo-space-s)");
+                .set("background", "var(--lumo-base-color)").set("display", "flex")
+                .set("flex-direction", "column").set("gap", "var(--lumo-space-s)");
 
         var h3 = new H3(title);
         h3.getStyle().set("margin", "0");
 
-        var desc = new Span(description);
-        desc.getStyle()
-                .set("color", "var(--lumo-secondary-text-color)")
-                .set("font-size", "var(--lumo-font-size-s)");
-
-        card.add(h3, desc);
+        card.add(h3);
         for (Component c : content) {
             card.add(c);
         }
         return card;
+    }
+
+    private Pre createSourceCode(String code) {
+        var pre = new Pre(code);
+        pre.getStyle().set("background", "var(--lumo-shade-5pct)")
+                .set("padding", "var(--lumo-space-s)")
+                .set("border-radius", "var(--lumo-border-radius-s)")
+                .set("font-size", "var(--lumo-font-size-xs)").set("overflow-x", "auto")
+                .set("margin", "0").set("white-space", "pre-wrap").set("word-break", "break-all");
+        return pre;
     }
 }
