@@ -22,11 +22,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.vaadin.componentfactory.toolbar.ToolbarSlot;
+import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.DomEvent;
 import com.vaadin.flow.component.EventData;
+import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.UI;
@@ -88,6 +90,55 @@ import tools.jackson.databind.node.ObjectNode;
 @Tag("vcf-enhanced-rich-text-editor")
 @JsModule("./vcf-enhanced-rich-text-editor.js")
 public class EnhancedRichTextEditor extends RichTextEditor {
+
+    /**
+     * Constructs an empty {@code EnhancedRichTextEditor}.
+     */
+    public EnhancedRichTextEditor() {
+        super();
+    }
+
+    /**
+     * Constructs a {@code EnhancedRichTextEditor} with the initial value.
+     *
+     * @param initialValue the initial value in HTML format
+     * @see #setValue(String)
+     */
+    public EnhancedRichTextEditor(String initialValue) {
+        this();
+        setValue(initialValue);
+    }
+
+    /**
+     * Constructs an empty {@code EnhancedRichTextEditor} with a value change
+     * listener.
+     *
+     * @param listener the value change listener
+     * @see #addValueChangeListener(HasValue.ValueChangeListener)
+     */
+    public EnhancedRichTextEditor(
+            HasValue.ValueChangeListener<? super AbstractField.ComponentValueChangeEvent<
+                    RichTextEditor, String>> listener) {
+        this();
+        addValueChangeListener(listener);
+    }
+
+    /**
+     * Constructs a {@code EnhancedRichTextEditor} with the initial value and a
+     * value change listener.
+     *
+     * @param initialValue the initial value in HTML format
+     * @param listener     the value change listener
+     * @see #setValue(String)
+     * @see #addValueChangeListener(HasValue.ValueChangeListener)
+     */
+    public EnhancedRichTextEditor(String initialValue,
+            HasValue.ValueChangeListener<? super AbstractField.ComponentValueChangeEvent<
+                    RichTextEditor, String>> listener) {
+        this();
+        setValue(initialValue);
+        addValueChangeListener(listener);
+    }
 
     /**
      * Schedules a command to run before the next client response.
@@ -657,6 +708,15 @@ public class EnhancedRichTextEditor extends RichTextEditor {
             return partSuffix;
         }
 
+        /**
+         * Returns the button name.
+         * @deprecated Use {@link #getPartSuffix()} instead.
+         */
+        @Deprecated
+        public String getButtonName() {
+            return partSuffix;
+        }
+
         /** Returns the full part name (e.g. {@code "toolbar-button-bold"}). */
         public String getPartName() {
             return "toolbar-button-" + partSuffix;
@@ -817,11 +877,11 @@ public class EnhancedRichTextEditor extends RichTextEditor {
     // ---- Placeholder API ----
 
     /**
-     * Sets the list of available placeholders for the editor.
+     * Sets the available placeholders for the editor.
      *
      * @param placeholders the placeholder definitions
      */
-    public void setPlaceholders(List<Placeholder> placeholders) {
+    public void setPlaceholders(Collection<Placeholder> placeholders) {
         this.placeholders = new ArrayList<>(placeholders);
         ArrayNode array = JacksonUtils.getMapper().createArrayNode();
         for (Placeholder p : placeholders) {
@@ -860,6 +920,15 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      */
     public void setPlaceholderAltAppearancePattern(String pattern) {
         getElement().setProperty("placeholderAltAppearancePattern", pattern);
+    }
+
+    /**
+     * Returns the regex pattern used for alt appearance matching.
+     *
+     * @return the pattern, or {@code null} if not set
+     */
+    public String getPlaceholderAltAppearancePattern() {
+        return getElement().getProperty("placeholderAltAppearancePattern");
     }
 
     /**

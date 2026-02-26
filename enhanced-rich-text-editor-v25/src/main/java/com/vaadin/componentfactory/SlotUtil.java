@@ -54,6 +54,22 @@ public final class SlotUtil {
     }
 
     /**
+     * Adds a component to the default custom toolbar slot.
+     */
+    public static void addComponent(EnhancedRichTextEditor target,
+            Component component) {
+        addComponent(target, CUSTOM_GROUP_SLOTNAME, component);
+    }
+
+    /**
+     * Adds a component to the default custom toolbar slot at a specific index.
+     */
+    public static void addComponentAtIndex(EnhancedRichTextEditor target,
+            Component component, int index) {
+        addComponentAtIndex(target, CUSTOM_GROUP_SLOTNAME, component, index);
+    }
+
+    /**
      * Adds a component to the given slot (appended at the end).
      */
     public static void addComponent(EnhancedRichTextEditor target,

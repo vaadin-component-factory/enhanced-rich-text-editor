@@ -345,6 +345,17 @@ public final class TemplateParser {
     }
 
     /**
+     * Validates a CSS color value against known patterns.
+     * @param color color string to validate
+     * @return true if valid
+     * @deprecated Use {@link TemplateJsonConstants#isValidColor(String)} instead.
+     */
+    @Deprecated
+    public static boolean isValidColor(String color) {
+        return TemplateJsonConstants.isValidColor(color);
+    }
+
+    /**
      * Checks, if the given template id is valid. Checks against the static constant {@code PATTERN_TEMPLATE_ID}.
      * @param templateId template id
      * @return matches the pattern
