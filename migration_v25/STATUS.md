@@ -55,12 +55,13 @@
 | 5.0      | Public API Breaking Changes Audit  | COMPLETE *(7 rollbacks, 296 tests pass)* |
 | 5.1      | V24 Sample Views Migration         | COMPLETE |
 | 5.2      | Test Views → Module IT             | COMPLETE *(dedicated IT module, 296 pass, 10 skip)* |
-| 5.3      | Documentation Humanization Review  | NOT STARTED *(rewrite docs for human readers, reduce machine-generated tone)* |
+| 5.3      | Documentation Humanization Review  | COMPLETE *(3-round review: global rules, 6-agent parallel review, fix all findings)* |
+| 5.4      | Release Preparation                | NOT STARTED *(module settings, remove V24 code, rename V25 modules)* |
 
 ### Phase 5 QA Notes (zu untersuchen)
 
 - ~~**b) Left Ruler fehlt**~~ — FIXED: vertical ruler added (content-wrapper + verticalRuler parts, 2 custom properties)
-- ~~**c) Dev-Doku dramatisch einkürzen**~~ — DONE: Non-ERTE content removed, module paths fixed (demo→IT), test counts updated (306/381). DEVELOPER_GUIDE 467→214 lines, EXTENDING 572→431, CONTRIBUTING 518→506 (absorbed test architecture)
+- ~~**c) Dev-Doku dramatisch einkürzen**~~ — DONE: Phase 5.3 covers this. Docs humanized, global rules applied, 6-agent review with 28 findings fixed.
 - ~~**d) TabConverter (Breaking Change)**~~ — DONE: TabConverter portiert (Jackson 3), automatischer Aufruf in setValue() entfernt. Utility-Klasse bleibt für manuelle Nutzung. Dokumentiert als Breaking Change 3.15 im Upgrade Guide.
 | **6**    | **Theme Support (Post-6.0.0)**     | NOT STARTED                            |
 | 6.1      | Aura Theme Support                 | NOT STARTED                            |
