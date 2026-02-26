@@ -671,7 +671,7 @@ See `SECURITY.md` for full security details.
 
 **Accessibility:** Provide `aria-label` or `title` on custom buttons. Use `addToolbarFocusShortcut()` for keyboard toolbar access. Tab/Shift+Tab moves focus in/out; arrow keys navigate buttons; Escape returns to content. Test with screen readers.
 
-**Testing:** See [CONTRIBUTING.md — Test Architecture](../dev/CONTRIBUTING.md#test-architecture) for 306 Playwright tests in `enhanced-rich-text-editor-it/`.
+**Testing:** See [CONTRIBUTING.md — Test Architecture](../../docs/dev/CONTRIBUTING.md#test-architecture) for 306 Playwright tests in `enhanced-rich-text-editor-it/`.
 
 ---
 

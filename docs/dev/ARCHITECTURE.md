@@ -1,6 +1,6 @@
 # ERTE V25 Architecture
 
-Internal architecture of the Enhanced Rich Text Editor (ERTE) V25. For practical extension patterns, see [`EXTENDING.md`](./EXTENDING.md). For public API, see [`API_REFERENCE.md`](../user/API_REFERENCE.md).
+Internal architecture of the Enhanced Rich Text Editor (ERTE) V25. For practical extension patterns, see [`EXTENDING.md`](./EXTENDING.md). For public API, see [`API_REFERENCE.md`](../../enhanced-rich-text-editor-v25/docs/API_REFERENCE.md).
 
 ---
 
@@ -218,4 +218,4 @@ ERTE overrides `static get lumoInjector()` (line 428) to reuse parent's tag name
 
 ---
 
-**See also:** [`EXTENDING.md`](./EXTENDING.md) for extension patterns, [`API_REFERENCE.md`](../user/API_REFERENCE.md) for public API, [`USER_GUIDE.md`](../user/USER_GUIDE.md) for features.
+**See also:** [`EXTENDING.md`](./EXTENDING.md) for extension patterns, [`API_REFERENCE.md`](../../enhanced-rich-text-editor-v25/docs/API_REFERENCE.md) for public API, [`USER_GUIDE.md`](../../enhanced-rich-text-editor-v25/docs/USER_GUIDE.md) for features.
