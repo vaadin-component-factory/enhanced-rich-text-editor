@@ -54,14 +54,13 @@ ERTE uses a simple branching model:
 
 | Branch | Purpose | Merge Target |
 |--------|---------|--------------|
-| `v25` | Active development (V25 migration) | (main working branch) |
+| `v25` | Active development | (main working branch) |
 | `feature/*` | New features | `v25` |
 | `fix/*` | Bug fixes | `v25` |
-| `master` | V24 production (ARCHIVED — do not use) | (closed) |
 
 ### Golden Rule
 
-**NEVER merge to `master`.** The `master` branch tracks V24 production and is archived. All development happens on `v25` and feature/fix branches.
+All development happens on the `v25` branch. Create feature and fix branches from `v25` and submit pull requests back to `v25`.
 
 ### Creating a Feature Branch
 
@@ -222,34 +221,32 @@ Extend via inheritance, not copying:
 
 ```java
 // CORRECT: extend via inheritance
-public class EnhancedRichTextEditor extends RteExtensionBase {
+public class EnhancedRichTextEditor extends RichTextEditor {
     @Override
-    protected void runBeforeClientResponse(ExecutableFunction function) {
+    protected void setPresentationValue(String value) {
         // Extend, don't copy
     }
 }
 
 // WRONG: copying RTE 2 classes breaks with RTE updates
-public class ErteRichTextEditor extends RichTextEditor {
+public class MyEditor extends RichTextEditor {
     // ... RTE 2 source code copied here ...
 }
 ```
 
-### 2. Single Foreign Package Class
+### 2. Keep All ERTE Logic in com.vaadin.componentfactory
 
-Only `RteExtensionBase` lives in Vaadin's RTE 2 package. All ERTE logic goes in `EnhancedRichTextEditor`:
+All ERTE classes live in the `com.vaadin.componentfactory` package:
 
 ```java
 // CORRECT
-package com.vaadin.flow.component.richtexteditor;
-public class RteExtensionBase extends RichTextEditor { }
-
 package com.vaadin.componentfactory;
-public class EnhancedRichTextEditor extends RteExtensionBase { }
+public class EnhancedRichTextEditor extends RichTextEditor { }
+public class TabStopHelper { }
 
-// WRONG: don't add other ERTE classes to Vaadin's package
+// WRONG: don't split ERTE across packages
 package com.vaadin.flow.component.richtexteditor;
-public class TabStopHelper { } // Don't do this!
+public class ErteHelper { }
 ```
 
 ### 3. Java Value Sync Timing
@@ -306,10 +303,17 @@ Java test views live in `enhanced-rich-text-editor-it/src/main/java/com/vaadin/c
 
 | View | Route | Purpose |
 |------|-------|---------|
+| `ErteShellTestView` | `/erte-test/shell` | Shell basics, Lit lifecycle |
 | `ErteTabStopTestView` | `/erte-test/tabstops` | Tabstops, rulers, soft-break |
 | `ErteReadonlyTestView` | `/erte-test/readonly` | Readonly sections |
-| `ErtePlaceholderTestView` | `/erte-test/placeholder` | Placeholders |
+| `ErtePlaceholderTestView` | `/erte-test/placeholders` | Placeholders |
 | `ErteToolbarTestView` | `/erte-test/toolbar` | Toolbar slots & visibility |
+| `ErteToolbarDialogTestView` | `/erte-test/toolbar-dialog` | Toolbar dialog helper |
+| `ErteToolbarPopoverTestView` | `/erte-test/toolbar-popover` | Toolbar popover helper |
+| `ErteToolbarSelectPopupTestView` | `/erte-test/toolbar-select-popup` | Toolbar context menu helper |
+| `ErteExtendOptionsTestView` | `/erte-test/extend-options` | extendQuill/extendEditor hooks |
+| `ErteReplaceIconTestView` | `/erte-test/replace-icons` | Replace toolbar icons |
+| `ErteTablesTestView` | `/erte-test/tables` | Table operations |
 | `ErteFeatureTestView` | `/erte-test/features` | Misc features (NBSP, i18n, align) |
 
 Each test view provides: `#test-editor`, `#delta-output`, `#html-output`, `#event-log`, `#test-ready`.

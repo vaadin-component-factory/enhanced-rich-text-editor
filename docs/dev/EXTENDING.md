@@ -26,26 +26,27 @@ An embed is a discrete element (not applied to existing text). Example: `TabBlot
 
 ### Server-Side Sanitization Integration
 
-When your blot's HTML is sent to the server, it will be sanitized by `RteExtensionBase.erteSanitize()`. To ensure your blot classes survive:
+When your blot's HTML is sent to the server, it will be sanitized by `EnhancedRichTextEditor.erteSanitize()`. To ensure your blot classes survive:
 
-1. **Add to client-side preservable list** — `vcf-enhanced-rich-text-editor.js`:
+1. **Add to client-side preservable list** — `vcf-enhanced-rich-text-editor.js` (line ~385):
    ```javascript
-   const ERTE_PRESERVED_CLASSES = ['ql-myembed', ...]; // line ~385
+   const ERTE_PRESERVED_CLASSES = ['ql-readonly', 'ql-tab', 'ql-soft-break', 'ql-placeholder', 'ql-nbsp', 'ql-myembed', ...];
    ```
 
-2. **Add to server-side whitelist** — `RteExtensionBase.java`:
+2. **Add to server-side whitelist** — `EnhancedRichTextEditor.java` (line ~161):
    ```java
    private static final Set<String> ALLOWED_ERTE_CLASSES = Set.of(
-       "ql-readonly", "ql-tab", ..., "ql-myembed"); // line ~49
+       "ql-readonly", "ql-tab", "ql-soft-break", "ql-placeholder",
+       "ql-nbsp", "td-q", "ql-editor__table--hideBorder", "ql-myembed");
    ```
 
-3. **If using attributes beyond `class`** — Extend the jsoup Safelist in `erteSanitize()`:
+3. **If using attributes beyond `class`** — Extend the jsoup Safelist in `erteSanitize()` (line ~239):
    ```java
    Safelist safelist = Safelist.basic()
        .addAttributes("span", "data-myattr");
    ```
 
-4. **If using `style` attribute** — Add allowed CSS properties to `ALLOWED_CSS_PROPERTIES`:
+4. **If using `style` attribute** — Add allowed CSS properties to `ALLOWED_CSS_PROPERTIES` (line ~164):
    ```java
    private static final Set<String> ALLOWED_CSS_PROPERTIES = Set.of(
        ..., "my-custom-property");
@@ -336,11 +337,11 @@ To replace a standard toolbar button icon (e.g., align-left, color picker):
 ```java
 editor.replaceStandardToolbarButtonIcon(
     EnhancedRichTextEditor.ToolbarButton.ALIGN_LEFT,
-    new Icon(VaadinIcon.ARROW_LEFT));
+    VaadinIcon.ARROW_LEFT.create());
 
 editor.replaceStandardToolbarButtonIcon(
     EnhancedRichTextEditor.ToolbarButton.COLOR,
-    new Icon(VaadinIcon.PALETTE));
+    VaadinIcon.PALETTE.create());
 
 // Pass null to restore default
 editor.replaceStandardToolbarButtonIcon(
@@ -420,7 +421,7 @@ public void insertTag(String tagName) {
 }
 ```
 
-Add `'ql-tag'` to `ALLOWED_ERTE_CLASSES` in `RteExtensionBase.java` (line ~49) for sanitizer support.
+Add `'ql-tag'` to `ALLOWED_ERTE_CLASSES` in `EnhancedRichTextEditor.java` (line ~161) for sanitizer support.
 
 ---
 

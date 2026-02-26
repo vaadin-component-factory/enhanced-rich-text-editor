@@ -43,16 +43,16 @@ npm -version          # Node package manager
 
 This is a multi-module Maven project with the following layout:
 
-| Module | Purpose | Status |
-|--------|---------|--------|
-| **enhanced-rich-text-editor-v25/** | Core ERTE addon (Java + JavaScript) | Active |
-| **enhanced-rich-text-editor-tables-v25/** | Tables addon for ERTE | Active |
-| **enhanced-rich-text-editor-demo/** | Demo application (sample views, prototype tests) | Active |
-| **enhanced-rich-text-editor-it/** | Integration tests (test views + Playwright specs) | Active |
-| enhanced-rich-text-editor/ | Legacy V24 core (reference only, excluded from build) | Archived |
-| enhanced-rich-text-editor-tables/ | Legacy V24 tables (reference only, excluded from build) | Archived |
+| Module | Purpose |
+|--------|---------|
+| **enhanced-rich-text-editor-v25/** | Core ERTE V25 addon (Java + JavaScript) |
+| **enhanced-rich-text-editor-tables-v25/** | Tables addon for ERTE V25 |
+| **enhanced-rich-text-editor-demo/** | Demo application (sample views, prototype tests) |
+| **enhanced-rich-text-editor-it/** | Integration tests (test views + Playwright specs) |
 
-**Git workflow:** Development happens on the `v25` branch. The `master` branch tracks V24 production — never merge to master.
+**Legacy modules** (`enhanced-rich-text-editor`, `enhanced-rich-text-editor-tables`) — V24 reference code (excluded from build).
+
+**Git workflow:** All development happens on the `v25` branch.
 
 ---
 
@@ -106,9 +106,9 @@ bash v25-server-start.sh  # Then start server
 ## Running the Demo
 
 The demo application (`enhanced-rich-text-editor-demo/`) is a Spring Boot app that serves:
-- A home page with navigation links
-- Test views for each ERTE feature (at `/erte-test/*`)
-- Playwright test targets
+- Sample views for each ERTE feature
+- A navigation menu with access to all demos
+- Playwright prototype tests (75 tests)
 
 ### Starting the Server
 

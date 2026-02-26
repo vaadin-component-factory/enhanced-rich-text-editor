@@ -33,7 +33,7 @@ For migration instructions, see [Upgrade Guide](docs/user/UPGRADE_GUIDE.md).
 - **Toolbar Popover** -- `ToolbarPopover` component for popover-based toolbar controls
 - **Toolbar Select Popup** -- `ToolbarSelectPopup` component for dropdown menu toolbar controls
 - **Toolbar Dialog** -- `ToolbarDialog` component for dialog-based toolbar controls
-- **Custom CSS Properties** -- 20 `--vaadin-erte-*` custom properties for styling readonly, placeholder, whitespace, and ruler elements
+- **Custom CSS Properties** -- 22 `--vaadin-erte-*` custom properties for styling readonly, placeholder, whitespace, and ruler elements
 - **Slotted Component Styling** -- `part="toolbar-custom-component"` with built-in hover, focus, active, and disabled states
 - **Full documentation suite** -- User Guide, API Reference, Upgrade Guide, Developer Guide, Architecture Guide, Contributing Guide
 
@@ -49,7 +49,6 @@ For migration instructions, see [Upgrade Guide](docs/user/UPGRADE_GUIDE.md).
 - **JSON API:** `elemental.json` to Jackson 3.x (`tools.jackson`)
 - **JUnit:** 4/5 to 5 only
 - **Mockito:** 1.x / PowerMock to 5.x
-- **Maven artifact:** `enhanced-rich-text-editor` to `enhanced-rich-text-editor-v25`
 - **Tag name:** `vcf-enhanced-rich-text-editor` (own web component registration)
 - **Placeholder API:** `getPlaceholders()` returns `List` instead of `Collection`; typo fixes (`Palceholder` to `Placeholder`)
 - **Toolbar button enum:** `DEINDENT` renamed to `OUTDENT`; new `COLOR` and `BACKGROUND` values

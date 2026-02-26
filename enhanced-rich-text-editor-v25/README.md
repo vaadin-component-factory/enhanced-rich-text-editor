@@ -9,8 +9,8 @@ toolbar, whitespace indicators, and more.
 ```xml
 <dependency>
     <groupId>com.vaadin.componentfactory</groupId>
-    <artifactId>enhanced-rich-text-editor-v25</artifactId>
-    <version>6.0.0-SNAPSHOT</version>
+    <artifactId>enhanced-rich-text-editor</artifactId>
+    <version>6.0.0</version>
 </dependency>
 ```
 

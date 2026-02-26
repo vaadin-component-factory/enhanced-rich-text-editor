@@ -16,10 +16,7 @@ ERTE V25 is built on Vaadin 25's Rich Text Editor (RTE 2) component, which is ba
 ├──────────────────────────────────────────────────────────────────┤
 │  Java Layer: EnhancedRichTextEditor (com.vaadin.componentfactory) │
 │  ├─ Public API (toolbar, placeholders, tabstops, etc.)            │
-│  └─ Event listeners & configuration                              │
-├──────────────────────────────────────────────────────────────────┤
-│  Java Bridge: RteExtensionBase (c.v.f.c.richtexteditor)         │
-│  ├─ Visibility lifting (package-private → protected)             │
+│  ├─ Event listeners & configuration                              │
 │  └─ Server-side sanitizer (ERTE extensions)                      │
 ├──────────────────────────────────────────────────────────────────┤
 │  JavaScript Layer: vcf-enhanced-rich-text-editor.js              │
@@ -37,8 +34,8 @@ ERTE V25 is built on Vaadin 25's Rich Text Editor (RTE 2) component, which is ba
 The ERTE V25 project consists of:
 
 - **`enhanced-rich-text-editor-v25/`** — Core addon module
-  - Java classes in `com.vaadin.componentfactory` (main) and `com.vaadin.flow.component.richtexteditor` (bridge)
-  - JavaScript frontend in `frontend/` (2635 lines)
+  - Java classes in `com.vaadin.componentfactory` (all ERTE logic)
+  - JavaScript frontend in `frontend/` (2651 lines)
   - CSS custom properties in `frontend/styles/vcf-enhanced-rich-text-editor-styles.css`
   - Compiled as `.jar` artifact in Maven build
 
@@ -59,7 +56,7 @@ The ERTE V25 project consists of:
 
 ## JavaScript Layer
 
-**File:** `/workspace/enhanced-rich-text-editor-v25/src/main/resources/META-INF/resources/frontend/vcf-enhanced-rich-text-editor.js` (2635 lines)
+**File:** `/workspace/enhanced-rich-text-editor-v25/src/main/resources/META-INF/resources/frontend/vcf-enhanced-rich-text-editor.js` (2651 lines)
 
 ### Web Component Extension
 
@@ -103,7 +100,7 @@ Five custom blots are registered globally via `Quill.register()` **before elemen
 RTE 2's toolbar is a Lit template rendered once at element init. ERTE injects 27 `<slot>` elements into the shadow DOM toolbar after `ready()` completes:
 
 - **START** and **END** — outermost slots
-- **BEFORE/AFTER_GROUP_*** — 25 slots around 12 button groups (history, emphasis, style, heading, glyph-transformation, list, indent, alignment, rich-text, block, format, custom)
+- **BEFORE/AFTER_GROUP_*** — 27 slots around 11 standard groups (history, emphasis, style, heading, glyph-transformation, list, indent, alignment, rich-text, block, format, custom)
 
 Each slot is injected by `_injectToolbarSlots()` (line 1069), which:
 1. Traverses RTE 2's toolbar DOM via `this.shadowRoot.querySelector('[part="toolbar"]')`
@@ -138,46 +135,15 @@ __updateHtmlValue() {
 }
 ```
 
-The `ERTE_PRESERVED_CLASSES` array (line 385) contains: `'ql-readonly', 'ql-tab', 'ql-soft-break', 'ql-placeholder', 'ql-nbsp'`.
+The `ERTE_PRESERVED_CLASSES` array (line 385) contains: `'ql-readonly', 'ql-tab', 'ql-soft-break', 'ql-placeholder', 'ql-nbsp', 'ql-editor__table--hideBorder'`, `'td-q'`.
 
 ## Java Layer
 
-### Two-Package Bridge Pattern
-
-ERTE uses an unusual two-package pattern to access RTE 2's package-private API:
-
-| Package | Class | Purpose |
-|---------|-------|---------|
-| `com.vaadin.flow.component.richtexteditor` | **RteExtensionBase** | Bridge class in RTE 2's package. Lifts package-private methods to `protected`. |
-| `com.vaadin.componentfactory` | **EnhancedRichTextEditor** | All ERTE business logic. Extends RteExtensionBase. Users interact with this class. |
-
-**Design rationale:** RTE 2's `RichTextEditor` has many package-private methods that are essential for ERTE (e.g., `runBeforeClientResponse()`, `sanitize()`). Java visibility rules prevent `EnhancedRichTextEditor` from accessing them if it's in a different package. The solution is a single bridge class (`RteExtensionBase`) in the foreign package that overrides and widens visibility. This keeps only one class as a "cross-package bridge" — the minimal intrusion into Vaadin's package structure.
-
-### RteExtensionBase
-
-**File:** `/workspace/enhanced-rich-text-editor-v25/src/main/java/com/vaadin/flow/component/richtexteditor/RteExtensionBase.java` (297 lines)
-
-**Responsibilities:**
-1. **Visibility lifting** — `@Override protected void runBeforeClientResponse(...)` widens package-private to protected for subclasses
-2. **ERTE sanitizer** — `erteSanitize(String html)` replaces RTE 2's package-private `sanitize()` method for server-side sanitization
-3. **Value path override** — `setPresentationValue(String)` intercepts server→client HTML sync to use ERTE sanitizer
-
-**Sanitizer strategy (dual-layer):**
-
-- **Server-side (`erteSanitize`)**: Uses jsoup Safelist to whitelist safe HTML, then post-filters class attributes to only allow ERTE classes (`ql-readonly`, `ql-tab`, etc.) and standard Quill classes (`ql-align-*`, `ql-indent-*`). Also restricts `style` attributes to safe CSS properties and validates `data:` URLs.
-
-- **Client-side (`__updateHtmlValue` in JS)**: Preserves ERTE classes when RTE 2 re-renders to avoid stripping during the model→presentation cycle.
-
-**Patterns:** Regex patterns used for post-filtering are defined as static final fields (lines 90–104):
-- `CLASS_ATTR_PATTERN` — matches `class="..."` attributes
-- `STYLE_ATTR_PATTERN` — matches `style="..."` attributes
-- `CSS_COMMENT_PATTERN` — removes CSS comments from style values
-- `CSS_FUNCTION_PATTERN` — detects CSS function calls for validation
-- `DATA_SRC_PATTERN` — matches `src="data:..."` URLs for MIME type validation
+ERTE extends Vaadin's `RichTextEditor` directly via the `EnhancedRichTextEditor` class. All ERTE-specific logic — including the server-side sanitizer, event handling, and configuration — lives in this single class.
 
 ### EnhancedRichTextEditor
 
-**File:** `/workspace/enhanced-rich-text-editor-v25/src/main/java/com/vaadin/componentfactory/EnhancedRichTextEditor.java` (1324 lines)
+**File:** `/workspace/enhanced-rich-text-editor-v25/src/main/java/com/vaadin/componentfactory/EnhancedRichTextEditor.java` (1799 lines)
 
 **Responsibilities:**
 - Public API for all ERTE features
@@ -187,17 +153,24 @@ ERTE uses an unusual two-package pattern to access RTE 2's package-private API:
 - Tabstop and ruler management
 - Readonly sections, whitespace indicators, NBSP, soft-break
 - Value format handling (HTML primary, Delta via `asDelta()`)
+- Server-side sanitization
 
 **Major nested types:**
-- **`ToolbarButton` enum** (lines 222–258) — 25 standard toolbar buttons (RTE 2) + 5 ERTE-specific = 30 total
+- **`ToolbarButton` enum** (lines 679–724) — 25 standard toolbar buttons (RTE 2) + 5 ERTE-specific = 30 total
 - **`ToolbarSlot` enum** — 27 slots (see `toolbar/ToolbarSlot.java`)
-- **Event classes** (lines 485+) — `PlaceholderBeforeInsertEvent`, `PlaceholderInsertedEvent`, etc.
+- **Event classes** (lines 1226+) — `PlaceholderBeforeInsertEvent`, `PlaceholderInsertedEvent`, etc.
+
+**Sanitizer strategy (dual-layer):**
+
+- **Server-side (`erteSanitize()`, lines 223–480)**: Uses jsoup Safelist to whitelist safe HTML, then post-filters class attributes to only allow ERTE classes (`ql-readonly`, `ql-tab`, `ql-soft-break`, `ql-placeholder`, `ql-nbsp`, `td-q`, `ql-editor__table--hideBorder`) and standard Quill classes (`ql-align-*`, `ql-indent-*`). Also restricts `style` attributes to safe CSS properties and validates `data:` URLs.
+
+- **Client-side (`__updateHtmlValue()` in JS)**: Preserves ERTE classes when RTE 2 re-renders to avoid stripping during the model→presentation cycle.
 
 **Lumo Theme Integration:** The JS class overrides `static get lumoInjector()` (line 428) to reuse the parent's tag name, so Vaadin's LumoInjector applies the parent's Lumo theme CSS to ERTE. This ensures toolbar icons, colors, and spacing are consistent with RTE 2.
 
 ## Toolbar Slot System
 
-### 27 Slots Across 12 Groups
+### 27 Slots Across 11 Groups
 
 The `ToolbarSlot` enum defines 27 slots that correspond to Vaadin's RTE 2 button grouping:
 
@@ -235,7 +208,7 @@ This is a clean break from ERTE V24 / Quill 1, which was Delta-primary. The HTML
 
 ERTE implements a **dual-layer sanitizer** to defend against XSS while preserving ERTE features:
 
-### Server-Side (`RteExtensionBase.erteSanitize()`)
+### Server-Side (`EnhancedRichTextEditor.erteSanitize()`)
 
 Called when HTML is set via `setPresentationValue()` (HTML from Java → client):
 
@@ -247,7 +220,7 @@ Called when HTML is set via `setPresentationValue()` (HTML from Java → client)
 
 2. **Post-filter: Class whitelist** — Only allows:
    - Standard Quill classes: `ql-align-*`, `ql-indent-*`
-   - ERTE classes: `ql-readonly`, `ql-tab`, `ql-soft-break`, `ql-placeholder`, `ql-nbsp`
+   - ERTE classes: `ql-readonly`, `ql-tab`, `ql-soft-break`, `ql-placeholder`, `ql-nbsp`, `td-q`, `ql-editor__table--hideBorder`
    - Strips all other class values
 
 3. **Post-filter: Style whitelist** — Restricts `style` attributes to safe CSS properties:
@@ -265,13 +238,13 @@ Called when HTML is set via `setPresentationValue()` (HTML from Java → client)
 RTE 2's internal `__updateHtmlValue()` method strips unknown `ql-*` classes when generating HTML from the editor. ERTE **completely replaces** this method (not a wrapper — does not call `super`) to preserve ERTE-specific classes that the server-side sanitizer already allowed. See the [Client-Side Value Preservation](#client-side-value-preservation) section above for the actual implementation.
 
 This **two-stage approach** is necessary because:
-- RTE 2's `sanitize()` is `static` and `package-private` in Java → cannot be overridden
+- RTE 2's `sanitize()` is not overridable in the public API
 - The client-side `__updateHtmlValue()` is a complete override (not a `super` wrapper), bypassing RTE 2's class-stripping entirely
 - Server sanitization protects against malicious HTML; client-side preservation ensures ERTE classes survive the model→presentation cycle
 
 ## Custom Properties (CSS)
 
-ERTE defines 20 custom CSS properties that users can override at the host element level:
+ERTE defines 22 custom CSS properties that users can override at the host element level:
 
 ### Readonly Sections (6)
 - `--vaadin-erte-readonly-color`
@@ -294,12 +267,14 @@ ERTE defines 20 custom CSS properties that users can override at the host elemen
 - `--vaadin-erte-whitespace-paragraph-indicator-color`
 - `--vaadin-erte-whitespace-indicator-spacing`
 
-### Ruler (5)
+### Ruler (7)
 - `--vaadin-erte-ruler-height`
 - `--vaadin-erte-ruler-border-color`
 - `--vaadin-erte-ruler-background`
 - `--vaadin-erte-ruler-marker-size`
 - `--vaadin-erte-ruler-marker-color`
+- `--vaadin-erte-ruler-vertical-width`
+- `--vaadin-erte-ruler-vertical-background`
 
 **Toolbar buttons** inherit from RTE 2's existing properties (`--vaadin-rich-text-editor-toolbar-button-*`) so that user theme overrides apply uniformly to both standard and custom buttons.
 
@@ -313,7 +288,15 @@ static get lumoInjector() {
 }
 ```
 
-ERTE overrides this to **reuse the parent's tag name** (`vaadin-rich-text-editor`) so the same Lumo injection applies. Without this, ERTE would look for theme CSS under `vcf-enhanced-rich-text-editor` (which doesn't exist in Lumo), leaving it with base SVG icons instead of Lumo's text-based/font icons. This single line ensures toolbar visual consistency.
+ERTE overrides this to **reuse the parent's tag name** (`vaadin-rich-text-editor`) so the same Lumo injection applies:
+
+```javascript
+static get lumoInjector() {
+  return { ...super.lumoInjector, is: 'vaadin-rich-text-editor' };
+}
+```
+
+Without this, ERTE would look for theme CSS under `vcf-enhanced-rich-text-editor` (which doesn't exist in Lumo), leaving it with base SVG icons instead of Lumo's text-based/font icons. This ensures toolbar visual consistency.
 
 ## Files Reference
 
@@ -321,15 +304,15 @@ Key source files by responsibility:
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `vcf-enhanced-rich-text-editor.js` | 2635 | Web component, blots, toolbar injection, i18n |
-| `RteExtensionBase.java` | 297 | Bridge class, sanitizer, visibility lifting |
-| `EnhancedRichTextEditor.java` | 1324 | Public API, events, configuration |
+| `vcf-enhanced-rich-text-editor.js` | 2651 | Web component, blots, toolbar injection, i18n |
+| `EnhancedRichTextEditor.java` | 1799 | Public API, events, configuration, sanitizer |
 | `ToolbarSlot.java` | 117 | Enum of 27 toolbar slots |
-| `ToolbarButton.java` | Nested | Enum of 30 toolbar buttons (25 standard + 5 ERTE) |
 | `ToolbarSwitch.java` | 119 | Toggle button helper (extends Button) |
 | `ToolbarPopover.java` | 132 | Dropdown panel helper (extends Popover) |
 | `ToolbarDialog.java` | 230 | Modal dialog helper (extends Dialog) |
 | `ToolbarSelectPopup.java` | 59 | Context menu helper (extends ContextMenu) |
+| `SlotUtil.java` | 155 | Toolbar slot injection utilities |
+| `TabConverter.java` | ~60 | Delta ↔ Tab value conversion |
 | `Placeholder.java` | 158 | Placeholder data class |
 | `TabStop.java` | 77 | TabStop data class |
 | `vcf-enhanced-rich-text-editor-styles.css` | 338 | CSS custom properties, blot styles, slots |

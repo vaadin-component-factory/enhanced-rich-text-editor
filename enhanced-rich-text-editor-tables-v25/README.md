@@ -21,8 +21,8 @@ Add professional table support to your ERTE documents: create tables, modify str
 ```xml
 <dependency>
     <groupId>com.vaadin.componentfactory</groupId>
-    <artifactId>enhanced-rich-text-editor-tables-v25</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <artifactId>enhanced-rich-text-editor-tables</artifactId>
+    <version>2.0.0</version>
 </dependency>
 ```
 
@@ -40,7 +40,7 @@ Three toolbar buttons appear automatically. Users can now insert and modify tabl
 
 - Java 21+
 - Vaadin 25.0.x
-- `enhanced-rich-text-editor-v25` 6.0.0-SNAPSHOT
+- `enhanced-rich-text-editor` 6.0.0
 
 ## Documentation
 

@@ -38,10 +38,10 @@ package com.vaadin.componentfactory;
 
 @Tag("vcf-enhanced-rich-text-editor")
 @JsModule("./vcf-enhanced-rich-text-editor.js")
-public class EnhancedRichTextEditor extends RteExtensionBase
+public class EnhancedRichTextEditor extends RichTextEditor
 ```
 
-Extends `RteExtensionBase` (which extends Vaadin's `RichTextEditor`). All ERTE-specific logic lives in this class.
+Extends Vaadin's `RichTextEditor`. All ERTE-specific logic lives in this class.
 
 ### Toolbar Component Management
 
@@ -167,7 +167,7 @@ Replaces a standard toolbar button's icon via its enum constant. Pass `null` as 
 
 **Example:**
 ```java
-editor.replaceStandardToolbarButtonIcon(ToolbarButton.BOLD, new Icon(VaadinIcon.STAR));
+editor.replaceStandardToolbarButtonIcon(ToolbarButton.BOLD, VaadinIcon.STAR.create());
 editor.replaceStandardToolbarButtonIcon(ToolbarButton.BOLD, null); // restore
 ```
 
@@ -312,7 +312,7 @@ public boolean isNoRulers()
 #### setPlaceholders
 
 ```java
-public void setPlaceholders(List<Placeholder> placeholders)
+public void setPlaceholders(Collection<Placeholder> placeholders)
 ```
 
 Sets the master list of available placeholders. These are shown in the placeholder dialog and used for event lookup.
@@ -371,6 +371,16 @@ public boolean isPlaceholderAltAppearance()
 ```
 
 **Returns:** `true` if alt appearance is currently active.
+
+---
+
+#### getPlaceholderAltAppearancePattern
+
+```java
+public String getPlaceholderAltAppearancePattern()
+```
+
+**Returns:** The regex pattern used to extract alt appearance text from placeholder text. `null` if not set.
 
 ---
 
@@ -453,6 +463,28 @@ public void setI18n(EnhancedRichTextEditorI18n i18n)
 ```
 
 Sets the i18n labels for toolbar buttons and placeholder dialog. Inherited from parent `RichTextEditor.setI18n()` with the extended ERTE i18n class.
+
+---
+
+### Sanitizer Customization
+
+#### addAllowedHtmlClasses
+
+```java
+public void addAllowedHtmlClasses(String... classNames)
+```
+
+Registers additional CSS class names that the server-side sanitizer should preserve. Used by extensions (e.g., Tables addon) to allow dynamic CSS classes.
+
+---
+
+#### removeAllowedHtmlClasses
+
+```java
+public void removeAllowedHtmlClasses(String... classNames)
+```
+
+Removes previously registered CSS class names from the sanitizer whitelist.
 
 ---
 
@@ -1168,27 +1200,25 @@ For the complete inherited API, see the [Vaadin RichTextEditor documentation](ht
 
 ## 13. CSS Shadow Parts
 
-ERTE toolbar buttons and groups expose CSS shadow parts for external styling.
+### Toolbar Button Parts
 
-### Individual Button Parts
+Part names: `toolbar-button-{suffix}` (e.g., `toolbar-button-bold`, `toolbar-button-readonly`).
+
+**Standard buttons (25):** `undo`, `redo`, `bold`, `italic`, `underline`, `strike`, `color`, `background`, `h1`, `h2`, `h3`, `subscript`, `superscript`, `list-ordered`, `list-bullet`, `outdent`, `indent`, `align-left`, `align-center`, `align-right`, `image`, `link`, `blockquote`, `code-block`, `clean`
+
+**ERTE-specific buttons (5):** `readonly`, `placeholder`, `placeholder-display`, `whitespace`, `align-justify`
 
 ```css
 vcf-enhanced-rich-text-editor::part(toolbar-button-bold) {
     color: red;
 }
-
-vcf-enhanced-rich-text-editor::part(toolbar-button-readonly) {
-    background: lightyellow;
-}
 ```
 
-Available button part suffixes (30 total):
-- Standard: `undo`, `redo`, `bold`, `italic`, `underline`, `strike`, `color`, `background`, `h1`, `h2`, `h3`, `subscript`, `superscript`, `list-ordered`, `list-bullet`, `outdent`, `indent`, `align-left`, `align-center`, `align-right`, `image`, `link`, `blockquote`, `code-block`, `clean`
-- ERTE-specific: `readonly`, `placeholder`, `placeholder-display`, `whitespace`, `align-justify`
+### Toolbar Group Parts
 
-Part names are: `toolbar-button-{suffix}` (e.g., `toolbar-button-bold`, `toolbar-button-readonly`).
+Part names: `toolbar-group-{suffix}` (e.g., `toolbar-group-history`, `toolbar-group-emphasis`).
 
-### Group Parts
+**Available:** `history`, `emphasis`, `style`, `heading`, `glyph-transformation`, `list`, `indent`, `alignment`, `rich-text`, `block`, `format`, `custom`
 
 ```css
 vcf-enhanced-rich-text-editor::part(toolbar-group-history) {
@@ -1196,12 +1226,9 @@ vcf-enhanced-rich-text-editor::part(toolbar-group-history) {
 }
 ```
 
-Available group part suffixes (11 total):
-- `history`, `emphasis`, `style`, `heading`, `glyph-transformation`, `list`, `indent`, `alignment`, `rich-text`, `block`, `format`
-
-Part names are: `toolbar-group-{suffix}` (e.g., `toolbar-group-history`, `toolbar-group-emphasis`).
-
 ### Toolbar Container
+
+`toolbar` — Style the toolbar itself.
 
 ```css
 vcf-enhanced-rich-text-editor::part(toolbar) {
@@ -1209,237 +1236,186 @@ vcf-enhanced-rich-text-editor::part(toolbar) {
 }
 ```
 
-### Slotted Custom Components
+### Custom Slotted Components
 
-Components added via `addToolbarComponents()` automatically receive `part="toolbar-custom-component"`. ERTE provides interactive state styling for slotted components:
+Components added via `addToolbarComponents()` receive `part="toolbar-custom-component"` and inherit Vaadin's toolbar button styling (`--vaadin-rich-text-editor-toolbar-button-*` custom properties).
 
-| State | CSS Selector | Behavior |
-|-------|-------------|----------|
-| Default | `::slotted([part~='toolbar-custom-component'])` | Inherits `--vaadin-rich-text-editor-toolbar-button-*` custom properties |
-| Hover | `::slotted(button[part~='toolbar-custom-component']:not([on]):hover)` | Subtle background highlight |
-| Focus | `::slotted(button[part~='toolbar-custom-component']:focus-visible)` | Focus ring outline |
-| Active/Pressed | `::slotted([part~='toolbar-custom-component'][on])` | Solid primary background (matches built-in pressed style) |
-| Disabled | `::slotted([part~='toolbar-custom-component'][disabled])` | Muted text, no pointer events |
+| State | Selector |
+|-------|----------|
+| Default | `::slotted([part~='toolbar-custom-component'])` |
+| Hover | `::slotted(button[part~='toolbar-custom-component']:not([on]):hover)` |
+| Focus | `::slotted(button[part~='toolbar-custom-component']:focus-visible)` |
+| Pressed | `::slotted([part~='toolbar-custom-component'][on])` |
+| Disabled | `::slotted([part~='toolbar-custom-component'][disabled])` |
 
-> **Note:** Custom components inherit from RTE 2's `--vaadin-rich-text-editor-toolbar-button-*` properties, so user overrides of those properties apply to custom components too.
+### Ruler Parts
+
+Part names for the ruler elements (horizontal and vertical):
+
+| Part | Element | Purpose |
+|------|---------|---------|
+| `ruler-wrapper` | Container | Wrapper for the entire ruler system |
+| `ruler-corner` | Container | Corner element (intersection of horizontal and vertical rulers) |
+| `horizontalRuler` | Container | Horizontal ruler bar |
+| `content-wrapper` | Container | Wrapper around editor content |
+| `verticalRuler` | Container | Vertical ruler bar |
+
+Tabstop markers inside the ruler are `vaadin-icon` elements.
+
+```css
+vcf-enhanced-rich-text-editor::part(horizontalRuler) {
+    background-color: var(--lumo-contrast-10pct);
+}
+```
 
 ---
 
 ## 14. CSS Content Classes
 
-These CSS classes are applied to elements inside `.ql-editor` (the editor content area).
+Classes applied inside `.ql-editor` (editor content area):
 
 | Class | Element | Purpose |
 |-------|---------|---------|
-| `.ql-tab` | `<span>` | Tab embed (inline-block, calculated width) |
+| `.ql-tab` | `<span>` | Tab embed (calculated width) |
 | `.ql-placeholder` | `<span>` | Placeholder embed |
 | `.ql-readonly` | `<span>` | Readonly section (contenteditable="false") |
 | `.ql-soft-break` | `<span>` | Soft-break embed (contains `<br>`) |
 | `.ql-nbsp` | `<span>` | Non-breaking space |
+| `.ql-align-left/center/right/justify` | `<p>` | Paragraph alignment |
+| `.ql-indent-1` through `.ql-indent-8` | `<p>` | Indentation levels |
 
-### Quill Alignment & Indent Classes
-
-- `ql-align-left`, `ql-align-center`, `ql-align-right`, `ql-align-justify` -- paragraph alignment
-- `ql-indent-1` through `ql-indent-8` -- indentation levels
-
-### Ruler Selectors
-
-| Selector | Purpose |
-|----------|---------|
-| `[part~="horizontalRuler"]` | Horizontal ruler container |
-| `vaadin-icon` inside ruler | Tabstop markers (alignment icons) |
+**Ruler:** Use `[part~="horizontalRuler"]` to style the ruler container. Tabstop markers are `vaadin-icon` elements inside it.
 
 ---
 
 ## 15. ERTE Custom Properties
 
-ERTE provides 20 CSS custom properties for customizing the appearance of editor content elements. These are the recommended approach for visual customization -- they use Vaadin design tokens as fallback values, ensuring theme awareness.
-
-Override custom properties on the host element:
+22 CSS custom properties for content element styling (override on host element). Use these for visual customization instead of CSS class overrides.
 
 ```css
 vcf-enhanced-rich-text-editor {
     --vaadin-erte-readonly-background: lightyellow;
-    --vaadin-erte-readonly-border-color: orange;
     --vaadin-erte-placeholder-background: #e8f4fd;
-    --vaadin-erte-ruler-height: 1.25rem;
 }
 ```
 
-### Readonly Sections (6 properties)
+### Readonly Sections
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `--vaadin-erte-readonly-color` | `var(--vaadin-text-color-secondary)` | Text color |
-| `--vaadin-erte-readonly-background` | `var(--vaadin-background-container)` | Background color |
-| `--vaadin-erte-readonly-border-color` | `var(--vaadin-border-color-secondary)` | Border (outline) color |
-| `--vaadin-erte-readonly-border-width` | `1px` | Border (outline) width |
-| `--vaadin-erte-readonly-border-radius` | `var(--lumo-border-radius-s)` | Corner radius |
-| `--vaadin-erte-readonly-padding` | `calc(var(--vaadin-padding-xs) / 2)` | Horizontal padding |
+| Property | Default |
+|----------|---------|
+| `--vaadin-erte-readonly-color` | `var(--vaadin-text-color-secondary)` |
+| `--vaadin-erte-readonly-background` | `var(--vaadin-background-container)` |
+| `--vaadin-erte-readonly-border-color` | `var(--vaadin-border-color-secondary)` |
+| `--vaadin-erte-readonly-border-width` | `1px` |
+| `--vaadin-erte-readonly-border-radius` | `var(--lumo-border-radius-s)` |
+| `--vaadin-erte-readonly-padding` | `calc(var(--vaadin-padding-xs) / 2)` |
 
-### Placeholders (6 properties)
+### Placeholders
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `--vaadin-erte-placeholder-color` | `inherit` | Text color |
-| `--vaadin-erte-placeholder-background` | `var(--lumo-primary-color-10pct)` | Background color |
-| `--vaadin-erte-placeholder-border-color` | `transparent` | Border (outline) color |
-| `--vaadin-erte-placeholder-border-width` | `0` | Border (outline) width |
-| `--vaadin-erte-placeholder-border-radius` | `var(--lumo-border-radius-s)` | Corner radius |
-| `--vaadin-erte-placeholder-padding` | `calc(var(--vaadin-padding-xs) / 2)` | Horizontal padding |
+| Property | Default |
+|----------|---------|
+| `--vaadin-erte-placeholder-color` | `inherit` |
+| `--vaadin-erte-placeholder-background` | `var(--lumo-primary-color-10pct)` |
+| `--vaadin-erte-placeholder-border-color` | `transparent` |
+| `--vaadin-erte-placeholder-border-width` | `0` |
+| `--vaadin-erte-placeholder-border-radius` | `var(--lumo-border-radius-s)` |
+| `--vaadin-erte-placeholder-padding` | `calc(var(--vaadin-padding-xs) / 2)` |
 
-### Whitespace Indicators (3 properties)
+### Whitespace Indicators
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `--vaadin-erte-whitespace-indicator-color` | `var(--lumo-contrast-40pct)` | Color for tab, NBSP, soft-break indicators |
-| `--vaadin-erte-whitespace-paragraph-indicator-color` | `var(--lumo-contrast-30pct)` | Color for paragraph-end indicator |
-| `--vaadin-erte-whitespace-indicator-spacing` | `calc(var(--vaadin-padding-xs) / 2)` | Spacing around indicators |
+| Property | Default |
+|----------|---------|
+| `--vaadin-erte-whitespace-indicator-color` | `var(--lumo-contrast-40pct)` |
+| `--vaadin-erte-whitespace-paragraph-indicator-color` | `var(--lumo-contrast-30pct)` |
+| `--vaadin-erte-whitespace-indicator-spacing` | `calc(var(--vaadin-padding-xs) / 2)` |
 
-### Ruler (5 properties)
+### Ruler
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `--vaadin-erte-ruler-height` | `0.9375rem` | Ruler bar height |
-| `--vaadin-erte-ruler-border-color` | `var(--vaadin-border-color, var(--lumo-contrast-20pct, rgb(158, 170, 182)))` | Ruler border color |
-| `--vaadin-erte-ruler-background` | `url(...)` (ruler tick image) | Ruler background image |
-| `--vaadin-erte-ruler-marker-size` | `0.9375rem` | Tabstop marker icon size |
-| `--vaadin-erte-ruler-marker-color` | `inherit` | Tabstop marker icon color |
-
-> **Migration note:** V24 (ERTE 1) required manual CSS class overrides for content styling. V25 (ERTE 2) provides these official custom properties as the preferred approach.
+| Property | Default |
+|----------|---------|
+| `--vaadin-erte-ruler-height` | `0.9375rem` |
+| `--vaadin-erte-ruler-border-color` | `var(--vaadin-border-color, var(--lumo-contrast-20pct, rgb(158, 170, 182)))` |
+| `--vaadin-erte-ruler-background` | SVG tick image (internal) |
+| `--vaadin-erte-ruler-marker-size` | `0.9375rem` |
+| `--vaadin-erte-ruler-marker-color` | `inherit` |
+| `--vaadin-erte-ruler-vertical-width` | `0.9375rem` |
+| `--vaadin-erte-ruler-vertical-background` | Ruler tick image (base64 PNG) |
 
 ---
 
 ## 16. Sanitization
 
-### 16.1 Default Sanitizer
+Server-side sanitizer (`erteSanitize()`) extends Vaadin RTE 2's safelist.
 
-ERTE's server-side sanitizer (`erteSanitize()`) extends Vaadin RTE 2's safelist:
+**Allowed tags:** `p`, `br`, `strong`, `b`, `em`, `i`, `u`, `s`, `strike`, `small`, `sub`, `sup`, `cite`, `code`, `q`, `dd`, `dl`, `dt`, `h1`, `h2`, `h3`, `ol`, `ul`, `li`, `a`, `img`, `blockquote`, `pre`, `span`, `table`, `tbody`, `tr`, `td`, `th`, `colgroup`, `col`
 
-**Allowed HTML tags:** `p`, `br`, `strong`, `em`, `u`, `s`, `sub`, `sup`, `h1`, `h2`, `h3`, `ol`, `ul`, `li`, `a`, `img`, `blockquote`, `pre`, `span`
+**Allowed attributes:** `style`, `class` (all elements) + `img` (`align`, `alt`, `height`, `src`, `title`, `width`) + `a` (`href`) + `span` (`contenteditable`, `aria-readonly`, `data-placeholder`) + `blockquote` (`cite`) + `q` (`cite`) + `td` (`table_id`, `row_id`, `cell_id`, `merge_id`, `colspan`, `rowspan`, `table-class`) + `tr` (`row_id`) + `table` (`table_id`)
 
-**Allowed attributes:**
-- All elements: `style`, `class`
-- `img`: `align`, `alt`, `height`, `src`, `title`, `width`
-- `a`: `href`, `target`
-- `span`: `contenteditable`, `aria-readonly`, `data-placeholder`
+**Allowed CSS classes:** `ql-readonly`, `ql-tab`, `ql-soft-break`, `ql-placeholder`, `ql-nbsp`, `ql-align-*`, `ql-indent-1` through `ql-indent-8`
 
-**Allowed CSS classes:**
-- ERTE classes: `ql-readonly`, `ql-tab`, `ql-soft-break`, `ql-placeholder`, `ql-nbsp`
-- Quill alignment: `ql-align-left`, `ql-align-center`, `ql-align-right`, `ql-align-justify`
-- Quill indent: `ql-indent-1` through `ql-indent-8`
+**Allowed CSS properties:** `color`, `background-color`, `font-*`, `text-*`, `line-height`, `letter-spacing`, `margin`, `padding`, `border-*`, `display`, `width`, `height`, `position`, and others (complete list in source code)
 
-**Allowed CSS properties (in `style` attributes):**
-- Text: `color`, `background-color`, `background`, `font-size`, `font-family`, `font-weight`, `font-style`
-- Layout: `text-align`, `text-indent`, `text-decoration`, `text-decoration-line`, `text-decoration-style`, `text-decoration-color`, `direction`
-- Spacing: `line-height`, `letter-spacing`, `word-spacing`
-- Box model: `margin`, `padding` (all sub-properties)
-- Border: `border` (all sub-properties), `border-collapse`, `border-spacing`
-- Display: `display`, `white-space`, `vertical-align`, `visibility`, `opacity`
-- Size: `width`, `height`, `min-width`, `max-width`, `min-height`, `max-height`
-- Position: `position`, `top`, `right`, `bottom`, `left`, `float`
-- Other: `list-style-type`, `overflow`, `overflow-x`, `overflow-y`, `cursor`
+**CSS functions:** `rgb()`, `rgba()`, `hsl()`, `hsla()`, `calc()`
 
-**Allowed CSS functions:** `rgb()`, `rgba()`, `hsl()`, `hsla()`, `calc()`
+**Image data URLs:** `image/png`, `image/jpeg`, `image/gif`, `image/webp`, `image/bmp`, `image/x-icon`
 
-**Allowed data URL MIME types:** `image/png`, `image/jpeg`, `image/jpg`, `image/gif`, `image/webp`, `image/bmp`, `image/x-icon`
+**Stripped:** `<script>`, `<iframe>`, event handlers, dangerous CSS functions (`url()`, `var()`, `@import`), SVG data URLs, CSS comments, `contenteditable="true"`
 
-### 16.2 What Gets Stripped
+### Extending the Sanitizer
 
-- `<script>`, `<iframe>`, `<object>`, `<embed>`, `<form>` tags
-- JavaScript event handlers (`onclick`, `onerror`, `onload`, etc.)
-- Unknown CSS classes (not in the ERTE or Quill whitelist)
-- Dangerous CSS functions (e.g., `url()`, `expression()`, `var()`)
-- `@import` directives in CSS
-- SVG data URLs (can contain embedded scripts)
-- `contenteditable="true"` (only `"false"` is allowed)
-- CSS comments (`/* ... */`)
-
-### 16.3 Custom Sanitization
-
-Advanced users can override the sanitizer by extending `RteExtensionBase`:
+To allow additional CSS classes (e.g., for custom blots or the Tables extension):
 
 ```java
-// Note: This is an advanced customization. The default sanitizer covers
-// all standard use cases. Only override if you need to allow additional
-// HTML elements or attributes.
-
-// See RteExtensionBase.erteSanitize() for the implementation.
-// The sanitizer uses jsoup's Safelist API.
+editor.addAllowedHtmlClasses("my-custom-class", "another-class");
+// Later, to remove:
+editor.removeAllowedHtmlClasses("my-custom-class");
 ```
 
-> **Warning:** Weakening the sanitizer can introduce XSS vulnerabilities. See `SECURITY.md` for known attack vectors.
+> **Warning:** Only allow classes you control. Allowing arbitrary classes can introduce styling-based attacks.
 
 ---
 
 ## 17. Built-in Keyboard Shortcuts
 
-These shortcuts are always active and cannot be removed:
+Always active, cannot be removed:
 
-| Shortcut | Action | Condition |
-|----------|--------|-----------|
-| Tab | Insert tab embed | Tabstops configured |
-| Shift+Enter | Insert soft-break | Always |
-| Shift+Space | Insert non-breaking space | Always |
-| Ctrl+P / Cmd+P | Open placeholder dialog | Placeholders configured |
+| Shortcut | Action |
+|----------|--------|
+| Tab | Insert tab embed (if tabstops configured) |
+| Shift+Enter | Insert soft-break |
+| Shift+Space | Insert non-breaking space |
+| Ctrl+P / Cmd+P | Open placeholder dialog (if placeholders configured) |
 
-> **Note:** Ctrl+P/Cmd+P may be intercepted by the browser's print dialog in some configurations.
+**Note:** Ctrl+P/Cmd+P may be intercepted by the browser's print dialog.
 
 ---
 
 ## 18. Value Format Guide
 
-### 18.1 HTML (Default)
+### HTML (Default)
 
-HTML is the primary value format in ERTE v6.x (matching Vaadin RTE 2).
+Primary format. Get/set HTML directly:
 
 ```java
-// Set HTML
 editor.setValue("<p>Hello <strong>world</strong></p>");
-
-// Get HTML
 String html = editor.getValue();
-
-// Listen for changes (fires on blur)
 editor.addValueChangeListener(e -> save(e.getValue()));
-
-// Eager mode (fires on every change)
-editor.setValueChangeMode(ValueChangeMode.EAGER);
 ```
 
-**When to use HTML:**
-- Standard form field binding
-- Database storage (most compact format)
-- Server-side processing with jsoup or similar
-- When you do not need precise format control
+**Use HTML for:** Form binding, database storage, server-side processing with jsoup.
 
-### 18.2 Delta (Optional)
+### Delta (Optional)
 
-Delta JSON provides precise control over content structure and formatting.
+JSON format for precise content control:
 
 ```java
-// Set Delta JSON
-editor.asDelta().setValue(
-    "[{\"insert\":\"Hello \"},{\"insert\":\"world\",\"attributes\":{\"bold\":true}},{\"insert\":\"\\n\"}]"
-);
-
-// Get Delta JSON
+editor.asDelta().setValue("[{\"insert\":\"Hello \"},{\"insert\":\"world\",\"attributes\":{\"bold\":true}},{\"insert\":\"\\n\"}]");
 String delta = editor.asDelta().getValue();
-
-// Listen for changes
-editor.asDelta().addValueChangeListener(e -> {
-    String newDelta = e.getValue();
-});
 ```
 
-**When to use Delta:**
-- Setting readonly content (`{"attributes": {"readonly": true}}`)
-- Setting placeholder content (`{"insert": {"placeholder": {"text": "Name"}}}`)
-- Setting tab content (`{"insert": {"tab": true}}`)
-- Batch updates (Delta parsing is faster than HTML)
-- When you need precise Quill format control
+**Use Delta for:** Readonly sections, placeholders, tabs, batch updates, precise Quill format control.
 
-### 18.3 Delta Structure Reference
+### Delta Structure
 
 ```json
 // Plain text
@@ -1448,37 +1424,8 @@ editor.asDelta().addValueChangeListener(e -> {
 // Bold text
 [{"insert": "bold text", "attributes": {"bold": true}}, {"insert": "\n"}]
 
-// Tab embed
-[{"insert": "before"}, {"insert": {"tab": true}}, {"insert": "after\n"}]
-
-// Readonly section
-[{"insert": "protected", "attributes": {"readonly": true}}, {"insert": "\n"}]
-
-// Placeholder embed
-[{"insert": {"placeholder": {"text": "Company Name"}}}, {"insert": "\n"}]
-
-// Soft-break
-[{"insert": "line1"}, {"insert": {"softBreak": true}}, {"insert": "line2\n"}]
-
-// Mixed content
-[
-  {"insert": "Dear "},
-  {"insert": {"placeholder": {"text": "N-1=Name", "format": {"italic": true}}}},
-  {"insert": ",\n"},
-  {"insert": "Welcome to "},
-  {"insert": "our company", "attributes": {"readonly": true}},
-  {"insert": ".\n"}
-]
+// Tab, readonly, placeholder, soft-break
+[{"insert": {"tab": true}}, {"insert": "protected", "attributes": {"readonly": true}}, {"insert": {"placeholder": {"text": "Name"}}}, {"insert": {"softBreak": true}}]
 ```
 
-### 18.4 Format Selection Guide
-
-| Use Case | Recommended Format | Reason |
-|----------|-------------------|--------|
-| Form field binding | HTML | Standard Vaadin pattern |
-| Database storage | HTML | Compact, query-friendly |
-| Readonly sections | Delta | Readonly is a Delta attribute |
-| Placeholder content | Delta | Placeholder is a Delta embed |
-| Template engine input | HTML | Easy to process server-side |
-| Content migration | Delta | Preserves all formatting precisely |
-| Unit test assertions | Delta | Deterministic structure |
+**Format selection:** Use HTML for standard binding/storage. Use Delta for readonly, placeholders, tabs, or when you need precise Quill structure.

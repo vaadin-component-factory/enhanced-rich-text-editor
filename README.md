@@ -19,7 +19,7 @@ Enhanced Rich Text Editor (ERTE) for Flow is an extended version of the Vaadin R
 ```xml
 <dependency>
     <groupId>com.vaadin.componentfactory</groupId>
-    <artifactId>enhanced-rich-text-editor-v25</artifactId>
+    <artifactId>enhanced-rich-text-editor</artifactId>
     <version>6.0.0</version>
 </dependency>
 ```
@@ -78,7 +78,7 @@ To enable table functionality, add the separate Tables Extension addon:
 ```xml
 <dependency>
     <groupId>com.vaadin.componentfactory</groupId>
-    <artifactId>enhanced-rich-text-editor-tables-v25</artifactId>
+    <artifactId>enhanced-rich-text-editor-tables</artifactId>
     <version>2.0.0</version>
 </dependency>
 ```
@@ -87,47 +87,46 @@ To enable table functionality, add the separate Tables Extension addon:
 EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte);
 ```
 
-See the [Tables Guide](enhanced-rich-text-editor-tables-v25/docs/TABLES_GUIDE.md) for full documentation, and the [Tables Upgrade Guide](enhanced-rich-text-editor-tables-v25/docs/TABLES_UPGRADE_GUIDE.md) for V1 → V2 migration.
+See the [Tables Guide](enhanced-rich-text-editor-tables/docs/TABLES_GUIDE.md) for full documentation, and the [Tables Upgrade Guide](enhanced-rich-text-editor-tables/docs/TABLES_UPGRADE_GUIDE.md) for V1 → V2 migration.
 
 ## Running the Demo
 
 ```bash
 # Build all modules
-bash v25-build.sh
+mvn clean install -DskipTests
 
 # Start the demo server on port 8080
-bash v25-server-start.sh
+mvn -pl enhanced-rich-text-editor-demo spring-boot:run
 
 # Browse to http://localhost:8080
 
-# Stop the server
-bash v25-server-stop.sh
+# In another terminal, stop the server
+mvn -pl enhanced-rich-text-editor-demo spring-boot:stop
 ```
 
 ## Running Tests
 
 ```bash
 # Build and start server first
-bash v25-build.sh
-bash v25-server-start.sh
+mvn clean install
+mvn -pl enhanced-rich-text-editor-demo spring-boot:run &
 
 # Run Playwright tests
 cd enhanced-rich-text-editor-demo
 npx playwright test tests/erte/
 
 # Stop server after testing
-bash v25-server-stop.sh
+mvn -pl enhanced-rich-text-editor-demo spring-boot:stop
 ```
 
 ## Project Structure
 
 | Module | Description |
 |--------|-------------|
-| `enhanced-rich-text-editor-v25/` | Core component (V25) |
-| `enhanced-rich-text-editor-tables-v25/` | Tables extension (V25) |
-| `enhanced-rich-text-editor-demo/` | Demo application with test views |
-| `enhanced-rich-text-editor/` | V24 core (reference only, excluded from build) |
-| `enhanced-rich-text-editor-tables/` | V24 tables (reference only, excluded from build) |
+| `enhanced-rich-text-editor/` | Core ERTE addon (Java + JavaScript) |
+| `enhanced-rich-text-editor-tables/` | Tables addon for ERTE |
+| `enhanced-rich-text-editor-demo/` | Demo application with sample views |
+| `enhanced-rich-text-editor-it/` | Integration tests (Playwright) |
 
 ## Version History
 
