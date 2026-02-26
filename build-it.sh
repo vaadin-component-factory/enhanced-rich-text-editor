@@ -1,6 +1,6 @@
 #!/bin/bash
 # Build V25 modules including IT module (mvn clean install -DskipTests)
-# Usage: bash v25-build-it.sh [-q]
+# Usage: bash build-it.sh [-q]
 #   -q    Quiet mode
 QUIET=""
 [ "$1" = "-q" ] && QUIET="-q"

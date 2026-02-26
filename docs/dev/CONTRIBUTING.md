@@ -20,11 +20,11 @@ Contributions require: [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for setup, [User
 ```bash
 git clone https://github.com/your-org/enhanced-rich-text-editor.git
 cd enhanced-rich-text-editor
-bash v25-build.sh
-bash v25-server-start.sh
+bash build.sh
+bash server-start.sh
 ```
 
-Verify with: `bash v25-build-it.sh && bash v25-it-server-start.sh && cd enhanced-rich-text-editor-it && npx playwright test tests/erte/`
+Verify with: `bash build-it.sh && bash it-server-start.sh && cd enhanced-rich-text-editor-it && npx playwright test tests/erte/`
 
 See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for details.
 
@@ -158,7 +158,7 @@ Java test views in `enhanced-rich-text-editor-it/src/main/java/com/vaadin/compon
 - **Shadow DOM:** Playwright pierces it, but `page.evaluate()` doesn't — use `el.shadowRoot.querySelector()`
 - **Ready indicator:** `#test-ready` has `display:none` — use `state: 'attached'`
 - **Delta:** Use `getDelta()` from element, or `getDeltaFromEditor()` from Quill
-- **Server errors:** `bash v25-it-server-logs.sh -errors`
+- **Server errors:** `bash it-server-logs.sh -errors`
 
 ---
 
@@ -212,7 +212,7 @@ Requirements: real user interactions (`click()`, `type()`, `press()`), not progr
 
 1. Create branch from `v25`: `git checkout -b feature/my-feature`
 2. Implement feature + tests (Java, JS, test view, Playwright spec)
-3. Run full suite: `bash v25-build-it.sh && bash v25-it-server-start.sh && cd enhanced-rich-text-editor-it && npx playwright test tests/erte/`
+3. Run full suite: `bash build-it.sh && bash it-server-start.sh && cd enhanced-rich-text-editor-it && npx playwright test tests/erte/`
 4. Push and PR to `v25` (never `master`)
 
 **PR Checklist:**

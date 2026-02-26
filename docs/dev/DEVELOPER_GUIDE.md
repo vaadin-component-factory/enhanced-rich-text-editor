@@ -49,13 +49,13 @@ Always use root scripts instead of Maven:
 
 **Standard build:**
 ```bash
-bash v25-build.sh          # mvn clean install -DskipTests
-bash v25-build.sh -q       # Quiet mode
+bash build.sh          # mvn clean install -DskipTests
+bash build.sh -q       # Quiet mode
 ```
 
 **Clean build (wipe frontend cache):**
 ```bash
-bash v25-build-clean.sh    # Also runs vaadin:clean-frontend
+bash build-clean.sh    # Also runs vaadin:clean-frontend
 ```
 
 Use clean build if JS changes aren't showing, dependencies changed, or troubleshooting build issues.
@@ -72,26 +72,26 @@ Spring Boot app on port 8080 with sample views, navigation, and prototype tests 
 
 **Start server:**
 ```bash
-bash v25-server-start.sh         # Port 8080
-bash v25-server-start.sh 9090    # Custom port
+bash server-start.sh         # Port 8080
+bash server-start.sh 9090    # Custom port
 ```
 
 **Check status:**
 ```bash
-bash v25-server-status.sh
-bash v25-server-status.sh --wait --timeout 60
+bash server-status.sh
+bash server-status.sh --wait --timeout 60
 ```
 
 **View logs:**
 ```bash
-bash v25-server-logs.sh          # Last 50 lines
-bash v25-server-logs.sh -f       # Follow mode
-bash v25-server-logs.sh -errors  # Errors only
+bash server-logs.sh          # Last 50 lines
+bash server-logs.sh -f       # Follow mode
+bash server-logs.sh -errors  # Errors only
 ```
 
 **Stop server:**
 ```bash
-bash v25-server-stop.sh
+bash server-stop.sh
 ```
 
 **Important:** Always stop server when done — runs in container, wastes resources if left running.
@@ -103,11 +103,11 @@ bash v25-server-stop.sh
 ERTE tests in `enhanced-rich-text-editor-it/`, IT server on port 8081.
 
 ```bash
-bash v25-build-it.sh                          # Build IT module
-bash v25-it-server-start.sh                   # Start IT server
+bash build-it.sh                          # Build IT module
+bash it-server-start.sh                   # Start IT server
 cd enhanced-rich-text-editor-it
 npx playwright test tests/erte/               # Run tests
-bash v25-it-server-stop.sh                    # Stop IT server
+bash it-server-stop.sh                    # Stop IT server
 ```
 
 See [TEST_INVENTORY.md](../../enhanced-rich-text-editor-it/tests/TEST_INVENTORY.md) for current test counts.

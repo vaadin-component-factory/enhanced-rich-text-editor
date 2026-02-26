@@ -34,7 +34,7 @@ Stock RTE 2 wrapped in ERTE's own web component tag. **Zero visual difference** 
 | 3 | All standard RTE 2 functionality works (typing, formatting, undo/redo) | **PASS** — UI explorer verified bold, typing |
 | 4 | Content settable via Java API (`setValue()`, `asDelta()`) | **PASS** — Playwright tests + UI explorer |
 | 5 | `_editor` (Quill instance) accessible after `super.ready()` | **PASS** — Playwright test |
-| 6 | Dev bundle builds without errors | **PASS** — `v25-build.sh` succeeds |
+| 6 | Dev bundle builds without errors | **PASS** — `build.sh` succeeds |
 | 7 | `mvn clean install -DskipTests` succeeds | **PASS** |
 | 8 | Demo view shows ERTE with no console errors | **PASS** — only favicon 404 (expected) |
 | 9 | Automated Playwright test passes (6 tests) | **PASS** — 6/6 pass |
@@ -77,8 +77,8 @@ Stock RTE 2 wrapped in ERTE's own web component tag. **Zero visual difference** 
 - Proper heading hierarchy (H2 > H3)
 
 ### Step 5: Build & verification — DONE
-- `v25-build.sh` passes (3 modules, 2.2s)
-- `v25-server-start.sh` starts on port 8082 (7s)
+- `build.sh` passes (3 modules, 2.2s)
+- `server-start.sh` starts on port 8082 (7s)
 - UI explorer verified: tag, toolbar, typing, formatting, Delta access
 - Console: `[ERTE] Shell ready, _editor: true` + only favicon 404
 

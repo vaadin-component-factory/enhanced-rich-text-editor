@@ -107,21 +107,21 @@ Convenience scripts in the repo root for build, server, and test operations. **A
 
 | Script | Purpose |
 |--------|---------|
-| `v25-build.sh [-q]` | Build V25 modules (`mvn clean install -DskipTests`) |
-| `v25-build-clean.sh [-q]` | Same + `vaadin:clean-frontend` (wipes dev bundle) |
-| `v25-build-it.sh [-q]` | Build V25 modules + IT module |
-| `v25-server-start.sh [port]` | Start demo on port 8080 (default) |
-| `v25-server-stop.sh` | Stop demo server |
-| `v25-server-logs.sh [-f\|-errors]` | Print server logs |
-| `v25-server-status.sh` | Check server status |
-| `v25-it-server-start.sh [port]` | Start IT server on port 8081 (default) |
-| `v25-it-server-stop.sh` | Stop IT server |
-| `v25-it-server-logs.sh [-f\|-errors]` | Print IT server logs |
-| `v25-it-server-status.sh` | Check IT server status |
+| `build.sh [-q]` | Build V25 modules (`mvn clean install -DskipTests`) |
+| `build-clean.sh [-q]` | Same + `vaadin:clean-frontend` (wipes dev bundle) |
+| `build-it.sh [-q]` | Build V25 modules + IT module |
+| `server-start.sh [port]` | Start demo on port 8080 (default) |
+| `server-stop.sh` | Stop demo server |
+| `server-logs.sh [-f\|-errors]` | Print server logs |
+| `server-status.sh` | Check server status |
+| `it-server-start.sh [port]` | Start IT server on port 8081 (default) |
+| `it-server-stop.sh` | Stop IT server |
+| `it-server-logs.sh [-f\|-errors]` | Print IT server logs |
+| `it-server-status.sh` | Check IT server status |
 
-**Workflow:** After changing addon code (ERTE JS/Java), always `v25-build.sh` before `v25-server-start.sh`. Tests require a running server.
+**Workflow:** After changing addon code (ERTE JS/Java), always `build.sh` before `server-start.sh`. Tests require a running server.
 
-**Always stop the server** after tests/explorations are done (`v25-server-stop.sh`). The server runs inside a container and is not useful to the user — don't leave it running.
+**Always stop the server** after tests/explorations are done (`server-stop.sh`). The server runs inside a container and is not useful to the user — don't leave it running.
 
 **Background tasks** (`run_in_background: true`): Use for complex, longer-running operations like plan reviews, feature implementation, and test runs. Do NOT use for quick, simple tasks (e.g., a single file read, a status check, a small edit).
 
@@ -129,12 +129,12 @@ Convenience scripts in the repo root for build, server, and test operations. **A
 
 ```bash
 # Build + server (preferred — use root scripts)
-bash v25-build.sh
-bash v25-server-start.sh
+bash build.sh
+bash server-start.sh
 
 # Build + IT server (for running ERTE tests)
-bash v25-build-it.sh
-bash v25-it-server-start.sh
+bash build-it.sh
+bash it-server-start.sh
 
 # Run Playwright ERTE tests (IT server must be running on 8081)
 cd enhanced-rich-text-editor-it
@@ -393,13 +393,13 @@ Use these as needed, do NOT try to load all of them as context simultaneously.
 **Running ERTE tests:**
 ```bash
 # Build IT module first
-bash v25-build-it.sh
+bash build-it.sh
 # Start IT server (port 8081)
-bash v25-it-server-start.sh
+bash it-server-start.sh
 # Run ERTE tests
 cd enhanced-rich-text-editor-it && npx playwright test tests/erte/
 # Stop IT server
-bash v25-it-server-stop.sh
+bash it-server-stop.sh
 ```
 
 ### ERTE Test Suite (306 tests in `enhanced-rich-text-editor-it/tests/erte/`)

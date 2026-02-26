@@ -1,6 +1,6 @@
 #!/bin/bash
 # Build V25 modules with full Vaadin frontend cleanup
-# Usage: bash v25-build-clean.sh [-q]
+# Usage: bash build-clean.sh [-q]
 #   -q    Quiet mode
 QUIET=""
 [ "$1" = "-q" ] && QUIET="-q"

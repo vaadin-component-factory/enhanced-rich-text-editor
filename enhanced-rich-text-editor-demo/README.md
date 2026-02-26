@@ -10,15 +10,15 @@ Playwright test suite.
 # From the repository root:
 
 # 1. Build all modules
-bash v25-build.sh
+bash build.sh
 
 # 2. Start the demo server on port 8080
-bash v25-server-start.sh
+bash server-start.sh
 
 # 3. Browse to http://localhost:8080
 
 # 4. Stop the server when done
-bash v25-server-stop.sh
+bash server-stop.sh
 ```
 
 ## Available Views
@@ -60,8 +60,8 @@ The demo includes a Playwright test suite. The server must be running before exe
 
 ```bash
 # Build and start server
-bash v25-build.sh
-bash v25-server-start.sh
+bash build.sh
+bash server-start.sh
 
 # Run all tests (287 total: 75 prototype + 212 ERTE)
 cd enhanced-rich-text-editor-demo
@@ -78,7 +78,7 @@ npx playwright test --ui
 
 # Stop server when done
 cd ..
-bash v25-server-stop.sh
+bash server-stop.sh
 ```
 
 ### Test Suite Overview
@@ -103,12 +103,12 @@ All scripts are in the repository root.
 
 | Script | Description |
 |--------|-------------|
-| `v25-build.sh [-q]` | Build V25 modules (`mvn clean install -DskipTests`) |
-| `v25-build-clean.sh [-q]` | Full clean build (wipes Vaadin dev bundle) |
-| `v25-server-start.sh [port]` | Start demo server (default port 8080) |
-| `v25-server-stop.sh` | Stop the demo server |
-| `v25-server-status.sh` | Check if the server is running |
-| `v25-server-logs.sh [-f\|-errors]` | View server logs |
+| `build.sh [-q]` | Build V25 modules (`mvn clean install -DskipTests`) |
+| `build-clean.sh [-q]` | Full clean build (wipes Vaadin dev bundle) |
+| `server-start.sh [port]` | Start demo server (default port 8080) |
+| `server-stop.sh` | Stop the demo server |
+| `server-status.sh` | Check if the server is running |
+| `server-logs.sh [-f\|-errors]` | View server logs |
 
 ## Project Structure
 

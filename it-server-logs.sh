@@ -1,6 +1,6 @@
 #!/bin/bash
 # Print V25 IT server logs
-# Usage: bash v25-it-server-logs.sh [-f|-state|-errors]
+# Usage: bash it-server-logs.sh [-f|-state|-errors]
 LOG_FILE="/tmp/claude-it-server.log"
 
 if [ ! -f "$LOG_FILE" ]; then

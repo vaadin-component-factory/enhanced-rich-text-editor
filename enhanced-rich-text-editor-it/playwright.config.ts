@@ -14,7 +14,7 @@ export default defineConfig({
     headless: true,
   },
   webServer: {
-    command: 'cd .. && bash v25-it-server-start.sh',
+    command: 'cd .. && bash it-server-start.sh',
     url: 'http://127.0.0.1:8081/erte-test/toolbar',
     reuseExistingServer: true,
     timeout: 120000,

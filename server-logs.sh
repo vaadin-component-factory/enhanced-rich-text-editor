@@ -1,6 +1,6 @@
 #!/bin/bash
 # Print V25 demo server logs
-# Usage: bash v25-server-logs.sh [-f|-state|-errors]
+# Usage: bash server-logs.sh [-f|-state|-errors]
 LOG_FILE="/tmp/claude-server.log"
 
 if [ ! -f "$LOG_FILE" ]; then

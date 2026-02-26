@@ -122,15 +122,15 @@ All checks passed:
 | Check | Result |
 |-------|--------|
 | `mvn clean install -DskipTests` (root) | BUILD SUCCESS (7.9s) |
-| `bash v25-build.sh` | EXIT 0 |
-| `bash v25-build-clean.sh` | EXIT 0 |
+| `bash build.sh` | EXIT 0 |
+| `bash build-clean.sh` | EXIT 0 |
 | `bash v24-build.sh` | EXIT 0 (standalone `-f` builds) |
-| `bash v25-server-start.sh` | Server ready on :8082 in 7s |
+| `bash server-start.sh` | Server ready on :8082 in 7s |
 | Browser: heading visible | "ERTE V25 — Phase 1 (Project Base)" |
 | Browser: RTE renders | Full Quill 2 toolbar, Lumo theme |
 | Console errors | Vaadin Copilot only (dev mode, not ERTE) |
 
-### Extra fix: v24-build-clean.sh + v25-build-clean.sh
+### Extra fix: v24-build-clean.sh + build-clean.sh
 - Fixed `vaadin:clean-frontend` → `com.vaadin:vaadin-maven-plugin:clean-frontend` (plugin prefix not resolved without pluginGroup config)
 - v24-build-clean.sh updated to use `-f` standalone builds (same as v24-build.sh)
 

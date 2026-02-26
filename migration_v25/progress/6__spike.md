@@ -250,10 +250,10 @@ public class ErteAuraSpikeView extends VerticalLayout {
 
 ```bash
 # Build ERTE module
-bash v25-build.sh
+bash build.sh
 
 # Start demo
-bash v25-server-start.sh
+bash server-start.sh
 
 # Navigate to: http://localhost:8080/erte-spike/aura-proxy
 ```

@@ -1,14 +1,14 @@
 #!/bin/bash
-# Check V25 demo server status
-# Usage: bash v25-server-status.sh [options] [port]
+# Check V25 IT server status
+# Usage: bash it-server-status.sh [options] [port]
 #   -w, --wait    Wait for server to be ready (HTTP 200)
 #   -t, --timeout Timeout in seconds for wait mode (default: 60)
-PID_FILE="/tmp/claude-server.pid"
+PID_FILE="/tmp/claude-it-server.pid"
 
 # Parse arguments
 WAIT_MODE=false
 TIMEOUT=60
-PORT=8080
+PORT=8081
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -33,21 +33,21 @@ done
 
 # Wait mode: poll until server is ready
 if [ "$WAIT_MODE" = true ]; then
-    echo "Waiting for server on port $PORT (timeout: ${TIMEOUT}s)..."
+    echo "Waiting for IT server on port $PORT (timeout: ${TIMEOUT}s)..."
     for i in $(seq 1 $TIMEOUT); do
         STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PORT}/" 2>/dev/null)
         if [ "$STATUS" = "200" ]; then
-            echo "Server ready (HTTP 200)"
+            echo "IT server ready (HTTP 200)"
             exit 0
         fi
         sleep 1
     done
-    echo "Timeout: Server not ready after ${TIMEOUT}s"
+    echo "Timeout: IT server not ready after ${TIMEOUT}s"
     exit 1
 fi
 
 # Normal status check
-echo "=== ERTE V25 Demo Server Status ==="
+echo "=== ERTE V25 IT Server Status ==="
 
 if [ -f "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")
