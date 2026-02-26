@@ -4,7 +4,7 @@ This document describes how to extend the Enhanced Rich Text Editor (ERTE) with 
 
 **Audience:** Java developers and JavaScript developers extending ERTE for application-specific features
 
-**Related:** [`ARCHITECTURE.md`](./ARCHITECTURE.md) for internal design, [`API_REFERENCE.md`](./API_REFERENCE.md) for public API reference.
+**Related:** [`ARCHITECTURE.md`](./ARCHITECTURE.md) for internal design, [`API_REFERENCE.md`](../user/API_REFERENCE.md) for public API reference.
 
 ## Creating Custom Blots
 
@@ -426,6 +426,6 @@ Add `'ql-tag'` to `ALLOWED_ERTE_CLASSES` in `RteExtensionBase.java` (line ~49) f
 
 **See also:**
 - [`ARCHITECTURE.md`](./ARCHITECTURE.md) — Internal design and blot registration
-- [`API_REFERENCE.md`](./API_REFERENCE.md) — Complete public API
+- [`API_REFERENCE.md`](../user/API_REFERENCE.md) — Complete public API
 - Quill 2 documentation: https://quilljs.com/ (API reference for blots, modules, keyboard)
 - Parchment 3 documentation: https://github.com/quilljs/parchment (blot format specs)

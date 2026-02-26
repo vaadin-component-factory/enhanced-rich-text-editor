@@ -40,10 +40,10 @@ editor.setValue("<p>Hello, world!</p>");
 
 ## Documentation
 
-- [User Guide](../docs/USER_GUIDE.md)
-- [API Reference](../docs/API_REFERENCE.md)
-- [Configuration Guide](../docs/CONFIGURATION.md)
-- [Upgrade Guide](../docs/UPGRADE_GUIDE.md) (migrating from v5.x / Vaadin 24)
+- [User Guide](../docs/user/USER_GUIDE.md)
+- [API Reference](../docs/user/API_REFERENCE.md)
+- [Configuration Guide](../docs/user/CONFIGURATION.md)
+- [Upgrade Guide](../docs/user/UPGRADE_GUIDE.md) (migrating from v5.x / Vaadin 24)
 
 ## License
 

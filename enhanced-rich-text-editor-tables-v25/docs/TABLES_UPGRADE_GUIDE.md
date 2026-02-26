@@ -394,6 +394,6 @@ Before deploying V2 to production:
 ## Getting Help
 
 - **Detailed API:** See [TABLES_GUIDE.md](./TABLES_GUIDE.md)
-- **Architecture:** See [/workspace/docs/ARCHITECTURE.md](/workspace/docs/ARCHITECTURE.md)
+- **Architecture:** See [/workspace/docs/dev/ARCHITECTURE.md](/workspace/docs/dev/ARCHITECTURE.md)
 - **Issues:** Open an issue on the ERTE GitHub repo
 

@@ -2,7 +2,7 @@
 
 This guide explains how to contribute to the Enhanced Rich Text Editor (ERTE) project. It covers the git workflow, code style, architecture constraints, and testing requirements.
 
-**Before contributing:** Read [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for setup and build instructions.
+**Before contributing:** Read [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for setup and build instructions. For end-user docs, see [User Guide](../user/USER_GUIDE.md).
 
 ---
 
@@ -272,7 +272,7 @@ protected void setPresentationValue(String value) {
 
 Never set `contenteditable="false"` on Embed outer domNode — Quill 2 guard nodes inside must stay editable. See [EXTENDING.md — Embed Blot Gotchas](EXTENDING.md#embed-blot-gotchas) for details and code examples.
 
-See [CLAUDE.md](../CLAUDE.md) for the complete list of confirmed patterns and architecture decisions.
+See [CLAUDE.md](../../CLAUDE.md) for the complete list of confirmed patterns and architecture decisions.
 
 ---
 
@@ -453,7 +453,7 @@ test.describe('ERTE My Feature', () => {
    - ✅ Code follows style guide (Java license header, English, consistent naming)
    - ✅ Architecture constraints followed (no RTE 2 copies, single foreign class, etc.)
    - ✅ Tests cover the feature (unit + integration)
-   - ✅ Documentation updated ([USER_GUIDE.md](USER_GUIDE.md) or [API_REFERENCE.md](API_REFERENCE.md) if applicable)
+   - ✅ Documentation updated ([USER_GUIDE.md](../user/USER_GUIDE.md) or [API_REFERENCE.md](../user/API_REFERENCE.md) if applicable)
 
 6. **Code review** — Team reviews your code for style, architecture, and testing
 
@@ -464,6 +464,6 @@ test.describe('ERTE My Feature', () => {
 ## Useful References
 
 - **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** — Build, test, and demo setup
-- **[USER_GUIDE.md](USER_GUIDE.md)** — Feature documentation
-- **[API_REFERENCE.md](API_REFERENCE.md)** — Complete Java API
-- **[CLAUDE.md](../CLAUDE.md)** — Architecture decisions, confirmed patterns, Quill/Parchment migration notes
+- **[USER_GUIDE.md](../user/USER_GUIDE.md)** — Feature documentation
+- **[API_REFERENCE.md](../user/API_REFERENCE.md)** — Complete Java API
+- **[CLAUDE.md](../../CLAUDE.md)** — Architecture decisions, confirmed patterns, Quill/Parchment migration notes

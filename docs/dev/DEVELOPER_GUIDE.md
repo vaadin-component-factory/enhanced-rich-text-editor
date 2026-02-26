@@ -2,7 +2,7 @@
 
 This guide covers building, testing, and developing the Enhanced Rich Text Editor (ERTE) v6.x from source.
 
-**Audience:** Developers contributing to ERTE or building extensions. For end-user feature documentation, see [User Guide](USER_GUIDE.md). For API reference, see [API Reference](API_REFERENCE.md).
+**Audience:** Developers contributing to ERTE or building extensions. For end-user feature documentation, see [User Guide](../user/USER_GUIDE.md). For API reference, see [API Reference](../user/API_REFERENCE.md).
 
 ---
 
@@ -201,7 +201,7 @@ npx playwright test tests/erte/
 bash v25-it-server-stop.sh
 ```
 
-Current baseline: **306 ERTE tests** (+ 75 prototype tests in demo module = 381 total). See [TEST_INVENTORY.md](../enhanced-rich-text-editor-it/tests/TEST_INVENTORY.md) for the full listing.
+Current baseline: **306 ERTE tests** (+ 75 prototype tests in demo module = 381 total). See [TEST_INVENTORY.md](../../enhanced-rich-text-editor-it/tests/TEST_INVENTORY.md) for the full listing.
 
 For test architecture details, debugging tips, and advanced commands, see [CONTRIBUTING.md](CONTRIBUTING.md#testing-requirements).
 
@@ -211,4 +211,4 @@ For test architecture details, debugging tips, and advanced commands, see [CONTR
 
 - **Contributing:** See [CONTRIBUTING.md](CONTRIBUTING.md) for code style, test architecture, and PR process
 - **Extending ERTE:** See [EXTENDING.md](EXTENDING.md) for custom blots, toolbar components, and keyboard shortcuts
-- **Reference:** [User Guide](USER_GUIDE.md) for feature documentation, [API Reference](API_REFERENCE.md) for the complete Java API
+- **Reference:** [User Guide](../user/USER_GUIDE.md) for feature documentation, [API Reference](../user/API_REFERENCE.md) for the complete Java API

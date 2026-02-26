@@ -870,7 +870,7 @@ ERTE includes a server-side HTML sanitizer that prevents XSS attacks while prese
 
 ### 4.4 Testing
 
-The `enhanced-rich-text-editor-it/` module contains 306 Playwright tests covering all ERTE features. For setup, commands, test architecture, and debugging tips, see [CONTRIBUTING.md — Test Architecture](CONTRIBUTING.md#test-architecture).
+The `enhanced-rich-text-editor-it/` module contains 306 Playwright tests covering all ERTE features. For setup, commands, test architecture, and debugging tips, see [CONTRIBUTING.md — Test Architecture](../dev/CONTRIBUTING.md#test-architecture).
 
 ---
 

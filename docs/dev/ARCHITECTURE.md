@@ -4,7 +4,7 @@ This document describes the internal architecture of the Enhanced Rich Text Edit
 
 **Audience:** Java/JavaScript developers, component contributors, maintainers
 
-**Related:** [`EXTENDING.md`](./EXTENDING.md) for practical extension patterns, [`API_REFERENCE.md`](./API_REFERENCE.md) for public API details.
+**Related:** [`EXTENDING.md`](./EXTENDING.md) for practical extension patterns, [`API_REFERENCE.md`](../user/API_REFERENCE.md) for public API details.
 
 ## Overview
 
@@ -338,5 +338,5 @@ Key source files by responsibility:
 
 **See also:**
 - [`EXTENDING.md`](./EXTENDING.md) — Practical patterns for extending ERTE (custom blots, keyboard shortcuts, toolbar components)
-- [`API_REFERENCE.md`](./API_REFERENCE.md) — Complete public API documentation
-- [`USER_GUIDE.md`](./USER_GUIDE.md) — User-facing features and configuration
+- [`API_REFERENCE.md`](../user/API_REFERENCE.md) — Complete public API documentation
+- [`USER_GUIDE.md`](../user/USER_GUIDE.md) — User-facing features and configuration

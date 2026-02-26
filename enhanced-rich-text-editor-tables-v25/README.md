@@ -62,4 +62,4 @@ Three toolbar buttons appear automatically. Users can now insert and modify tabl
 
 ## Contributing
 
-Contributions welcome. See [CONTRIBUTING.md](../docs/CONTRIBUTING.md) for guidelines.
+Contributions welcome. See [CONTRIBUTING.md](../docs/dev/CONTRIBUTING.md) for guidelines.
