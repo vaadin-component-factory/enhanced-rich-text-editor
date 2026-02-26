@@ -1,22 +1,19 @@
 import { test, expect } from '@playwright/test';
+import { ERTE_TEST_BASE, waitForEditor } from './helpers';
 
 /**
  * ERTE Shell smoke tests (Phase 2).
  * Verifies the JS extension mechanism works end-to-end:
  * custom tag, toolbar, editing, Java API, Quill instance, Delta round-trip.
  *
- * Uses V25DemoView at route "/" — no #test-ready indicator needed.
+ * Uses ErteShellTestView at route "/erte-test/shell".
  */
 
 test.describe('ERTE Shell (Phase 2)', () => {
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    // Wait for the ERTE custom element to be defined, ready, AND content loaded from Java
-    await page.waitForFunction(() => {
-      const el = document.querySelector('vcf-enhanced-rich-text-editor');
-      return el && (el as any)._editor && (el as any)._editor.getLength() > 1;
-    }, { timeout: 60000 });
+    await page.goto(`${ERTE_TEST_BASE}/shell`);
+    await waitForEditor(page);
   });
 
   test('tag is vcf-enhanced-rich-text-editor', async ({ page }) => {
@@ -69,9 +66,6 @@ test.describe('ERTE Shell (Phase 2)', () => {
   });
 
   test('Delta accessible via Quill getContents()', async ({ page }) => {
-    // Read Delta directly from Quill instance (no server round-trip needed)
-    // This proves asDelta() can access the Delta — the server-side ValueChangeListener
-    // round-trip is validated in Phase 3 with dedicated test views.
     const delta = await page.evaluate(() => {
       const el = document.querySelector('vcf-enhanced-rich-text-editor') as any;
       return el._editor.getContents();

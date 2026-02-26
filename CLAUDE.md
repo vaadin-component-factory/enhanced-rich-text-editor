@@ -109,10 +109,15 @@ Convenience scripts in the repo root for build, server, and test operations. **A
 |--------|---------|
 | `v25-build.sh [-q]` | Build V25 modules (`mvn clean install -DskipTests`) |
 | `v25-build-clean.sh [-q]` | Same + `vaadin:clean-frontend` (wipes dev bundle) |
+| `v25-build-it.sh [-q]` | Build V25 modules + IT module |
 | `v25-server-start.sh [port]` | Start demo on port 8080 (default) |
 | `v25-server-stop.sh` | Stop demo server |
 | `v25-server-logs.sh [-f\|-errors]` | Print server logs |
 | `v25-server-status.sh` | Check server status |
+| `v25-it-server-start.sh [port]` | Start IT server on port 8081 (default) |
+| `v25-it-server-stop.sh` | Stop IT server |
+| `v25-it-server-logs.sh [-f\|-errors]` | Print IT server logs |
+| `v25-it-server-status.sh` | Check IT server status |
 
 **Workflow:** After changing addon code (ERTE JS/Java), always `v25-build.sh` before `v25-server-start.sh`. Tests require a running server.
 
@@ -127,11 +132,12 @@ Convenience scripts in the repo root for build, server, and test operations. **A
 bash v25-build.sh
 bash v25-server-start.sh
 
-# Run Playwright tests (server must be running first)
-cd enhanced-rich-text-editor-demo
-npx playwright test
+# Build + IT server (for running ERTE tests)
+bash v25-build-it.sh
+bash v25-it-server-start.sh
 
-# Run only ERTE tests
+# Run Playwright ERTE tests (IT server must be running on 8081)
+cd enhanced-rich-text-editor-it
 npx playwright test tests/erte/
 
 # Playwright with UI for debugging
@@ -150,7 +156,8 @@ Multi-module Maven project. V25 target: Java 21+, Vaadin 25.0.x, Spring Boot 4.x
 
 - **enhanced-rich-text-editor/** — Core component (V24, reference only, excluded from build)
 - **enhanced-rich-text-editor-tables/** — Tables addon (V24, reference only, excluded from build)
-- **enhanced-rich-text-editor-demo/** — Demo application
+- **enhanced-rich-text-editor-demo/** — Demo application (user-facing views only)
+- **enhanced-rich-text-editor-it/** — Integration tests (test views + Playwright specs, port 8081)
 - **enhanced-rich-text-editor-v25/** — *(new)* V25 core component, extends Vaadin's RTE 2
 - **enhanced-rich-text-editor-tables-v25/** — *(new)* V25 tables addon
 
@@ -379,27 +386,25 @@ Use these as needed, do NOT try to load all of them as context simultaneously.
 | `migration_v25/STATUS.md` | **Start here** — single-file dashboard showing which phase is next |
 | `migration_v25/progress/` | **Always update** after completing a task — one file per phase (e.g., `0_use_cases_tests.md`, `1_project_base.md`) |
 | `migration_v25/USE_CASE_ANALYSIS.md` | Feature inventory with migration paths for all 20 ERTE features |
-| `tests/TEST_INVENTORY.md` | Full test listing grouped by feature (update when adding/removing tests) |
+| `enhanced-rich-text-editor-it/tests/TEST_INVENTORY.md` | Full test listing grouped by feature (update when adding/removing tests) |
 
 ## Playwright Tests
 
-381 total tests: 75 prototype + 306 ERTE. Full listing in [TEST_INVENTORY.md](enhanced-rich-text-editor-demo/tests/TEST_INVENTORY.md).
+381 total tests: 75 prototype + 306 ERTE. Full listing in [TEST_INVENTORY.md](enhanced-rich-text-editor-it/tests/TEST_INVENTORY.md).
 
-**Running tests:**
+**Running ERTE tests:**
 ```bash
-# Build first
-mvn clean package -DskipTests
-# Start server (from demo dir)
-cd enhanced-rich-text-editor-demo && bash server-start.sh
-# Run all tests
-npx playwright test
-# Run only ERTE tests
-npx playwright test tests/erte/
-# Stop server
-bash server-stop.sh
+# Build IT module first
+bash v25-build-it.sh
+# Start IT server (port 8081)
+bash v25-it-server-start.sh
+# Run ERTE tests
+cd enhanced-rich-text-editor-it && npx playwright test tests/erte/
+# Stop IT server
+bash v25-it-server-stop.sh
 ```
 
-### ERTE Test Suite (306 tests in `tests/erte/`)
+### ERTE Test Suite (306 tests in `enhanced-rich-text-editor-it/tests/erte/`)
 
 | Spec File | Tests | Covers |
 |-----------|-------|--------|
@@ -413,15 +418,15 @@ bash server-stop.sh
 | `erte-shell.spec.ts` | 6 | Shell basics, Lit lifecycle, value sync |
 | `extend-options.spec.ts` | 4 | extendQuill/extendEditor hooks, V24 deprecation |
 
-**Test views** (Java, in `com.vaadin.componentfactory`): `ErteTabStopTestView`, `ErtePlaceholderTestView`, `ErteReadonlyTestView`, `ErteToolbarTestView`, `ErteExtendOptionsTestView`, `ErteFeatureTestView`. Each provides a single editor (`id="test-editor"`), delta/HTML output elements, event log, and a ready indicator.
+**Test views** (Java, in `enhanced-rich-text-editor-it`, package `com.vaadin.componentfactory`): `ErteTabStopTestView`, `ErtePlaceholderTestView`, `ErteReadonlyTestView`, `ErteToolbarTestView`, `ErteExtendOptionsTestView`, `ErteFeatureTestView`, `ErteShellTestView`. Each provides a single editor (`id="test-editor"`), delta/HTML output elements, event log, and a ready indicator.
 
 **Side navigation:** `ErteTestLayout.java` provides an `AppLayout` with `SideNav` listing all phases. When implementing a new phase, always update this layout: change the `disabled(...)` entry to `new SideNavItem("label", "erte-test/route", icon)` so the link becomes active.
 
-**Shared helpers** (`tests/erte/helpers.ts`): `waitForEditor()`, `getDelta()`, `getDeltaFromEditor()`, `getRuler()`, `getRulerMarkers()`, etc.
+**Shared helpers** (`enhanced-rich-text-editor-it/tests/erte/helpers.ts`): `waitForEditor()`, `getDelta()`, `getDeltaFromEditor()`, `getRuler()`, `getRulerMarkers()`, etc.
 
 ### Prototype Tests (75 tests in `tab-stop-prototype.spec.ts`)
 
-Original tabstop tests against the prototype view at `/tab-stop`. See [prototype_tests.md](enhanced-rich-text-editor-demo/prototype_tests.md).
+Original tabstop tests against the prototype view at `/tab-stop`. See [prototype_tests.md](enhanced-rich-text-editor-demo/prototype_tests.md). Remain in demo module.
 
 ### Key Test Patterns
 - Shadow DOM: Playwright locators pierce it, but `page.evaluate()`/`waitForFunction` do NOT — use `el.shadowRoot.querySelector()`
