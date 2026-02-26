@@ -46,10 +46,6 @@ ERTE extends Vaadin 25's Rich Text Editor (RTE 2, built on Quill 2 and Parchment
   - Playwright test suite (see TEST_INVENTORY.md)
   - Runs on port 8081
 
-- **Legacy modules** (`enhanced-rich-text-editor`, `enhanced-rich-text-editor-tables`)
-  - V24 reference code (Vaadin 24, Quill 1)
-  - Excluded from build, kept for reference only
-
 ## JavaScript Layer
 
 File: `vcf-enhanced-rich-text-editor.js` (2651 lines)

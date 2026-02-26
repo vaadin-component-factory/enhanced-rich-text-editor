@@ -154,8 +154,6 @@ mvn clean package -Pproduction -DskipTests
 
 Multi-module Maven project. V25 target: Java 21+, Vaadin 25.0.x, Spring Boot 4.x.
 
-- **enhanced-rich-text-editor/** — Core component (V24, reference only, excluded from build)
-- **enhanced-rich-text-editor-tables/** — Tables addon (V24, reference only, excluded from build)
 - **enhanced-rich-text-editor-demo/** — Demo application (user-facing views only)
 - **enhanced-rich-text-editor-it/** — Integration tests (test views + Playwright specs, port 8081)
 - **enhanced-rich-text-editor-v25/** — *(new)* V25 core component, extends Vaadin's RTE 2

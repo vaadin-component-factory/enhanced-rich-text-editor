@@ -39,8 +39,6 @@ Multi-module Maven project:
 | **enhanced-rich-text-editor-demo/** | Demo application (sample views, prototype tests) |
 | **enhanced-rich-text-editor-it/** | Integration tests (test views + Playwright specs) |
 
-**Legacy modules** (`enhanced-rich-text-editor`, `enhanced-rich-text-editor-tables`) — V24 reference code (excluded from build).
-
 **Git workflow:** All development happens on the `v25` branch.
 
 ---
