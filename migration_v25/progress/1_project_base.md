@@ -38,8 +38,8 @@ Polymer→Lit style migration (`<custom-style>`, `registerStyles()` → `static 
 
 ### Steps
 
-1. Create `enhanced-rich-text-editor-v25/` module (pom.xml, RteExtensionBase stub, ERTE stub, license)
-2. Create `enhanced-rich-text-editor-tables-v25/` module (pom.xml, stub, license)
+1. Create `enhanced-rich-text-editor/` module (pom.xml, RteExtensionBase stub, ERTE stub, license)
+2. Create `enhanced-rich-text-editor-tables/` module (pom.xml, stub, license)
 3. Update root `pom.xml` (V25 modules only in reactor)
 4. Update demo `pom.xml` (V25 deps, Spring Boot 4, Java 21)
 5. Relocate V24-specific demo views to `src-v24/`
@@ -54,13 +54,13 @@ Polymer→Lit style migration (`<custom-style>`, `registerStyles()` → `static 
 
 | Action | File |
 |--------|------|
-| CREATE | `enhanced-rich-text-editor-v25/pom.xml` |
-| CREATE | `enhanced-rich-text-editor-v25/.../RteExtensionBase.java` (in RTE 2 package) |
-| CREATE | `enhanced-rich-text-editor-v25/.../EnhancedRichTextEditor.java` (in ERTE package) |
-| CREATE | `enhanced-rich-text-editor-v25/src/license/` (copy from V24) |
-| CREATE | `enhanced-rich-text-editor-tables-v25/pom.xml` |
-| CREATE | `enhanced-rich-text-editor-tables-v25/.../EnhancedRichTextEditorTables.java` |
-| CREATE | `enhanced-rich-text-editor-tables-v25/src/license/` (copy from V24) |
+| CREATE | `enhanced-rich-text-editor/pom.xml` |
+| CREATE | `enhanced-rich-text-editor/.../RteExtensionBase.java` (in RTE 2 package) |
+| CREATE | `enhanced-rich-text-editor/.../EnhancedRichTextEditor.java` (in ERTE package) |
+| CREATE | `enhanced-rich-text-editor/src/license/` (copy from V24) |
+| CREATE | `enhanced-rich-text-editor-tables/pom.xml` |
+| CREATE | `enhanced-rich-text-editor-tables/.../EnhancedRichTextEditorTables.java` |
+| CREATE | `enhanced-rich-text-editor-tables/src/license/` (copy from V24) |
 | CREATE | `enhanced-rich-text-editor-demo/.../V25DemoView.java` |
 | EDIT | `pom.xml` (root) |
 | EDIT | `enhanced-rich-text-editor-demo/pom.xml` |
@@ -73,13 +73,13 @@ Polymer→Lit style migration (`<custom-style>`, `registerStyles()` → `static 
 ## Completed Steps
 
 ### Step 1: V25 ERTE module — DONE
-- `enhanced-rich-text-editor-v25/pom.xml` — Vaadin 25.0.5, Java 21, `vaadin` (Pro), Mockito 5.14.2
+- `enhanced-rich-text-editor/pom.xml` — Vaadin 25.0.5, Java 21, `vaadin` (Pro), Mockito 5.14.2
 - `RteExtensionBase.java` in `com.vaadin.flow.component.richtexteditor` (bridge class)
 - `EnhancedRichTextEditor.java` in `com.vaadin.componentfactory` (stub extends bridge)
 - License files copied from V24
 
 ### Step 2: V25 tables module — DONE
-- `enhanced-rich-text-editor-tables-v25/pom.xml` — depends on ERTE V25 6.0.0-SNAPSHOT
+- `enhanced-rich-text-editor-tables/pom.xml` — depends on ERTE V25 6.0.0-SNAPSHOT
 - `EnhancedRichTextEditorTables.java` stub in `com.vaadin.componentfactory.erte.tables`
 - License files copied
 

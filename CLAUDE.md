@@ -156,8 +156,8 @@ Multi-module Maven project. V25 target: Java 21+, Vaadin 25.0.x, Spring Boot 4.x
 
 - **enhanced-rich-text-editor-demo/** — Demo application (user-facing views only)
 - **enhanced-rich-text-editor-it/** — Integration tests (test views + Playwright specs, port 8081)
-- **enhanced-rich-text-editor-v25/** — *(new)* V25 core component, extends Vaadin's RTE 2
-- **enhanced-rich-text-editor-tables-v25/** — *(new)* V25 tables addon
+- **enhanced-rich-text-editor/** — V25 core component, extends Vaadin's RTE 2
+- **enhanced-rich-text-editor-tables/** — V25 tables addon
 
 ### Data Format
 Content is stored as Quill Delta JSON. Tables encode cell metadata in a pipe-separated format within the `td` attribute:

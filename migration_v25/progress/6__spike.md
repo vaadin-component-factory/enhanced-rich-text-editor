@@ -93,7 +93,7 @@ public class ErteAuraSpikeView extends VerticalLayout {
 
 Add prototype `_injectAuraStyleProxy()` to ERTE's JS file.
 
-**File:** `enhanced-rich-text-editor-v25/src/main/resources/META-INF/resources/frontend/vcf-enhanced-rich-text-editor.js`
+**File:** `enhanced-rich-text-editor/src/main/resources/META-INF/resources/frontend/vcf-enhanced-rich-text-editor.js`
 
 **Location:** After `ready()` method, before `_applyErteI18n()`
 

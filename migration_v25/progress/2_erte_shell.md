@@ -52,7 +52,7 @@ Stock RTE 2 wrapped in ERTE's own web component tag. **Zero visual difference** 
 ## Completed Steps
 
 ### Step 1: JS subclass (`vcf-enhanced-rich-text-editor.js`) — DONE
-- File: `enhanced-rich-text-editor-v25/src/main/resources/META-INF/resources/frontend/vcf-enhanced-rich-text-editor.js`
+- File: `enhanced-rich-text-editor/src/main/resources/META-INF/resources/frontend/vcf-enhanced-rich-text-editor.js`
 - Extends RTE 2 via `customElements.get('vaadin-rich-text-editor')`
 - Guard on undefined base class
 - `render()` passthrough, `static get styles()` defensive spread
@@ -117,9 +117,9 @@ Notes:
 
 | Action | File |
 |--------|------|
-| CREATE | `enhanced-rich-text-editor-v25/src/main/resources/META-INF/resources/frontend/vcf-enhanced-rich-text-editor.js` |
-| EDIT | `enhanced-rich-text-editor-v25/.../RteExtensionBase.java` |
-| EDIT | `enhanced-rich-text-editor-v25/.../EnhancedRichTextEditor.java` |
+| CREATE | `enhanced-rich-text-editor/src/main/resources/META-INF/resources/frontend/vcf-enhanced-rich-text-editor.js` |
+| EDIT | `enhanced-rich-text-editor/.../RteExtensionBase.java` |
+| EDIT | `enhanced-rich-text-editor/.../EnhancedRichTextEditor.java` |
 | EDIT | `enhanced-rich-text-editor-demo/.../V25DemoView.java` |
 | EDIT | `enhanced-rich-text-editor-demo/playwright.config.ts` |
 | EDIT | `enhanced-rich-text-editor-demo/tests/erte/helpers.ts` |

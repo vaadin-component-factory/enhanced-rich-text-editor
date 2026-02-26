@@ -1,6 +1,6 @@
 # ERTE V25 Architecture
 
-Internal architecture of the Enhanced Rich Text Editor (ERTE) V25. For practical extension patterns, see [`EXTENDING.md`](./EXTENDING.md). For public API, see [`API_REFERENCE.md`](../../enhanced-rich-text-editor-v25/docs/API_REFERENCE.md).
+Internal architecture of the Enhanced Rich Text Editor (ERTE) V25. For practical extension patterns, see [`EXTENDING.md`](./EXTENDING.md). For public API, see [`API_REFERENCE.md`](../../enhanced-rich-text-editor/docs/API_REFERENCE.md).
 
 ---
 
@@ -29,13 +29,13 @@ ERTE extends Vaadin 25's Rich Text Editor (RTE 2, built on Quill 2 and Parchment
 
 ## Module Structure
 
-- **`enhanced-rich-text-editor-v25/`** — Core addon module
+- **`enhanced-rich-text-editor/`** — Core addon module
   - Java classes in `com.vaadin.componentfactory` (all ERTE logic)
   - JavaScript frontend in `frontend/` (2651 lines)
   - CSS custom properties in `frontend/styles/vcf-enhanced-rich-text-editor-styles.css`
   - Compiled as `.jar` artifact in Maven build
 
-- **`enhanced-rich-text-editor-tables-v25/`** — Tables addon (extends core ERTE with table support)
+- **`enhanced-rich-text-editor-tables/`** — Tables addon (extends core ERTE with table support)
 
 - **`enhanced-rich-text-editor-demo/`** — Demo application
   - Spring Boot application with sample views (ErteSamplesView, ErtePlaygroundView, etc.)
@@ -214,4 +214,4 @@ ERTE overrides `static get lumoInjector()` (line 428) to reuse parent's tag name
 
 ---
 
-**See also:** [`EXTENDING.md`](./EXTENDING.md) for extension patterns, [`API_REFERENCE.md`](../../enhanced-rich-text-editor-v25/docs/API_REFERENCE.md) for public API, [`USER_GUIDE.md`](../../enhanced-rich-text-editor-v25/docs/USER_GUIDE.md) for features.
+**See also:** [`EXTENDING.md`](./EXTENDING.md) for extension patterns, [`API_REFERENCE.md`](../../enhanced-rich-text-editor/docs/API_REFERENCE.md) for public API, [`USER_GUIDE.md`](../../enhanced-rich-text-editor/docs/USER_GUIDE.md) for features.

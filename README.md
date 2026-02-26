@@ -8,9 +8,9 @@ Enhanced Rich Text Editor (ERTE) for Flow is an extended version of the Vaadin R
 
 ## Documentation
 
-- [User Guide](enhanced-rich-text-editor-v25/docs/USER_GUIDE.md) -- Features, examples, and best practices
-- [API Reference](enhanced-rich-text-editor-v25/docs/API_REFERENCE.md) -- Complete API surface, custom properties, sanitization, keyboard shortcuts
-- [Upgrade Guide](enhanced-rich-text-editor-v25/docs/UPGRADE_GUIDE.md) -- Migrating from ERTE 1 (v5.x, Vaadin 24) to ERTE 2 (v6.x, Vaadin 25)
+- [User Guide](enhanced-rich-text-editor/docs/USER_GUIDE.md) -- Features, examples, and best practices
+- [API Reference](enhanced-rich-text-editor/docs/API_REFERENCE.md) -- Complete API surface, custom properties, sanitization, keyboard shortcuts
+- [Upgrade Guide](enhanced-rich-text-editor/docs/UPGRADE_GUIDE.md) -- Migrating from ERTE 1 (v5.x, Vaadin 24) to ERTE 2 (v6.x, Vaadin 25)
 
 ## Quick Start
 
@@ -87,7 +87,7 @@ To enable table functionality, add the separate Tables Extension addon:
 EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte);
 ```
 
-See the [Tables Guide](enhanced-rich-text-editor-tables-v25/docs/TABLES_GUIDE.md) for full documentation, and the [Tables Upgrade Guide](enhanced-rich-text-editor-tables-v25/docs/TABLES_UPGRADE_GUIDE.md) for V1 → V2 migration.
+See the [Tables Guide](enhanced-rich-text-editor-tables/docs/TABLES_GUIDE.md) for full documentation, and the [Tables Upgrade Guide](enhanced-rich-text-editor-tables/docs/TABLES_UPGRADE_GUIDE.md) for V1 → V2 migration.
 
 ## Running the Demo
 
@@ -123,8 +123,8 @@ mvn -pl enhanced-rich-text-editor-demo spring-boot:stop
 
 | Module | Description |
 |--------|-------------|
-| `enhanced-rich-text-editor-v25/` | Core ERTE addon (Java + JavaScript) |
-| `enhanced-rich-text-editor-tables-v25/` | Tables addon for ERTE |
+| `enhanced-rich-text-editor/` | Core ERTE addon (Java + JavaScript) |
+| `enhanced-rich-text-editor-tables/` | Tables addon for ERTE |
 | `enhanced-rich-text-editor-demo/` | Demo application with sample views |
 | `enhanced-rich-text-editor-it/` | Integration tests (Playwright) |
 

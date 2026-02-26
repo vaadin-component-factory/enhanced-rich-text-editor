@@ -1,6 +1,6 @@
 # Extending ERTE V25
 
-Practical patterns for custom blots, toolbar components, keyboard shortcuts, and styling. See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for design, [`API_REFERENCE.md`](../../enhanced-rich-text-editor-v25/docs/API_REFERENCE.md) for public API.
+Practical patterns for custom blots, toolbar components, keyboard shortcuts, and styling. See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for design, [`API_REFERENCE.md`](../../enhanced-rich-text-editor/docs/API_REFERENCE.md) for public API.
 
 For Quill 2 fundamentals, see [quilljs.com](https://quilljs.com/) and [Parchment 3](https://github.com/quilljs/parchment).
 
@@ -295,4 +295,4 @@ Add `'ql-tag'` to `ALLOWED_ERTE_CLASSES` in `EnhancedRichTextEditor.java` for sa
 
 ---
 
-**See also:** [`ARCHITECTURE.md`](./ARCHITECTURE.md), [`API_REFERENCE.md`](../../enhanced-rich-text-editor-v25/docs/API_REFERENCE.md), [Quill 2](https://quilljs.com/), [Parchment 3](https://github.com/quilljs/parchment)
+**See also:** [`ARCHITECTURE.md`](./ARCHITECTURE.md), [`API_REFERENCE.md`](../../enhanced-rich-text-editor/docs/API_REFERENCE.md), [Quill 2](https://quilljs.com/), [Parchment 3](https://github.com/quilljs/parchment)

@@ -8,5 +8,5 @@ ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT_DIR"
 echo "=== ERTE V25 Build (with IT) ==="
 mvn clean install -DskipTests $QUIET \
-    -pl enhanced-rich-text-editor-v25,enhanced-rich-text-editor-tables-v25,enhanced-rich-text-editor-it \
+    -pl enhanced-rich-text-editor,enhanced-rich-text-editor-tables,enhanced-rich-text-editor-it \
     -am
