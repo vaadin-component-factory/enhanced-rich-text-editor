@@ -351,7 +351,7 @@ Use these as needed, do NOT try to load all of them as context simultaneously.
 
 ## Playwright Tests
 
-255 total tests: 75 prototype + 180 ERTE. Full listing in [TEST_INVENTORY.md](enhanced-rich-text-editor-demo/tests/TEST_INVENTORY.md).
+381 total tests: 75 prototype + 306 ERTE. Full listing in [TEST_INVENTORY.md](enhanced-rich-text-editor-demo/tests/TEST_INVENTORY.md).
 
 **Running tests:**
 ```bash
@@ -367,16 +367,19 @@ npx playwright test tests/erte/
 bash server-stop.sh
 ```
 
-### ERTE Test Suite (180 tests in `tests/erte/`)
+### ERTE Test Suite (306 tests in `tests/erte/`)
 
 | Spec File | Tests | Covers |
 |-----------|-------|--------|
-| `tabstops.spec.ts` | 75 | Tabstops, rulers, soft-break, whitespace indicators |
+| `tabstops.spec.ts` | 86 | Tabstops, rulers, soft-break, whitespace indicators |
+| `tables.spec.ts` | 82 | Table operations, templates, undo/redo, value round-trip |
+| `features.spec.ts` | 36 | NBSP, addText, align, indent, i18n, sanitizer, focus |
+| `toolbar.spec.ts` | 32 | Slot system, visibility, shortcuts, icons, keyboard nav |
 | `placeholders.spec.ts` | 32 | Placeholder dialog, events, appearance, keyboard |
 | `readonly.spec.ts` | 18 | Readonly sections, protection, whole-editor readonly |
-| `toolbar.spec.ts` | 24 | Slot system, visibility, shortcuts, icons, keyboard nav |
+| `replace-icons.spec.ts` | 10 | Replace standard toolbar button icons |
+| `erte-shell.spec.ts` | 6 | Shell basics, Lit lifecycle, value sync |
 | `extend-options.spec.ts` | 4 | extendQuill/extendEditor hooks, V24 deprecation |
-| `features.spec.ts` | 24 | NBSP, addText, align, indent, i18n, sanitizer, focus |
 
 **Test views** (Java, in `com.vaadin.componentfactory`): `ErteTabStopTestView`, `ErtePlaceholderTestView`, `ErteReadonlyTestView`, `ErteToolbarTestView`, `ErteExtendOptionsTestView`, `ErteFeatureTestView`. Each provides a single editor (`id="test-editor"`), delta/HTML output elements, event log, and a ready indicator.
 
