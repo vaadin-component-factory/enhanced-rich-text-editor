@@ -1,8 +1,6 @@
-# Enhanced Rich Text Editor -- Developer Guide
+# Developer Guide
 
-This guide covers building, testing, and developing the Enhanced Rich Text Editor (ERTE) v6.x from source.
-
-**Audience:** Developers contributing to ERTE or building extensions. For end-user feature documentation, see [User Guide](../user/USER_GUIDE.md). For API reference, see [API Reference](../user/API_REFERENCE.md).
+Building, testing, and developing ERTE v6.x from source. For features, see [User Guide](../user/USER_GUIDE.md). For API, see [API Reference](../user/API_REFERENCE.md).
 
 ---
 
@@ -18,30 +16,21 @@ This guide covers building, testing, and developing the Enhanced Rich Text Edito
 
 ## Prerequisites
 
-Before building or testing ERTE, ensure your environment has the required tools:
-
 | Tool | Version | Notes |
 |------|---------|-------|
 | Java | 21+ | Required for compilation and running the demo |
 | Maven | 3.9+ | Used for building all modules |
 | Node.js | 20+ | Required for Playwright tests |
 
-**Verify your setup:**
+**Verify:** `java -version` (21+), `mvn -version` (3.9+), `node -version` (20+)
 
-```bash
-java -version          # Should show Java 21 or higher
-mvn -version          # Should show Maven 3.9+
-node -version         # Should show Node.js 20+
-npm -version          # Node package manager
-```
-
-> **Note:** The project targets Vaadin 25.0.x and Spring Boot 4.x. See `/workspace/enhanced-rich-text-editor-demo/pom.xml` for exact versions.
+Targets Vaadin 25.0.x and Spring Boot 4.x. See `enhanced-rich-text-editor-demo/pom.xml` for exact versions.
 
 ---
 
 ## Repository Structure
 
-This is a multi-module Maven project with the following layout:
+Multi-module Maven project:
 
 | Module | Purpose |
 |--------|---------|
@@ -58,157 +47,77 @@ This is a multi-module Maven project with the following layout:
 
 ## Building from Source
 
-The project provides convenient shell scripts for building. Always use these instead of running Maven manually.
+Always use root scripts instead of Maven:
 
-### Standard Build
-
+**Standard build:**
 ```bash
-bash v25-build.sh
+bash v25-build.sh          # mvn clean install -DskipTests
+bash v25-build.sh -q       # Quiet mode
 ```
 
-Runs `mvn clean install -DskipTests` for all V25 modules. This:
-- Cleans previous artifacts
-- Compiles Java source and tests
-- Packages the addon JARs
-- Installs to the local Maven repository
-
-**Quiet mode** (no verbose output):
-
+**Clean build (wipe frontend cache):**
 ```bash
-bash v25-build.sh -q
+bash v25-build-clean.sh    # Also runs vaadin:clean-frontend
 ```
 
-### Clean Build (Wiping Frontend Cache)
+Use clean build if JS changes aren't showing, dependencies changed, or troubleshooting build issues.
 
-```bash
-bash v25-build-clean.sh
-```
+**Time:** Standard ~1-2 min, clean ~3-4 min.
 
-Same as `v25-build.sh`, but also runs `vaadin:clean-frontend` to wipe the development bundle. Use this if:
-- JavaScript changes aren't appearing in the demo
-- You've changed dependencies
-- You're troubleshooting build issues
-
-**Time to build:** Standard build ~1-2 minutes. Clean build ~3-4 minutes (rebuilds frontend assets).
-
-### Build Workflow
-
-Always build before starting the server:
-
-```bash
-bash v25-build.sh      # Build once
-bash v25-server-start.sh  # Then start server
-# Make changes, repeat build and server restart as needed
-```
+**Workflow:** Always build before starting server. Build again after code changes.
 
 ---
 
 ## Running the Demo
 
-The demo application (`enhanced-rich-text-editor-demo/`) is a Spring Boot app that serves:
-- Sample views for each ERTE feature
-- A navigation menu with access to all demos
-- Playwright prototype tests (75 tests)
+Spring Boot app on port 8080 with sample views, navigation, and prototype tests (75 tests).
 
-### Starting the Server
-
+**Start server:**
 ```bash
-bash v25-server-start.sh
+bash v25-server-start.sh         # Port 8080
+bash v25-server-start.sh 9090    # Custom port
 ```
 
-Starts the demo on port 8080. The script:
-- Kills any existing server on the port
-- Starts Spring Boot in the background
-- Waits up to 90 seconds for the server to be ready
-- Prints the URL: `http://localhost:8080/`
-
-**Custom port:**
-
-```bash
-bash v25-server-start.sh 9090
-```
-
-### Checking Server Status
-
+**Check status:**
 ```bash
 bash v25-server-status.sh
-```
-
-Shows:
-- Running process ID (or "stale" if process died)
-- Port availability
-- HTTP response code
-
-**Wait mode** (polls until ready):
-
-```bash
 bash v25-server-status.sh --wait --timeout 60
 ```
 
-Useful in scripts that need to wait for startup.
-
-### Viewing Server Logs
-
+**View logs:**
 ```bash
-bash v25-server-logs.sh
+bash v25-server-logs.sh          # Last 50 lines
+bash v25-server-logs.sh -f       # Follow mode
+bash v25-server-logs.sh -errors  # Errors only
 ```
 
-Shows the last 50 lines of the server log. Options:
-
-| Command | Output |
-|---------|--------|
-| `bash v25-server-logs.sh` | Last 50 lines |
-| `bash v25-server-logs.sh -f` | Stream logs (follow mode, Ctrl+C to exit) |
-| `bash v25-server-logs.sh -state` | Last 50 lines (alias for default) |
-| `bash v25-server-logs.sh -errors` | Only error/exception lines (last 30) |
-
-**Quick troubleshooting:**
-
-```bash
-bash v25-server-logs.sh -errors  # Find what went wrong
-```
-
-### Stopping the Server
-
+**Stop server:**
 ```bash
 bash v25-server-stop.sh
 ```
 
-Stops the running server and removes the PID file.
-
-> **Important:** Always stop the server when done. The server runs inside a container and is not useful to the user — leaving it running wastes resources.
+**Important:** Always stop server when done — runs in container, wastes resources if left running.
 
 ---
 
 ## Running Tests
 
-ERTE tests live in the `enhanced-rich-text-editor-it/` module and run against a dedicated IT server on port 8081.
-
-### Quick Start
+ERTE tests (306 tests) in `enhanced-rich-text-editor-it/`, IT server on port 8081.
 
 ```bash
-# Build IT module
-bash v25-build-it.sh
-
-# Start IT server (port 8081)
-bash v25-it-server-start.sh
-
-# Run ERTE tests
+bash v25-build-it.sh                          # Build IT module
+bash v25-it-server-start.sh                   # Start IT server
 cd enhanced-rich-text-editor-it
-npx playwright test tests/erte/
-
-# Stop IT server when done
-bash v25-it-server-stop.sh
+npx playwright test tests/erte/               # Run tests
+bash v25-it-server-stop.sh                    # Stop IT server
 ```
 
-Current baseline: **306 ERTE tests** (+ 75 prototype tests in demo module = 381 total). See [TEST_INVENTORY.md](../../enhanced-rich-text-editor-it/tests/TEST_INVENTORY.md) for the full listing.
+Baseline: **306 ERTE tests** + 75 prototype tests = 381 total. See [TEST_INVENTORY.md](../../enhanced-rich-text-editor-it/tests/TEST_INVENTORY.md).
 
-For test architecture details, debugging tips, and advanced commands, see [CONTRIBUTING.md](CONTRIBUTING.md#testing-requirements).
+For architecture, debugging, and advanced commands, see [CONTRIBUTING.md](CONTRIBUTING.md#testing-requirements).
 
 ---
 
-## Next Steps
+---
 
-- **Contributing:** See [CONTRIBUTING.md](CONTRIBUTING.md) for code style, test architecture, and PR process
-- **Extending ERTE:** See [EXTENDING.md](EXTENDING.md) for custom blots, toolbar components, and keyboard shortcuts
-- **Reference:** [User Guide](../user/USER_GUIDE.md) for feature documentation, [API Reference](../user/API_REFERENCE.md) for the complete Java API
+**See also:** [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR process, [EXTENDING.md](EXTENDING.md) for custom blots and extensions, [User Guide](../user/USER_GUIDE.md) for features, [API Reference](../user/API_REFERENCE.md) for Java API.

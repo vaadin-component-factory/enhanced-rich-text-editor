@@ -14,7 +14,7 @@
 | Quill | 1.3.6 | 2.0.3 |
 | Parchment | 1.x | 3.x |
 | Jackson | 2.x (elemental `Json`) | 3.x (`tools.jackson`) |
-| Maven artifact | `enhanced-rich-text-editor-tables` | `enhanced-rich-text-editor-tables-v25` |
+| Maven artifact | `enhanced-rich-text-editor-tables` | `enhanced-rich-text-editor-tables` |
 | Package | `com.vaadin.componentfactory.erte.tables` | (same) |
 | License | CVALv3 | CVALv3 |
 
@@ -24,212 +24,113 @@
 
 ### 1. Jackson 3 Migration (Json → ObjectNode)
 
-**V1 used Vaadin's elemental JSON API.** V2 uses Jackson 3 from the tools namespace.
+V1 used Vaadin's elemental JSON API. V2 uses Jackson 3 from the tools namespace.
 
-**Before (V1):**
-
+**Before:**
 ```java
-// V1: Parse with Vaadin's Json
 Json parsedJson = TemplateParser.parseJson(jsonString);
-tables.setTemplates(parsedJson);
-
-// V1: Read/write with Json API
 Json tableNode = templates.getObject("myTemplate");
 String name = tableNode.getString("name");
 ```
 
-**After (V2):**
-
+**After:**
 ```java
-// V2: Parse with Jackson ObjectNode
 ObjectNode templates = TemplateParser.parseJson(jsonString);
-tables.setTemplates(templates);
-
-// V2: Read/write with Jackson API
 JsonNode tableNode = templates.get("myTemplate");
 String name = tableNode.get("name").asText();
 ```
 
-**What changed:**
-- `Json` → `ObjectNode` (from `tools.jackson.databind.node`)
-- `TemplateParser.parseJson()` now returns `ObjectNode` instead of `Json`
-- All Jackson methods are in the `tools.jackson` namespace (not `com.fasterxml.jackson`)
+Changes: `Json` → `ObjectNode`, `getObject()` → `get()`, `getString()` → `get().asText()`. Import from `tools.jackson.databind`.
 
-### 2. I18n Field Names (TextFields in V25 Use Labels, Not Placeholders)
+### 2. I18n Field Names (Labels Not Placeholders)
 
-Vaadin 25's `TextField` uses labels instead of placeholders for form hints.
+Vaadin 25's `TextField` uses labels, not placeholders.
 
-**Before (V1):**
-
+**Before:**
 ```java
 i18n.setInsertTableRowsFieldPlaceholder("Number of rows");
-i18n.setInsertTableColumnsFieldPlaceholder("Number of columns");
 ```
 
-**After (V2):**
-
+**After:**
 ```java
 i18n.setInsertTableRowsFieldLabel("Rows");
-i18n.setInsertTableColumnsFieldLabel("Columns");
 ```
 
-**What changed:**
-- Method names changed from `setInsertTableRowsFieldPlaceholder` → `setInsertTableRowsFieldLabel`
-- Field labels now appear above the input (Vaadin 25 behavior), not as placeholder text inside
+Change: `*FieldPlaceholder` → `*FieldLabel`.
 
-### 3. Color Validation (Invalid Colors Now Throw Exceptions)
+### 3. Color Validation (Invalid Colors Throw Exceptions)
 
-**V1 silently accepted invalid colors.** V2 validates and throws exceptions.
+V1 silently accepted invalid colors. V2 validates strictly.
 
-**Before (V1):**
-
+**Before:**
 ```java
-// V1: invalid color was silently accepted
-tables.setTableHoverColor("not-a-color");
+tables.setTableHoverColor("not-a-color"); // silently accepted
 ```
 
-**After (V2):**
-
+**After:**
 ```java
-// V2: invalid color throws IllegalArgumentException
-try {
-    tables.setTableHoverColor("not-a-color"); // throws!
-} catch (IllegalArgumentException e) {
-    log.error("Invalid color: {}", e.getMessage());
-}
-
-// Valid formats:
-tables.setTableHoverColor("#2196f3"); // hex
-tables.setTableHoverColor("blue"); // named
-tables.setTableHoverColor("rgb(33, 150, 243)"); // rgb/rgba
-tables.setTableHoverColor("var(--my-color)"); // CSS variables
+tables.setTableHoverColor("not-a-color"); // throws IllegalArgumentException
+tables.setTableHoverColor("#2196f3"); // hex OK
+tables.setTableHoverColor("blue"); // named OK
+tables.setTableHoverColor("rgb(33, 150, 243)"); // rgb OK
+tables.setTableHoverColor("var(--my-color)"); // CSS variables OK
 ```
 
-**Accepted color formats:** hex (`#fff`, `#ffffff`), named colors (`red`, `blue`), `rgb()`/`rgba()`, `hsl()`/`hsla()`, CSS variables `var(--name)`.
+Add try-catch or validate inputs before setting.
 
-### 4. Template ID Validation (Now Enforced)
+### 4. Template ID Validation (Strict CSS Class Names)
 
-**V1 accepted any string as template ID.** V2 validates IDs as CSS class names.
+V1 accepted any string. V2 requires valid CSS class names: start with letter, use only letters/numbers/hyphens.
 
-**Before (V1):**
-
+**Before:**
 ```java
-// V1: accepted any string
 tables.insertTableAtCurrentPosition(3, 3, "my-template@123"); // OK
 ```
 
-**After (V2):**
-
+**After:**
 ```java
-// V2: only [A-Za-z][A-Za-z0-9\-]* allowed
 tables.insertTableAtCurrentPosition(3, 3, "my-template@123"); // throws!
 tables.insertTableAtCurrentPosition(3, 3, "my-template-123"); // OK
 ```
 
-**Valid template IDs:** must start with a letter, contain only letters, numbers, and hyphens. Examples: `blue`, `header-row-1`, `myTemplate2`.
+Update stored template JSON and hardcoded IDs to match pattern.
 
 ---
 
 ## Migration Steps
 
-### Step 1: Update Dependencies
-
-Change your `pom.xml`:
-
+**1. Update pom.xml**
 ```xml
-<!-- Remove V1 -->
-<!-- <dependency>
-    <groupId>org.vaadin.addons.componentfactory</groupId>
-    <artifactId>enhanced-rich-text-editor-tables</artifactId>
-    <version>5.x</version>
-</dependency> -->
-
-<!-- Add V2 -->
 <dependency>
     <groupId>com.vaadin.componentfactory</groupId>
-    <artifactId>enhanced-rich-text-editor-tables-v25</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <artifactId>enhanced-rich-text-editor-tables</artifactId>
+    <version>2.0.0</version>
 </dependency>
 ```
+Also upgrade to Vaadin 25.0.x and ERTE 6.0.0.
 
-Also ensure you're on Vaadin 25.0.x and ERTE V25 6.0.0-SNAPSHOT.
-
-### Step 2: Update Template Parsing
-
-Search for all calls to `TemplateParser.parseJson()`:
-
-**Before:**
-
+**2. Update template parsing**
 ```java
-Json templates = TemplateParser.parseJson(jsonString);
+// Change all calls
+ObjectNode templates = TemplateParser.parseJson(jsonString); // was: Json
+// Add import: tools.jackson.databind.node.ObjectNode
 ```
 
-**After:**
-
+**3. Update template JSON access**
 ```java
-ObjectNode templates = TemplateParser.parseJson(jsonString);
+// Change from Json API to Jackson
+JsonNode template = templates.get("myTemplate"); // was: getObject()
+String name = template.get("name").asText(); // was: getString()
 ```
 
-Add the import:
-
+**4. Update i18n method names**
 ```java
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.node.ObjectNode;
+// Change all setters from *FieldPlaceholder to *FieldLabel
+i18n.setInsertTableRowsFieldLabel("Rows"); // was: setInsertTableRowsFieldPlaceholder
 ```
 
-### Step 3: Update Template JSON References
-
-If your code reads/writes template JSON, update to Jackson API:
-
-**Before:**
-
+**5. Add color validation**
 ```java
-Json template = templates.getObject("myTemplate");
-String name = template.getString("name");
-template.put("name", "New Name");
-```
-
-**After:**
-
-```java
-JsonNode template = templates.get("myTemplate");
-String name = template.get("name").asText();
-((ObjectNode) template).put("name", "New Name");
-```
-
-### Step 4: Update I18n Labels
-
-Find all `TablesI18n` setters with "Placeholder" in the name:
-
-**Before:**
-
-```java
-i18n.setInsertTableRowsFieldPlaceholder("Rows");
-i18n.setInsertTableColumnsFieldPlaceholder("Columns");
-```
-
-**After:**
-
-```java
-i18n.setInsertTableRowsFieldLabel("Rows");
-i18n.setInsertTableColumnsFieldLabel("Columns");
-```
-
-### Step 5: Add Color Validation
-
-If your code sets colors programmatically, add try-catch:
-
-**Before:**
-
-```java
-String userColor = getUserInput(); // might be invalid
-tables.setTableHoverColor(userColor);
-```
-
-**After:**
-
-```java
-String userColor = getUserInput();
 try {
     tables.setTableHoverColor(userColor);
 } catch (IllegalArgumentException e) {
@@ -237,111 +138,48 @@ try {
 }
 ```
 
-Or validate before setting:
-
+**6. Rename template IDs**
+Search for hardcoded IDs. Must match pattern `[A-Za-z][A-Za-z0-9\-]*`:
 ```java
-if (TemplateJsonConstants.isValidColor(userColor)) {
-    tables.setTableHoverColor(userColor);
-} else {
-    showErrorDialog("Invalid color format");
-}
+tables.insertTableAtCurrentPosition(3, 3, "template-v1"); // was: "template@v1"
 ```
+Also update stored JSON template keys.
 
-### Step 6: Update Template IDs
-
-Search your code for hardcoded template IDs. Rename any that don't match the pattern `[A-Za-z][A-Za-z0-9\-]*`:
-
-**Before:**
-
-```java
-tables.insertTableAtCurrentPosition(3, 3, "template@v1");
-tables.insertTableAtCurrentPosition(3, 3, "default.template");
+**7. Test**
+```bash
+mvn clean install -DskipTests
+mvn -pl enhanced-rich-text-editor-demo spring-boot:run
+cd enhanced-rich-text-editor-it && npx playwright test tests/erte/tables.spec.ts
 ```
-
-**After:**
-
-```java
-tables.insertTableAtCurrentPosition(3, 3, "template-v1");
-tables.insertTableAtCurrentPosition(3, 3, "default-template");
-```
-
-Also update any stored template JSON:
-
-```json
-{
-  "template@v1": { ... }
-}
-```
-
-to:
-
-```json
-{
-  "template-v1": { ... }
-}
-```
-
-### Step 7: Test and Validate
-
-1. **Build:** `mvn clean install -DskipTests`
-2. **Start server:** `bash v25-server-start.sh`
-3. **Run tests:** `cd enhanced-rich-text-editor-demo && npx playwright test tests/erte/tables.spec.ts`
-4. **Visual check:** Navigate to `/erte-test/tables` in the demo and verify:
-   - Tables can be inserted
-   - Rows/columns can be added/removed
-   - Cell selection works
-   - Templates load and apply correctly
-5. **Integration test:** Load your stored templates and verify they display correctly
+Verify tables insert, modify, and apply templates correctly.
 
 ---
 
 ## New Features in V2
 
-You don't have to use them, but they may be useful:
-
-### 1. CSS Custom Properties (11 total)
-
-V2 provides CSS variables for table styling:
-
-```css
-vcf-enhanced-rich-text-editor {
-  --vaadin-erte-table-border-color: #e0e0e0;
-  --vaadin-erte-table-cell-padding: 8px 12px;
-  --vaadin-erte-table-cell-min-height: 2em;
-  --vaadin-erte-table-cell-selected-background: var(--lumo-primary-color-10pct);
-  /* ... etc. See TABLES_GUIDE.md Section 6 ... */
-}
-```
+### 1. CSS Custom Properties
+11 variables for table styling (see TABLES_GUIDE.md Section 6).
 
 ### 2. Programmatic Hover/Focus Colors
-
-V2 makes it easy to set these at runtime without CSS:
-
 ```java
 tables.setTableHoverColor("var(--lumo-primary-color)");
 tables.setTableCellHoverColor("var(--lumo-primary-color-10pct)");
 ```
 
-### 3. Delta Template ID Scanning
-
-Find which templates are actually in use:
-
+### 3. Template ID Scanning
+Find which templates are in use:
 ```java
 Set<String> used = EnhancedRichTextEditorTables.getAssignedTemplateIds(delta);
 ```
 
 ### 4. Custom Styles Injection
-
-Inject CSS before or after auto-generated template CSS:
-
 ```java
 tables.setCustomStyles("table { margin: 1em 0; }", true); // before
 tables.setCustomStyles("table td { font-size: 14px; }", false); // after
 ```
 
-### 5. Keyboard Navigation Improvements
-
-V2's Quill 2 integration provides better arrow key and Tab navigation between cells.
+### 5. Keyboard Navigation
+Quill 2 provides better arrow key and Tab navigation between cells.
 
 ---
 
@@ -394,6 +232,6 @@ Before deploying V2 to production:
 ## Getting Help
 
 - **Detailed API:** See [TABLES_GUIDE.md](./TABLES_GUIDE.md)
-- **Architecture:** See [/workspace/docs/dev/ARCHITECTURE.md](/workspace/docs/dev/ARCHITECTURE.md)
+- **Architecture:** See [ARCHITECTURE.md](/workspace/docs/dev/ARCHITECTURE.md)
 - **Issues:** Open an issue on the ERTE GitHub repo
 

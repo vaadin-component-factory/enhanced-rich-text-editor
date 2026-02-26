@@ -10,13 +10,13 @@
 
 ### What You Get
 
-The Tables extension adds three toolbar buttons that let end users:
+Three toolbar buttons:
 
-- **Add Table** — Insert a new table (specify rows and columns)
-- **Modify Table** — Append/remove rows or columns, merge/split cells, remove the table
-- **Style Templates** — Apply named, reusable table styling rules (colors, borders, dimensions, etc.)
+- **Add Table** — Insert new table (rows & columns)
+- **Modify Table** — Add/remove rows/columns, merge/split cells, delete table
+- **Style Templates** — Apply named styling rules (colors, borders, dimensions)
 
-The extension also fires events when tables are selected, cells are changed, or templates are modified — so your app can react to table operations.
+Plus events when tables/cells are modified or templates change, so your app can react.
 
 ### Installation
 
@@ -25,27 +25,22 @@ Add this to your `pom.xml`:
 ```xml
 <dependency>
     <groupId>com.vaadin.componentfactory</groupId>
-    <artifactId>enhanced-rich-text-editor-tables-v25</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <artifactId>enhanced-rich-text-editor-tables</artifactId>
+    <version>2.0.0</version>
 </dependency>
 ```
 
-**Requirements:** Java 21+, Vaadin 25.0.x, `enhanced-rich-text-editor-v25` 6.0.0-SNAPSHOT
+**Requirements:** Java 21+, Vaadin 25.0.x, `enhanced-rich-text-editor` 6.0.0
 
 ### Quickstart
 
-Enable tables on an ERTE instance in three lines:
-
 ```java
 EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
-
-// Enable tables with default i18n
 EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte);
-
 add(rte);
 ```
 
-The three toolbar buttons appear automatically. Users can now insert and modify tables. Done.
+The three buttons appear automatically in the toolbar.
 
 ---
 
@@ -53,29 +48,11 @@ The three toolbar buttons appear automatically. Users can now insert and modify 
 
 ### The Three Buttons
 
-**Add Table** — Appears as a table icon with a plus sign. When clicked, opens a popover with two `IntegerField` inputs:
+**Add Table** — Opens a popover with Rows/Columns inputs (default: 3×3, range: 1–20). Click the plus button to insert at cursor. Disabled inside tables (no nesting).
 
-- **Rows** — number of rows (default: 3, min: 1, max: 20)
-- **Columns** — number of columns (default: 3, min: 1, max: 20)
+**Modify Table** — Enabled when a table is selected. Menu items: append/remove rows, append/remove columns, merge cells (multi-select only), split cell, remove table.
 
-After entering values, click the **Add** button (the plus icon) to insert the table at the current cursor position. The popover closes automatically. Disabled when the cursor is already inside a table (you can't nest tables).
-
-**Modify Table** — Appears as a table icon with tools/wrench icon. Enabled only when a table is selected. Opens a dropdown menu with:
-
-- Append row above / below (2 items)
-- Remove row (1 item)
-- Separator
-- Append column before / after (2 items)
-- Remove column (1 item)
-- Separator
-- Merge selected cells (enabled only during multi-cell selection)
-- Split cell (1 item)
-- Separator
-- Remove table (1 item)
-
-All operations work on the currently selected table.
-
-**Style Templates** — Appears as a table icon with eye icon. Opens a dialog for managing table styling templates. Disabled when no table is selected. See the **Style Templates** section below for details.
+**Style Templates** — Opens a dialog for template management (see below). Disabled when no table selected.
 
 ### Toggling and Customizing
 
@@ -100,38 +77,28 @@ modifyMenu.getMenuItems(); // list of all menu items
 
 ### Inserting Tables
 
-The easiest way is through the UI — click **Add Table** and fill in the dimensions. Programmatically, you can insert a table at the current cursor position:
+Through the UI: click **Add Table** and enter dimensions.
+
+Programmatically:
 
 ```java
-// Insert a 4×3 table (4 rows, 3 columns)
-tables.insertTableAtCurrentPosition(4, 3);
-
-// Insert a table and apply a style template
-tables.insertTableAtCurrentPosition(4, 3, "myTemplate");
+tables.insertTableAtCurrentPosition(4, 3); // 4 rows, 3 columns
+tables.insertTableAtCurrentPosition(4, 3, "myTemplate"); // with template
 ```
 
-The template ID must be a valid CSS class name (letters, numbers, hyphens only) and must exist in your templates. If the template doesn't exist, the table is still inserted but without styling.
+Template ID must be a valid CSS class name. If it doesn't exist, the table inserts without styling.
 
 ### Modifying Tables
 
-All modifications happen through the **Modify Table** menu. Programmatically, you can't directly modify a specific table — instead, operations work on the currently selected table (the one your cursor is in or on). This mirrors how users interact with the UI.
-
-The toolbar buttons handle row/column changes automatically:
-
-```java
-// User clicks "Append row above" → the template dialog's row index updates
-// User clicks "Merge cells" → the template dialog updates to show merged cell
-```
+Use the **Modify Table** menu. Operations work on the currently selected table (where cursor is). The UI updates automatically when you add/remove rows/columns or merge cells.
 
 ### Cell Selection
 
-To select multiple cells for merging, hold **Ctrl** and click individual cells, or **Ctrl+drag** to select a range. Selected cells get the `ql-cell-selected` CSS class (a light background by default). The **Merge selected cells** menu item is enabled only when you have multiple cells selected.
-
-Clicking a cell without Ctrl clears the selection and places the cursor in that cell.
+**Ctrl+click** individual cells or **Ctrl+drag** for a range. Selected cells get `ql-cell-selected` class (light background). **Merge cells** menu item only enables with multiple cells selected. Click without Ctrl to clear selection.
 
 ### Removing Tables
 
-Click **Modify Table** → **Remove table**. This deletes the entire table from the editor. Cannot be undone by the Templates dialog.
+Click **Modify Table** → **Remove table**.
 
 ---
 
@@ -139,25 +106,21 @@ Click **Modify Table** → **Remove table**. This deletes the entire table from 
 
 ### What Are Templates?
 
-Templates are named collections of styling rules for tables. Each rule targets table-level properties (background, borders), specific rows (header, footer, even, odd, or by number), specific columns (by number), or specific cells (by x/y coordinates). You define templates once, then apply them to tables.
+Named collections of styling rules. Target table-level properties, specific rows (header, footer, even, odd, or numbered), columns (numbered), or cells (x/y coordinates). Define once, apply to multiple tables.
 
 ### How to Use Templates
 
-**Load templates from JSON:**
-
+**Load from JSON:**
 ```java
-String templateJson = loadFromDatabase(); // your storage
-ObjectNode templates = TemplateParser.parseJson(templateJson);
+ObjectNode templates = TemplateParser.parseJson(jsonString);
 tables.setTemplates(templates);
 ```
 
-**Apply a template to a table:** When a table is selected, click **Style Templates** and choose a template from the **Current Template** dropdown. The template is applied immediately.
+**Apply via UI:** Select a table, click **Style Templates**, choose template from dropdown.
 
-**Programmatically apply a template:**
-
+**Programmatic application:**
 ```java
-// Set a template for the currently selected table
-tables.setTemplateIdForCurrentTable("myTemplate");
+tables.setTemplateIdForCurrentTable("myTemplate"); // for selected table
 ```
 
 ### Template JSON Structure
@@ -320,130 +283,66 @@ The CSS is injected into the editor's shadow DOM, so it only affects table styli
 
 ## 5. Events
 
-The Tables extension fires 8 event types. All are registered on the `EnhancedRichTextEditorTables` instance.
+8 event types fire on table and template changes. Register on the `EnhancedRichTextEditorTables` instance.
 
 ### Table Selection Events
 
-**TableSelectedEvent** — fired when the cursor enters or leaves a table.
+**TableSelectedEvent** — cursor enters/leaves a table
 
 ```java
 tables.addTableSelectedListener(e -> {
-    if (e.isSelected()) {
-        log.info("Table selected: {}", e.getTemplate());
-    } else {
-        log.info("Table deselected");
-    }
-
-    // Cell selection also matters
-    if (e.isCellSelectionActive()) {
-        log.info("Multiple cells are selected");
-    }
+    if (e.isSelected()) log.info("Table selected: {}", e.getTemplate());
+    if (e.isCellSelectionActive()) log.info("Multiple cells selected");
 });
 ```
+- `isSelected()` — table now selected
+- `isCellSelectionActive()` — multiple cells selected
+- `getTemplate()` — template ID (or null)
 
-Properties:
-- `isSelected()` — true if a table is now selected
-- `isCellSelectionActive()` — true if multiple cells are selected (merge is possible)
-- `getTemplate()` — template ID of the selected table (null if no template)
-
-**TableCellChangedEvent** — fired when the cursor moves to a different cell within a table.
+**TableCellChangedEvent** — cursor moves to different cell
 
 ```java
 tables.addTableCellChangedListener(e -> {
-    Integer row = e.getRowIndex();
-    Integer col = e.getColIndex();
-
-    if (row != null) {
-        log.info("Moved to row {}, col {}", row, col);
-    }
+    if (e.getRowIndex() != null) log.info("Row: {}, Col: {}", e.getRowIndex(), e.getColIndex());
 });
 ```
-
-Properties:
-- `getRowIndex()` — 0-based row index (or null if deselected)
-- `getColIndex()` — 0-based column index (or null if deselected)
-- `getOldRowIndex()` — previous row index (or null)
-- `getOldColIndex()` — previous column index (or null)
 
 ### Template Events
 
-All template events extend `TemplateModificationEvent` and fire when templates are modified (either by the user or by your code).
+All extend `TemplateModificationEvent`. Fire on user interaction or code:
 
-**TemplatesInitializedEvent** — fired after `setTemplates()` is called.
-
+**TemplatesInitializedEvent**
 ```java
 tables.addTemplatesInitializedListener(e -> {
-    ObjectNode templates = e.getTemplates();
-    String css = e.getCssString();
-    log.info("Templates loaded: {} templates, CSS: {} bytes",
-        templates.size(), css.length());
+    log.info("Loaded {} templates", e.getTemplates().size());
 });
 ```
 
-**TemplateCreatedEvent** — new template created (user clicked Create button).
+**TemplateCreatedEvent** — user clicked Create
+
+**TemplateCopiedEvent** — user clicked Copy
+
+**TemplateUpdatedEvent** — name or rule changed
+
+**TemplateDeletedEvent** — user confirmed deletion
+
+**TemplateSelectedEvent** — active template changed for table
+
+All provide `getTemplateId()`. Common pattern:
 
 ```java
-tables.addTemplateCreatedListener(e -> {
-    String templateId = e.getTemplateId();
-    saveTemplatesToDatabase(tables.getTemplates()); // persist
-});
+tables.addTemplateCreatedListener(e -> saveTemplatesToDatabase(tables.getTemplates()));
+tables.addTemplateUpdatedListener(e -> saveTemplatesToDatabase(tables.getTemplates()));
+tables.addTemplateDeletedListener(e -> saveTemplatesToDatabase(tables.getTemplates()));
 ```
 
-**TemplateCopiedEvent** — template copied (user clicked Copy button).
+### Event Registration
 
-```java
-tables.addTemplateCopiedListener(e -> {
-    String newTemplateId = e.getTemplateId();
-    String copiedFrom = e.getCopiedTemplateId().orElse(null);
-    log.info("Copied {} to {}", copiedFrom, newTemplateId);
-    saveTemplatesToDatabase(tables.getTemplates());
-});
-```
-
-**TemplateUpdatedEvent** — template modified (name change, rule change).
-
-```java
-tables.addTemplateUpdatedListener(e -> {
-    String templateId = e.getTemplateId();
-    log.info("Template updated: {}", templateId);
-    saveTemplatesToDatabase(tables.getTemplates());
-});
-```
-
-**TemplateDeletedEvent** — template deleted (user confirmed deletion).
-
-```java
-tables.addTemplateDeletedListener(e -> {
-    String deletedId = e.getTemplateId();
-    log.info("Template deleted: {}", deletedId);
-    saveTemplatesToDatabase(tables.getTemplates());
-});
-```
-
-**TemplateSelectedEvent** — active template changed for the current table.
-
-```java
-tables.addTemplateSelectedListener(e -> {
-    String templateId = e.getTemplateId(); // null if no template
-    log.info("Table template changed to: {}", templateId);
-});
-```
-
-### Event Base Class
-
-All events inherit from `EnhancedRichTextEditorTablesComponentEvent`, which extends `ComponentEvent<EnhancedRichTextEditor>`. They fire on the underlying ERTE component, but you register listeners on the `EnhancedRichTextEditorTables` instance for convenience. Every `add*Listener()` method returns a `Registration` you can use to unregister later:
+Every `add*Listener()` returns a `Registration` to unregister:
 
 ```java
 Registration reg = tables.addTableSelectedListener(e -> { /* ... */ });
-// Later, when no longer needed:
 reg.remove();
-```
-
-```java
-// Get the underlying ERTE component from any event
-tables.addTemplateUpdatedListener(e -> {
-    EnhancedRichTextEditor rte = e.getTableExtension().getRte();
-});
 ```
 
 ---
@@ -452,12 +351,11 @@ tables.addTemplateUpdatedListener(e -> {
 
 ### CSS Custom Properties
 
-Tables support 11 CSS custom properties for fine-grained styling. Set them on the ERTE component to control appearance.
-
-**Cell borders and padding (7 properties):**
+11 CSS custom properties for styling. Set on the ERTE component:
 
 ```css
 vcf-enhanced-rich-text-editor {
+  /* Borders & Padding */
   --vaadin-erte-table-border-color: #e0e0e0;
   --vaadin-erte-table-border-width: 1px;
   --vaadin-erte-table-border-style: solid;
@@ -465,134 +363,78 @@ vcf-enhanced-rich-text-editor {
   --vaadin-erte-table-cell-min-height: 1.625em;
   --vaadin-erte-table-cell-background: transparent;
   --vaadin-erte-table-cell-vertical-align: top;
-}
-```
 
-**Cell selection and focus states (4 properties):**
-
-```css
-vcf-enhanced-rich-text-editor {
+  /* Selection & Focus */
   --vaadin-erte-table-cell-selected-background: var(--lumo-primary-color-10pct);
   --vaadin-erte-table-cell-hover-background: transparent;
   --vaadin-erte-table-cell-focus-color: var(--vaadin-focus-ring-color);
-  --vaadin-erte-table-cell-focus-width: var(--vaadin-focus-ring-width, 2px);
-}
-```
-
-**In your application CSS:**
-
-```css
-.my-editor {
-  --vaadin-erte-table-border-color: #2196f3;
-  --vaadin-erte-table-cell-padding: 8px 12px;
+  --vaadin-erte-table-cell-focus-width: 2px;
 }
 ```
 
 ### Programmatic Color Control
 
-Set table and cell hover/focus colors at runtime:
+Set hover/focus colors at runtime:
 
 ```java
-// Table border on hover (dashed outline around the table)
-tables.setTableHoverColor("var(--lumo-primary-color)");
-
-// Cell background on hover
-tables.setTableCellHoverColor("var(--lumo-primary-color-10pct)");
-
-// Table border on focus (when a cell is focused)
-tables.setTableFocusColor("var(--lumo-warning-color)");
-
-// Cell background on focus
-tables.setTableCellFocusColor("var(--lumo-warning-color-10pct)");
-
-// Disable a feature by passing null
-tables.setTableHoverColor(null);
+tables.setTableHoverColor("var(--lumo-primary-color)"); // table border
+tables.setTableCellHoverColor("var(--lumo-primary-color-10pct)"); // cell bg
+tables.setTableFocusColor("var(--lumo-warning-color)"); // table border
+tables.setTableCellFocusColor("var(--lumo-warning-color-10pct)"); // cell bg
+tables.setTableHoverColor(null); // disable
 ```
 
-Pass a CSS color value. Invalid colors throw `IllegalArgumentException`. Accepted formats: hex (`#fff`, `#ffffff`), named colors (`red`, `blue`), `rgb()`/`rgba()`, `hsl()`/`hsla()`, and CSS variables (`var(--my-color)`).
+Accepted formats: hex, named colors, `rgb()`/`rgba()`, `hsl()`/`hsla()`, CSS variables. Invalid colors throw `IllegalArgumentException`.
 
-### CSS Classes for Custom Styling
+### Custom Styling
 
-The currently focused cell gets the `focused-cell` CSS class. Use it to style:
-
+Focused cell gets `focused-cell` class:
 ```css
 vcf-enhanced-rich-text-editor::part(editor) table td.focused-cell {
   outline: 2px solid red;
 }
 ```
 
-Selected cells (during multi-select) get the `ql-cell-selected` class.
-
-### Accessibility
-
-The extension includes forced-colors media query support, so table selection and focus states remain visible in Windows High Contrast Mode.
+Selected cells (multi-select) get `ql-cell-selected` class. High contrast mode supported.
 
 ---
 
 ## 7. Internationalization (i18n)
 
-All toolbar labels and dialog text can be customized for any language.
-
-### Toolbar Labels
-
-Use `TablesI18n` to customize toolbar button tooltips and menu item labels:
+Customize all toolbar labels and dialog text:
 
 ```java
 TablesI18n i18n = new TablesI18n();
 i18n.setInsertTableToolbarSwitchTooltip("Tabelle einfügen");
 i18n.setInsertTableRowsFieldLabel("Zeilen");
 i18n.setInsertTableColumnsFieldLabel("Spalten");
-i18n.setModifyTableToolbarSwitchTooltip("Tabelle ändern");
-i18n.setModifyTableAppendRowAboveItemLabel("Zeile oben einfügen");
-// ... set all other labels ...
+// ... more setters ...
 
-EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte, i18n);
-```
-
-All setters follow the pattern `set[Component][Property](String)`. Setter names are self-explanatory; use your IDE's autocomplete to discover them.
-
-### Template Dialog Labels
-
-Customize the template dialog through the nested `TemplatesI18n` class:
-
-```java
-TablesI18n i18n = new TablesI18n();
+// Template dialog
 TablesI18n.TemplatesI18n templatesI18n = i18n.getTemplatesI18n();
 templatesI18n.setDialogTitle("Tabellenvorlagen");
 templatesI18n.setCurrentTemplateSelectFieldLabel("Aktuelle Vorlage");
-templatesI18n.setCreateNewTemplateButtonTooltip("Neue Vorlage erstellen");
-templatesI18n.setCurrentRowSectionTitle("Aktuelle Zeile");
-templatesI18n.setCurrentColumnSectionTitle("Aktuelle Spalte");
-// ... etc. ...
+// ... more setters ...
 
 EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte, i18n);
 ```
 
-### Default Behavior
-
-If no i18n is provided, all labels default to English. You can pass `null` to any setter to use the default.
+Setter names follow the pattern `set[Component][Property](String)`. Use IDE autocomplete to discover them. Default: English. Pass `null` to any setter to use default.
 
 ---
 
 ## 8. Customizing the Toolbar
 
-Access toolbar components to hide, disable, or modify them:
+Access and modify toolbar components:
 
 ```java
-// Hide/show buttons
 tables.getAddTableToolbarButton().setVisible(false);
 tables.getModifyTableToolbarButton().setEnabled(false);
-tables.getStyleTemplatesDialogToolbarButton().setEnabled(true);
 
-// Access UI elements
 ToolbarPopover addPopover = tables.getAddTablePopup();
-ToolbarSelectPopup modifyMenu = tables.getModifyTableSelectPopup();
+addPopover.setAutofocus(false);
+
 TemplateDialog templateDialog = tables.getStyleTemplatesDialog();
-
-// Customize popover behavior
-addPopover.setAutofocus(false); // don't focus first field
-
-// Customize dialog
 templateDialog.setWidth("30rem");
 templateDialog.setHeight("50vh");
 ```
@@ -601,12 +443,12 @@ templateDialog.setHeight("50vh");
 
 | Method | Returns |
 |--------|---------|
-| `getAddTableToolbarButton()` | `ToolbarSwitch` for Add Table button |
-| `getAddTablePopup()` | `ToolbarPopover` for rows/cols input |
-| `getModifyTableToolbarButton()` | `ToolbarSwitch` for Modify Table button |
-| `getModifyTableSelectPopup()` | `ToolbarSelectPopup` for row/col/cell menu |
-| `getStyleTemplatesDialogToolbarButton()` | `ToolbarSwitch` for Templates button |
-| `getStyleTemplatesDialog()` | `TemplateDialog` for template management |
+| `getAddTableToolbarButton()` | `ToolbarSwitch` for Add Table |
+| `getAddTablePopup()` | `ToolbarPopover` for rows/cols |
+| `getModifyTableToolbarButton()` | `ToolbarSwitch` for Modify Table |
+| `getModifyTableSelectPopup()` | `ToolbarSelectPopup` for menu |
+| `getStyleTemplatesDialogToolbarButton()` | `ToolbarSwitch` for Templates |
+| `getStyleTemplatesDialog()` | `TemplateDialog` for management |
 
 ---
 
@@ -786,20 +628,14 @@ Access via `table.getStyleTemplatesDialog().getDefaults()`:
 ### Save Templates to Database
 
 ```java
-tables.addTemplateUpdatedListener(e -> {
-    ObjectNode templates = tables.getTemplates();
-    String json = templates.toString();
-    database.save("table_templates", json);
-});
-
-// Also listen to create/copy/delete events
+// Listen to all template changes
 tables.addTemplateCreatedListener(e -> saveTemplates());
+tables.addTemplateUpdatedListener(e -> saveTemplates());
 tables.addTemplateCopiedListener(e -> saveTemplates());
 tables.addTemplateDeletedListener(e -> saveTemplates());
 
 private void saveTemplates() {
-    ObjectNode templates = tables.getTemplates();
-    database.save("table_templates", templates.toString());
+    database.save("table_templates", tables.getTemplates().toString());
 }
 ```
 
@@ -807,61 +643,19 @@ private void saveTemplates() {
 
 ```java
 tables.addTemplateDeletedListener(e -> {
-    String templateId = e.getTemplateId();
-    String delta = editor.asDelta().getValue();
-
-    if (EnhancedRichTextEditorTables.getAssignedTemplateIds(delta).contains(templateId)) {
-        log.warn("Warning: deleted template {} is still in use in tables", templateId);
+    if (EnhancedRichTextEditorTables.getAssignedTemplateIds(
+            editor.asDelta().getValue()).contains(e.getTemplateId())) {
+        log.warn("Template {} still in use", e.getTemplateId());
     }
 });
 ```
 
-### Change Table Appearance Dynamically
+### Dynamic Table Styling
 
 ```java
-// Apply hover effects
 tables.setTableHoverColor("var(--lumo-primary-color-50pct)");
 tables.setTableCellHoverColor("var(--lumo-primary-color-10pct)");
-
-// Apply focus effects
 tables.setTableFocusColor("var(--lumo-warning-color)");
-tables.setTableCellFocusColor("var(--lumo-warning-color-10pct)");
-
-// Add global margins
-tables.setCustomStyles("table { margin: 1em 0; }", true);
-```
-
-### Full i18n Setup (German Example)
-
-```java
-TablesI18n i18n = new TablesI18n();
-
-// Toolbar
-i18n.setInsertTableToolbarSwitchTooltip("Tabelle einfügen");
-i18n.setInsertTableRowsFieldLabel("Zeilen");
-i18n.setInsertTableColumnsFieldLabel("Spalten");
-i18n.setInsertTableAddButtonTooltip("Tabelle hinzufügen");
-i18n.setModifyTableToolbarSwitchTooltip("Tabelle ändern");
-i18n.setModifyTableAppendRowAboveItemLabel("Zeile oben einfügen");
-i18n.setModifyTableAppendRowBelowItemLabel("Zeile unten einfügen");
-i18n.setModifyTableRemoveRowItemLabel("Zeile löschen");
-i18n.setModifyTableAppendColumnBeforeItemLabel("Spalte links einfügen");
-i18n.setModifyTableAppendColumnAfterItemLabel("Spalte rechts einfügen");
-i18n.setModifyTableRemoveColumnItemLabel("Spalte löschen");
-i18n.setModifyTableMergeCellsItemLabel("Zellen zusammenführen");
-i18n.setModifyTableSplitCellItemLabel("Zelle teilen");
-i18n.setModifyTableRemoveTableItemLabel("Tabelle löschen");
-i18n.setTableTemplatesToolbarSwitchTooltip("Tabellenvorlagen");
-
-// Templates dialog
-TablesI18n.TemplatesI18n templatesI18n = i18n.getTemplatesI18n();
-templatesI18n.setDialogTitle("Tabellenvorlagen");
-templatesI18n.setCurrentTemplateSelectFieldLabel("Aktuelle Vorlage");
-templatesI18n.setCreateNewTemplateButtonTooltip("Neue Vorlage erstellen");
-templatesI18n.setCurrentRowSectionTitle("Aktuelle Zeile");
-templatesI18n.setCurrentColumnSectionTitle("Aktuelle Spalte");
-// ... etc. ...
-
-EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte, i18n);
+tables.setCustomStyles("table { margin: 1em 0; }", true); // before
 ```
 
