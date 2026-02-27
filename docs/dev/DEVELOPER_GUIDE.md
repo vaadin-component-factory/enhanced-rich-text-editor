@@ -1,6 +1,6 @@
 # Developer Guide
 
-Building, testing, and developing ERTE v6.x from source. For features, see [User Guide](../../enhanced-rich-text-editor/docs/USER_GUIDE.md). For API, see [API Reference](../../enhanced-rich-text-editor/docs/API_REFERENCE.md).
+Building, testing, and developing ERTE v6.x from source. For features, see [User Guide](../BASE_USER_GUIDE.md).
 
 ---
 
@@ -118,4 +118,4 @@ For architecture, debugging, and advanced commands, see [CONTRIBUTING.md](CONTRI
 
 ---
 
-**See also:** [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR process, [EXTENDING.md](EXTENDING.md) for custom blots and extensions, [User Guide](../../enhanced-rich-text-editor/docs/USER_GUIDE.md) for features, [API Reference](../../enhanced-rich-text-editor/docs/API_REFERENCE.md) for Java API.
+**See also:** [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR process, [EXTENDING.md](EXTENDING.md) for custom blots and extensions, [User Guide](../BASE_USER_GUIDE.md) for features.

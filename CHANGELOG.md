@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Complete rewrite for Vaadin 25. ERTE 2 extends Vaadin's built-in Rich Text Editor 2
 (Quill 2, Lit, Parchment 3) instead of maintaining a standalone fork.
 
-For migration instructions, see [Upgrade Guide](enhanced-rich-text-editor/docs/UPGRADE_GUIDE.md).
+For migration instructions, see [Upgrade Guide](docs/BASE_UPGRADE_GUIDE.md).
 
 ### Added
 

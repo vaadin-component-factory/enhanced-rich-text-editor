@@ -668,7 +668,7 @@ ERTE 2 hardens: `innerHTML` replaced with `textContent`/`createElement()`, CSS p
 
 ### 9.5 Documentation
 
-For details, see the full migration guide, [USER_GUIDE.md](BASE_USER_GUIDE.md), and [API_REFERENCE.md](BASE_API_REFERENCE.md).
+For details, see the full migration guide and [USER_GUIDE.md](BASE_USER_GUIDE.md).
 
 ERTE 2 introduces 22 CSS custom properties (`--vaadin-erte-*`) for theming
 ERTE-specific visual elements. If your application customized ERTE 1 appearance

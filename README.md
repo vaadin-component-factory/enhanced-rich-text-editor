@@ -8,9 +8,8 @@ Enhanced Rich Text Editor (ERTE) for Flow is an extended version of the Vaadin R
 
 ## Documentation
 
-- [User Guide](enhanced-rich-text-editor/docs/USER_GUIDE.md) -- Features, examples, and best practices
-- [API Reference](enhanced-rich-text-editor/docs/API_REFERENCE.md) -- Complete API surface, custom properties, sanitization, keyboard shortcuts
-- [Upgrade Guide](enhanced-rich-text-editor/docs/UPGRADE_GUIDE.md) -- Migrating from ERTE 1 (v5.x, Vaadin 24) to ERTE 2 (v6.x, Vaadin 25)
+- [User Guide](docs/BASE_USER_GUIDE.md) -- Features, examples, and best practices
+- [Upgrade Guide](docs/BASE_UPGRADE_GUIDE.md) -- Migrating from ERTE 1 (v5.x, Vaadin 24) to ERTE 2 (v6.x, Vaadin 25)
 
 ## Quick Start
 
@@ -87,7 +86,7 @@ To enable table functionality, add the separate Tables Extension addon:
 EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte);
 ```
 
-See the [Tables Guide](enhanced-rich-text-editor-tables/docs/TABLES_GUIDE.md) for full documentation, and the [Tables Upgrade Guide](enhanced-rich-text-editor-tables/docs/TABLES_UPGRADE_GUIDE.md) for V1 → V2 migration.
+See the [Tables Guide](docs/TABLES_GUIDE.md) for full documentation, and the [Tables Upgrade Guide](docs/TABLES_UPGRADE_GUIDE.md) for V1 → V2 migration.
 
 ## Running the Demo
 

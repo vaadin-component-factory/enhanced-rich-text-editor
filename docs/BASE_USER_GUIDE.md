@@ -1,6 +1,6 @@
 # Enhanced Rich Text Editor -- User Guide
 
-This guide covers all ERTE v6.x features for Vaadin 25, including code examples, best practices, and troubleshooting. For the complete API surface, see [API Reference](BASE_API_REFERENCE.md). For migration from v5.x, see [Upgrade Guide](BASE_UPGRADE_GUIDE.md).
+This guide covers all ERTE v6.x features for Vaadin 25, including code examples, best practices, and troubleshooting. For migration from v5.x, see [Upgrade Guide](BASE_UPGRADE_GUIDE.md).
 
 ---
 
@@ -18,13 +18,13 @@ This guide covers all ERTE v6.x features for Vaadin 25, including code examples,
   - [2.8 Programmatic Text Insertion](#28-programmatic-text-insertion)
   - [2.9 Align Justify](#29-align-justify)
   - [2.10 Styling and Theming](#210-styling-and-theming)
+  - [2.11 Built-in Keyboard Shortcuts](#211-built-in-keyboard-shortcuts)
 - [3. Advanced Features](#3-advanced-features)
   - [3.1 Value Formats (HTML vs Delta)](#31-value-formats-html-vs-delta)
-  - [3.2 Extension Hooks](#32-extension-hooks)
-  - [3.3 Internationalization (I18n)](#33-internationalization-i18n)
-  - [3.4 Sanitization](#34-sanitization)
-- [4. Best Practices](#4-best-practices)
-- [5. Troubleshooting](#5-troubleshooting)
+  - [3.2 Internationalization (I18n)](#32-internationalization-i18n)
+  - [3.3 Sanitization](#33-sanitization)
+- [4. Known Limitations](#4-known-limitations)
+- [5. Getting Help](#5-getting-help)
 
 ---
 
@@ -162,8 +162,6 @@ editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, colorSwitch);
 
 Factory methods: `vertical(switch, components...)`, `horizontal(switch, components...)`.
 
-> See [API Reference -- ToolbarPopover](BASE_API_REFERENCE.md#7-toolbarpopover) for the complete API.
-
 #### Toolbar Select Popups
 
 `ToolbarSelectPopup` opens a context menu anchored to a `ToolbarSwitch`:
@@ -181,8 +179,6 @@ editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, insertSwitch);
 
 Uses standard Vaadin `ContextMenu` API.
 
-> See [API Reference -- ToolbarSelectPopup](BASE_API_REFERENCE.md#8-toolbarselectpopup) for the complete API.
-
 #### Toolbar Dialogs
 
 `ToolbarDialog` opens a non-modal dialog controlled by a `ToolbarSwitch` (non-modal, resizable, draggable, closes on ESC):
@@ -196,8 +192,6 @@ editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, settingsSwitch);
 
 Factory methods: `vertical(switch, components...)`, `horizontal(switch, components...)`.
 
-> See [API Reference -- ToolbarDialog](BASE_API_REFERENCE.md#9-toolbardialog) for the complete API.
-
 **Removing components:**
 
 ```java
@@ -206,7 +200,7 @@ editor.removeToolbarComponent(ToolbarSlot.START, startBtn);
 editor.removeToolbarComponent(ToolbarSlot.START, "slot-start-btn");
 ```
 
-> **Styling note:** All components added via `addToolbarComponents()` automatically receive `part="toolbar-custom-component"`. This enables consistent styling through ERTE's shadow DOM (hover, focus, active/pressed states for buttons). See [API Reference — CSS Shadow Parts](BASE_API_REFERENCE.md#13-css-shadow-parts) for styling details.
+> **Styling note:** All components added via `addToolbarComponents()` automatically receive `part="toolbar-custom-component"`. This enables consistent styling through ERTE's shadow DOM (hover, focus, active/pressed states for buttons). See [Section 2.10.2](#2102-erte-shadow-parts) for styling details.
 
 #### Toolbar Button Visibility
 
@@ -221,7 +215,7 @@ editor.setToolbarButtonsVisibility(Map.of(
 editor.setToolbarButtonsVisibility(null);
 ```
 
-When all buttons in a group are hidden, the group container auto-hides. See [API Reference — ToolbarButton](BASE_API_REFERENCE.md#4-toolbarbutton-enum) for the complete list.
+When all buttons in a group are hidden, the group container auto-hides. See Javadoc for the complete enum list.
 
 #### Custom Keyboard Shortcuts
 
@@ -500,18 +494,140 @@ Uses standard Quill justify format.
 
 ### 2.10 Styling and Theming
 
-ERTE uses Vaadin Lumo theme with 22 CSS custom properties for readonly sections, placeholders, whitespace indicators, and rulers:
+ERTE uses the Vaadin Lumo theme. It provides 22 CSS custom properties for ERTE-specific visual elements, shadow parts for toolbar targeting, and content classes for editor styling.
+
+For standard RTE 2 properties (`--vaadin-rich-text-editor-*`), see the [Vaadin RTE Styling docs](https://vaadin.com/docs/v25/components/rich-text-editor/styling).
+
+#### 2.10.1 ERTE Custom Properties
+
+Override on the host element:
 
 ```css
 vcf-enhanced-rich-text-editor {
     --vaadin-erte-readonly-background: lightyellow;
-    --vaadin-erte-readonly-border-color: orange;
     --vaadin-erte-placeholder-background: #e8f4fd;
     --vaadin-erte-ruler-height: 1.25rem;
 }
 ```
 
-See [API Reference — ERTE Custom Properties](BASE_API_REFERENCE.md#15-erte-custom-properties) for the complete list.
+**Readonly Sections (6):**
+
+| Property | Default |
+|----------|---------|
+| `--vaadin-erte-readonly-color` | `var(--vaadin-text-color-secondary)` |
+| `--vaadin-erte-readonly-background` | `var(--vaadin-background-container)` |
+| `--vaadin-erte-readonly-border-color` | `var(--vaadin-border-color-secondary)` |
+| `--vaadin-erte-readonly-border-width` | `1px` |
+| `--vaadin-erte-readonly-border-radius` | `var(--lumo-border-radius-s)` |
+| `--vaadin-erte-readonly-padding` | `calc(var(--vaadin-padding-xs) / 2)` |
+
+**Placeholders (6):**
+
+| Property | Default |
+|----------|---------|
+| `--vaadin-erte-placeholder-color` | `inherit` |
+| `--vaadin-erte-placeholder-background` | `var(--lumo-primary-color-10pct)` |
+| `--vaadin-erte-placeholder-border-color` | `transparent` |
+| `--vaadin-erte-placeholder-border-width` | `0` |
+| `--vaadin-erte-placeholder-border-radius` | `var(--lumo-border-radius-s)` |
+| `--vaadin-erte-placeholder-padding` | `calc(var(--vaadin-padding-xs) / 2)` |
+
+**Whitespace Indicators (3):**
+
+| Property | Default |
+|----------|---------|
+| `--vaadin-erte-whitespace-indicator-color` | `var(--lumo-contrast-40pct, rgba(0, 0, 0, 0.38))` |
+| `--vaadin-erte-whitespace-paragraph-indicator-color` | `var(--lumo-contrast-30pct, rgba(0, 0, 0, 0.26))` |
+| `--vaadin-erte-whitespace-indicator-spacing` | `calc(var(--vaadin-padding-xs) / 2)` |
+
+**Ruler (7):**
+
+| Property | Default |
+|----------|---------|
+| `--vaadin-erte-ruler-height` | `0.9375rem` |
+| `--vaadin-erte-ruler-border-color` | `var(--vaadin-border-color, var(--lumo-contrast-20pct))` |
+| `--vaadin-erte-ruler-background` | SVG tick image (internal) |
+| `--vaadin-erte-ruler-marker-size` | `0.9375rem` |
+| `--vaadin-erte-ruler-marker-color` | `inherit` |
+| `--vaadin-erte-ruler-vertical-width` | `0.9375rem` |
+| `--vaadin-erte-ruler-vertical-background` | Ruler tick image (base64 PNG) |
+
+#### 2.10.2 ERTE Shadow Parts
+
+ERTE adds these shadow parts on top of the standard RTE 2 parts. Standard toolbar parts (bold, italic, etc.) and groups are provided by the Vaadin RTE 2 component -- see [Vaadin RTE Styling docs](https://vaadin.com/docs/v25/components/rich-text-editor/styling).
+
+**ERTE toolbar buttons:**
+
+| Part | Element |
+|------|---------|
+| `toolbar-button-readonly` | Readonly toggle button |
+| `toolbar-button-placeholder` | Placeholder insert button |
+| `toolbar-button-placeholder-display` | Placeholder appearance toggle |
+| `toolbar-button-whitespace` | Whitespace indicators toggle |
+| `toolbar-button-align-justify` | Justify alignment button |
+
+**Custom group and slotted components:**
+
+| Part | Element |
+|------|---------|
+| `toolbar-group-custom` | Custom button group container |
+| `toolbar-custom-component` | All components added via `addToolbarComponents()` |
+
+Slotted component state selectors:
+
+| State | Selector |
+|-------|----------|
+| Default | `::slotted([part~='toolbar-custom-component'])` |
+| Hover | `::slotted(button[part~='toolbar-custom-component']:not([on]):hover)` |
+| Focus | `::slotted(button[part~='toolbar-custom-component']:focus-visible)` |
+| Pressed | `::slotted([part~='toolbar-custom-component'][on])` |
+| Disabled | `::slotted([part~='toolbar-custom-component'][disabled])` |
+
+**Ruler parts:**
+
+| Part | Purpose |
+|------|---------|
+| `ruler-wrapper` | Wrapper for the entire ruler system |
+| `ruler-corner` | Corner element (intersection of rulers) |
+| `horizontalRuler` | Horizontal ruler bar |
+| `verticalRuler` | Vertical ruler bar |
+| `content-wrapper` | Wrapper around editor content |
+
+```css
+vcf-enhanced-rich-text-editor::part(toolbar-button-readonly) {
+    color: red;
+}
+vcf-enhanced-rich-text-editor::part(horizontalRuler) {
+    background-color: var(--lumo-contrast-10pct);
+}
+```
+
+#### 2.10.3 Content Classes
+
+ERTE-specific classes applied inside `.ql-editor` (editor content area). Standard Quill classes (`ql-align-*`, `ql-indent-*`) are provided by the base RTE 2 component.
+
+| Class | Element | Purpose |
+|-------|---------|---------|
+| `.ql-tab` | `<span>` | Tab embed (calculated width) |
+| `.ql-placeholder` | `<span>` | Placeholder embed |
+| `.ql-readonly` | `<span>` | Readonly section (`contenteditable="false"`) |
+| `.ql-soft-break` | `<span>` | Soft-break embed (contains `<br>`) |
+| `.ql-nbsp` | `<span>` | Non-breaking space |
+
+---
+
+### 2.11 Built-in Keyboard Shortcuts
+
+These shortcuts are always active and cannot be removed:
+
+| Shortcut | Action |
+|----------|--------|
+| Tab | Insert tab embed (if tabstops configured) |
+| Shift+Enter | Insert soft-break |
+| Shift+Space | Insert non-breaking space |
+| Ctrl+P / Cmd+P | Open placeholder dialog (if placeholders configured) |
+
+> **Note:** Ctrl+P / Cmd+P may be intercepted by the browser's print dialog. In Chromium-based browsers, the browser intercepts the shortcut before JavaScript. Users can use the toolbar button as an alternative.
 
 ---
 
@@ -557,56 +673,7 @@ editor.asDelta().addValueChangeListener(e -> {
 
 ---
 
-### 3.2 Extension Hooks
-
-Register custom Quill formats or modify editor configuration via JavaScript extension hooks:
-
-1. Create a JS connector with `extendQuill` (register formats before editor creation) and `extendEditor` (modify instance after creation):
-
-```javascript
-(function () {
-    window.Vaadin ??= {};
-    window.Vaadin.Flow ??= {};
-    window.Vaadin.Flow.vcfEnhancedRichTextEditor ??= {};
-    const ns = window.Vaadin.Flow.vcfEnhancedRichTextEditor;
-
-    // Register custom format
-    ns.extendQuill ??= [];
-    ns.extendQuill.push((Quill) => {
-        const Inline = Quill.import('blots/inline');
-        class HighlightBlot extends Inline {
-            static blotName = 'highlight';
-            static tagName = 'MARK';
-        }
-        Quill.register(HighlightBlot);
-    });
-
-    // Modify editor instance
-    ns.extendEditor ??= [];
-    ns.extendEditor.push((editor, Quill) => {
-        editor.root.dataset.extendEditorCalled = 'true';
-    });
-}());
-```
-
-2. Load the connector in your view:
-
-```java
-@Route("my-view")
-@JsModule("./src/sampleEditorExtensionConnector.js")
-public class MyView extends VerticalLayout {
-    public MyView() {
-        EnhancedRichTextEditor editor = new EnhancedRichTextEditor();
-        add(editor);
-    }
-}
-```
-
-**Use for:** Custom Quill formats (highlight, mention, footnote), custom modules (auto-complete, spell-check), editor configuration tweaks.
-
----
-
-### 3.3 Internationalization (I18n)
+### 3.2 Internationalization (I18n)
 
 ERTE extends RTE 2's i18n with labels for ERTE-specific buttons and dialogs:
 
@@ -651,7 +718,7 @@ Inherited RTE 2: `setUndo()`, `setRedo()`, `setBold()`, `setItalic()`, `setUnder
 
 ---
 
-### 3.4 Sanitization
+### 3.3 Sanitization
 
 Server-side HTML sanitizer prevents XSS while preserving ERTE content.
 
@@ -663,62 +730,22 @@ See `SECURITY.md` for full security details.
 
 ---
 
-## 4. Best Practices
+## 4. Known Limitations
 
-**Security:** Validate placeholder content in `PlaceholderBeforeInsertEvent` before `event.insert()`. Use readonly sections for protected content. Don't insert unsanitized HTML via `setValue()`—sanitizer handles output, you handle input validation. See `SECURITY.md` for XSS vectors.
-
-**Performance:** Use Delta for batch updates. Limit tabstops (each triggers width calculation). Avoid 100+ placeholders. Value listeners fire on blur by default—use `ValueChangeMode.EAGER` only when needed.
-
-**Accessibility:** Provide `aria-label` or `title` on custom buttons. Use `addToolbarFocusShortcut()` for keyboard toolbar access. Tab/Shift+Tab moves focus in/out; arrow keys navigate buttons; Escape returns to content. Test with screen readers.
-
-**Testing:** See [CONTRIBUTING.md — Test Architecture](../../docs/dev/CONTRIBUTING.md#test-architecture) for Playwright tests in `enhanced-rich-text-editor-it/`.
-
----
-
-## 5. Troubleshooting
-
-**Toolbar button not visible**
-- Check `setToolbarButtonsVisibility()` config
-- Verify button not in fully hidden group (all hidden = group hidden)
-- Check for keyboard shortcut conflicts
-
-**Placeholder not inserting**
-- Verify `PlaceholderBeforeInsertEvent` calls `event.insert()`
-- Check placeholder in list via `setPlaceholders()`
-- Confirm placeholder text not null
-
-**Tab width wrong**
-- Verify tabstop positions in pixels
-- Check tab direction (LEFT, RIGHT, MIDDLE)
-- Wrapped lines use fixed width (expected)
-
-**Value change listener not firing**
-- Fires on **blur**, not keystroke
-- For immediate updates: `ValueChangeMode.ON_CHANGE` or read Delta via JS
-- Check editor not disabled
-
-**Programmatic focus not working**
-- Ensure editor attached to DOM and enabled
-- ERTE overrides `HTMLElement.focus()` to focus Quill editor, not just component
-
-**I18n labels not updating**
-- Call `setI18n()` with complete object
-- ERTE-specific labels separate from inherited RTE labels
-- Both can be set via fluent chaining
-
-### Known Limitations
+These are Quill 2 / Parchment 3 platform constraints, not ERTE bugs:
 
 | Issue | Workaround |
 |-------|-----------|
 | Readonly undo removes formatting | Re-apply readonly after undo |
-| Bold/Italic at tab boundary may not work | Use keyboard shortcuts |
+| Bold/Italic at tab boundary may not work | Place cursor away from embed, then apply format |
 | Placeholder copy-paste doesn't survive clipboard roundtrip | Use programmatic insertion |
 | Undo doesn't restore removed embed blots | Manual re-insertion |
 
-### Getting Help
+---
 
-- **Upgrade:** [docs/UPGRADE_GUIDE.md](BASE_UPGRADE_GUIDE.md)
-- **API Reference:** [docs/API_REFERENCE.md](BASE_API_REFERENCE.md)
-- **Test examples:** `enhanced-rich-text-editor-it/src/main/java/com/vaadin/componentfactory/`
-- **Issues:** GitHub repository
-- **Support:** [vaadin.com](https://vaadin.com)
+## 5. Getting Help
+
+- **Upgrade from v5.x:** [Upgrade Guide](BASE_UPGRADE_GUIDE.md)
+- **Extension hooks and custom blots:** [EXTENDING.md](dev/EXTENDING.md)
+- **Demo application:** Run the demo module (`enhanced-rich-text-editor-demo/`) for working examples of all features
+- **Issues:** [GitHub](https://github.com/vaadin-component-factory/enhanced-rich-text-editor/issues)

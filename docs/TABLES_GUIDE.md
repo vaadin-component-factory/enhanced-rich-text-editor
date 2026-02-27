@@ -2,7 +2,7 @@
 
 **For developers who need to add table support to their ERTE-based applications.** This guide covers everything from setup through advanced customization. No prior experience with Quill tables required.
 
-**Related documentation:** Extend the ERTE core component with [EXTENDING.md](../../docs/dev/EXTENDING.md). Use I18n across your app with [CONTRIBUTING.md](../../docs/dev/CONTRIBUTING.md) patterns.
+**Related documentation:** Extend the ERTE core component with [EXTENDING.md](dev/EXTENDING.md). Use I18n across your app with [CONTRIBUTING.md](dev/CONTRIBUTING.md) patterns.
 
 ---
 

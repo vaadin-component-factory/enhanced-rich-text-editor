@@ -44,8 +44,8 @@ Three toolbar buttons appear automatically. Users can now insert and modify tabl
 
 ## Documentation
 
-- **[TABLES_GUIDE.md](./docs/TABLES_GUIDE.md)** — Complete developer guide with API reference, examples, and patterns
-- **[TABLES_UPGRADE_GUIDE.md](./docs/TABLES_UPGRADE_GUIDE.md)** — Migration guide from Tables V1 (Vaadin 24) to V2
+- **[TABLES_GUIDE.md](../docs/TABLES_GUIDE.md)** — Complete developer guide with API reference, examples, and patterns
+- **[TABLES_UPGRADE_GUIDE.md](../docs/TABLES_UPGRADE_GUIDE.md)** — Migration guide from Tables V1 (Vaadin 24) to V2
 
 ## What's New in V2
 

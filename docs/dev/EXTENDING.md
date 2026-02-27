@@ -1,6 +1,6 @@
 # Extending ERTE V25
 
-Practical patterns for custom blots, toolbar components, keyboard shortcuts, and styling. See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for design, [`API_REFERENCE.md`](../../enhanced-rich-text-editor/docs/API_REFERENCE.md) for public API.
+Practical patterns for custom blots, toolbar components, keyboard shortcuts, and styling. See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for design.
 
 For Quill 2 fundamentals, see [quilljs.com](https://quilljs.com/) and [Parchment 3](https://github.com/quilljs/parchment).
 
@@ -295,4 +295,57 @@ Add `'ql-tag'` to `ALLOWED_ERTE_CLASSES` in `EnhancedRichTextEditor.java` for sa
 
 ---
 
-**See also:** [`ARCHITECTURE.md`](./ARCHITECTURE.md), [`API_REFERENCE.md`](../../enhanced-rich-text-editor/docs/API_REFERENCE.md), [Quill 2](https://quilljs.com/), [Parchment 3](https://github.com/quilljs/parchment)
+## Sanitizer Allowlists
+
+The server-side sanitizer (`erteSanitize()`) extends Vaadin RTE 2's safelist. Below are the complete reference lists of what is allowed through sanitization.
+
+### Allowed Tags
+
+`p`, `br`, `strong`, `b`, `em`, `i`, `u`, `s`, `strike`, `small`, `sub`, `sup`, `cite`, `code`, `q`, `dd`, `dl`, `dt`, `h1`, `h2`, `h3`, `ol`, `ul`, `li`, `a`, `img`, `blockquote`, `pre`, `span`, `table`, `tbody`, `tr`, `td`, `th`, `colgroup`, `col`
+
+### Allowed Attributes
+
+| Element | Attributes |
+|---------|-----------|
+| All elements | `style`, `class` |
+| `img` | `align`, `alt`, `height`, `src`, `title`, `width` |
+| `a` | `href` |
+| `span` | `contenteditable`, `aria-readonly`, `data-placeholder` |
+| `blockquote`, `q` | `cite` |
+| `td` | `table_id`, `row_id`, `cell_id`, `merge_id`, `colspan`, `rowspan`, `table-class` |
+| `tr` | `row_id` |
+| `table` | `table_id` |
+
+### Allowed CSS Classes
+
+- ERTE classes: `ql-readonly`, `ql-tab`, `ql-soft-break`, `ql-placeholder`, `ql-nbsp`
+- Quill alignment: `ql-align-left`, `ql-align-center`, `ql-align-right`, `ql-align-justify`
+- Quill indentation: `ql-indent-1` through `ql-indent-8`
+- Table classes: `ql-editor__table--hideBorder`, `td-q`
+- Custom classes added via `addAllowedHtmlClasses()`
+
+### Allowed CSS Properties
+
+`color`, `background-color`, `font-*`, `text-*`, `line-height`, `letter-spacing`, `margin`, `padding`, `border-*`, `display`, `width`, `height`, `position`, and others (complete list in `EnhancedRichTextEditor.java` source code)
+
+### Allowed CSS Functions
+
+`rgb()`, `rgba()`, `hsl()`, `hsla()`, `calc()`
+
+### Allowed Image Data URL MIME Types
+
+`image/png`, `image/jpeg`, `image/jpg`, `image/gif`, `image/webp`, `image/bmp`, `image/x-icon`
+
+### What Gets Stripped
+
+- `<script>`, `<iframe>`, `<object>`, `<embed>` tags
+- Event handler attributes (`onclick`, `onerror`, etc.)
+- Dangerous CSS functions (`url()`, `var()`, `expression()`)
+- `@import` directives
+- SVG data URLs
+- CSS comments
+- `contenteditable="true"` (only `"false"` is allowed)
+
+---
+
+**See also:** [`ARCHITECTURE.md`](./ARCHITECTURE.md), [Quill 2](https://quilljs.com/), [Parchment 3](https://github.com/quilljs/parchment)

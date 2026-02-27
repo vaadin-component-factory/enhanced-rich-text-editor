@@ -1,6 +1,6 @@
 # Contributing to ERTE
 
-Contributions require: [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for setup, [User Guide](../../enhanced-rich-text-editor/docs/USER_GUIDE.md) for end-user features.
+Contributions require: [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for setup, [User Guide](../BASE_USER_GUIDE.md) for end-user features.
 
 ---
 
@@ -220,8 +220,8 @@ Requirements: real user interactions (`click()`, `type()`, `press()`), not progr
 - ✅ Code style (Java license header, English, consistent naming)
 - ✅ Architecture constraints (no RTE 2 copies, single foreign class)
 - ✅ Tests cover feature
-- ✅ Documentation updated ([USER_GUIDE.md](../../enhanced-rich-text-editor/docs/USER_GUIDE.md) or [API_REFERENCE.md](../../enhanced-rich-text-editor/docs/API_REFERENCE.md))
+- ✅ Documentation updated ([USER_GUIDE.md](../BASE_USER_GUIDE.md))
 
 ---
 
-**See also:** [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md), [USER_GUIDE.md](../../enhanced-rich-text-editor/docs/USER_GUIDE.md), [API_REFERENCE.md](../../enhanced-rich-text-editor/docs/API_REFERENCE.md), [CLAUDE.md](../../CLAUDE.md)
+**See also:** [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md), [USER_GUIDE.md](../BASE_USER_GUIDE.md), [CLAUDE.md](../../CLAUDE.md)
