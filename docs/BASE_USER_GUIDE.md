@@ -1,6 +1,6 @@
 # Enhanced Rich Text Editor -- User Guide
 
-This guide covers all ERTE v6.x features for Vaadin 25, including code examples, best practices, and troubleshooting. For the complete API surface, see [API Reference](API_REFERENCE.md). For migration from v5.x, see [Upgrade Guide](UPGRADE_GUIDE.md).
+This guide covers all ERTE v6.x features for Vaadin 25, including code examples, best practices, and troubleshooting. For the complete API surface, see [API Reference](BASE_API_REFERENCE.md). For migration from v5.x, see [Upgrade Guide](BASE_UPGRADE_GUIDE.md).
 
 ---
 
@@ -44,7 +44,7 @@ ERTE v6.x requires Vaadin 25.0.x and Java 21+. Add the dependency to your `pom.x
 
 > **Note:** Vaadin 25 moved the Rich Text Editor to the commercial `vaadin` artifact (not `vaadin-core`). A Vaadin Pro subscription or higher is required for production use.
 
-> **Theme:** ERTE v6.0 uses the Vaadin Lumo theme. Ensure your application loads Lumo (the default for Vaadin 25). For theme setup details, see [Upgrade Guide -- Section 2.5](UPGRADE_GUIDE.md).
+> **Theme:** ERTE v6.0 uses the Vaadin Lumo theme. Ensure your application loads Lumo (the default for Vaadin 25). For theme setup details, see [Upgrade Guide -- Section 2.5](BASE_UPGRADE_GUIDE.md).
 
 ### 1.2 Basic Usage
 
@@ -162,7 +162,7 @@ editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, colorSwitch);
 
 Factory methods: `vertical(switch, components...)`, `horizontal(switch, components...)`.
 
-> See [API Reference -- ToolbarPopover](API_REFERENCE.md#7-toolbarpopover) for the complete API.
+> See [API Reference -- ToolbarPopover](BASE_API_REFERENCE.md#7-toolbarpopover) for the complete API.
 
 #### Toolbar Select Popups
 
@@ -181,7 +181,7 @@ editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, insertSwitch);
 
 Uses standard Vaadin `ContextMenu` API.
 
-> See [API Reference -- ToolbarSelectPopup](API_REFERENCE.md#8-toolbarselectpopup) for the complete API.
+> See [API Reference -- ToolbarSelectPopup](BASE_API_REFERENCE.md#8-toolbarselectpopup) for the complete API.
 
 #### Toolbar Dialogs
 
@@ -196,7 +196,7 @@ editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, settingsSwitch);
 
 Factory methods: `vertical(switch, components...)`, `horizontal(switch, components...)`.
 
-> See [API Reference -- ToolbarDialog](API_REFERENCE.md#9-toolbardialog) for the complete API.
+> See [API Reference -- ToolbarDialog](BASE_API_REFERENCE.md#9-toolbardialog) for the complete API.
 
 **Removing components:**
 
@@ -206,7 +206,7 @@ editor.removeToolbarComponent(ToolbarSlot.START, startBtn);
 editor.removeToolbarComponent(ToolbarSlot.START, "slot-start-btn");
 ```
 
-> **Styling note:** All components added via `addToolbarComponents()` automatically receive `part="toolbar-custom-component"`. This enables consistent styling through ERTE's shadow DOM (hover, focus, active/pressed states for buttons). See [API Reference — CSS Shadow Parts](API_REFERENCE.md#13-css-shadow-parts) for styling details.
+> **Styling note:** All components added via `addToolbarComponents()` automatically receive `part="toolbar-custom-component"`. This enables consistent styling through ERTE's shadow DOM (hover, focus, active/pressed states for buttons). See [API Reference — CSS Shadow Parts](BASE_API_REFERENCE.md#13-css-shadow-parts) for styling details.
 
 #### Toolbar Button Visibility
 
@@ -221,7 +221,7 @@ editor.setToolbarButtonsVisibility(Map.of(
 editor.setToolbarButtonsVisibility(null);
 ```
 
-When all buttons in a group are hidden, the group container auto-hides. See [API Reference — ToolbarButton](API_REFERENCE.md#4-toolbarbutton-enum) for the complete list.
+When all buttons in a group are hidden, the group container auto-hides. See [API Reference — ToolbarButton](BASE_API_REFERENCE.md#4-toolbarbutton-enum) for the complete list.
 
 #### Custom Keyboard Shortcuts
 
@@ -511,7 +511,7 @@ vcf-enhanced-rich-text-editor {
 }
 ```
 
-See [API Reference — ERTE Custom Properties](API_REFERENCE.md#15-erte-custom-properties) for the complete list.
+See [API Reference — ERTE Custom Properties](BASE_API_REFERENCE.md#15-erte-custom-properties) for the complete list.
 
 ---
 
@@ -717,8 +717,8 @@ See `SECURITY.md` for full security details.
 
 ### Getting Help
 
-- **Upgrade:** [docs/UPGRADE_GUIDE.md](UPGRADE_GUIDE.md)
-- **API Reference:** [docs/API_REFERENCE.md](API_REFERENCE.md)
+- **Upgrade:** [docs/UPGRADE_GUIDE.md](BASE_UPGRADE_GUIDE.md)
+- **API Reference:** [docs/API_REFERENCE.md](BASE_API_REFERENCE.md)
 - **Test examples:** `enhanced-rich-text-editor-it/src/main/java/com/vaadin/componentfactory/`
 - **Issues:** GitHub repository
 - **Support:** [vaadin.com](https://vaadin.com)

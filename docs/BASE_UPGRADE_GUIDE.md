@@ -495,7 +495,7 @@ Deprecated. Replace with `extendQuill` (pre-init) or `extendEditor` (post-init) 
 
 ### 4A.1 Toolbar Helper Classes
 
-Four helper classes (`ToolbarSwitch`, `ToolbarPopover`, `ToolbarSelectPopup`, `ToolbarDialog`) for custom toolbar extensions. See [User Guide](USER_GUIDE.md) for examples.
+Four helper classes (`ToolbarSwitch`, `ToolbarPopover`, `ToolbarSelectPopup`, `ToolbarDialog`) for custom toolbar extensions. See [User Guide](BASE_USER_GUIDE.md) for examples.
 
 ### 4A.2 CSS Custom Properties
 
@@ -668,7 +668,7 @@ ERTE 2 hardens: `innerHTML` replaced with `textContent`/`createElement()`, CSS p
 
 ### 9.5 Documentation
 
-For details, see the full migration guide, [USER_GUIDE.md](USER_GUIDE.md), and [API_REFERENCE.md](API_REFERENCE.md).
+For details, see the full migration guide, [USER_GUIDE.md](BASE_USER_GUIDE.md), and [API_REFERENCE.md](BASE_API_REFERENCE.md).
 
 ERTE 2 introduces 22 CSS custom properties (`--vaadin-erte-*`) for theming
 ERTE-specific visual elements. If your application customized ERTE 1 appearance

@@ -4,7 +4,7 @@ Complete API reference for the Enhanced Rich Text Editor (ERTE) v6.x. This docum
 
 **Audience:** Java developers integrating ERTE programmatically.
 
-**Related docs:** [User Guide](USER_GUIDE.md) for feature documentation and examples, [Upgrade Guide](UPGRADE_GUIDE.md) for migration from v5.x.
+**Related docs:** [User Guide](BASE_USER_GUIDE.md) for feature documentation and examples, [Upgrade Guide](BASE_UPGRADE_GUIDE.md) for migration from v5.x.
 
 ---
 
