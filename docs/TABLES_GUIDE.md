@@ -69,13 +69,15 @@ modifyMenu.getMenuItems(); // list of all menu items
 
 ## 3. Table Operations
 
-**Insert:** UI or `tables.insertTableAtCurrentPosition(rows, cols)` / `insertTableAtCurrentPosition(rows, cols, templateId)`
+Users interact with tables through the toolbar buttons or you can control them programmatically.
 
-**Modify:** **Modify Table** menu (append/remove/merge/split/delete)
+**Insert:** Click the Add Table button or call `tables.insertTableAtCurrentPosition(rows, cols)`. You can also pass a template ID to apply styling immediately: `insertTableAtCurrentPosition(rows, cols, templateId)`.
 
-**Select cells:** Ctrl+click individual cells or Ctrl+drag range (get `ql-cell-selected` class). Merge enables only with multiple cells.
+**Modify:** When the cursor is inside a table, the Modify Table menu offers append/remove rows and columns, merge and split cells, and delete the entire table.
 
-**Remove:** **Modify Table** → **Remove table**
+**Select cells:** Hold Ctrl and click individual cells, or Ctrl+drag to select a range. Selected cells get the `ql-cell-selected` CSS class. Merge is only available when multiple cells are selected.
+
+**Remove:** Use the Modify Table menu → **Remove table**.
 
 ---
 
@@ -228,7 +230,7 @@ The CSS is injected into the editor's shadow DOM, so it only affects table styli
 
 ## 5. Events
 
-8 event types fire on table and template changes. Register on the `EnhancedRichTextEditorTables` instance.
+ERTE Tables fires 8 event types that let you react to table and template changes. All listeners are registered on the `EnhancedRichTextEditorTables` instance and return a `Registration` for cleanup.
 
 ### Table Selection Events
 
@@ -294,9 +296,11 @@ reg.remove();
 
 ## 6. Theming & Styling
 
+Tables come with sensible defaults, but you can customize every visual aspect through CSS custom properties or programmatic color control.
+
 ### CSS Custom Properties
 
-11 CSS variables for table styling:
+ERTE Tables provides 11 CSS custom properties for borders, padding, colors, and selection styling:
 
 ```css
 vcf-enhanced-rich-text-editor {
@@ -319,7 +323,7 @@ vcf-enhanced-rich-text-editor {
 
 ### Programmatic Color Control
 
-Set hover/focus colors at runtime:
+If you need to change hover and focus colors dynamically (e.g., based on user preferences or a theme switch), you can set them from Java:
 
 ```java
 tables.setTableHoverColor("var(--lumo-primary-color)"); // table border
@@ -401,7 +405,7 @@ templateDialog.setHeight("50vh");
 
 ### Delta Representation
 
-Tables stored as Quill Delta JSON. Cell lines have `td` attribute: `"tableId|rowId|cellId|rowspan|colspan|templateId|uniqueId"` (pipe-separated, 7 fields). Merged cells: root cell has rowspan/colspan; other cells reference root's cellId. Template ID on first cell only.
+Tables are stored as Quill Delta JSON. Each cell line carries a `td` attribute with pipe-separated metadata: `"tableId|rowId|cellId|rowspan|colspan|templateId|uniqueId"` (7 fields). For merged cells, the root cell has the actual rowspan/colspan values while the other cells reference the root's cellId. The template ID is stored on the first cell of each table only.
 
 ### Finding Used Templates
 
@@ -460,6 +464,8 @@ Templates are stored as an `ObjectNode` (Jackson 3). The structure is:
 ---
 
 ## 10. API Quick Reference
+
+A compact listing of the most important methods. For full Javadoc, see the source.
 
 ### EnhancedRichTextEditorTables
 

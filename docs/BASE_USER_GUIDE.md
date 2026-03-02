@@ -436,6 +436,8 @@ Press **Shift+Space** to insert a non-breaking space (not collapsed by browser, 
 
 ### 2.8 Programmatic Text Insertion
 
+You can insert text at the current cursor position or at a specific index. This is useful for inserting boilerplate, auto-complete values, or text from external sources.
+
 ```java
 // Insert at cursor position
 editor.addText("INSERTED");
@@ -448,22 +450,19 @@ editor.getTextLength(length ->
     Notification.show("Length: " + length));
 ```
 
-Notes: `getTextLength()` is async (callback pattern). `addText(text, position)` clamps out-of-bounds positions. No insertion if editor disabled. No-position form requires focused editor with active selection.
+`addText(text, position)` clamps out-of-bounds positions. The no-position form requires a focused editor with an active selection. `getTextLength()` is asynchronous and returns the length via a callback.
 
 ---
 
 ### 2.9 Align Justify
 
-ERTE adds justify alignment (included by default):
+ERTE adds a justify alignment button to the toolbar, next to the existing left/center/right buttons. It's visible by default — hide it if you don't need it:
 
 ```java
-// Hide if not needed
 editor.setToolbarButtonsVisibility(Map.of(
     EnhancedRichTextEditor.ToolbarButton.ALIGN_JUSTIFY, false
 ));
 ```
-
-Uses standard Quill justify format.
 
 ---
 
@@ -558,7 +557,7 @@ ERTE-specific classes applied inside `.ql-editor` (editor content area). Standar
 
 ### 3.1 Value Formats (HTML vs Delta)
 
-ERTE uses **HTML as primary format**, with Delta JSON accessible via `asDelta()` wrapper.
+With Vaadin 25, the Rich Text Editor uses **HTML as primary format**. If you need to work with Quill's Delta JSON (e.g., for programmatic readonly sections or batch updates), use the `asDelta()` wrapper.
 
 ```java
 // HTML (primary)
@@ -621,13 +620,11 @@ Standard RTE 2 i18n (inherited): bold, italic, underline, strike, color, backgro
 
 ### 3.3 Sanitization
 
-Server-side HTML sanitizer prevents XSS while preserving ERTE content.
+ERTE includes a server-side HTML sanitizer that runs automatically when content is received from the client. It prevents XSS attacks while preserving all ERTE-specific content like readonly sections, tabstops, placeholders, and soft-breaks.
 
-**Preserves:** Standard HTML tags (`p`, `br`, `strong`, `em`, `u`, `s`, `h1`-`h3`, `img`, `a`, `ol`, `ul`, `li`, `blockquote`, `pre`), ERTE classes (`ql-readonly`, `ql-tab`, `ql-soft-break`, `ql-placeholder`, `ql-nbsp`), Quill classes (`ql-align-*`, `ql-indent-*`), `contenteditable="false"` on spans, safe CSS properties, safe image data URLs.
+You don't need to configure anything — the sanitizer works out of the box. It preserves standard HTML tags, ERTE classes (`ql-readonly`, `ql-tab`, `ql-soft-break`, `ql-placeholder`, `ql-nbsp`), Quill classes (`ql-align-*`, `ql-indent-*`), and safe attributes. It strips script tags, event handlers, dangerous CSS, and unknown classes.
 
-**Strips:** Script tags, event handlers, dangerous CSS functions, `@import` directives, SVG data URLs, unknown CSS classes, `contenteditable="true"`.
-
-See `SECURITY.md` for full security details.
+See `SECURITY.md` for the full allowlist and security details.
 
 ---
 

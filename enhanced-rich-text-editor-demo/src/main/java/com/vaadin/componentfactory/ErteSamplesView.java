@@ -25,6 +25,7 @@ import com.vaadin.componentfactory.toolbar.ToolbarSwitch;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.KeyModifier;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -431,31 +432,31 @@ public class ErteSamplesView extends VerticalLayout {
         var rte = new EnhancedRichTextEditor();
 
         // Shift+F9 for align center
-        rte.addStandardToolbarButtonShortcut(ToolbarButton.ALIGN_CENTER, "F9", false, true, false);
+        rte.addStandardToolbarButtonShortcut(ToolbarButton.ALIGN_CENTER, Key.F9, KeyModifier.SHIFT);
         // Shift+P for superscript
-        rte.addStandardToolbarButtonShortcut(ToolbarButton.SUPERSCRIPT, "P", false, true, false);
+        rte.addStandardToolbarButtonShortcut(ToolbarButton.SUPERSCRIPT, Key.KEY_P, KeyModifier.SHIFT);
         // Ctrl+B for header 1
-        rte.addStandardToolbarButtonShortcut(ToolbarButton.H1, "B", true, false, false);
+        rte.addStandardToolbarButtonShortcut(ToolbarButton.H1, Key.KEY_B, KeyModifier.CONTROL);
         // F9 to load an image
-        rte.addStandardToolbarButtonShortcut(ToolbarButton.IMAGE, "F9", false, false, false);
+        rte.addStandardToolbarButtonShortcut(ToolbarButton.IMAGE, Key.F9);
         // Alt+G for code block
-        rte.addStandardToolbarButtonShortcut(ToolbarButton.CODE_BLOCK, "G", false, false, true);
+        rte.addStandardToolbarButtonShortcut(ToolbarButton.CODE_BLOCK, Key.KEY_G, KeyModifier.ALT);
         // Shift+J to focus toolbar
-        rte.addToolbarFocusShortcut("J", false, true, false);
+        rte.addToolbarFocusShortcut(Key.KEY_J, KeyModifier.SHIFT);
 
         return createCard("Rich Text Editor with custom shortcuts", rte,
                 createSourceCode("EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
                         + "// Shift+F9 for align center\n"
                         + "rte.addStandardToolbarButtonShortcut(\n"
-                        + "    ToolbarButton.ALIGN_CENTER, \"F9\", false, true, false);\n"
+                        + "    ToolbarButton.ALIGN_CENTER, Key.F9, KeyModifier.SHIFT);\n"
                         + "// Shift+P for superscript\n"
                         + "rte.addStandardToolbarButtonShortcut(\n"
-                        + "    ToolbarButton.SUPERSCRIPT, \"P\", false, true, false);\n"
+                        + "    ToolbarButton.SUPERSCRIPT, Key.KEY_P, KeyModifier.SHIFT);\n"
                         + "// Ctrl+B for header 1\n"
                         + "rte.addStandardToolbarButtonShortcut(\n"
-                        + "    ToolbarButton.H1, \"B\", true, false, false);\n"
+                        + "    ToolbarButton.H1, Key.KEY_B, KeyModifier.CONTROL);\n"
                         + "// Shift+J to focus toolbar\n"
-                        + "rte.addToolbarFocusShortcut(\"J\", false, true, false);"));
+                        + "rte.addToolbarFocusShortcut(Key.KEY_J, KeyModifier.SHIFT);"));
     }
 
     private Component createEditorWithIconReplacement() {

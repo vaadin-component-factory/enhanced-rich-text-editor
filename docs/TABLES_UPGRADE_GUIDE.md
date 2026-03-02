@@ -23,6 +23,8 @@
 
 ### 1. Jackson 3 Migration (Json → ObjectNode)
 
+Vaadin 25 uses Jackson 3 (`tools.jackson`) instead of the elemental JSON library. All template parsing and access code needs to be updated.
+
 ```java
 // V1: elemental Json
 Json parsedJson = TemplateParser.parseJson(jsonString);
@@ -35,7 +37,7 @@ String name = templates.get("myTemplate").get("name").asText();
 
 ### 2. I18n Field Names (Placeholders → Labels)
 
-Vaadin 25 uses labels. Change: `*FieldPlaceholder` → `*FieldLabel`
+Input fields in Vaadin 25 use labels instead of placeholder text. All i18n setter names have been updated accordingly.
 
 ```java
 // V1: i18n.setInsertTableRowsFieldPlaceholder("Number of rows")
@@ -44,15 +46,17 @@ Vaadin 25 uses labels. Change: `*FieldPlaceholder` → `*FieldLabel`
 
 ### 3. Color Validation
 
-V2 validates strictly (throws `IllegalArgumentException`). Accepted: hex (`#2196f3`), named (`blue`), rgb/rgba, hsl/hsla, CSS variables (`var(--color)`). Add try-catch or validate inputs.
+V2 now validates color values strictly and throws `IllegalArgumentException` for invalid inputs. Accepted formats: hex (`#2196f3`), named colors (`blue`), rgb/rgba, hsl/hsla, and CSS variables (`var(--color)`). If you pass user-provided colors, wrap them in a try-catch or validate before passing.
 
 ### 4. Template ID Validation
 
-V2 requires valid CSS class names: `[A-Za-z][A-Za-z0-9\-]*`. Update hardcoded IDs and stored JSON ("my-template@123" → "my-template-123").
+Template IDs are now used as CSS class names and must match the pattern `[A-Za-z][A-Za-z0-9\-]*`. If you have template IDs with special characters (e.g., `"my-template@123"`), rename them to valid CSS names (e.g., `"my-template-123"`). This applies to both hardcoded IDs in your Java code and stored template JSON.
 
 ---
 
 ## Migration Steps
+
+Walk through these steps in order. Most changes are straightforward search-and-replace.
 
 **1. Update pom.xml**
 ```xml
@@ -106,20 +110,22 @@ Also update stored JSON template keys.
 
 ## New Features in V2
 
-- **11 CSS custom properties** for table styling
-- **Programmatic hover/focus colors**: `tables.setTableHoverColor(...)`
-- **Template ID scanning**: `getAssignedTemplateIds(delta)`
-- **Custom CSS injection**: `tables.setCustomStyles(...)`
-- **Better keyboard navigation** (Quill 2)
+These features are new in Tables V2 and were not available in V1:
+
+- **11 CSS custom properties** (`--vaadin-erte-table-*`) for fine-grained control over borders, padding, and selection colors
+- **Programmatic hover/focus colors** — set colors from Java with `tables.setTableHoverColor(...)` etc.
+- **Template ID scanning** — find which templates are used in a delta with `getAssignedTemplateIds(delta)`
+- **Custom CSS injection** — inject additional CSS before or after generated template styles with `tables.setCustomStyles(...)`
+- **Better keyboard navigation** within tables (Quill 2 improvement)
 
 ---
 
 ## Known Limitations & Notes
 
-- **Cell styling UI (planned):** Dialog doesn't provide visual editor yet. Edit JSON directly: `tables.getTemplates()`, modify `"cells"` array, reload.
-- **Delta format unchanged:** `td` attribute format same as V1
-- **Undo/redo:** Table removal may shuffle row IDs (Quill 2 limitation)
-- **All V1 features supported** — no features dropped
+- **Cell styling UI (planned):** The template dialog doesn't have a visual editor for individual cells yet. You can edit them programmatically via `tables.getTemplates()` → modify the `"cells"` array → reload.
+- **Delta format unchanged:** The `td` attribute format is the same as V1, so stored content is fully compatible.
+- **Undo/redo:** Undoing a table removal may produce slightly different row ordering. This is a Quill 2 limitation, not an ERTE bug.
+- **All V1 features supported** — no features have been dropped in V2.
 
 ---
 

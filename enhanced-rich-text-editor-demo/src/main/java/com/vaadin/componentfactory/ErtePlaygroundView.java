@@ -29,6 +29,8 @@ import com.vaadin.componentfactory.toolbar.ToolbarPopover;
 import com.vaadin.componentfactory.toolbar.ToolbarSelectPopup;
 import com.vaadin.componentfactory.toolbar.ToolbarSlot;
 import com.vaadin.componentfactory.toolbar.ToolbarSwitch;
+import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.KeyModifier;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -113,9 +115,9 @@ public class ErtePlaygroundView extends HorizontalLayout {
         // Keyboard shortcuts
         editor.addStandardToolbarButtonShortcut(
                 EnhancedRichTextEditor.ToolbarButton.ALIGN_CENTER,
-                "F9", false, true, false); // Shift+F9
+                Key.F9, KeyModifier.SHIFT); // Shift+F9
         editor.addToolbarFocusShortcut(
-                "F10", false, true, false); // Shift+F10
+                Key.F10, KeyModifier.SHIFT); // Shift+F10
 
         // --- Toolbar custom components ---
 

@@ -4,9 +4,11 @@ Patterns for custom blots, toolbar components, keyboard shortcuts, and styling. 
 
 ## Custom Blots
 
+If you want to add your own content types to the editor (like special tokens, badges, or inline widgets), you'll need a custom Quill blot.
+
 ### Embed Blot Patterns
 
-An embed (discrete element like `TabBlot` or `PlaceholderBlot`) has three critical patterns:
+An embed blot is a discrete, non-text element inside the editor (like ERTE's `TabBlot` or `PlaceholderBlot`). There are three critical patterns to get right:
 
 1. **Lifecycle:** `static create()` runs before constructor. Initialize outer DOM in `create()`, configure inner `contentNode` in `constructor()`.
 
@@ -16,7 +18,7 @@ An embed (discrete element like `TabBlot` or `PlaceholderBlot`) has three critic
 
 ### Sanitization Integration
 
-Custom blot HTML must pass server sanitization. To preserve your blot:
+ERTE sanitizes all HTML on the server to prevent XSS. If your custom blot uses its own CSS class or HTML attributes, you need to add them to the allowlists — otherwise they'll be stripped on the next round-trip.
 
 1. **Client preservable list** — `vcf-enhanced-rich-text-editor.js` (~line 385):
    ```javascript
@@ -38,9 +40,11 @@ Custom blot HTML must pass server sanitization. To preserve your blot:
 
 ## Extending the Toolbar
 
+ERTE's toolbar is fully customizable — you can bind keyboard shortcuts, add your own components, and replace icons.
+
 ### Keyboard Shortcuts for Standard Buttons
 
-Bind shortcuts to built-in buttons using Vaadin `Key` constants and `KeyModifier` varargs:
+You can bind keyboard shortcuts to any of the built-in toolbar buttons using Vaadin's `Key` constants and `KeyModifier` varargs:
 
 ```java
 editor.addStandardToolbarButtonShortcut(
@@ -146,6 +150,8 @@ Used internally for align-justify button.
 
 ## Custom Keyboard Shortcuts
 
+Beyond binding shortcuts to existing toolbar buttons, you can also create completely custom keyboard actions by talking to the Quill API directly.
+
 ### Binding Custom Actions
 
 ```java
@@ -164,7 +170,7 @@ editor.getElement().executeJs(
 
 ### Extension Hooks (JavaScript-Only)
 
-Two hooks for Quill customization (not Java API — register via global JavaScript namespace):
+ERTE provides two hooks for extending Quill from JavaScript. These aren't Java APIs — you register them via the global namespace and load them with `@JsModule`.
 
 **`extendQuill`** — Called before `super.ready()` with Quill class. Register custom blots:
 
@@ -202,9 +208,11 @@ public class MyView extends VerticalLayout { }
 
 ## Styling & Theming
 
+ERTE exposes CSS custom properties and shadow parts for theming. You can customize colors, sizes, and spacing without touching the component source.
+
 ### CSS Custom Properties
 
-Override at host element:
+Override on the host element:
 
 ```css
 vcf-enhanced-rich-text-editor {
@@ -245,7 +253,7 @@ static get styles() {
 
 ## Example: Custom Tag Embed
 
-Complete custom embed example:
+Here's a complete example of a custom embed blot — a "tag" element that displays like `<tagname>` inside the editor. This shows the full lifecycle: JavaScript blot, Java insertion, CSS styling, and sanitizer integration.
 
 **JavaScript (vcf-enhanced-rich-text-editor.js):**
 ```javascript
@@ -296,7 +304,7 @@ Add `'ql-tag'` to `ALLOWED_ERTE_CLASSES` in `EnhancedRichTextEditor.java` for sa
 
 ## Sanitizer Allowlists
 
-The server-side sanitizer (`erteSanitize()`) extends Vaadin RTE 2's safelist. Below are the complete reference lists of what is allowed through sanitization.
+The server-side sanitizer (`erteSanitize()`) extends Vaadin RTE 2's safelist. If you're adding custom blots or attributes, you'll need to know what's already allowed. Here are the complete reference lists.
 
 ### Allowed Tags
 

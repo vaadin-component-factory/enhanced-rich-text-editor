@@ -1901,6 +1901,74 @@ class VcfEnhancedRichTextEditor extends RteBase {
   // ==========================================================================
 
   /**
+   * Builds a Quill keyboard binding descriptor from a modifiers array.
+   * @param {string} key - Quill 2 key name
+   * @param {string[]} modifiers - array of modifier names: 'SHIFT', 'CONTROL', 'ALT', 'META'
+   *   CONTROL maps to Ctrl on Win/Linux, Cmd on Mac (cross-platform shortKey).
+   * @param {Function} handler - binding handler
+   * @returns {Object} Quill keyboard binding descriptor
+   * @private
+   */
+  _buildKeyBinding(key, modifiers, handler) {
+    const SHORTKEY = /Mac/i.test(navigator.platform) ? 'metaKey' : 'ctrlKey';
+    const mods = Array.isArray(modifiers) ? modifiers : [];
+    return {
+      key,
+      shiftKey: mods.includes('SHIFT'),
+      altKey: mods.includes('ALT'),
+      [SHORTKEY]: mods.includes('CONTROL'),
+      ...(mods.includes('META') ? { metaKey: true } : {}),
+      handler
+    };
+  }
+
+  /**
+   * Internal: registers a keyboard binding that clicks a toolbar button.
+   * @param {string} partSuffix - button part suffix (e.g. 'bold', 'align-center')
+   * @param {string} key - Quill 2 key name (e.g. 'F9', 'b')
+   * @param {string[]} modifiers - modifier names array
+   * @private
+   */
+  _applyToolbarButtonShortcut(partSuffix, key, modifiers) {
+    const toolbar = this.shadowRoot?.querySelector('[part="toolbar"]');
+    if (!toolbar || !this._editor) return;
+    const btn = toolbar.querySelector(`[part~="toolbar-button-${partSuffix}"]`);
+    if (!btn) return;
+
+    const binding = this._buildKeyBinding(key, modifiers, () => {
+      btn.click();
+      return false;
+    });
+
+    const bindings = this._editor.keyboard.bindings;
+    const existing = bindings[key] || [];
+    bindings[key] = [binding, ...existing];
+  }
+
+  /**
+   * Internal: registers a keyboard binding that focuses the toolbar.
+   * @param {string} key - Quill 2 key name (e.g. 'F10')
+   * @param {string[]} modifiers - modifier names array
+   * @private
+   */
+  _applyToolbarFocusShortcut(key, modifiers) {
+    const toolbar = this.shadowRoot?.querySelector('[part="toolbar"]');
+    if (!toolbar || !this._editor) return;
+
+    const self = this;
+    const binding = this._buildKeyBinding(key, modifiers, () => {
+      self._markToolbarFocused();
+      const firstBtn = toolbar.querySelector('button:not([style*="display: none"]):not([hidden])');
+      if (firstBtn) firstBtn.focus();
+      return false;
+    });
+
+    const bindings = this._editor.keyboard.bindings;
+    const existing = bindings[key] || [];
+    bindings[key] = [binding, ...existing];
+  }
+
+  /**
    * Binds a keyboard shortcut to a standard toolbar button.
    * Clicking the button triggers its native handler (format toggle, dialog, etc.).
    * @param {string} partSuffix - button part suffix (e.g. 'bold', 'align-center')
@@ -1908,28 +1976,14 @@ class VcfEnhancedRichTextEditor extends RteBase {
    * @param {boolean} shortKey - Ctrl (Win/Linux) or Cmd (Mac)
    * @param {boolean} shiftKey
    * @param {boolean} altKey
+   * @deprecated Use _applyToolbarButtonShortcut(partSuffix, key, modifiers) instead
    */
   addStandardToolbarButtonShortcut(partSuffix, key, shortKey, shiftKey, altKey) {
-    const toolbar = this.shadowRoot?.querySelector('[part="toolbar"]');
-    if (!toolbar || !this._editor) return;
-    const btn = toolbar.querySelector(`[part~="toolbar-button-${partSuffix}"]`);
-    if (!btn) return;
-
-    const SHORTKEY = /Mac/i.test(navigator.platform) ? 'metaKey' : 'ctrlKey';
-    const binding = {
-      key,
-      shiftKey: !!shiftKey,
-      altKey: !!altKey,
-      [SHORTKEY]: !!shortKey,
-      handler: () => {
-        btn.click();
-        return false;
-      }
-    };
-
-    const bindings = this._editor.keyboard.bindings;
-    const existing = bindings[key] || [];
-    bindings[key] = [binding, ...existing];
+    const mods = [];
+    if (shortKey) mods.push('CONTROL');
+    if (shiftKey) mods.push('SHIFT');
+    if (altKey) mods.push('ALT');
+    this._applyToolbarButtonShortcut(partSuffix, key, mods);
   }
 
   /**
@@ -1938,29 +1992,14 @@ class VcfEnhancedRichTextEditor extends RteBase {
    * @param {boolean} shortKey - Ctrl (Win/Linux) or Cmd (Mac)
    * @param {boolean} shiftKey
    * @param {boolean} altKey
+   * @deprecated Use _applyToolbarFocusShortcut(key, modifiers) instead
    */
   addToolbarFocusShortcut(key, shortKey, shiftKey, altKey) {
-    const toolbar = this.shadowRoot?.querySelector('[part="toolbar"]');
-    if (!toolbar || !this._editor) return;
-
-    const SHORTKEY = /Mac/i.test(navigator.platform) ? 'metaKey' : 'ctrlKey';
-    const self = this;
-    const binding = {
-      key,
-      shiftKey: !!shiftKey,
-      altKey: !!altKey,
-      [SHORTKEY]: !!shortKey,
-      handler: () => {
-        self._markToolbarFocused();
-        const firstBtn = toolbar.querySelector('button:not([style*="display: none"]):not([hidden])');
-        if (firstBtn) firstBtn.focus();
-        return false;
-      }
-    };
-
-    const bindings = this._editor.keyboard.bindings;
-    const existing = bindings[key] || [];
-    bindings[key] = [binding, ...existing];
+    const mods = [];
+    if (shortKey) mods.push('CONTROL');
+    if (shiftKey) mods.push('SHIFT');
+    if (altKey) mods.push('ALT');
+    this._applyToolbarFocusShortcut(key, mods);
   }
 
   // ==========================================================================

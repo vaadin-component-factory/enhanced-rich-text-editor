@@ -29,6 +29,8 @@ import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.DomEvent;
 import com.vaadin.flow.component.EventData;
 import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.KeyModifier;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.UI;
@@ -767,12 +769,36 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      * shortcut is pressed, the button is clicked, triggering its native
      * handler (format toggle, dialog open, undo/redo, etc.).
      *
+     * <p>Example: {@code addStandardToolbarButtonShortcut(ToolbarButton.BOLD,
+     * Key.KEY_B, KeyModifier.CONTROL, KeyModifier.SHIFT)}
+     *
+     * @param toolbarButton the toolbar button to trigger
+     * @param key           the key, e.g. {@link Key#F9}, {@link Key#KEY_B}
+     * @param modifiers     zero or more key modifiers.
+     *                      {@link KeyModifier#CONTROL} maps to Ctrl on
+     *                      Windows/Linux and Cmd on Mac (cross-platform).
+     */
+    public void addStandardToolbarButtonShortcut(ToolbarButton toolbarButton,
+            Key key, KeyModifier... modifiers) {
+        getElement().executeJs(
+                "this._applyToolbarButtonShortcut($0, $1, $2)",
+                toolbarButton.getPartSuffix(), toQuillKeyName(key),
+                toJsonArray(modifiers));
+    }
+
+    /**
+     * Binds a keyboard shortcut to a standard toolbar button. When the
+     * shortcut is pressed, the button is clicked, triggering its native
+     * handler (format toggle, dialog open, undo/redo, etc.).
+     *
      * @param toolbarButton the toolbar button to trigger
      * @param key           Quill 2 key name (e.g. {@code "F9"}, {@code "b"})
      * @param shortKey      {@code true} for Ctrl (Win/Linux) or Cmd (Mac)
      * @param shiftKey      {@code true} for Shift modifier
      * @param altKey        {@code true} for Alt modifier
+     * @deprecated Use {@link #addStandardToolbarButtonShortcut(ToolbarButton, Key, KeyModifier...)} instead
      */
+    @Deprecated(since = "6.0", forRemoval = true)
     public void addStandardToolbarButtonShortcut(ToolbarButton toolbarButton,
             String key, boolean shortKey, boolean shiftKey, boolean altKey) {
         getElement().executeJs(
@@ -784,16 +810,64 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      * Binds a keyboard shortcut that moves focus from the editor to the
      * toolbar. The first visible toolbar button receives focus.
      *
+     * <p>Example: {@code addToolbarFocusShortcut(Key.F10, KeyModifier.SHIFT)}
+     *
+     * @param key       the key, e.g. {@link Key#F10}
+     * @param modifiers zero or more key modifiers.
+     *                  {@link KeyModifier#CONTROL} maps to Ctrl on
+     *                  Windows/Linux and Cmd on Mac (cross-platform).
+     */
+    public void addToolbarFocusShortcut(Key key,
+            KeyModifier... modifiers) {
+        getElement().executeJs(
+                "this._applyToolbarFocusShortcut($0, $1)",
+                toQuillKeyName(key), toJsonArray(modifiers));
+    }
+
+    /**
+     * Binds a keyboard shortcut that moves focus from the editor to the
+     * toolbar. The first visible toolbar button receives focus.
+     *
      * @param key      Quill 2 key name (e.g. {@code "F10"})
      * @param shortKey {@code true} for Ctrl (Win/Linux) or Cmd (Mac)
      * @param shiftKey {@code true} for Shift modifier
      * @param altKey   {@code true} for Alt modifier
+     * @deprecated Use {@link #addToolbarFocusShortcut(Key, KeyModifier...)} instead
      */
+    @Deprecated(since = "6.0", forRemoval = true)
     public void addToolbarFocusShortcut(String key, boolean shortKey,
             boolean shiftKey, boolean altKey) {
         getElement().executeJs(
                 "this.addToolbarFocusShortcut($0, $1, $2, $3)",
                 key, shortKey, shiftKey, altKey);
+    }
+
+    /**
+     * Converts a Vaadin {@link Key} to a Quill 2 key name string.
+     * <p>Vaadin uses {@code event.code} for letters ({@code "KeyB"}) and
+     * digits ({@code "Digit1"}), while Quill expects {@code event.key}
+     * format ({@code "b"}, {@code "1"}). Function keys, Enter, Tab, etc.
+     * are identical in both systems.
+     */
+    private static String toQuillKeyName(Key key) {
+        String value = key.getKeys().get(0);
+        // "KeyA".."KeyZ" → "a".."z"
+        if (value.startsWith("Key") && value.length() == 4) {
+            return value.substring(3).toLowerCase();
+        }
+        // "Digit0".."Digit9" → "0".."9"
+        if (value.startsWith("Digit") && value.length() == 6) {
+            return value.substring(5);
+        }
+        return value;
+    }
+
+    private static ArrayNode toJsonArray(KeyModifier[] modifiers) {
+        ArrayNode arr = JacksonUtils.getMapper().createArrayNode();
+        for (KeyModifier mod : modifiers) {
+            arr.add(mod.name());
+        }
+        return arr;
     }
 
     // ---- Whitespace Indicators API ----
@@ -1436,10 +1510,10 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      * user expectations (e.g., "Hello" returns 5, not 6).
      * </p>
      * <p>
-     * <strong>Breaking Change from V24:</strong> V24's synchronous API
-     * ({@code int getTextLength()}) cannot be preserved in V25 due to
-     * Vaadin's deadlock detection. This async callback pattern matches
-     * Vaadin's {@code WebStorage.getItem()} API.
+     * <strong>Breaking Change from V24:</strong> V24's synchronous
+     * {@code int getTextLength()} was replaced because Vaadin Flow's
+     * {@code executeJs()} is inherently asynchronous — there is no way
+     * to block the server thread until the browser responds.
      * </p>
      *
      * @param callback Consumer that receives the text length (never null)

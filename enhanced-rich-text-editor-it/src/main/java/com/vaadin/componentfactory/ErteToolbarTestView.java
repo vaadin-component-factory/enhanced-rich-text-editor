@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.vaadin.componentfactory.toolbar.ToolbarSlot;
+import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.KeyModifier;
 import com.vaadin.componentfactory.toolbar.ToolbarSwitch;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.button.Button;
@@ -67,12 +69,12 @@ public class ErteToolbarTestView extends VerticalLayout {
         // --- Keyboard shortcuts (Phase 3.2b) ---
         editor.addStandardToolbarButtonShortcut(
                 EnhancedRichTextEditor.ToolbarButton.ALIGN_CENTER,
-                "F9", false, true, false); // Shift+F9 → align center
+                Key.F9, KeyModifier.SHIFT); // Shift+F9 → align center
         editor.addToolbarFocusShortcut(
-                "F10", false, true, false); // Shift+F10 → focus toolbar
+                Key.F10, KeyModifier.SHIFT); // Shift+F10 → focus toolbar
         editor.addStandardToolbarButtonShortcut(
                 EnhancedRichTextEditor.ToolbarButton.BOLD,
-                "b", true, true, false); // Ctrl+Shift+B → bold toggle
+                Key.KEY_B, KeyModifier.CONTROL, KeyModifier.SHIFT); // Ctrl+Shift+B → bold toggle
 
         // --- Slot components ---
 

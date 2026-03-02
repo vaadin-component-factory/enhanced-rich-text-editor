@@ -25,20 +25,22 @@ Building, testing, and developing ERTE v6.x from source. For features, see [User
 
 ## Repository Structure
 
+The project is a multi-module Maven build. Each module has a distinct role:
+
 | Module | Purpose |
 |--------|---------|
-| **enhanced-rich-text-editor/** | Core ERTE (Java + JS) |
-| **enhanced-rich-text-editor-tables/** | Tables addon |
-| **enhanced-rich-text-editor-demo/** | Demo app + prototype tests (75) |
-| **enhanced-rich-text-editor-it/** | Integration tests (test views + Playwright specs) |
+| **enhanced-rich-text-editor/** | Core ERTE addon (Java + JavaScript) |
+| **enhanced-rich-text-editor-tables/** | Tables extension for ERTE |
+| **enhanced-rich-text-editor-demo/** | Demo application with sample views and prototype tests (75) |
+| **enhanced-rich-text-editor-it/** | Integration tests (dedicated test views + Playwright specs) |
 
-**Development:** All work on `v25` branch.
+All development happens on the `v25` branch.
 
 ---
 
 ## Building from Source
 
-Always use root scripts:
+Always use the root scripts instead of running Maven directly. They handle module ordering and skip tests automatically.
 
 ```bash
 bash build.sh             # mvn clean install -DskipTests
@@ -46,13 +48,13 @@ bash build.sh -q          # Quiet mode
 bash build-clean.sh       # Clean frontend cache (for JS changes)
 ```
 
-Use clean build if JS changes aren't visible or for troubleshooting. **Time:** ~1-2 min (standard), ~3-4 min (clean).
+Use `build-clean.sh` if your JS changes aren't showing up, or when troubleshooting build issues. Always rebuild before starting the server after code changes.
 
 ---
 
 ## Running the Demo
 
-Spring Boot app on port 8080 with sample views, navigation, and prototype tests (75 tests).
+The demo is a Spring Boot application that showcases all ERTE features with interactive examples. It runs on port 8080 by default.
 
 **Start server:**
 ```bash
@@ -84,7 +86,7 @@ bash server-stop.sh
 
 ## Running Tests
 
-ERTE tests in `enhanced-rich-text-editor-it/`, IT server on port 8081.
+The integration tests run against a dedicated IT server (port 8081) with purpose-built test views. The tests use Playwright.
 
 ```bash
 bash build-it.sh                          # Build IT module
@@ -97,8 +99,6 @@ bash it-server-stop.sh                    # Stop IT server
 See [TEST_INVENTORY.md](../../enhanced-rich-text-editor-it/tests/TEST_INVENTORY.md) for current test counts.
 
 For architecture, debugging, and advanced commands, see [CONTRIBUTING.md](CONTRIBUTING.md#testing-requirements).
-
----
 
 ---
 

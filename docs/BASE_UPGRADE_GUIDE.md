@@ -9,13 +9,11 @@ Migration guide from ERTE 1 (v5.x, Vaadin 24, Quill 1) to ERTE 2 (v6.x, Vaadin 2
 ## Table of Contents
 
 - [1. Quick Reference](#1-quick-reference)
-- [2. Prerequisites and Dependencies](#2-prerequisites-and-dependencies)
-- [3. Breaking Changes](#3-breaking-changes)
-- [4. New in ERTE 2](#4-new-in-erte-2)
-- [5. Known Limitations](#5-known-limitations)
-- [6. Troubleshooting](#6-troubleshooting)
-- [7. Migration Checklist](#7-migration-checklist)
-- [8. Additional Considerations](#8-additional-considerations)
+- [2. Breaking Changes](#2-breaking-changes)
+- [3. New in ERTE 2](#3-new-in-erte-2)
+- [4. Known Limitations](#4-known-limitations)
+- [5. Quick Troubleshooting](#5-quick-troubleshooting)
+- [6. Migration Checklist](#6-migration-checklist)
 
 ---
 
@@ -41,13 +39,9 @@ All 20 ERTE features supported in v6.x. Migration effort by category:
 | API changes | Medium | 3 | getTextLength (async), Keyboard shortcuts (keyCode→Key), extendOptions (deprecated) |
 
 **Critical change:** The primary value format changed from Delta JSON to HTML.
-See [Section 3.1](#31-primary-value-format-delta-to-html) for details and migration
-strategies.
+See [Section 2.1](#21-primary-value-format-delta-to-html) for details and migration strategies.
 
----
-
-## 2. Prerequisites and Dependencies
-### 2.1 Maven Coordinates
+**Maven coordinates:** GroupId and package names unchanged; version bumps from 5.2.0 to 6.0.0.
 
 ```xml
 <dependency>
@@ -57,21 +51,23 @@ strategies.
 </dependency>
 ```
 
-GroupId and package names unchanged; version bumps from 5.2.0 to 6.0.0.
+---
 
-### 2.2 Primary Value Format: Delta to HTML
+## 2. Breaking Changes
 
-**What changed:**
-- `getValue()` returns HTML (not Delta)
-- `setValue()` accepts HTML
-- `getHtmlValue()` removed — use `getValue()`
-- Delta access via `asDelta()` wrapper
+This section gives you an overview of the breaking changes, when upgrading to ERTE 6.0.
+
+### 2.1 Primary Value Format (Delta to HTML)
+
+With Vaadin 25, the value of the Rich Text Editor is not delta anymore, but html. You can still
+use the delta value, if you want or need to process it.
+
+**Impact:** High — affects all code that reads or writes editor content.
 
 **Migration strategy:**
 
 **Option A (recommended): Convert to HTML**
 ```java
-// One-time migration
 editor.asDelta().setValue(storedDelta);
 String html = editor.getValue();  // Convert
 database.save(id, html);
@@ -80,43 +76,15 @@ database.save(id, html);
 
 **Option B: Keep Delta via wrapper**
 ```java
-// All reads/writes through asDelta()
 editor.asDelta().setValue(deltaJson);
 editor.asDelta().addValueChangeListener(e -> database.save(e.getValue()));
 ```
 > No database migration, but all code must use `asDelta()`.
 
----
+### 2.2 getTextLength()
 
-## 3. Breaking Changes
-
-This section documents every API change that will cause a compilation error or
-runtime behavior change. Each change includes before/after code examples.
-
-### 3.1 Primary Value Format (Delta to HTML)
-
-**Impact:** High -- affects all code that reads or writes editor content.
-
-```java
-// --- ERTE 1 (V24) ---
-// Delta is the primary format
-editor.setValue(deltaJsonString);
-String delta = editor.getValue();     // Returns Delta JSON
-String html = editor.getHtmlValue();  // Separate HTML getter
-
-// --- ERTE 2 (V25) ---
-// HTML is the primary format
-editor.setValue(htmlString);
-String html = editor.getValue();      // Returns HTML
-
-// Delta access via wrapper
-editor.asDelta().setValue(deltaJsonString);
-String delta = editor.asDelta().getValue();
-```
-
-See [Section 2.2](#22-the-delta-vs-html-storage-decision) for migration strategies.
-
-### 3.2 getTextLength() -- Now Asynchronous
+The text length is read from the client via internal JavaScript. Since any client side interaction is
+asynchronous, the method to obtain the current text length has changed. It works now with a `Consumer<Integer>`.
 
 ```java
 // ERTE 1: synchronous (removed)
@@ -130,19 +98,25 @@ editor.getTextLength(length -> {
 
 > Text length excludes Quill's trailing newline ("Hello" = 5, not 6).
 
-### 3.3 I18n Class
+### 2.3 I18n Class
+
+The i18n class name has changed. Also the name for the "deindent" toolbar button has changed to "outdent".
 
 ```java
 // ERTE 1: RichTextEditorI18n with all fields
-new EnhancedRichTextEditor.RichTextEditorI18n().setDeindent("...")
+var i18n = new EnhancedRichTextEditor.RichTextEditorI18n();
+i18n.setDeindent("...");
 
 // ERTE 2: EnhancedRichTextEditorI18n (extends RTE 2 base)
-new EnhancedRichTextEditor.EnhancedRichTextEditorI18n().setOutdent("...")
+var new EnhancedRichTextEditor.EnhancedRichTextEditorI18n();
+var i18n .setOutdent("...");
 ```
 
 Key changes: class name, `setDeindent()` → `setOutdent()`, typo fix `setPlaceholderAppeance()` → `setPlaceholderAppearance()`
 
-### 3.4 ToolbarButton Enum Changes
+### 2.4 ToolbarButton Enum Changes
+
+As with 2.3, the enum for the "deindent" button has changed.
 
 **Impact:** Low -- only affects code referencing `DEINDENT`.
 
@@ -172,25 +146,31 @@ editor.setToolbarButtonsVisibility(Map.of(
 Each enum constant now has a `getPartSuffix()` method (e.g., `"bold"`) and a
 `getPartName()` method (e.g., `"toolbar-button-bold"`) for CSS part-based targeting.
 
-### 3.5 Keyboard Shortcut API
+### 2.5 Keyboard Shortcut API
+
+The old API used numeric keyCodes and three boolean parameters for modifier keys. The new API uses Vaadin's `Key` and `KeyModifier` classes, which is more readable and less error-prone. Also, the typo in `addToobarFocusShortcut()` has been fixed.
 
 ```java
 // ERTE 1: numeric keyCodes + boolean modifiers
 editor.addStandardToolbarButtonShortcut(ToolbarButton.BOLD, 66, true, false, false);
 editor.addToobarFocusShortcut(121, false, false, false);
 
-// ERTE 2: Key constants + KeyModifier varargs + typo fix
+// ERTE 2: Key constants + KeyModifier varargs
 editor.addStandardToolbarButtonShortcut(ToolbarButton.BOLD, Key.KEY_B, KeyModifier.CONTROL);
 editor.addToolbarFocusShortcut(Key.F10);
 ```
 
-Key mappings: `66`→`Key.KEY_B`, `73`→`Key.KEY_I`, `85`→`Key.KEY_U`, `9`→`Key.TAB`, `13`→`Key.ENTER`, `121`→`Key.F10`. Typo fix: `addToobarFocusShortcut()` → `addToolbarFocusShortcut()`.
+Common key mappings: `66`→`Key.KEY_B`, `73`→`Key.KEY_I`, `85`→`Key.KEY_U`, `9`→`Key.TAB`, `13`→`Key.ENTER`, `121`→`Key.F10`.
 
-### 3.6 Typo Fixes (Placeholder)
+### 2.6 Typo Fixes (Placeholder)
 
-Rename: `setPlacehoderAltAppearance()` → `setPlaceholderAltAppearance()` (typo fix).
+A few method names from ERTE 1 had typos that have been corrected:
+- `setPlacehoderAltAppearance()` → `setPlaceholderAltAppearance()`
+- `addToobarFocusShortcut()` → `addToolbarFocusShortcut()` (see also 2.5)
 
-### 3.7 Placeholder Format API
+### 2.7 Placeholder Format API
+
+Placeholder formatting now uses standard `Map<String, Object>` instead of Vaadin's `JsonObject`. This aligns with the rest of the ERTE 2 API and removes the dependency on the elemental JSON library.
 
 ```java
 // ERTE 1: JsonObject
@@ -202,40 +182,48 @@ p.setFormat(fmt);
 p.setFormat(Map.of("bold", true, "italic", true));
 ```
 
-### 3.8 Removed V24 Methods
+### 2.8 Removed V24 Methods
 
-| V24 | V25 |
-|-----|----|
-| `addCustomButton(Button)` | `addCustomToolbarComponents(Component...)` or `addToolbarComponents(ToolbarSlot, ...)` |
-| `getHtmlValue()` | `getValue()` |
-| `getValue()` (Delta) | `asDelta().getValue()` |
+Some methods have been removed or replaced. If you used any of these, here are the replacements:
 
-### 3.9 extendOptions Hook
+| V24 Method                    | V25 Replacement                                                                                     |
+|-------------------------------|-----------------------------------------------------------------------------------------------------|
+| `addCustomButton(button)`     | `addCustomToolbarComponents(...)` or `addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, ...)`          |
+| `getHtmlValue()`              | `getValue()` (now returns HTML by default)                                                          |
+| `getValue()` (returned Delta) | `asDelta().getValue()`                                                                              |
 
-Deprecated. Use `extendQuill` (register blots) or `extendEditor` (event handlers) instead. See [EXTENDING.md](dev/EXTENDING.md).
+### 2.9 extendOptions Hook
 
----
+The `extendOptions` callback from ERTE 1 is deprecated. It has been replaced by two more specific hooks: `extendQuill` for registering custom blots before the editor initializes, and `extendEditor` for adding event handlers or other post-init logic. See [EXTENDING.md](dev/EXTENDING.md) for details and examples.
 
-## 4. New in ERTE 2
-
-- **22 CSS custom properties** (`--vaadin-erte-*`) for theming
-- **Toolbar part-based styling** for custom components (`part="toolbar-custom-component"`)
-- **Arrow key navigation** between toolbar buttons
-- **Reliable `editor.focus()`** from any context
+_Side note: this is only relevant, if you develop your own ERTE extension._
 
 ---
 
-## 5. Known Limitations
+## 3. New in ERTE 2
 
-Quill 2 / Parchment 3 constraints (not ERTE bugs):
+ERTE 2 introduces a few new features that weren't available in ERTE 1:
 
-- **Guard nodes:** Cursor may appear at guard position; Ctrl+B/I unreliable at embed boundary
-- **Undo:** May not restore embed blots or readonly formatting
-- **Copy-Paste:** Embeds may not survive clipboard roundtrip; cross-editor paste loses custom blot types
+- **CSS custom properties** (`--vaadin-erte-*`) for fine-grained theming of colors, sizes, and spacing
+- **Toolbar part-based styling** — custom toolbar components get `part="toolbar-custom-component"` for easy CSS targeting
+- **Arrow key navigation** between toolbar buttons (left/right to move, Home/End to jump)
+- **Reliable `editor.focus()`** — works from any server-side context without timing workarounds
 
 ---
 
-## 6. Quick Troubleshooting
+## 4. Known Limitations
+
+These are Quill 2 / Parchment 3 platform constraints, not ERTE bugs. They affect all Quill 2-based editors and cannot be fixed at the ERTE level.
+
+- **Guard nodes:** Quill 2 uses invisible guard characters around embedded elements (like tabstops or placeholders). The cursor may occasionally appear at the guard position instead of the element itself, and format toggles (Ctrl+B/I) can be unreliable right next to an embed.
+- **Undo:** Quill's history module may not fully restore embedded blots or readonly formatting after undo.
+- **Copy-Paste:** Custom embeds may not survive a clipboard roundtrip (copy from ERTE, paste back). Cross-editor paste loses custom blot types entirely.
+
+---
+
+## 5. Quick Troubleshooting
+
+If you hit a compilation error or unexpected runtime behavior after upgrading, check this table first:
 
 | Error | Fix |
 |-------|-----|
@@ -251,7 +239,9 @@ Quill 2 / Parchment 3 constraints (not ERTE bugs):
 
 ---
 
-## 7. Migration Checklist
+## 6. Migration Checklist
+
+A step-by-step checklist for upgrading your project. Work through it top to bottom.
 
 ### Before Starting
 - [ ] Back up database if storing content
