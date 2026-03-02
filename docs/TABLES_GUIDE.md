@@ -10,13 +10,7 @@
 
 ### What You Get
 
-Three toolbar buttons:
-
-- **Add Table** — Insert new table (rows & columns)
-- **Modify Table** — Add/remove rows/columns, merge/split cells, delete table
-- **Style Templates** — Apply named styling rules (colors, borders, dimensions)
-
-Plus events when tables/cells are modified or templates change, so your app can react.
+Three toolbar buttons: **Add Table** (insert new table), **Modify Table** (rows/columns/merge/delete), **Style Templates** (apply styling rules). Plus 8 event types for table/cell/template changes.
 
 ### Installation
 
@@ -30,7 +24,7 @@ Add this to your `pom.xml`:
 </dependency>
 ```
 
-**Requirements:** Java 21+, Vaadin 25.0.x, `enhanced-rich-text-editor` 6.0.0
+**Requirements:** Vaadin 25.0.x, `enhanced-rich-text-editor` 6.0.0
 
 ### Quickstart
 
@@ -48,13 +42,13 @@ The three buttons appear automatically in the toolbar.
 
 ### The Three Buttons
 
-**Add Table** — Opens a popover with Rows/Columns inputs (default: 3×3, range: 1–20). Click the plus button to insert at cursor. Disabled inside tables (no nesting).
+| Button | Behavior |
+|--------|----------|
+| **Add Table** | Popover with row/column inputs (default 3×3, 1–20 range). Insert at cursor. Disabled inside tables. |
+| **Modify Table** | Menu: append/remove rows/columns, merge, split, delete. Enabled only when table selected. |
+| **Style Templates** | Dialog for template management. Disabled when no table. |
 
-**Modify Table** — Enabled when a table is selected. Menu items: append/remove rows, append/remove columns, merge cells (multi-select only), split cell, remove table.
-
-**Style Templates** — Opens a dialog for template management (see below). Disabled when no table selected.
-
-### Toggling and Customizing
+### Customization
 
 You can access and modify these buttons programmatically:
 
@@ -75,38 +69,19 @@ modifyMenu.getMenuItems(); // list of all menu items
 
 ## 3. Table Operations
 
-### Inserting Tables
+**Insert:** UI or `tables.insertTableAtCurrentPosition(rows, cols)` / `insertTableAtCurrentPosition(rows, cols, templateId)`
 
-Through the UI: click **Add Table** and enter dimensions.
+**Modify:** **Modify Table** menu (append/remove/merge/split/delete)
 
-Programmatically:
+**Select cells:** Ctrl+click individual cells or Ctrl+drag range (get `ql-cell-selected` class). Merge enables only with multiple cells.
 
-```java
-tables.insertTableAtCurrentPosition(4, 3); // 4 rows, 3 columns
-tables.insertTableAtCurrentPosition(4, 3, "myTemplate"); // with template
-```
-
-Template ID must be a valid CSS class name. If it doesn't exist, the table inserts without styling.
-
-### Modifying Tables
-
-Use the **Modify Table** menu. Operations work on the currently selected table (where cursor is). The UI updates automatically when you add/remove rows/columns or merge cells.
-
-### Cell Selection
-
-**Ctrl+click** individual cells or **Ctrl+drag** for a range. Selected cells get `ql-cell-selected` class (light background). **Merge cells** menu item only enables with multiple cells selected. Click without Ctrl to clear selection.
-
-### Removing Tables
-
-Click **Modify Table** → **Remove table**.
+**Remove:** **Modify Table** → **Remove table**
 
 ---
 
 ## 4. Style Templates
 
-### What Are Templates?
-
-Named collections of styling rules. Target table-level properties, specific rows (header, footer, even, odd, or numbered), columns (numbered), or cells (x/y coordinates). Define once, apply to multiple tables.
+Named collections of styling rules for table, rows, columns, or cells. Define once, apply to multiple tables.
 
 ### How to Use Templates
 
@@ -181,35 +156,7 @@ Each template is keyed by its **template ID** (a CSS class name) and has the fol
 
 ### Row Index Patterns
 
-Row and column indexes use CSS pseudo-class syntax:
-
-| Pattern | Meaning |
-|---------|---------|
-| `"1"` | Row 1 (first row = header) |
-| `"2n"` | Even-numbered rows (2, 4, 6, ...) |
-| `"2n+1"` | Odd-numbered rows (1, 3, 5, ...) |
-| `"0n+1"` | First row (shorthand for header) |
-| `"0n+1"` with `"last": true` | Last row (footer) — see example below |
-
-**Special syntax for header/footer:**
-
-```json
-{
-  "rows": [
-    {
-      "index": "0n+1",
-      "declarations": { "bgColor": "#e0e0e0" }
-    },
-    {
-      "index": "0n+1",
-      "last": true,
-      "declarations": { "bgColor": "#e0e0e0" }
-    }
-  ]
-}
-```
-
-The `"last": true` flag distinguishes the footer row from the header row.
+CSS pseudo-class syntax: `"0n+1"` (first/header), `"2n"` (even), `"2n+1"` (odd), `"1"` (specific). Use `"last": true` to distinguish footer from header.
 
 ### Style Properties
 
@@ -253,13 +200,11 @@ Click **Style Templates** to open the dialog. It has these sections:
 
 All changes are applied in real-time. No "Save" button needed.
 
-### Customizing Dimension Units
+### Dimension Units
 
-By default, dimension fields (width, height) use `rem` as the unit. Change it globally:
-
+Set default unit (default: `rem`):
 ```java
 tables.getStyleTemplatesDialog().getDefaults().setDimensionUnit("px");
-// Now all dimension fields will show values in pixels
 ```
 
 ### Injecting Custom CSS
@@ -351,7 +296,7 @@ reg.remove();
 
 ### CSS Custom Properties
 
-11 CSS custom properties for styling. Set on the ERTE component:
+11 CSS variables for table styling:
 
 ```css
 vcf-enhanced-rich-text-editor {
@@ -456,40 +401,7 @@ templateDialog.setHeight("50vh");
 
 ### Delta Representation
 
-Tables are stored in Quill Delta JSON. Each table cell is a line with a special `td` attribute:
-
-```json
-{
-  "insert": "\n",
-  "attributes": {
-    "td": "tableId|rowId|cellId|rowspan|colspan|templateId|uniqueId"
-  }
-}
-```
-
-The `td` value is a pipe-separated string with 7 fields:
-
-1. **tableId** — shared by all cells in the table (e.g., "t1")
-2. **rowId** — shared by all cells in the same row (e.g., "r1")
-3. **cellId** — unique per cell (e.g., "c1")
-4. **rowspan** — empty for normal cells, number for merged (e.g., "2")
-5. **colspan** — empty for normal cells, number for merged (e.g., "")
-6. **templateId** — template ID on the FIRST cell only, empty for others
-7. **uniqueId** — reserved, usually empty
-
-**Example: 2×2 table with template "blue":**
-
-```json
-[
-  {"insert": "\n", "attributes": {"td": "t1|r1|c1||||blue"}},
-  {"insert": "\n", "attributes": {"td": "t1|r1|c2|||||"}},
-  {"insert": "\n", "attributes": {"td": "t1|r2|c3|||||"}},
-  {"insert": "\n", "attributes": {"td": "t1|r2|c4|||||"}},
-  {"insert": "\n"}
-]
-```
-
-**Merged cells:** The "root" cell (top-left) has rowspan/colspan set. Other cells in the merged region reference the root's cellId.
+Tables stored as Quill Delta JSON. Cell lines have `td` attribute: `"tableId|rowId|cellId|rowspan|colspan|templateId|uniqueId"` (pipe-separated, 7 fields). Merged cells: root cell has rowspan/colspan; other cells reference root's cellId. Template ID on first cell only.
 
 ### Finding Used Templates
 

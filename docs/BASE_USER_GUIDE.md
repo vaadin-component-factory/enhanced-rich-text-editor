@@ -23,8 +23,7 @@ This guide covers all ERTE v6.x features for Vaadin 25, including code examples,
   - [3.1 Value Formats (HTML vs Delta)](#31-value-formats-html-vs-delta)
   - [3.2 Internationalization (I18n)](#32-internationalization-i18n)
   - [3.3 Sanitization](#33-sanitization)
-- [4. Known Limitations](#4-known-limitations)
-- [5. Getting Help](#5-getting-help)
+- [4. Getting Help](#4-getting-help)
 
 ---
 
@@ -32,7 +31,7 @@ This guide covers all ERTE v6.x features for Vaadin 25, including code examples,
 
 ### 1.1 Installation
 
-ERTE v6.x requires Vaadin 25.0.x and Java 21+. Add the dependency to your `pom.xml`:
+ERTE v6.x requires Vaadin 25.0.x. Add the dependency to your `pom.xml`:
 
 ```xml
 <dependency>
@@ -42,33 +41,18 @@ ERTE v6.x requires Vaadin 25.0.x and Java 21+. Add the dependency to your `pom.x
 </dependency>
 ```
 
-> **Note:** Vaadin 25 moved the Rich Text Editor to the commercial `vaadin` artifact (not `vaadin-core`). A Vaadin Pro subscription or higher is required for production use.
-
-> **Theme:** ERTE v6.0 uses the Vaadin Lumo theme. Ensure your application loads Lumo (the default for Vaadin 25). For theme setup details, see [Upgrade Guide -- Section 2.5](BASE_UPGRADE_GUIDE.md).
+> **Note:** The base Rich Text Editor is part of the `vaadin` artifact (not `vaadin-core`). Make sure your project uses `vaadin` as dependency.
 
 ### 1.2 Basic Usage
 
 ```java
 EnhancedRichTextEditor editor = new EnhancedRichTextEditor();
-
-// Set and get HTML
 editor.setValue("<p>Hello, world!</p>");
-String html = editor.getValue();
 
 // Listen for changes (fires on blur)
 editor.addValueChangeListener(event -> {
-    String newValue = event.getValue();
-    Notification.show("Content changed");
+    Notification.show("Saved: " + event.getValue());
 });
-```
-
-### 1.3 Quick Setup Example
-
-```java
-import com.vaadin.componentfactory.EnhancedRichTextEditor;
-import com.vaadin.componentfactory.toolbar.ToolbarSlot;
-
-EnhancedRichTextEditor editor = new EnhancedRichTextEditor();
 
 // Hide buttons
 editor.setToolbarButtonsVisibility(Map.of(
@@ -76,9 +60,8 @@ editor.setToolbarButtonsVisibility(Map.of(
     EnhancedRichTextEditor.ToolbarButton.CODE_BLOCK, false
 ));
 
-// Add custom button
+// Add custom button to toolbar
 Button saveBtn = new Button("Save");
-saveBtn.addClickListener(e -> save(editor.getValue()));
 editor.addToolbarComponents(ToolbarSlot.END, saveBtn);
 
 // Configure tabstops
@@ -86,19 +69,13 @@ editor.setTabStops(List.of(
     new TabStop(TabStop.Direction.LEFT, 150),
     new TabStop(TabStop.Direction.RIGHT, 350)
 ));
-```
 
-### 1.4 Common Use Cases
-
-**Read-only viewer:**
-```java
+// Read-only viewer
 EnhancedRichTextEditor viewer = new EnhancedRichTextEditor();
 viewer.setReadOnly(true);
 viewer.setValue(savedHtml);
-```
 
-**Insert text programmatically:**
-```java
+// Programmatic text insertion
 editor.addText("PREFIX", 0);  // at beginning
 editor.addText("INSERTED");   // at cursor
 editor.getTextLength(len -> Notification.show("Length: " + len));
@@ -114,13 +91,7 @@ The toolbar is ERTE's most flexible feature. It supports adding custom component
 
 #### Adding Components to Toolbar Slots
 
-ERTE provides 27 `ToolbarSlot` positions for custom components, organized around 11 button groups:
-
-```
-[START] [BH|Undo|Redo|AH] [BE|Bold|Italic|...|AE] ... [GROUP_CUSTOM] [END]
-```
-
-Slots: `START`/`END` (edges), `BEFORE_GROUP_X`/`AFTER_GROUP_X` (22 positions), `BEFORE_GROUP_CUSTOM`/`GROUP_CUSTOM`/`AFTER_GROUP_CUSTOM` (custom area).
+ERTE provides 27 `ToolbarSlot` positions: `START`/`END`, `BEFORE_GROUP_*/AFTER_GROUP_*` (22 positions per group), and `GROUP_CUSTOM`.
 
 ```java
 Button startBtn = new Button("S");
@@ -223,18 +194,22 @@ When all buttons in a group are hidden, the group container auto-hides. See Java
 // Ctrl+Shift+B toggles Bold
 editor.addStandardToolbarButtonShortcut(
     EnhancedRichTextEditor.ToolbarButton.BOLD,
-    "b", true, true, false);  // key, shortKey, shiftKey, altKey
+    Key.KEY_B, KeyModifier.CONTROL, KeyModifier.SHIFT);
 
 // Shift+F9 triggers Align Center
 editor.addStandardToolbarButtonShortcut(
     EnhancedRichTextEditor.ToolbarButton.ALIGN_CENTER,
-    "F9", false, true, false);
+    Key.F9, KeyModifier.SHIFT);
+
+// F9 without modifiers triggers Image
+editor.addStandardToolbarButtonShortcut(
+    EnhancedRichTextEditor.ToolbarButton.IMAGE, Key.F9);
 
 // Move focus from editor to toolbar
-editor.addToolbarFocusShortcut("F10", false, true, false);
+editor.addToolbarFocusShortcut(Key.F10, KeyModifier.SHIFT);
 ```
 
-Parameters: `key` is a Quill 2 key name (`"b"`, `"F9"`, `"Enter"`, etc.). `shortKey` maps to Ctrl/Cmd depending on platform.
+Uses Vaadin's `Key` constants (`Key.KEY_B`, `Key.F9`, `Key.ENTER`, etc.) and `KeyModifier` varargs. `KeyModifier.CONTROL` maps to Ctrl (Win/Linux) or Cmd (Mac).
 
 #### Replacing Toolbar Button Icons
 
@@ -500,57 +475,7 @@ For standard RTE 2 properties (`--vaadin-rich-text-editor-*`), see the [Vaadin R
 
 #### 2.10.1 ERTE Custom Properties
 
-Override on the host element:
-
-```css
-vcf-enhanced-rich-text-editor {
-    --vaadin-erte-readonly-background: lightyellow;
-    --vaadin-erte-placeholder-background: #e8f4fd;
-    --vaadin-erte-ruler-height: 1.25rem;
-}
-```
-
-**Readonly Sections (6):**
-
-| Property | Default |
-|----------|---------|
-| `--vaadin-erte-readonly-color` | `var(--vaadin-text-color-secondary)` |
-| `--vaadin-erte-readonly-background` | `var(--vaadin-background-container)` |
-| `--vaadin-erte-readonly-border-color` | `var(--vaadin-border-color-secondary)` |
-| `--vaadin-erte-readonly-border-width` | `1px` |
-| `--vaadin-erte-readonly-border-radius` | `var(--lumo-border-radius-s)` |
-| `--vaadin-erte-readonly-padding` | `calc(var(--vaadin-padding-xs) / 2)` |
-
-**Placeholders (6):**
-
-| Property | Default |
-|----------|---------|
-| `--vaadin-erte-placeholder-color` | `inherit` |
-| `--vaadin-erte-placeholder-background` | `var(--lumo-primary-color-10pct)` |
-| `--vaadin-erte-placeholder-border-color` | `transparent` |
-| `--vaadin-erte-placeholder-border-width` | `0` |
-| `--vaadin-erte-placeholder-border-radius` | `var(--lumo-border-radius-s)` |
-| `--vaadin-erte-placeholder-padding` | `calc(var(--vaadin-padding-xs) / 2)` |
-
-**Whitespace Indicators (3):**
-
-| Property | Default |
-|----------|---------|
-| `--vaadin-erte-whitespace-indicator-color` | `var(--lumo-contrast-40pct, rgba(0, 0, 0, 0.38))` |
-| `--vaadin-erte-whitespace-paragraph-indicator-color` | `var(--lumo-contrast-30pct, rgba(0, 0, 0, 0.26))` |
-| `--vaadin-erte-whitespace-indicator-spacing` | `calc(var(--vaadin-padding-xs) / 2)` |
-
-**Ruler (7):**
-
-| Property | Default |
-|----------|---------|
-| `--vaadin-erte-ruler-height` | `0.9375rem` |
-| `--vaadin-erte-ruler-border-color` | `var(--vaadin-border-color, var(--lumo-contrast-20pct))` |
-| `--vaadin-erte-ruler-background` | SVG tick image (internal) |
-| `--vaadin-erte-ruler-marker-size` | `0.9375rem` |
-| `--vaadin-erte-ruler-marker-color` | `inherit` |
-| `--vaadin-erte-ruler-vertical-width` | `0.9375rem` |
-| `--vaadin-erte-ruler-vertical-background` | Ruler tick image (base64 PNG) |
+ERTE provides 22 CSS custom properties for readonly sections, placeholders, whitespace indicators, and rulers. See [ARCHITECTURE.md](dev/ARCHITECTURE.md#custom-properties) for the complete reference.
 
 #### 2.10.2 ERTE Shadow Parts
 
@@ -618,8 +543,6 @@ ERTE-specific classes applied inside `.ql-editor` (editor content area). Standar
 
 ### 2.11 Built-in Keyboard Shortcuts
 
-These shortcuts are always active and cannot be removed:
-
 | Shortcut | Action |
 |----------|--------|
 | Tab | Insert tab embed (if tabstops configured) |
@@ -627,7 +550,7 @@ These shortcuts are always active and cannot be removed:
 | Shift+Space | Insert non-breaking space |
 | Ctrl+P / Cmd+P | Open placeholder dialog (if placeholders configured) |
 
-> **Note:** Ctrl+P / Cmd+P may be intercepted by the browser's print dialog. In Chromium-based browsers, the browser intercepts the shortcut before JavaScript. Users can use the toolbar button as an alternative.
+> **Note:** Browsers may intercept Ctrl+P. Use the toolbar button as alternative.
 
 ---
 
@@ -635,41 +558,19 @@ These shortcuts are always active and cannot be removed:
 
 ### 3.1 Value Formats (HTML vs Delta)
 
-ERTE uses **HTML as primary format** (matching RTE 2), with Delta JSON as optional secondary.
-
-#### HTML (Default)
+ERTE uses **HTML as primary format**, with Delta JSON accessible via `asDelta()` wrapper.
 
 ```java
+// HTML (primary)
 editor.setValue("<p>Hello <strong>world</strong></p>");
 String html = editor.getValue();
 
-editor.addValueChangeListener(e -> {
-    String newHtml = e.getValue();
-});
-```
-
-#### Delta (Optional)
-
-```java
-editor.asDelta().setValue(
-    "[{\"insert\":\"Hello \"},{\"insert\":\"world\",\"attributes\":{\"bold\":true}},{\"insert\":\"\\n\"}]"
-);
+// Delta (secondary)
+editor.asDelta().setValue("[{\"insert\":\"Hello \"},{\"insert\":\"world\",\"attributes\":{\"bold\":true}}]");
 String deltaJson = editor.asDelta().getValue();
-
-editor.asDelta().addValueChangeListener(e -> {
-    String newDelta = e.getValue();
-});
 ```
 
-**Use Delta for:** Programmatic readonly sections, batch updates, precise format control. **Use HTML for:** Form binding, database storage, user-visible content.
-
-**Delta examples:**
-```json
-[{"insert": "Hello World\n"}]
-[{"insert": "Col1"}, {"insert": {"tab": true}}, {"insert": "Col2\n"}]
-[{"insert": "Protected", "attributes": {"readonly": true}}, {"insert": "\n"}]
-[{"insert": {"placeholder": {"text": "Company Name"}}}, {"insert": "\n"}]
-```
+**When to use:** HTML for storage/forms. Delta for programmatic readonly sections and batch updates.
 
 ---
 
@@ -714,7 +615,7 @@ editor.setI18n(i18n);
 | `setPlaceholderAppearanceLabel2()` | "Value" |
 | `setAlignJustify()` | "Justify" |
 
-Inherited RTE 2: `setUndo()`, `setRedo()`, `setBold()`, `setItalic()`, `setUnderline()`, `setStrike()`, `setColor()`, `setBackground()`, `setH1()`, `setH2()`, `setH3()`, `setSubscript()`, `setSuperscript()`, `setListOrdered()`, `setListBullet()`, `setOutdent()`, `setIndent()`, `setAlignLeft()`, `setAlignCenter()`, `setAlignRight()`, `setImage()`, `setLink()`, `setBlockquote()`, `setCodeBlock()`, `setClean()`.
+Standard RTE 2 i18n (inherited): bold, italic, underline, strike, color, background, headings, subscript, superscript, lists, indent/outdent, alignment, link, image, blockquote, code block, clean.
 
 ---
 
@@ -730,20 +631,9 @@ See `SECURITY.md` for full security details.
 
 ---
 
-## 4. Known Limitations
-
-These are Quill 2 / Parchment 3 platform constraints, not ERTE bugs:
-
-| Issue | Workaround |
-|-------|-----------|
-| Readonly undo removes formatting | Re-apply readonly after undo |
-| Bold/Italic at tab boundary may not work | Place cursor away from embed, then apply format |
-| Placeholder copy-paste doesn't survive clipboard roundtrip | Use programmatic insertion |
-| Undo doesn't restore removed embed blots | Manual re-insertion |
-
 ---
 
-## 5. Getting Help
+## 4. Getting Help
 
 - **Upgrade from v5.x:** [Upgrade Guide](BASE_UPGRADE_GUIDE.md)
 - **Extension hooks and custom blots:** [EXTENDING.md](dev/EXTENDING.md)

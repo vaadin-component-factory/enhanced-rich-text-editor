@@ -16,53 +16,37 @@ Building, testing, and developing ERTE v6.x from source. For features, see [User
 
 ## Prerequisites
 
-| Tool | Version | Notes |
-|------|---------|-------|
-| Java | 21+ | Required for compilation and running the demo |
-| Maven | 3.9+ | Used for building all modules |
-| Node.js | 20+ | Required for Playwright tests |
-
-**Verify:** `java -version` (21+), `mvn -version` (3.9+), `node -version` (20+)
-
-Targets Vaadin 25.0.x and Spring Boot 4.x. See `enhanced-rich-text-editor-demo/pom.xml` for exact versions.
+| Tool | Version |
+|------|---------|
+| Node.js | 20+ (for Playwright tests) |
+| Maven/Java | Dictated by Vaadin 25 project setup |
 
 ---
 
 ## Repository Structure
 
-Multi-module Maven project:
-
 | Module | Purpose |
 |--------|---------|
-| **enhanced-rich-text-editor/** | Core ERTE addon (Java + JavaScript) |
-| **enhanced-rich-text-editor-tables/** | Tables addon for ERTE |
-| **enhanced-rich-text-editor-demo/** | Demo application (sample views, prototype tests) |
+| **enhanced-rich-text-editor/** | Core ERTE (Java + JS) |
+| **enhanced-rich-text-editor-tables/** | Tables addon |
+| **enhanced-rich-text-editor-demo/** | Demo app + prototype tests (75) |
 | **enhanced-rich-text-editor-it/** | Integration tests (test views + Playwright specs) |
 
-**Git workflow:** All development happens on the `v25` branch.
+**Development:** All work on `v25` branch.
 
 ---
 
 ## Building from Source
 
-Always use root scripts instead of Maven:
+Always use root scripts:
 
-**Standard build:**
 ```bash
-bash build.sh          # mvn clean install -DskipTests
-bash build.sh -q       # Quiet mode
+bash build.sh             # mvn clean install -DskipTests
+bash build.sh -q          # Quiet mode
+bash build-clean.sh       # Clean frontend cache (for JS changes)
 ```
 
-**Clean build (wipe frontend cache):**
-```bash
-bash build-clean.sh    # Also runs vaadin:clean-frontend
-```
-
-Use clean build if JS changes aren't showing, dependencies changed, or troubleshooting build issues.
-
-**Time:** Standard ~1-2 min, clean ~3-4 min.
-
-**Workflow:** Always build before starting server. Build again after code changes.
+Use clean build if JS changes aren't visible or for troubleshooting. **Time:** ~1-2 min (standard), ~3-4 min (clean).
 
 ---
 

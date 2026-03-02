@@ -1,22 +1,18 @@
 # Extending ERTE V25
 
-Practical patterns for custom blots, toolbar components, keyboard shortcuts, and styling. See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for design.
-
-For Quill 2 fundamentals, see [quilljs.com](https://quilljs.com/) and [Parchment 3](https://github.com/quilljs/parchment).
+Patterns for custom blots, toolbar components, keyboard shortcuts, and styling. See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for design.
 
 ## Custom Blots
 
 ### Embed Blot Patterns
 
-An embed is a discrete element (not applied to existing text), like `TabBlot` or `PlaceholderBlot`.
+An embed (discrete element like `TabBlot` or `PlaceholderBlot`) has three critical patterns:
 
-**Three critical patterns:**
+1. **Lifecycle:** `static create()` runs before constructor. Initialize outer DOM in `create()`, configure inner `contentNode` in `constructor()`.
 
-1. **Lifecycle:** `static create()` runs before constructor. `contentNode` created by Embed constructor — initialize outer DOM in `create()`, configure `contentNode` in `constructor()`.
+2. **Guard nodes:** Quill 2 places zero-width text inside domNode. Never set `contenteditable="false"` on outer domNode — keep guard nodes editable. Inner `contentNode` already has it.
 
-2. **Guard nodes (Quill 2):** Quill 2 places zero-width guard text (`\uFEFF`) inside domNode. Never set `contenteditable="false"` on outer domNode — guard nodes must stay editable. Inner `contentNode` already has it.
-
-3. **Cursor placement:** Override `position(index, inclusive)` if needed. Default usually sufficient.
+3. **Cursor:** Override `position(index, inclusive)` if needed (default usually sufficient).
 
 ### Sanitization Integration
 
@@ -44,21 +40,24 @@ Custom blot HTML must pass server sanitization. To preserve your blot:
 
 ### Keyboard Shortcuts for Standard Buttons
 
-Bind shortcuts to built-in buttons:
+Bind shortcuts to built-in buttons using Vaadin `Key` constants and `KeyModifier` varargs:
 
 ```java
 editor.addStandardToolbarButtonShortcut(
-    ToolbarButton.BOLD, "b", true, false, false);  // Ctrl+B
+    ToolbarButton.BOLD, Key.KEY_B, KeyModifier.CONTROL);           // Ctrl+B (Cmd+B on Mac)
 editor.addStandardToolbarButtonShortcut(
-    ToolbarButton.H1, "1", true, true, false);     // Ctrl+Shift+1
+    ToolbarButton.H1, Key.DIGIT_1, KeyModifier.CONTROL, KeyModifier.SHIFT); // Ctrl+Shift+1
+editor.addStandardToolbarButtonShortcut(
+    ToolbarButton.IMAGE, Key.F9);                                   // F9 (no modifiers)
 ```
 
-**Key names:** Use Quill 2 names (`"a"–"z"`, `"0"–"9"`, `"F1"–"F12"`, `"Enter"`, `"Escape"`, `"Tab"`, `"ArrowUp"`), not numeric keyCodes.
+**Keys:** Use Vaadin `Key` constants (`Key.KEY_A`–`Key.KEY_Z`, `Key.DIGIT_0`–`Key.DIGIT_9`, `Key.F1`–`Key.F12`, `Key.ENTER`, `Key.ESCAPE`, `Key.TAB`, `Key.ARROW_UP`). `KeyModifier.CONTROL` maps to Ctrl on Win/Linux and Cmd on Mac.
 
 ### Focus Toolbar
 
 ```java
-editor.addToolbarFocusShortcut("F10", false, false, false);
+editor.addToolbarFocusShortcut(Key.F10);                    // F10 (no modifiers)
+editor.addToolbarFocusShortcut(Key.F10, KeyModifier.SHIFT); // Shift+F10
 ```
 
 Useful for screen readers and keyboard-only workflows.
@@ -338,10 +337,10 @@ The server-side sanitizer (`erteSanitize()`) extends Vaadin RTE 2's safelist. Be
 
 ### What Gets Stripped
 
-- `<script>`, `<iframe>`, `<object>`, `<embed>` tags
+- All tags not in the allowed list (including `<script>`, `<iframe>`, `<object>`, `<embed>`, `<style>`)
 - Event handler attributes (`onclick`, `onerror`, etc.)
-- Dangerous CSS functions (`url()`, `var()`, `expression()`)
-- `@import` directives
+- All CSS functions except the five listed above (this includes `url()`, `var()`, `expression()`, `linear-gradient()`, etc.)
+- `@import` directives in style values
 - SVG data URLs
 - CSS comments
 - `contenteditable="true"` (only `"false"` is allowed)
