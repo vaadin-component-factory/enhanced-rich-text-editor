@@ -1,6 +1,6 @@
 # Contributing to ERTE
 
-Contributions require: [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for setup, [User Guide](../BASE_USER_GUIDE.md) for end-user features.
+Thanks for contributing to ERTE! This guide covers the workflow, code style, and testing requirements. Make sure you have the dev environment set up first — see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md).
 
 ---
 

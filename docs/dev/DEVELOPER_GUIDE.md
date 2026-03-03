@@ -1,6 +1,6 @@
 # Developer Guide
 
-Building, testing, and developing ERTE v6.x from source. For features, see [User Guide](../BASE_USER_GUIDE.md).
+Everything you need to build, test, and run ERTE v6.x from source. For end-user features, see the [User Guide](../BASE_USER_GUIDE.md).
 
 ---
 

@@ -1,6 +1,6 @@
 # ERTE V25 Architecture
 
-How ERTE is built internally. Read this if you want to understand the codebase before making changes. For practical extension patterns, see [`EXTENDING.md`](./EXTENDING.md).
+How ERTE is built internally. Read this if you want to understand the codebase before making changes — it covers the three-layer architecture, module structure, and key design decisions. For practical extension patterns, see [`EXTENDING.md`](./EXTENDING.md).
 
 ---
 

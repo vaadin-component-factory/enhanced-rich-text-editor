@@ -1,6 +1,6 @@
 # Extending ERTE V25
 
-Patterns for custom blots, toolbar components, keyboard shortcuts, and styling. See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for design.
+This guide covers how to extend ERTE with your own blots, toolbar components, keyboard shortcuts, and custom styling. If you want to understand the internals first, start with [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
 ## Custom Blots
 
@@ -68,7 +68,7 @@ Useful for screen readers and keyboard-only workflows.
 
 ### Custom Toolbar Components
 
-Add Java components (buttons, inputs, popups) to any of the 27 toolbar slots:
+Add Java components (buttons, inputs, popups) to any toolbar slot:
 
 ```java
 // Simple button in the custom group
@@ -86,7 +86,7 @@ editor.addToolbarComponents(
     before, after);
 ```
 
-**Available slots:** `START`, `END`, `BEFORE_GROUP_*`, `AFTER_GROUP_*`, `GROUP_CUSTOM` (27 total). Components get part name `toolbar-custom-component` for CSS styling.
+**Available slots:** `START`, `END`, `BEFORE_GROUP_*`, `AFTER_GROUP_*`, `GROUP_CUSTOM`. Components get part name `toolbar-custom-component` for CSS styling.
 
 ### Toolbar Helper Classes
 
@@ -222,7 +222,7 @@ vcf-enhanced-rich-text-editor {
 }
 ```
 
-See `ARCHITECTURE.md` for complete list (22 properties across 4 categories).
+See the [User Guide — Custom Properties](../BASE_USER_GUIDE.md#2101-erte-custom-properties) for the complete reference with defaults.
 
 ### Styling Custom Toolbar Components
 
@@ -304,7 +304,7 @@ Add `'ql-tag'` to `ALLOWED_ERTE_CLASSES` in `EnhancedRichTextEditor.java` for sa
 
 ## Sanitizer Allowlists
 
-The server-side sanitizer (`erteSanitize()`) extends Vaadin RTE 2's safelist. If you're adding custom blots or attributes, you'll need to know what's already allowed. Here are the complete reference lists.
+The server-side sanitizer (`erteSanitize()`) extends Vaadin RTE 2's safelist. If you're adding custom blots or attributes, you'll need to know what's already allowed so you can decide what to add. For a user-facing summary, see the [User Guide — Sanitization](../BASE_USER_GUIDE.md#33-sanitization). The complete reference lists follow below.
 
 ### Allowed Tags
 
