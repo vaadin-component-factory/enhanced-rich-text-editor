@@ -1,6 +1,8 @@
 # Enhanced Rich Text Editor -- User Guide
 
-This guide covers all ERTE v6.x features for Vaadin 25, including code examples, best practices, and troubleshooting. For migration from v5.x, see [Upgrade Guide](BASE_UPGRADE_GUIDE.md).
+This guide walks you through all ERTE v6.x features for Vaadin 25 — from basic setup to advanced customization. Each section includes working code examples you can drop into your project.
+
+If you're upgrading from v5.x, start with the [Upgrade Guide](BASE_UPGRADE_GUIDE.md) first.
 
 ---
 
@@ -87,11 +89,11 @@ editor.getTextLength(len -> Notification.show("Length: " + len));
 
 ### 2.1 Toolbar Customization
 
-The toolbar is ERTE's most flexible feature. It supports adding custom components to 27 named slots, controlling button visibility, binding keyboard shortcuts, and replacing button icons.
+The toolbar is ERTE's most flexible feature. It supports adding custom components to over 20 named slots, controlling button visibility, binding keyboard shortcuts, and replacing button icons.
 
-#### Adding Components to Toolbar Slots
+#### Adding Components
 
-ERTE provides 27 `ToolbarSlot` positions: `START`/`END`, `BEFORE_GROUP_*/AFTER_GROUP_*` (22 positions per group), and `GROUP_CUSTOM`.
+ERTE provides several `ToolbarSlot` positions: `START`/`END`, `BEFORE_GROUP_*/AFTER_GROUP_*` (two per button-group), and `GROUP_CUSTOM`.
 
 ```java
 Button startBtn = new Button("S");
@@ -106,62 +108,7 @@ editor.addToolbarComponents(ToolbarSlot.BEFORE_GROUP_HISTORY, beforeHistoryBtn);
 // Or add to the custom group
 editor.addCustomToolbarComponents(new Button("Custom"));
 ```
-
-**ToolbarSwitch** -- a toggle button for toolbar components:
-
-```java
-ToolbarSwitch toolbarSwitch = new ToolbarSwitch("SW");
-toolbarSwitch.addActiveChangedListener(e ->
-    System.out.println("Switch active: " + e.isActive()));
-editor.addCustomToolbarComponents(toolbarSwitch);
-```
-
-#### Toolbar Popovers
-
-`ToolbarPopover` anchors a popover to a `ToolbarSwitch` and syncs open/close state:
-
-```java
-ToolbarSwitch colorSwitch = new ToolbarSwitch(VaadinIcon.PAINTBRUSH);
-TextField colorField = new TextField("Color");
-Button applyBtn = new Button("Apply");
-
-ToolbarPopover popover = ToolbarPopover.vertical(colorSwitch, colorField, applyBtn);
-popover.setFocusOnOpenTarget(colorField);
-
-editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, colorSwitch);
-```
-
-Factory methods: `vertical(switch, components...)`, `horizontal(switch, components...)`.
-
-#### Toolbar Select Popups
-
-`ToolbarSelectPopup` opens a context menu anchored to a `ToolbarSwitch`:
-
-```java
-ToolbarSwitch insertSwitch = new ToolbarSwitch(VaadinIcon.PLUS);
-ToolbarSelectPopup menu = new ToolbarSelectPopup(insertSwitch);
-menu.addItem("Horizontal Rule", e -> { /* insert HR */ });
-menu.addItem("Page Break", e -> { /* insert page break */ });
-menu.addComponent(new Hr());
-menu.addItem("Special Character...", e -> { /* open dialog */ });
-
-editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, insertSwitch);
-```
-
-Uses standard Vaadin `ContextMenu` API.
-
-#### Toolbar Dialogs
-
-`ToolbarDialog` opens a non-modal dialog controlled by a `ToolbarSwitch` (non-modal, resizable, draggable, closes on ESC):
-
-```java
-ToolbarSwitch settingsSwitch = new ToolbarSwitch(VaadinIcon.COG);
-ToolbarDialog dialog = new ToolbarDialog(settingsSwitch, true); // openAtSwitch
-dialog.add(new Checkbox("Show rulers"), new Checkbox("Show whitespace"));
-editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, settingsSwitch);
-```
-
-Factory methods: `vertical(switch, components...)`, `horizontal(switch, components...)`.
+> **Styling note:** All components added via `addToolbarComponents()` automatically receive `part="toolbar-custom-component"`. This enables consistent styling through ERTE's shadow DOM (hover, focus, active/pressed states for buttons). See [Section 2.10.2](#2102-erte-shadow-parts) for styling details.
 
 **Removing components:**
 
@@ -170,8 +117,6 @@ editor.removeToolbarComponent(ToolbarSlot.START, startBtn);
 // or by ID:
 editor.removeToolbarComponent(ToolbarSlot.START, "slot-start-btn");
 ```
-
-> **Styling note:** All components added via `addToolbarComponents()` automatically receive `part="toolbar-custom-component"`. This enables consistent styling through ERTE's shadow DOM (hover, focus, active/pressed states for buttons). See [Section 2.10.2](#2102-erte-shadow-parts) for styling details.
 
 #### Toolbar Button Visibility
 
@@ -186,7 +131,7 @@ editor.setToolbarButtonsVisibility(Map.of(
 editor.setToolbarButtonsVisibility(null);
 ```
 
-When all buttons in a group are hidden, the group container auto-hides. See Javadoc for the complete enum list.
+When all buttons in a group are hidden, the group container auto-hides. See the Javadoc for the complete enum list.
 
 #### Custom Keyboard Shortcuts
 
@@ -225,6 +170,69 @@ editor.replaceStandardToolbarButtonIcon(
 // Restore original
 editor.replaceStandardToolbarButtonIcon(ToolbarButton.BOLD, null);
 ```
+
+
+#### Ready-to-use toolbar components
+
+The ERTE provides a set of ready-to-use toolbar components to integrate custom functionality easily.
+
+##### Toolbar Switch 
+
+The `ToolbarSwitch` is a toggle button for toolbar components:
+
+```java
+ToolbarSwitch toolbarSwitch = new ToolbarSwitch("SW");
+toolbarSwitch.addActiveChangedListener(e ->
+    System.out.println("Switch active: " + e.isActive()));
+editor.addCustomToolbarComponents(toolbarSwitch);
+```
+
+##### Toolbar Popovers
+
+`ToolbarPopover` anchors a popover to a `ToolbarSwitch` and syncs open/close state:
+
+```java
+ToolbarSwitch colorSwitch = new ToolbarSwitch(VaadinIcon.PAINTBRUSH);
+TextField colorField = new TextField("Color");
+Button applyBtn = new Button("Apply");
+
+ToolbarPopover popover = ToolbarPopover.vertical(colorSwitch, colorField, applyBtn);
+popover.setFocusOnOpenTarget(colorField);
+
+editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, colorSwitch);
+```
+
+Beside the constructor, there are also factory methods for common layouts: `vertical(switch, components...)`, `horizontal(switch, components...)`.
+
+##### Toolbar Select Popups
+
+`ToolbarSelectPopup` opens a context menu anchored to a `ToolbarSwitch`:
+
+```java
+ToolbarSwitch insertSwitch = new ToolbarSwitch(VaadinIcon.PLUS);
+ToolbarSelectPopup menu = new ToolbarSelectPopup(insertSwitch);
+menu.addItem("Horizontal Rule", e -> { /* insert HR */ });
+menu.addItem("Page Break", e -> { /* insert page break */ });
+menu.addSeparator();
+menu.addItem("Special Character...", e -> { /* open dialog */ });
+
+editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, insertSwitch);
+```
+
+It uses standard Vaadin `ContextMenu` API.
+
+##### Toolbar Dialogs
+
+`ToolbarDialog` opens a non-modal dialog controlled by a `ToolbarSwitch`. The dialog comes with default configuration (non-modal, resizable, draggable, closes on ESC):
+
+```java
+ToolbarSwitch settingsSwitch = new ToolbarSwitch(VaadinIcon.COG);
+ToolbarDialog dialog = new ToolbarDialog(settingsSwitch, true); // openAtSwitch
+dialog.add(new Checkbox("Show rulers"), new Checkbox("Show whitespace"));
+editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, settingsSwitch);
+```
+
+Beside the constructor, there are also factory methods for common layouts: `vertical(switch, components...)`, `horizontal(switch, components...)`.
 
 ---
 
@@ -284,59 +292,140 @@ Users insert via: **Toolbar button** (dialog with combo-box), **Keyboard shortcu
 
 #### Event Lifecycle
 
-Placeholder events have cancel/confirm semantics. Default actions are prevented—listeners **must** call `event.insert()` or `event.remove()` to proceed.
+**Default behavior** 
+
+ERTE handles placeholders automatically: clicking the toolbar button (or pressing Ctrl+P) opens a dialog where the user selects a placeholder, and pressing Delete/Backspace on a placeholder removes it. No Java code needed for basic usage.
+
+**Customize Behavior** 
+
+If you need to customize the handling of placeholders, you can do that via lifecycle events.
+
+There are two types of events:
+
+- **Gate events** (`ButtonClicked`, `BeforeInsert`, `BeforeRemove`): These *intercept* the default action. When you register a listener, the default action is suppressed — your listener **must** call `event.insert()` or `event.remove()` to proceed, or do nothing to cancel.
+- **Notification events** (`Inserted`, `Removed`, `Selected`, `Leave`, `AppearanceChanged`): These fire *after* the action. Use them for logging, UI updates, etc. They don't affect the operation.
+
+**Insert flow:**
+
+```
+User clicks toolbar button / Ctrl+P
+  → ButtonClicked (gate) ─── listener registered? ──→ YES: dialog suppressed,
+  │                                                          listener decides
+  │                                                    NO:  built-in dialog opens
+  ↓
+User confirms in dialog (or listener calls event.insert())
+  → BeforeInsert (gate) ─── listener registered? ──→ YES: must call event.insert()
+  │                                                    NO:  insert proceeds automatically
+  ↓
+Placeholder appears in editor
+  → Inserted (notification)
+```
+
+**Remove flow:**
+
+```
+User presses Delete/Backspace on a placeholder
+  → BeforeRemove (gate) ─── listener registered? ──→ YES: must call event.remove()
+  │                                                    NO:  removal proceeds automatically
+  ↓
+Placeholder removed from editor
+  → Removed (notification)
+```
+
+##### Typical usage: just log insertions (no dialog override)
 
 ```java
-// 1. Toolbar button clicked
-editor.addPlaceholderButtonClickedListener(event -> {
-    event.insert(placeholders.get(0));
-    // or at specific position:
-    event.insert(placeholders.get(0), event.getPosition());
-});
+// No ButtonClicked listener → dialog works normally.
+// No BeforeInsert listener → insertion proceeds automatically.
+// Just track what was inserted:
+editor.addPlaceholderInsertedListener(event ->
+    event.getPlaceholders().forEach(p ->
+        log.info("Inserted: {}", p.getText())));
+```
 
-// 2. Before insert (cancellable)
+##### Skip the dialog and insert directly
+
+Registering a `ButtonClickedListener` suppresses the built-in dialog. Your listener takes over:
+
+```java
+// Always insert the first placeholder, no dialog
+editor.addPlaceholderButtonClickedListener(event ->
+    event.insert(placeholders.get(0)));
+```
+
+##### Validate before insert, protect certain placeholders from deletion
+
+```java
+// Gate: only allow insert if quota not exceeded
 editor.addPlaceholderBeforeInsertListener(event -> {
-    if (isValid(event.getPlaceholders())) {
-        event.insert();  // REQUIRED to proceed
+    if (currentCount < MAX_PLACEHOLDERS) {
+        event.insert();  // REQUIRED — without this, nothing happens
+    } else {
+        Notification.show("Maximum placeholders reached");
     }
 });
 
-// 3. After insert (notification)
-editor.addPlaceholderInsertedListener(event -> {
-    event.getPlaceholders().forEach(p ->
-        Notification.show("Inserted: " + p.getText()));
-});
-
-// 4. Before remove (cancellable)
+// Gate: prevent deletion of required placeholders
 editor.addPlaceholderBeforeRemoveListener(event -> {
-    if (!isProtected(event.getPlaceholders())) {
-        event.remove();  // REQUIRED to proceed
+    boolean anyProtected = event.getPlaceholders().stream()
+            .anyMatch(p -> p.getText().startsWith("REQUIRED-"));
+    if (!anyProtected) {
+        event.remove();  // REQUIRED — without this, nothing happens
+    } else {
+        Notification.show("Cannot remove required placeholders");
     }
-});
-
-// 5. After remove (notification)
-editor.addPlaceholderRemovedListener(event -> {
-    event.getPlaceholders().forEach(p ->
-        Notification.show("Removed: " + p.getText()));
-});
-
-// 6. Placeholder selected
-editor.addPlaceholderSelectedListener(event -> {
-    showDetails(event.getPlaceholders().get(0));
-});
-
-// 7. Cursor leaves placeholder
-editor.addPlaceholderLeaveListener(event -> clearDetails());
-
-// 8. Appearance changed
-editor.addPlaceholderAppearanceChangedListener(event -> {
-    boolean isAlt = event.getAltAppearance();
 });
 ```
 
-#### Formatting
+##### Selection tracking (show details panel)
 
-Placeholders support Quill inline format attributes:
+```java
+editor.addPlaceholderSelectedListener(event ->
+    detailsPanel.show(event.getPlaceholders().get(0)));
+
+editor.addPlaceholderLeaveListener(event ->
+    detailsPanel.hide());
+```
+
+##### Appearance change tracking
+
+```java
+editor.addPlaceholderAppearanceChangedListener(event -> {
+    boolean isAlt = event.getAltAppearance();
+    statusLabel.setText(isAlt ? "Showing values" : "Showing names");
+});
+```
+
+#### Formatting (format / altFormat)
+
+Each placeholder has two visual appearances that you can switch between:
+
+- **`format`** — the default appearance (e.g., italic placeholder name)
+- **`altFormat`** — the alternative appearance (e.g., bold resolved value)
+
+Both are maps of Quill inline format attributes applied to the placeholder token in the editor. The user switches between them via the toolbar toggle button, `setPlaceholderAltAppearance(true/false)`, or the `placeholderAltAppearancePattern` regex.
+
+**Typical use case — mail merge preview:** Show field names in italic by default, switch to bold resolved values for preview:
+
+```java
+Placeholder company = new Placeholder("N-1=Acme Corp");
+company.getFormat().put("italic", true);       // name appearance: italic
+company.getAltFormat().put("bold", true);       // value appearance: bold
+company.getAltFormat().put("color", "#006600"); // value appearance: green
+
+Placeholder date = new Placeholder("D-1=2024-01-15");
+date.getFormat().put("italic", true);
+date.getAltFormat().put("font", "monospace");   // value appearance: monospace
+
+editor.setPlaceholders(List.of(company, date));
+
+// Auto-switch to altFormat when text after "=" is present
+editor.setPlaceholderAltAppearancePattern("(?<=\\=).*$");
+```
+
+When `altAppearance` is off, placeholders render with `format` (italic field names). When toggled on, they render with `altFormat` (bold/green values, monospace dates).
+
+**Supported format attributes:**
 
 | Attribute | Type | Example |
 |-----------|------|---------|
@@ -348,18 +437,17 @@ Placeholders support Quill inline format attributes:
 | `link` | String | `format.put("link", "https://example.com")` |
 | `script` | String | `format.put("script", "super")` |
 
-Set `format` for the default appearance and `altFormat` for the alternative appearance (triggered by the alt appearance pattern or toggle button).
-
 ---
 
 ### 2.3 Tabstops and Rulers
 
-Tabstops enable document-style tab alignment. Pressing Tab inserts an embedded tab with width calculated from the defined tabstop positions and alignment direction.
+If you need document-style columnar alignment (think invoices, forms, or structured layouts), tabstops are the way to go. Pressing Tab inserts an embedded tab character whose width is calculated from the defined tabstop positions.
 
 #### Tabstops
 
+Define tabstops as a list of positions (in pixels from the left content edge) with an alignment direction:
+
 ```java
-// Set 3 tabstops at specific pixel positions
 editor.setTabStops(List.of(
     new TabStop(TabStop.Direction.LEFT, 150),
     new TabStop(TabStop.Direction.RIGHT, 350),
@@ -370,67 +458,83 @@ editor.setTabStops(List.of(
 List<TabStop> current = editor.getTabStops();
 ```
 
-**Alignment:** `LEFT` (text right-aligned to tabstop), `RIGHT` (left-aligned), `MIDDLE` (centered). Positions in pixels from content left edge.
+**How alignment works:** The direction controls how text *after* the tab aligns relative to the tabstop position — like in a word processor:
 
-Note: ERTE handles vertical arrow navigation through tab-heavy content by intercepting ArrowUp/ArrowDown and calculating correct target lines.
+- **`LEFT`** — text starts at the tabstop and flows to the right (most common)
+- **`RIGHT`** — text ends at the tabstop, growing to the left (useful for right-aligned numbers)
+- **`MIDDLE`** — text is centered on the tabstop position
 
 #### Rulers
 
-Rulers show a visual grid: horizontal ruler displays pixel positions and cycles tabstop direction (LEFT → RIGHT → MIDDLE → remove) on click. Vertical ruler shows line-height reference.
+Rulers provide a visual reference for tabstop positions. The horizontal ruler shows pixel positions and lets users click to cycle through directions (LEFT → RIGHT → MIDDLE → remove). The vertical ruler shows a line-height reference.
 
 ```java
 editor.setNoRulers(true);   // Hide rulers (tabstops still work)
-editor.setNoRulers(false);  // Show rulers
+editor.setNoRulers(false);  // Show rulers (default)
 ```
 
 ---
 
 ### 2.4 Readonly Sections
 
-Readonly sections protect inline content from editing. Select text and click the lock icon to toggle, or use Delta attributes.
+Readonly sections let you protect specific parts of the text from editing — useful for legal clauses, template boilerplate, or any content users should see but not modify. The rest of the editor remains fully editable.
+
+**Interactively:** Select text and click the lock icon in the toolbar to toggle readonly on/off.
+
+**Programmatically:** Use Delta attributes to set readonly content from the server:
 
 ```java
-// Set readonly content via Delta
 editor.asDelta().setValue("["
     + "{\"insert\":\"Editable text. \"},"
-    + "{\"insert\":\"Readonly.\","
+    + "{\"insert\":\"This part is protected.\","
     +   "\"attributes\":{\"readonly\":true}},"
-    + "{\"insert\":\" Editable.\\n\"}"
+    + "{\"insert\":\" Editable again.\\n\"}"
     + "]");
-
-// Whole-editor readonly
-editor.setReadOnly(true);
-editor.setReadOnly(false);
 ```
 
-**Features:** Delete protection (auto-reverted), gray background, supports additional formatting within readonly spans.
+Readonly sections are visually marked with a gray background and are delete-protected — if a user tries to delete into a readonly span, the change is automatically reverted. You can still apply formatting (bold, italic, etc.) within a readonly span.
+
+> **Whole-editor readonly** 
+> 
+> If you want to set the whole editor readonly, you can use the normal readonly api, that all Vaadin input fields provide:
+> ```java
+> editor.setReadOnly(true);   // entire editor locked
+> editor.setReadOnly(false);  // back to normal
+> ```
 
 ---
 
 ### 2.5 Whitespace Indicators
 
-Display special characters for invisible formatting (→ Tab, ↵ Soft-break, ¶ Paragraph, · NBSP):
+Sometimes you need to see what's really in the document — where the tabs are, whether that blank line is a soft-break or a new paragraph, or if someone used a non-breaking space. Whitespace indicators overlay visual markers on invisible characters:
+
+- → Tab
+- ↵ Soft-break
+- ¶ Paragraph end
+- · Non-breaking space
 
 ```java
 editor.setShowWhitespace(true);
 boolean showing = editor.isShowWhitespace();
 ```
 
-The WHITESPACE toolbar button also toggles this.
+Users can also toggle this from the toolbar (the whitespace button).
+
+> Please note, that due to the nature of HTML there are no whitespace indicators for normal whitespaces. Introducing them would lead to performance issues and might also break browser behavior. Therefore we decided to not introduce them via workarounds.
 
 ---
 
 ### 2.6 Non-Breaking Space
 
-Press **Shift+Space** to insert a non-breaking space (not collapsed by browser, prevents line breaks, preserved in HTML output). Built-in keyboard behavior—no Java API needed.
+Press **Shift+Space** to insert a non-breaking space. Unlike regular spaces, it won't be collapsed by the browser, prevents automatic line breaks at that position, and is preserved in the HTML output. This is a built-in keyboard behavior — no Java API needed.
 
 ---
 
 ### 2.7 Soft-Break and Tab Copying
 
-**Soft-Break:** Press **Shift+Enter** to insert a line break within a paragraph (no new `<p>` tag). Useful for addresses, poetry, etc.
+**Soft-Break:** Press **Shift+Enter** to insert a line break *within* a paragraph (no new `<p>` tag). This is useful whenever you need a visual line break without starting a new block — addresses, poetry, multi-line labels, etc.
 
-**Tab Copying:** After soft-break, tabs from the line start to cursor are copied to the new line (limited by defined tabstop count). Enables indented multi-line content with consistent alignment.
+**Tab Copying:** When you press Shift+Enter on a line that starts with tabs, the new line automatically gets the same leading tabs. This keeps your columnar alignment intact across multiple lines without re-pressing Tab on each new line. The number of copied tabs is limited by the number of defined tabstops. This behavior is soft-wrap only, it does no occur on hard wraps (Enter) or auto wrapping at the border of the editor.
 
 ---
 
@@ -468,13 +572,73 @@ editor.setToolbarButtonsVisibility(Map.of(
 
 ### 2.10 Styling and Theming
 
-ERTE uses the Vaadin Lumo theme. It provides 22 CSS custom properties for ERTE-specific visual elements, shadow parts for toolbar targeting, and content classes for editor styling.
+ERTE builds on the Vaadin Lumo theme and adds its own CSS custom properties, shadow parts, and content classes. You have three layers to work with:
 
-For standard RTE 2 properties (`--vaadin-rich-text-editor-*`), see the [Vaadin RTE Styling docs](https://vaadin.com/docs/v25/components/rich-text-editor/styling).
+- **CSS custom properties** (`--vaadin-erte-*`) — control colors, sizes, and spacing of ERTE-specific elements
+- **Shadow parts** — target toolbar buttons, rulers, and custom components from external CSS
+- **Content classes** — style editor content elements (tabs, placeholders, readonly spans)
+
+For the standard RTE properties (`--vaadin-rich-text-editor-*`), see the [Vaadin RTE Styling docs](https://vaadin.com/docs/v25/components/rich-text-editor/styling).
 
 #### 2.10.1 ERTE Custom Properties
 
-ERTE provides 22 CSS custom properties for readonly sections, placeholders, whitespace indicators, and rulers. See [ARCHITECTURE.md](dev/ARCHITECTURE.md#custom-properties) for the complete reference.
+ERTE provides CSS custom properties (`--vaadin-erte-*`) that you can override on the host element to customize readonly sections, placeholders, whitespace indicators, and rulers. For example:
+
+```css
+/* global for all ERTE instances*/
+html {
+    --vaadin-erte-readonly-background: lightgray;
+    --vaadin-erte-placeholder-background: #e0f0ff;
+}
+
+/* only for instances with a certain css class*/
+vcf-enhanced-rich-text-editor.some-css-class {
+    --vaadin-erte-readonly-background: yellow;
+    --vaadin-erte-placeholder-background: #e0f0ff;
+}
+```
+
+**Readonly sections:**
+
+| Property | Description | Default |
+|----------|-------------|---------|
+| `--vaadin-erte-readonly-color` | Text color | `--vaadin-text-color-secondary` |
+| `--vaadin-erte-readonly-background` | Background color | `--vaadin-background-container` |
+| `--vaadin-erte-readonly-border-color` | Outline color | `--vaadin-border-color-secondary` |
+| `--vaadin-erte-readonly-border-width` | Outline width | `1px` |
+| `--vaadin-erte-readonly-border-radius` | Corner radius | `--lumo-border-radius-s` |
+| `--vaadin-erte-readonly-padding` | Inline padding | `--vaadin-padding-xs / 2` |
+
+**Placeholders:**
+
+| Property | Description | Default |
+|----------|-------------|---------|
+| `--vaadin-erte-placeholder-color` | Text color | `inherit` |
+| `--vaadin-erte-placeholder-background` | Background color | `--lumo-primary-color-10pct` |
+| `--vaadin-erte-placeholder-border-color` | Outline color | `transparent` |
+| `--vaadin-erte-placeholder-border-width` | Outline width | `0` |
+| `--vaadin-erte-placeholder-border-radius` | Corner radius | `--lumo-border-radius-s` |
+| `--vaadin-erte-placeholder-padding` | Inline padding | `--vaadin-padding-xs / 2` |
+
+**Whitespace indicators:**
+
+| Property | Description | Default |
+|----------|-------------|---------|
+| `--vaadin-erte-whitespace-indicator-color` | Color of tab/soft-break/NBSP markers | `--lumo-contrast-40pct` |
+| `--vaadin-erte-whitespace-paragraph-indicator-color` | Color of paragraph markers | `--lumo-contrast-30pct` |
+| `--vaadin-erte-whitespace-indicator-spacing` | Spacing around indicators | `--vaadin-padding-xs / 2` |
+
+**Rulers:**
+
+| Property | Description | Default |
+|----------|-------------|---------|
+| `--vaadin-erte-ruler-height` | Height of the horizontal ruler | `0.9375rem` |
+| `--vaadin-erte-ruler-border-color` | Ruler border color | `--vaadin-border-color` |
+| `--vaadin-erte-ruler-background` | Horizontal ruler background (tick-mark image) | base64 PNG |
+| `--vaadin-erte-ruler-marker-size` | Size of tabstop direction markers | `0.9375rem` |
+| `--vaadin-erte-ruler-marker-color` | Color of tabstop direction markers | `inherit` |
+| `--vaadin-erte-ruler-vertical-width` | Width of the vertical ruler | `0.9375rem` |
+| `--vaadin-erte-ruler-vertical-background` | Vertical ruler background (line-height image) | base64 PNG |
 
 #### 2.10.2 ERTE Shadow Parts
 
@@ -528,7 +692,7 @@ vcf-enhanced-rich-text-editor::part(horizontalRuler) {
 
 #### 2.10.3 Content Classes
 
-ERTE-specific classes applied inside `.ql-editor` (editor content area). Standard Quill classes (`ql-align-*`, `ql-indent-*`) are provided by the base RTE 2 component.
+These classes are applied to elements inside the editor content area (`.ql-editor`). You can use them in your own CSS to style specific content types — for example, to highlight all placeholders or change the background of readonly spans.
 
 | Class | Element | Purpose |
 |-------|---------|---------|
@@ -537,6 +701,8 @@ ERTE-specific classes applied inside `.ql-editor` (editor content area). Standar
 | `.ql-readonly` | `<span>` | Readonly section (`contenteditable="false"`) |
 | `.ql-soft-break` | `<span>` | Soft-break embed (contains `<br>`) |
 | `.ql-nbsp` | `<span>` | Non-breaking space |
+
+Standard Quill classes (`ql-align-*`, `ql-indent-*`) are provided by the base RTE 2 component.
 
 ---
 
@@ -557,25 +723,27 @@ ERTE-specific classes applied inside `.ql-editor` (editor content area). Standar
 
 ### 3.1 Value Formats (HTML vs Delta)
 
-With Vaadin 25, the Rich Text Editor uses **HTML as primary format**. If you need to work with Quill's Delta JSON (e.g., for programmatic readonly sections or batch updates), use the `asDelta()` wrapper.
+With Vaadin 25, the Rich Text Editor uses **HTML as its primary format**. `getValue()` returns HTML, `setValue()` expects HTML. This is the format you'll use for storage and form binding.
 
 ```java
-// HTML (primary)
+// HTML — the default and recommended format
 editor.setValue("<p>Hello <strong>world</strong></p>");
 String html = editor.getValue();
+```
 
-// Delta (secondary)
+If you need to work with Quill's Delta JSON — for example, to set readonly attributes or insert placeholders programmatically — use the `asDelta()` wrapper:
+
+```java
+// Delta — for structured content manipulation
 editor.asDelta().setValue("[{\"insert\":\"Hello \"},{\"insert\":\"world\",\"attributes\":{\"bold\":true}}]");
 String deltaJson = editor.asDelta().getValue();
 ```
-
-**When to use:** HTML for storage/forms. Delta for programmatic readonly sections and batch updates.
 
 ---
 
 ### 3.2 Internationalization (I18n)
 
-ERTE extends RTE 2's i18n with labels for ERTE-specific buttons and dialogs:
+All toolbar button labels and dialog texts can be localized. ERTE extends the standard RTE 2 i18n object with labels for its own buttons (readonly, whitespace, placeholder, etc.) and the placeholder dialog.
 
 ```java
 EnhancedRichTextEditor.EnhancedRichTextEditorI18n i18n =
@@ -614,25 +782,54 @@ editor.setI18n(i18n);
 | `setPlaceholderAppearanceLabel2()` | "Value" |
 | `setAlignJustify()` | "Justify" |
 
-Standard RTE 2 i18n (inherited): bold, italic, underline, strike, color, background, headings, subscript, superscript, lists, indent/outdent, alignment, link, image, blockquote, code block, clean.
+For the standard RTE 2 labels (bold, italic, headings, etc.), see the [Vaadin RTE i18n docs](https://vaadin.com/docs/v25/components/rich-text-editor#internationalization-i18n).
 
 ---
 
 ### 3.3 Sanitization
 
-ERTE includes a server-side HTML sanitizer that runs automatically when content is received from the client. It prevents XSS attacks while preserving all ERTE-specific content like readonly sections, tabstops, placeholders, and soft-breaks.
+ERTE includes a server-side HTML sanitizer that runs automatically whenever content is received from the client. You don't need to configure anything — it works out of the box and protects against XSS while preserving all ERTE-specific content.
 
-You don't need to configure anything — the sanitizer works out of the box. It preserves standard HTML tags, ERTE classes (`ql-readonly`, `ql-tab`, `ql-soft-break`, `ql-placeholder`, `ql-nbsp`), Quill classes (`ql-align-*`, `ql-indent-*`), and safe attributes. It strips script tags, event handlers, dangerous CSS, and unknown classes.
+#### What gets preserved
 
-See `SECURITY.md` for the full allowlist and security details.
+- **HTML tags:** Standard formatting (`<p>`, `<strong>`, `<em>`, `<a>`, `<ul>`, `<ol>`, `<li>`, `<h1>`–`<h3>`, `<blockquote>`, `<img>`, etc.) plus table elements (`<table>`, `<tr>`, `<td>`, `<th>`, `<colgroup>`, `<col>`)
+- **ERTE classes:** `ql-readonly`, `ql-tab`, `ql-soft-break`, `ql-placeholder`, `ql-nbsp`
+- **Quill classes:** `ql-align-*`, `ql-indent-*`
+- **Safe CSS properties:** Text styling (color, font, text-align, etc.), spacing (margin, padding), borders, sizing, and layout properties. Only safe CSS functions are allowed (`rgb()`, `rgba()`, `hsl()`, `calc()`)
+- **Image sources:** `http:`, `https:`, and `data:` URLs (restricted to image MIME types — SVG is excluded because it can contain scripts)
 
----
+#### What gets stripped
+
+- `<script>` tags and event handler attributes (`onclick`, `onerror`, etc.)
+- Unknown CSS classes (anything not in the lists above)
+- Dangerous CSS: `@import`, `expression()`, `url()`, `behavior()`, and other non-whitelisted CSS functions
+- `data:` URLs with non-image MIME types (e.g., `data:text/html`)
+- `contenteditable="true"` (only `"false"` is preserved, for readonly spans)
+
+#### Extending the allowlist
+
+If you use custom CSS classes in your content (e.g., from the Tables addon or your own blots), you can register them with the sanitizer so they don't get stripped:
+
+```java
+// Register custom classes
+editor.addAllowedHtmlClasses("my-highlight", "invoice-header");
+
+// Remove them later if needed
+editor.removeAllowedHtmlClasses("my-highlight");
+
+// See what's currently registered
+Set<String> registered = editor.getAllowedHtmlClasses();
+```
+
+Class names must match `[A-Za-z][A-Za-z0-9-]*` and must not start with `ql-` (reserved for Quill internals).
 
 ---
 
 ## 4. Getting Help
 
+If you get stuck or want to explore further:
+
 - **Upgrade from v5.x:** [Upgrade Guide](BASE_UPGRADE_GUIDE.md)
-- **Extension hooks and custom blots:** [EXTENDING.md](dev/EXTENDING.md)
-- **Demo application:** Run the demo module (`enhanced-rich-text-editor-demo/`) for working examples of all features
-- **Issues:** [GitHub](https://github.com/vaadin-component-factory/enhanced-rich-text-editor/issues)
+- **Extension hooks and custom blots:** [EXTENDING.md](dev/EXTENDING.md) — for building your own blots, registering Quill extensions, or hooking into the editor lifecycle
+- **Working examples:** Run the demo module (`enhanced-rich-text-editor-demo/`) to see all features in action
+- **Issues and questions:** [GitHub](https://github.com/vaadin-component-factory/enhanced-rich-text-editor/issues)
