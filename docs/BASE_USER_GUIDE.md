@@ -807,7 +807,7 @@ ERTE includes a server-side HTML sanitizer that runs automatically whenever cont
 - **HTML tags:** Standard formatting (`<p>`, `<strong>`, `<em>`, `<a>`, `<ul>`, `<ol>`, `<li>`, `<h1>`–`<h3>`, `<blockquote>`, `<img>`, etc.) plus table elements (`<table>`, `<tr>`, `<td>`, `<th>`, `<colgroup>`, `<col>`)
 - **ERTE classes:** `ql-readonly`, `ql-tab`, `ql-soft-break`, `ql-placeholder`, `ql-nbsp`
 - **Quill classes:** `ql-align-*`, `ql-indent-*`
-- **Safe CSS properties:** Text styling (color, font, text-align, etc.), spacing (margin, padding), borders, sizing, and layout properties. Only safe CSS functions are allowed (`rgb()`, `rgba()`, `hsl()`, `calc()`)
+- **Safe CSS properties:** Text styling (color, font, text-align, etc.), spacing (margin, padding), borders, sizing, and layout properties. Only safe CSS functions are allowed (`rgb()`, `rgba()`, `hsl()`, `hsla()`, `calc()`)
 - **Image sources:** `http:`, `https:`, and `data:` URLs (restricted to image MIME types — SVG is excluded because it can contain scripts)
 
 #### What gets stripped

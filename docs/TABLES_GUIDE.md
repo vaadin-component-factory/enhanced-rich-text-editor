@@ -469,7 +469,7 @@ Key accessors for programmatic control:
 | Method | Description |
 |--------|-------------|
 | `getTemplates()` / `setTemplates(...)` | Template JSON |
-| `getActiveTemplateId()` / `setActiveTemplateId(...)` | Currently selected template |
+| `getActiveTemplateId()` / `setActiveTemplateId(...)` | Currently selected template. Getter returns `Optional<String>` — use `.orElse(null)` or `getActiveTemplateIdOrThrow()` |
 | `getDefaults()` | Access Defaults (dimension unit) |
 | `getTemplateSection()` | Template selection UI |
 | `getTableSection()` | Table styling section |

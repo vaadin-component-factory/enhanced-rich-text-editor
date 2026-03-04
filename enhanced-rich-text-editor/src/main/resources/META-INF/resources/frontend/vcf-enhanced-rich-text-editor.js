@@ -1056,7 +1056,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
   }
 
   /**
-   * Injects 25 named <slot> elements into the toolbar DOM produced by
+   * Injects named <slot> elements into the toolbar DOM produced by
    * super.render(). Slots are placed: START before first group, BEFORE/AFTER
    * around each of the 11 standard groups, a custom group span with
    * BEFORE_CUSTOM/GROUP_CUSTOM/AFTER_CUSTOM, and END at the end.

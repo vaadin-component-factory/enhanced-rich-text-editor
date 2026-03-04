@@ -224,12 +224,12 @@ editor.getElement().executeJs(
     "  handler: function() { " +
     "    const index = this.quill.getSelection()?.index ?? 0; " +
     "    this.quill.insertText(index, '\\t', {'custom': true}, 'user'); " +
-    "    return true; " +
+    "    return false; " +
     "  } " +
     "})");
 ```
 
-Use `this.quill` (binding context), string key names (`"Tab"`, `"Enter"`), return `true` to prevent default.
+Use `this.quill` (binding context), string key names (`"Tab"`, `"Enter"`), return `false` to prevent default (return `true` to let the next handler run).
 
 ---
 
