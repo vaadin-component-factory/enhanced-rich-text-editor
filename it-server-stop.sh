@@ -1,6 +1,6 @@
 #!/bin/bash
 # Stop V25 IT server
-PID_FILE="/tmp/claude-it-server.pid"
+PID_FILE="/tmp/erte-it-server.pid"
 PORT=${1:-8081}
 
 if [ -f "$PID_FILE" ]; then

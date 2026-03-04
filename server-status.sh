@@ -3,7 +3,7 @@
 # Usage: bash server-status.sh [options] [port]
 #   -w, --wait    Wait for server to be ready (HTTP 200)
 #   -t, --timeout Timeout in seconds for wait mode (default: 60)
-PID_FILE="/tmp/claude-server.pid"
+PID_FILE="/tmp/erte-server.pid"
 
 # Parse arguments
 WAIT_MODE=false

@@ -19,7 +19,8 @@ Everything you need to build, test, and run ERTE from source. Whether you're fix
 | Tool | Version |
 |------|---------|
 | Node.js | 20+ (for Playwright tests) |
-| Maven/Java | Dictated by Vaadin 25 project setup |
+| Java | 21+ |
+| Maven | 3.9+ |
 
 ---
 
@@ -31,7 +32,7 @@ The project is a multi-module Maven build. Each module has its own job, and you'
 |--------|---------|
 | **enhanced-rich-text-editor/** | Core ERTE addon (Java + JavaScript) |
 | **enhanced-rich-text-editor-tables/** | Tables extension for ERTE |
-| **enhanced-rich-text-editor-demo/** | Demo application with sample views and prototype tests (75) |
+| **enhanced-rich-text-editor-demo/** | Demo application with sample views and prototype tests |
 | **enhanced-rich-text-editor-it/** | Integration tests (dedicated test views + Playwright specs) |
 
 All development happens on the `v25` branch.
@@ -93,11 +94,14 @@ bash build-it.sh                          # Build IT module
 bash it-server-start.sh                   # Start IT server (port 8081)
 cd enhanced-rich-text-editor-it
 npx playwright test tests/erte/           # Run all ERTE tests
+cd ..
 bash it-server-stop.sh                    # Stop IT server when done
 ```
 
-See [TEST_INVENTORY.md](../../enhanced-rich-text-editor-it/tests/TEST_INVENTORY.md) for the current test suite overview. For test architecture details, debugging tips, and advanced commands, see [CONTRIBUTING.md](CONTRIBUTING.md#testing-requirements).
+> **Note:** Root scripts (`build-it.sh`, `it-server-start.sh`, etc.) must be run from the repo root. Remember to `cd ..` after running Playwright tests.
+
+See [TEST_INVENTORY.md](../../enhanced-rich-text-editor-it/tests/TEST_INVENTORY.md) for the current test suite overview.
 
 ---
 
-**Where to go from here:** [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR process, [EXTENDING.md](EXTENDING.md) for adding your own blots and toolbar components, [User Guide](../BASE_USER_GUIDE.md) for the full feature reference.
+**Where to go from here:** [ARCHITECTURE.md](ARCHITECTURE.md) for understanding the internal structure, [EXTENDING.md](EXTENDING.md) for adding your own blots and toolbar components, [User Guide](../BASE_USER_GUIDE.md) for the full feature reference.

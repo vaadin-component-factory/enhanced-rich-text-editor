@@ -121,7 +121,7 @@ Convenience scripts in the repo root for build, server, and test operations. **A
 
 **Workflow:** After changing addon code (ERTE JS/Java), always `build.sh` before `server-start.sh`. Tests require a running server.
 
-**Always stop the server** after tests/explorations are done (`server-stop.sh`). The server runs inside a container and is not useful to the user — don't leave it running.
+**Always stop the server** after tests/explorations are done (`server-stop.sh`). The server runs inside the devcontainer and is not accessible to the user — don't leave it running.
 
 **Background tasks** (`run_in_background: true`): Use for complex, longer-running operations like plan reviews, feature implementation, and test runs. Do NOT use for quick, simple tasks (e.g., a single file read, a status check, a small edit).
 
@@ -184,7 +184,7 @@ The V25 primary value format is HTML (matching RTE 2), with Delta access via `as
 ### Architecture Decisions (confirmed by spike — all PASS)
 
 - **JS extension strategy:** ES class extension of RTE 2's web component (not composition, not prototype patching). See `implementation_notes.md` section 6.
-- **Java packages:** `RteExtensionBase` in `com.vaadin.flow.component.richtexteditor` (bridge lifting package-private → protected), `EnhancedRichTextEditor` in `com.vaadin.componentfactory` (all ERTE logic). Only the bridge class lives in the foreign package.
+- **Java packages:** `EnhancedRichTextEditor` in `com.vaadin.componentfactory` extends `RichTextEditor` directly. All ERTE logic in one package.
 - **Tag:** `vcf-enhanced-rich-text-editor` (own tag, own web component registration).
 - **Value format:** HTML-primary (matching RTE 2). Delta access via `asDelta()` wrapper. Clean break from ERTE 1's Delta-primary API.
 - **Theme:** Lumo. Use `--vaadin-*` custom properties where they exist. Loads via `@StyleSheet(Lumo.STYLESHEET)` on host app.
@@ -416,7 +416,7 @@ bash it-server-stop.sh
 | `erte-shell.spec.ts` | 6 | Shell basics, Lit lifecycle, value sync |
 | `extend-options.spec.ts` | 4 | extendQuill/extendEditor hooks, V24 deprecation |
 
-**Test views** (Java, in `enhanced-rich-text-editor-it`, package `com.vaadin.componentfactory`): `ErteTabStopTestView`, `ErtePlaceholderTestView`, `ErteReadonlyTestView`, `ErteToolbarTestView`, `ErteExtendOptionsTestView`, `ErteFeatureTestView`, `ErteShellTestView`. Each provides a single editor (`id="test-editor"`), delta/HTML output elements, event log, and a ready indicator.
+**Test views** (Java, in `enhanced-rich-text-editor-it`, package `com.vaadin.componentfactory`): `ErteTabStopTestView`, `ErtePlaceholderTestView`, `ErteReadonlyTestView`, `ErteToolbarTestView`, `ErteExtendOptionsTestView`, `ErteFeatureTestView`, `ErteShellTestView`, `ErteReplaceIconTestView`, `ErteTablesTestView`, `ErteToolbarDialogTestView`, `ErteToolbarPopoverTestView`, `ErteToolbarSelectPopupTestView`. Each provides a single editor (`id="test-editor"`), delta/HTML output elements, event log, and a ready indicator.
 
 **Side navigation:** `ErteTestLayout.java` provides an `AppLayout` with `SideNav` listing all phases. When implementing a new phase, always update this layout: change the `disabled(...)` entry to `new SideNavItem("label", "erte-test/route", icon)` so the link becomes active.
 
@@ -452,6 +452,8 @@ Custom Claude Code agents in `.claude/agents/`. The orchestrator launches them d
 | **migration-auditor** | Database migration safety and backward compatibility |
 | **devcontainer-auditor** | Devcontainer/Docker setup review |
 | **requirements-reviewer** | Requirements review before implementation |
+| **vaadin-expert** | Vaadin technical questions using official docs (read-only) |
+| **end-user-reviewer** | Non-technical review of docs, UI text, error messages, UX flows |
 | **housekeeper** | Cleanup: servers, Docker, temp files, screenshots |
 
 **Usage:** Agents are launched via the `Task` tool with `subagent_type`. The orchestrator selects the appropriate agent(s) for each task, composes detailed prompts, and launches them directly — in parallel when independent, sequentially when dependent.

@@ -3,8 +3,8 @@
 # Usage: bash it-server-start.sh [port]
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PORT=${1:-8081}
-PID_FILE="/tmp/claude-it-server.pid"
-LOG_FILE="/tmp/claude-it-server.log"
+PID_FILE="/tmp/erte-it-server.pid"
+LOG_FILE="/tmp/erte-it-server.log"
 
 # Stop any existing IT server first
 if [ -f "$PID_FILE" ]; then

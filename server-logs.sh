@@ -1,7 +1,7 @@
 #!/bin/bash
 # Print V25 demo server logs
 # Usage: bash server-logs.sh [-f|-state|-errors]
-LOG_FILE="/tmp/claude-server.log"
+LOG_FILE="/tmp/erte-server.log"
 
 if [ ! -f "$LOG_FILE" ]; then
     echo "No log file found at $LOG_FILE"

@@ -1,162 +1,221 @@
 # Extending ERTE V25
 
-Everything you need to add your own content types, toolbar components, keyboard shortcuts, and styling to ERTE. If you want to understand the internals first, start with [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+How to add your own content types, toolbar components, keyboard shortcuts, and styling to ERTE. For understanding the internals first, see [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+
+## The Extension Pattern
+
+ERTE is designed so that extensions add functionality **without subclassing** the Java component. The Table addon is the reference implementation — it extends ERTE with table support using only public APIs: toolbar helpers, extension hooks, and `executeJs()`.
+
+The key benefit: you never need to modify ERTE source code. Extensions work entirely through ERTE's public API — Java methods, toolbar slots, JS hooks, and sanitizer registration. Your extension is a separate module with its own `@JsModule` connector, its own Java class, and its own tests. When ERTE is updated, your extension keeps working as long as the public API stays stable.
+
+Multiple extensions can be active on the same editor simultaneously — for example, Tables and a hypothetical Footnotes extension. Each extension manages its own blots, toolbar buttons, events, and styles independently:
+
+```java
+EnhancedRichTextEditor editor = new EnhancedRichTextEditor();
+
+// Each extension enables itself on the same editor instance
+EnhancedRichTextEditorTables tables =
+    EnhancedRichTextEditorTables.enable(editor);
+MyFootnotesExtension footnotes =
+    MyFootnotesExtension.enable(editor);
+```
+
+This works because every layer of the architecture supports parallel extensions:
+
+| Layer | How extensions coexist |
+|-------|----------------------|
+| **JS hooks** | `extendQuill` and `extendEditor` are arrays — each extension pushes its callbacks, all execute in order |
+| **Blot registration** | Each extension registers its own blots under unique format names (`formats/td`, `formats/footnote`) |
+| **Toolbar** | Each extension places components in different slots — or shares a slot without conflict |
+| **CSS** | Each extension injects a `<style>` element with a unique ID into the shadow root |
+| **Events** | Each extension dispatches its own CustomEvents (`table-selected`, `footnote-clicked`) and registers its own Java-side listeners |
+| **Sanitizer** | Each extension registers its CSS classes and attributes via `addAllowedHtmlClasses()` |
+| **Connector namespace** | Each extension lives under its own key (`extensions.tables`, `extensions.footnotes`) |
+
+The rest of this guide walks through each of these layers.
+
+---
+
+## Extension Hooks
+
+ERTE provides two JavaScript hooks for extensions that need to register Quill blots or interact with the editor instance. These hooks run at specific lifecycle points — getting the timing right matters.
+
+### `extendQuill` — Before Editor Creation
+
+Called with the Quill class before `super.ready()`. Use this to register custom blots:
+
+```javascript
+const extNs = window.Vaadin.Flow.vcfEnhancedRichTextEditor;
+extNs.extendQuill = extNs.extendQuill || [];
+extNs.extendQuill.push((Quill) => {
+  const Inline = Quill.import('blots/inline');
+  class HighlightBlot extends Inline { /* ... */ }
+  Quill.register('formats/highlight', HighlightBlot, true);
+});
+```
+
+The Table addon uses this to register its four blots (ContainBlot, TableCell, TableRow, Table):
+
+```javascript
+// From connector.js — tables register their blots in extendQuill
+extNs.extendQuill.push(function(Quill) {
+  const Container = Quill.import('blots/container');
+  Container.order = ['list', 'contain', 'td', 'tr', 'table'];
+
+  Quill.register('formats/contain', ContainBlot, true);
+  Quill.register('formats/td', TableCell, true);
+  Quill.register('formats/tr', TableRow, true);
+  Quill.register('formats/table', Table, true);
+});
+```
+
+### `extendEditor` — After Editor Creation
+
+Called with the Quill instance after `super.ready()`. Use this to add event handlers, keyboard bindings, or DOM listeners:
+
+```javascript
+const extNs = window.Vaadin.Flow.vcfEnhancedRichTextEditor;
+extNs.extendEditor = extNs.extendEditor || [];
+extNs.extendEditor.push((editor, Quill) => {
+  editor.on('text-change', (delta, oldDelta, source) => {
+    console.log('Editor changed:', delta);
+  });
+});
+```
+
+The Table addon uses this to initialize the table module, wire up mouse events for cell selection, and set up keyboard handlers:
+
+```javascript
+// From connector.js — tables init their module in extendEditor
+extNs.extendEditor.push(function(editor, Quill) {
+  initTableModule(editor, Quill);
+  const container = editor.container;
+  container.addEventListener('mousedown', e => TableSelection.mouseDown(editor, e));
+  // ... more event wiring
+});
+```
+
+### Loading Extensions
+
+Load your extension connector via `@JsModule` on your view or layout:
+
+```java
+@JsModule("./src/erte-table/connector.js")  // Table addon
+public class EnhancedRichTextEditorTables { ... }
+```
+
+Both hook arrays accept multiple callbacks — they execute in push order. Extensions can safely push to the arrays before or after ERTE core loads (the namespace is initialized defensively).
+
+> **Note:** `extendOptions` is deprecated in V25. Use `extendQuill` and `extendEditor` instead.
+
+---
 
 ## Custom Blots
 
-To add your own content types to the editor — things like special tokens, badges, or inline widgets — you'll need a custom Quill blot. ERTE's own `TabBlot`, `PlaceholderBlot`, and `ReadOnlyBlot` are all built this way.
+To add your own content types — things like special tokens, badges, or inline widgets — you need a custom Quill blot.
 
-### Embed Blot Patterns
+### Embed Blot Lifecycle
 
-An embed blot is a discrete, non-text element inside the editor. There are three patterns you need to get right — miss any one of them and things will break in subtle ways:
+Three things to get right:
 
-1. **Lifecycle:** `static create()` runs before constructor. Initialize outer DOM in `create()`, configure inner `contentNode` in `constructor()`.
+1. **`static create(value)`** runs before the constructor. Initialize outer DOM here. In Quill 2, `create()` must return the created DOM node.
+2. **Constructor** — `contentNode` is created by the Embed base class. Set text and configure the visual appearance here.
+3. **Guard nodes** — Quill 2 places invisible zero-width characters inside Embed domNodes so the cursor can sit next to them. Never set `contenteditable="false"` on the outer domNode — the inner `contentNode` already has it.
 
-2. **Guard nodes:** Quill 2 places zero-width text inside domNode. Never set `contenteditable="false"` on outer domNode — keep guard nodes editable. Inner `contentNode` already has it.
+### Inline Blot vs Embed Blot
 
-3. **Cursor:** Override `position(index, inclusive)` if needed (default usually sufficient).
+- **Inline** (like ReadOnlyBlot): wraps existing text content, applies formatting. Override `static formats(domNode)` and `format(name, value)`.
+- **Embed** (like TabBlot, PlaceholderBlot): discrete non-text element. Override `static create(value)`, `static value(domNode)`, and the constructor.
 
-### Sanitization Integration
-
-This one catches people off-guard: ERTE sanitizes all HTML on the server to prevent XSS. If your custom blot uses its own CSS class or HTML attributes, you need to add them to the allowlists on **both** client and server — otherwise they'll silently disappear on the next round-trip and you'll wonder what happened.
-
-1. **Client preservable list** — `vcf-enhanced-rich-text-editor.js` (~line 385):
-   ```javascript
-   const ERTE_PRESERVED_CLASSES = ['ql-readonly', 'ql-tab', ..., 'ql-myembed'];
-   ```
-
-2. **Server whitelist** — `EnhancedRichTextEditor.java` (~line 161):
-   ```java
-   private static final Set<String> ALLOWED_ERTE_CLASSES = Set.of(
-       "ql-readonly", "ql-tab", ..., "ql-myembed");
-   ```
-
-3. **Custom attributes** — Extend jsoup Safelist (~line 239):
-   ```java
-   Safelist safelist = Safelist.basic().addAttributes("span", "data-myattr");
-   ```
-
-4. **Custom styles** — Add to `ALLOWED_CSS_PROPERTIES` (~line 164)
+---
 
 ## Extending the Toolbar
 
-The toolbar is one of ERTE's most flexible parts — you can bind keyboard shortcuts to existing buttons, drop in your own components at any position, and even replace the built-in icons.
+### Custom Components
 
-### Keyboard Shortcuts for Standard Buttons
-
-You can bind keyboard shortcuts to any of the built-in toolbar buttons using Vaadin's `Key` constants and `KeyModifier` varargs:
+Add any Java component to any toolbar slot:
 
 ```java
-editor.addStandardToolbarButtonShortcut(
-    ToolbarButton.BOLD, Key.KEY_B, KeyModifier.CONTROL);           // Ctrl+B (Cmd+B on Mac)
-editor.addStandardToolbarButtonShortcut(
-    ToolbarButton.H1, Key.DIGIT_1, KeyModifier.CONTROL, KeyModifier.SHIFT); // Ctrl+Shift+1
-editor.addStandardToolbarButtonShortcut(
-    ToolbarButton.IMAGE, Key.F9);                                   // F9 (no modifiers)
-```
-
-**Keys:** Use Vaadin `Key` constants (`Key.KEY_A`–`Key.KEY_Z`, `Key.DIGIT_0`–`Key.DIGIT_9`, `Key.F1`–`Key.F12`, `Key.ENTER`, `Key.ESCAPE`, `Key.TAB`, `Key.ARROW_UP`). `KeyModifier.CONTROL` maps to Ctrl on Win/Linux and Cmd on Mac.
-
-### Focus Toolbar
-
-A nice touch for accessibility — let users jump directly to the toolbar with a shortcut:
-
-```java
-editor.addToolbarFocusShortcut(Key.F10);                    // F10 (no modifiers)
-editor.addToolbarFocusShortcut(Key.F10, KeyModifier.SHIFT); // Shift+F10
-```
-
-Especially useful for screen readers and keyboard-only workflows.
-
-### Custom Toolbar Components
-
-You can add any Java component (buttons, text fields, popups) to any toolbar slot:
-
-```java
-// Simple button in the custom group
 Button customButton = new Button("My Button");
-customButton.addClickListener(e -> {
-    // Handle click
-});
+customButton.addClickListener(e -> { /* handle click */ });
 editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, customButton);
-
-// Multiple components in a specific slot
-Button before = new Button("A");
-Button after = new Button("B");
-editor.addToolbarComponents(
-    ToolbarSlot.BEFORE_GROUP_EMPHASIS,
-    before, after);
 ```
 
-**Available slots:** `START`, `END`, `BEFORE_GROUP_*`, `AFTER_GROUP_*`, `GROUP_CUSTOM`. Components get part name `toolbar-custom-component` for CSS styling.
+**Available slots:** `START`, `END`, `BEFORE_GROUP_*`, `AFTER_GROUP_*`, `GROUP_CUSTOM`. Custom components automatically inherit the native RTE 2 toolbar styling via the `toolbar-custom-component` part — hover effects, focus rings, active state, and disabled state work out of the box.
 
 ### Toolbar Helper Classes
 
-ERTE ships several helper classes for common toolbar UI patterns — toggle state, popover panels, and context menus.
+ERTE ships helper classes for common toolbar UI patterns. The Table addon uses all of them:
 
-#### ToolbarSwitch
-
-A toggle button with an active/inactive state — the building block for everything below:
+**ToolbarSwitch** — Toggle button with active/inactive state:
 
 ```java
-ToolbarSwitch mySwitch = new ToolbarSwitch(VaadinIcon.COG);
-mySwitch.addActiveChangedListener(e -> { /* handle */ });
-editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, mySwitch);
+// Table addon: "Add Table" button
+addTableButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.PLUS);
+addTableButton.setTooltipText("Add new table");
 ```
 
-#### ToolbarPopover
-
-A dropdown panel that opens when the switch is activated. The open/close state stays in sync automatically:
+**ToolbarPopover** — Dropdown panel that opens when the switch is activated:
 
 ```java
-ToolbarSwitch settingsSwitch = new ToolbarSwitch(VaadinIcon.PAINTBRUSH);
-ToolbarPopover popover = ToolbarPopover.vertical(settingsSwitch,
-    new TextField("Setting 1"), new TextField("Setting 2"));
-editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, settingsSwitch);
+// Table addon: table size input (rows × cols)
+addTablePopup = ToolbarPopover.horizontal(addTableButton,
+    Alignment.BASELINE, rows, new Span("x"), cols, add);
+addTablePopup.setAutofocus(false);
+addTablePopup.setFocusOnOpenTarget(rows);
 ```
 
-#### ToolbarDialog
+**ToolbarSelectPopup** — Context menu for actions:
 
-Like `ToolbarPopover`, but opens a resizable, non-modal dialog instead — good for larger tool panels:
+```java
+// Table addon: "Modify Table" menu (add/remove rows/cols, merge, etc.)
+modifyTableSelectPopup = new ToolbarSelectPopup(modifyTableButton);
+modifyTableSelectPopup.addItem("Add row below", e -> executeAction("append-row-below"));
+modifyTableSelectPopup.addItem("Remove row", e -> executeAction("remove-row"));
+```
+
+**ToolbarDialog** — Resizable non-modal dialog:
 
 ```java
 ToolbarSwitch settingsSwitch = new ToolbarSwitch(VaadinIcon.COG);
 ToolbarDialog dialog = ToolbarDialog.vertical(settingsSwitch,
     new Checkbox("Show rulers"));
 dialog.openAtSwitch();
-editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, settingsSwitch);
 ```
 
-#### ToolbarSelectPopup
-
-A context menu that appears when the switch is clicked — perfect for format selection or quick actions:
+### Keyboard Shortcuts for Standard Buttons
 
 ```java
-ToolbarSwitch formatSwitch = new ToolbarSwitch(VaadinIcon.COGS);
-ToolbarSelectPopup popup = new ToolbarSelectPopup(formatSwitch);
-popup.addItem("Bold", e -> editor.getElement().executeJs(
-    "this._editor.format('bold', true, 'user')"));
-editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, formatSwitch);
+editor.addStandardToolbarButtonShortcut(
+    ToolbarButton.BOLD, Key.KEY_B, KeyModifier.CONTROL);
+editor.addStandardToolbarButtonShortcut(
+    ToolbarButton.H1, Key.DIGIT_1, KeyModifier.CONTROL, KeyModifier.SHIFT);
 ```
 
-### Dynamic Button Injection
+`KeyModifier.CONTROL` maps to Ctrl on Win/Linux and Cmd on Mac.
 
-If you're injecting buttons after Quill has already initialized, you'll need to manually bind the editor actions — the toolbar's automatic wiring only happens during init:
+### Focus Toolbar
+
+Let users jump to the toolbar with a shortcut — useful for keyboard-only workflows:
 
 ```java
-Button alignJustify = new Button("Justify");
-alignJustify.addClickListener(e ->
-    editor.getElement().executeJs("this._editor.format('align', 'justify', 'user')"));
-editor.addToolbarComponents(ToolbarSlot.AFTER_GROUP_ALIGNMENT, alignJustify);
+editor.addToolbarFocusShortcut(Key.F10, KeyModifier.SHIFT);
 ```
 
-Used internally for align-justify button.
+### Replacing Toolbar Button Icons
+
+```java
+editor.replaceStandardToolbarButtonIcon(
+    ToolbarButton.ALIGN_LEFT, VaadinIcon.ARROW_LEFT.create());
+editor.replaceStandardToolbarButtonIcon(
+    ToolbarButton.BOLD, null);  // Restore default
+```
+
+---
 
 ## Custom Keyboard Shortcuts
 
-Beyond binding shortcuts to existing toolbar buttons, you can also create entirely new keyboard actions by talking to the Quill keyboard API directly. This gives you full control over what happens when the user presses a key combination.
-
-### Binding Custom Actions
+Beyond binding shortcuts to existing toolbar buttons, you can create new keyboard actions via the Quill keyboard API:
 
 ```java
 editor.getElement().executeJs(
@@ -170,49 +229,52 @@ editor.getElement().executeJs(
     "})");
 ```
 
-**Important:** Use `this.quill` (binding context), string key names (`"Tab"`, `"Enter"`), return `true` to prevent default.
+Use `this.quill` (binding context), string key names (`"Tab"`, `"Enter"`), return `true` to prevent default.
 
-### Extension Hooks (JavaScript-Only)
+---
 
-For deeper customization, ERTE provides two hooks that let you extend Quill directly from JavaScript. These aren't Java APIs — you register callback functions via the global namespace and load them with `@JsModule`.
+## Sanitizer Integration
 
-**`extendQuill`** — Called before `super.ready()` with Quill class. Register custom blots:
+ERTE sanitizes all HTML on both client and server to prevent XSS. If your extension uses custom CSS classes, HTML attributes, or inline styles, you need to add them to the allowlists — otherwise they'll silently disappear on the next round-trip.
 
-```javascript
-window.Vaadin.Flow.vcfEnhancedRichTextEditor.extendQuill = [
-  (Quill) => {
-    const Inline = Quill.import('blots/inline');
-    class HighlightBlot extends Inline { /* ... */ }
-    Quill.register('formats/highlight', HighlightBlot, true);
-  }
-];
-```
+This is a dual-layer system. Both layers must agree on what's allowed.
 
-**`extendEditor`** — Called after `super.ready()` with Quill instance. Add event handlers:
+### Client Side — Class Preservation
+
+In `vcf-enhanced-rich-text-editor.js`, the `ERTE_PRESERVED_CLASSES` array controls which CSS classes survive the Quill → HTML → server cycle. Add your classes here:
 
 ```javascript
-window.Vaadin.Flow.vcfEnhancedRichTextEditor.extendEditor = [
-  (quill, Quill) => {
-    quill.on('text-change', (delta, oldDelta, source) => {
-      console.log('Editor changed:', delta);
-    });
-  }
-];
+const ERTE_PRESERVED_CLASSES = ['ql-readonly', 'ql-tab', ..., 'your-class'];
 ```
 
-Load via `@JsModule` on your view:
+### Server Side — HTML Allowlist
 
+In `EnhancedRichTextEditor.java`:
+
+**CSS classes (ERTE core contributors)** — add to `ALLOWED_ERTE_CLASSES` in `EnhancedRichTextEditor.java`:
 ```java
-@JsModule("./my-extension-connector.js")
-@Route("my-view")
-public class MyView extends VerticalLayout { }
+private static final Set<String> ALLOWED_ERTE_CLASSES = Set.of(
+    "ql-readonly", "ql-tab", ..., "your-class");
 ```
 
-> **Note:** `extendOptions` deprecated in V25. Use `extendQuill` and `extendEditor` instead.
+**CSS classes (extension authors)** — use the public API from your extension code:
+```java
+rte.addAllowedHtmlClasses("my-extension-class", "my-other-class");
+```
 
-## Styling & Theming
+**HTML attributes** — there is currently no public API for extensions to register custom HTML attributes. If your extension needs custom attributes preserved through sanitization, modify `erteSanitize()` in ERTE core (`EnhancedRichTextEditor.java`).
 
-ERTE looks good out of the box with Lumo, but you can customize just about every visual detail. CSS custom properties let you change colors, sizes, and spacing without touching component source code.
+**CSS properties** — add to `ALLOWED_CSS_PROPERTIES` if your blot uses inline styles.
+
+The Table addon handles this differently — it registers its allowed classes dynamically via `addAllowedHtmlClasses()` on the editor, and its table-specific attributes (`table_id`, `row_id`, `cell_id`, etc.) are part of the core sanitizer allowlist because tables use `<td>`, `<tr>`, and `<table>` elements.
+
+### What the Sanitizer Strips
+
+All tags not in the allowed list (including `<script>`, `<iframe>`, `<object>`), event handler attributes (`onclick`, `onerror`), and CSS functions except `rgb()`, `rgba()`, `hsl()`, `hsla()`, `calc()`. The full reference — allowed tags, attributes, classes, properties, and image MIME types — is in the [User Guide — Sanitization](../BASE_USER_GUIDE.md#33-sanitization).
+
+---
+
+## Styling
 
 ### CSS Custom Properties
 
@@ -226,24 +288,13 @@ vcf-enhanced-rich-text-editor {
 }
 ```
 
-See the [User Guide — Custom Properties](../BASE_USER_GUIDE.md#2101-erte-custom-properties) for the complete reference with defaults.
+See the [User Guide — Custom Properties](../BASE_USER_GUIDE.md#2101-erte-custom-properties) for the complete list with defaults.
 
-### Styling Custom Toolbar Components
+### Blot Styles
 
-Custom toolbar components automatically inherit the native RTE 2 toolbar styling via the `toolbar-custom-component` part — hover effects, focus rings, active state, and disabled state all work out of the box.
+When styling your own blots, use `--vaadin-*` custom properties that fall back to `--lumo-*` tokens. This ensures correct appearance in both light and dark mode.
 
-### Replacing Toolbar Button Icons
-
-```java
-editor.replaceStandardToolbarButtonIcon(
-    ToolbarButton.ALIGN_LEFT, VaadinIcon.ARROW_LEFT.create());
-editor.replaceStandardToolbarButtonIcon(
-    ToolbarButton.BOLD, null);  // Restore default
-```
-
-### Inline Blot CSS
-
-When styling your own blots, use `--vaadin-*` custom properties that fall back to `--lumo-*` tokens. This ensures correct appearance in both light and dark mode:
+**ERTE core contributors** can add styles directly in `static get styles()` of the web component class:
 
 ```javascript
 static get styles() {
@@ -255,108 +306,129 @@ static get styles() {
 }
 ```
 
-## Example: Custom Tag Embed
+**Extension authors** cannot use `static get styles()` — extensions don't subclass the web component. Instead, inject CSS into the shadow root at runtime (see [Injecting CSS into Shadow DOM](#injecting-css-into-shadow-dom) below). The Table addon demonstrates this pattern.
 
-Here's a complete example of a custom embed blot — a "tag" element that displays like `<tagname>` inside the editor. It covers the full lifecycle: JavaScript blot definition, Java insertion API, CSS styling, and sanitizer integration.
+---
 
-**JavaScript (vcf-enhanced-rich-text-editor.js):**
+## Injecting CSS into Shadow DOM
+
+Extensions that add visual elements inside the editor need their styles inside the shadow root. The Table addon demonstrates the pattern:
+
 ```javascript
-class TagBlot extends Embed {
-  static blotName = 'tag';
-  static tagName = 'span';
-  static className = 'ql-tag';
-
-  static create(value) {
-    const node = super.create();
-    node.dataset.tag = value || 'tag';
-    return node;
-  }
-
-  static value(node) { return node.dataset.tag; }
-
-  constructor(scroll, node) {
-    super(scroll, node);
-    if (this.contentNode) {
-      this.contentNode.textContent = `<${node.dataset.tag || 'tag'}>`;
-    }
+// From connector.js — inside the extension's namespace object
+// (e.g., window.Vaadin.Flow.vcfEnhancedRichTextEditor.extensions.tables)
+init(rte) {
+  const shadowRoot = rte.shadowRoot;
+  if (!shadowRoot.querySelector('#erte-table-base')) {
+    const baseStyle = document.createElement('style');
+    baseStyle.id = 'erte-table-base';
+    baseStyle.textContent = tableCss;  // imported from .css file
+    shadowRoot.append(baseStyle);
   }
 }
-
-Quill.register('formats/tag', TagBlot, true);
-const ERTE_PRESERVED_CLASSES = ['ql-readonly', 'ql-tag', ...];
 ```
 
-**Java:**
+Use a unique ID on the `<style>` element to prevent duplicate injection on re-attach.
+
+---
+
+## Building a Java Extension
+
+An extension is a regular Java class in its own Maven module. It holds a reference to the editor and interacts with it exclusively through public API — `getElement()`, `addToolbarComponents()`, `addAllowedHtmlClasses()`, `executeJs()`, and DOM event listeners. No subclassing, no access to ERTE internals.
+
+The Table addon is the reference (simplified — see the actual source for the full implementation):
+
 ```java
-public void insertTag(String tagName) {
-    editor.getElement().executeJs(
-        "this._editor.insertEmbed(this._editor.getSelection().index, 'tag', $0, 'user')",
-        tagName);
+@JsModule("./src/erte-table/connector.js")
+public class EnhancedRichTextEditorTables {
+
+    private final EnhancedRichTextEditor rte;
+
+    // Factory method — the extension pattern entry point
+    public static EnhancedRichTextEditorTables enable(EnhancedRichTextEditor rte) {
+        EnhancedRichTextEditorTables tables = new EnhancedRichTextEditorTables(rte, new TablesI18n());
+        tables.initToolbarTable();
+        return tables;
+    }
+
+    protected EnhancedRichTextEditorTables(EnhancedRichTextEditor rte, TablesI18n i18n) {
+        this.rte = rte;
+
+        // Initialize JS connector
+        rte.getElement().executeJs(
+            "window.Vaadin.Flow.vcfEnhancedRichTextEditor.extensions.tables.init(this)");
+
+        // Re-init on re-attach (e.g. after a view navigation round-trip)
+        rte.addAttachListener(event -> {
+            if (!event.isInitialAttach()) {
+                rte.getElement().executeJs(
+                    "window.Vaadin.Flow.vcfEnhancedRichTextEditor"
+                    + ".extensions.tables.init(this)");
+            }
+        });
+
+        // Listen to custom DOM events dispatched by the JS connector
+        rte.getElement().addEventListener("table-selected", event -> {
+            JsonNode data = event.getEventData();
+            boolean selected = data.get("event.detail.selected").asBoolean();
+            boolean cellSelectionActive = data.get("event.detail.cellSelectionActive").asBoolean();
+            String template = data.has("event.detail.template")
+                ? data.get("event.detail.template").asText() : null;
+            fireEvent(new TableSelectedEvent(this, true, selected, cellSelectionActive, template));
+        }).addEventData("event.detail.selected")
+          .addEventData("event.detail.cellSelectionActive")
+          .addEventData("event.detail.template");
+    }
+
+    // This class is NOT a Component — fire events through the host RTE
+    private void fireEvent(EnhancedRichTextEditorTablesComponentEvent event) {
+        ComponentUtil.fireEvent(rte, event);
+    }
 }
 ```
 
-**CSS:**
+### What the extension uses from ERTE
+
+| ERTE API | What extensions use it for |
+|----------|--------------------------|
+| `getElement().executeJs(...)` | Call JS connector functions |
+| `getElement().addEventListener(...)` | Listen to custom DOM events from JS |
+| `addToolbarComponents(slot, ...)` | Place buttons and controls in the toolbar |
+| `addAllowedHtmlClasses(...)` | Register CSS classes with the sanitizer |
+| `addAttachListener(...)` | Re-initialize connector on re-attach |
+
+That's it. No protected methods, no package-private access, no reflection. The extension is completely decoupled from ERTE internals, which means ERTE can evolve its internal implementation without breaking extensions.
+
+### JS Connector Namespace
+
+Each extension should use its own key under `extensions` to avoid collisions:
+
 ```javascript
-static get styles() {
-  return css`.ql-tag { color: var(--vaadin-tag-color, var(--lumo-primary-color)); }`;
-}
+// Tables: extensions.tables.*
+window.Vaadin.Flow.vcfEnhancedRichTextEditor.extensions.tables = {
+  init(rte) { ... },
+  insert(rte, rows, cols) { ... }
+};
+
+// Your extension: extensions.footnotes.*
+window.Vaadin.Flow.vcfEnhancedRichTextEditor.extensions.footnotes = {
+  init(rte) { ... },
+  insert(rte, text) { ... }
+};
 ```
 
-Add `'ql-tag'` to `ALLOWED_ERTE_CLASSES` in `EnhancedRichTextEditor.java` for sanitizer support.
+Both connectors load independently via their own `@JsModule`, both push to the shared `extendQuill`/`extendEditor` arrays, and both manage their own DOM listeners with proper cleanup on `disconnectedCallback`. Since connectors are not web component subclasses, patch the host element's `disconnectedCallback` directly:
+
+```javascript
+// In your connector's init function:
+const origDisconnected = host.disconnectedCallback?.bind(host);
+host.disconnectedCallback = function() {
+  container.removeEventListener('mousedown', onMouseDown);
+  onMouseDown = null;
+  if (origDisconnected) origDisconnected.call(this);
+};
+```
 
 ---
 
-## Sanitizer Allowlists
-
-This is the full reference of what the server-side sanitizer allows through. You'll need this when adding custom blots or attributes — check what's already allowed so you know what to add. For a user-facing summary, see the [User Guide — Sanitization](../BASE_USER_GUIDE.md#33-sanitization).
-
-### Allowed Tags
-
-`p`, `br`, `strong`, `b`, `em`, `i`, `u`, `s`, `strike`, `small`, `sub`, `sup`, `cite`, `code`, `q`, `dd`, `dl`, `dt`, `h1`, `h2`, `h3`, `ol`, `ul`, `li`, `a`, `img`, `blockquote`, `pre`, `span`, `table`, `tbody`, `tr`, `td`, `th`, `colgroup`, `col`
-
-### Allowed Attributes
-
-| Element | Attributes |
-|---------|-----------|
-| All elements | `style`, `class` |
-| `img` | `align`, `alt`, `height`, `src`, `title`, `width` |
-| `a` | `href` |
-| `span` | `contenteditable`, `aria-readonly`, `data-placeholder` |
-| `blockquote`, `q` | `cite` |
-| `td` | `table_id`, `row_id`, `cell_id`, `merge_id`, `colspan`, `rowspan`, `table-class` |
-| `tr` | `row_id` |
-| `table` | `table_id` |
-
-### Allowed CSS Classes
-
-- ERTE classes: `ql-readonly`, `ql-tab`, `ql-soft-break`, `ql-placeholder`, `ql-nbsp`
-- Quill alignment: `ql-align-left`, `ql-align-center`, `ql-align-right`, `ql-align-justify`
-- Quill indentation: `ql-indent-1` through `ql-indent-8`
-- Table classes: `ql-editor__table--hideBorder`, `td-q`
-- Custom classes added via `addAllowedHtmlClasses()`
-
-### Allowed CSS Properties
-
-`color`, `background-color`, `font-*`, `text-*`, `line-height`, `letter-spacing`, `margin`, `padding`, `border-*`, `display`, `width`, `height`, `position`, and others (complete list in `EnhancedRichTextEditor.java` source code)
-
-### Allowed CSS Functions
-
-`rgb()`, `rgba()`, `hsl()`, `hsla()`, `calc()`
-
-### Allowed Image Data URL MIME Types
-
-`image/png`, `image/jpeg`, `image/jpg`, `image/gif`, `image/webp`, `image/bmp`, `image/x-icon`
-
-### What Gets Stripped
-
-- All tags not in the allowed list (including `<script>`, `<iframe>`, `<object>`, `<embed>`, `<style>`)
-- Event handler attributes (`onclick`, `onerror`, etc.)
-- All CSS functions except the five listed above (this includes `url()`, `var()`, `expression()`, `linear-gradient()`, etc.)
-- `@import` directives in style values
-- SVG data URLs
-- CSS comments
-- `contenteditable="true"` (only `"false"` is allowed)
-
----
-
-**See also:** [`ARCHITECTURE.md`](./ARCHITECTURE.md), [Quill 2](https://quilljs.com/), [Parchment 3](https://github.com/quilljs/parchment)
+**See also:** [`ARCHITECTURE.md`](./ARCHITECTURE.md) for internals, [User Guide](../BASE_USER_GUIDE.md) for features, [Quill 2](https://quilljs.com/), [Parchment 3](https://github.com/quilljs/parchment)

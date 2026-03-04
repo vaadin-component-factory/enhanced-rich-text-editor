@@ -69,7 +69,7 @@ Five blots registered globally via `Quill.register()` before element creation:
 | PlaceholderBlot | Embed | `.ql-placeholder` | Configurable placeholder token |
 | NbspBlot | Embed | `.ql-nbsp` | Non-breaking space |
 
-**Quill 2 Embed guard nodes — this is a common gotcha.** Quill 2 places invisible zero-width characters (`\uFEFF`) inside Embed domNodes so the cursor can sit next to them. If you set `contenteditable="false"` on the outer domNode, those guard nodes become non-editable too, and the cursor can't be placed before or after the embed. The inner `contentNode` already has `contenteditable="false"` — that's all you need. See [EXTENDING.md](EXTENDING.md) for details.
+**Quill 2 Embed guard nodes — this is a common gotcha.** Quill 2 places invisible zero-width characters (`\uFEFF`) inside Embed domNodes so the cursor can sit next to them. If you set `contenteditable="false"` on the outer domNode, those guard nodes become non-editable too, and the cursor can't be placed before or after the embed. The inner `contentNode` already has `contenteditable="false"` — that's all you need. See also the [guard node rules](EXTENDING.md#embed-blot-lifecycle) in the extension guide.
 
 ### Toolbar Slot Injection
 
@@ -99,17 +99,16 @@ ERTE overrides `static get lumoInjector()` to reuse the parent's tag name (`vaad
 All ERTE logic lives in `EnhancedRichTextEditor`, which extends Vaadin's `RichTextEditor`.
 
 **Package structure:**
-- `com.vaadin.flow.component.richtexteditor` — `RteExtensionBase` only (bridge class that lifts package-private RTE 2 methods to protected)
-- `com.vaadin.componentfactory` — Everything else (ERTE API, toolbar helpers, events, data classes)
+- `com.vaadin.componentfactory` — All ERTE code (API, toolbar helpers, events, data classes)
 
-Only one class lives in the foreign package — deliberately. This is the minimal bridge needed to access RTE 2 internals, and keeping it to a single class makes the dependency obvious and auditable.
+`EnhancedRichTextEditor` extends `RichTextEditor` directly.
 
 ### Dual-Layer Sanitizer
 
 - **Server-side (`erteSanitize()`)**: jsoup Safelist extended with ERTE classes, attributes, and safe CSS properties. Called on `setPresentationValue()`.
 - **Client-side (`__updateHtmlValue()`)**: Preserves ERTE classes during the Quill → HTML → server round-trip.
 
-Both layers must agree on which classes are allowed — if you add a class to one side but forget the other, content will either be stripped on save or not preserved on load. See [EXTENDING.md — Sanitization Integration](./EXTENDING.md#sanitization-integration) for how to add custom classes.
+Both layers must agree on which classes are allowed — if you add a class to one side but forget the other, content will either be stripped on save or not preserved on load. See [EXTENDING.md — Sanitizer Integration](./EXTENDING.md#sanitizer-integration) for how to add custom classes.
 
 ### Value Format
 
@@ -117,22 +116,21 @@ HTML-primary (matching RTE 2). `setValue()`/`getValue()` work with HTML strings.
 
 ## Key Source Files
 
-| File | Purpose |
-|------|---------|
-| `vcf-enhanced-rich-text-editor.js` | Web component, blots, toolbar injection, i18n |
-| `vcf-enhanced-rich-text-editor-styles.css` | CSS custom properties, blot styles, slot styling |
-| `EnhancedRichTextEditor.java` | Public API, events, configuration, sanitizer |
-| `RteExtensionBase.java` | Bridge class (package-private → protected) |
-| `toolbar/ToolbarSlot.java` | Enum of toolbar slot positions |
-| `toolbar/ToolbarSwitch.java` | Toggle button helper |
-| `toolbar/ToolbarPopover.java` | Dropdown panel helper |
-| `toolbar/ToolbarDialog.java` | Dialog helper |
-| `toolbar/ToolbarSelectPopup.java` | Context menu helper |
-| `toolbar/SlotUtil.java` | Toolbar slot injection utilities |
-| `TabConverter.java` | Delta ↔ Tab value conversion |
-| `Placeholder.java` | Placeholder data class |
-| `TabStop.java` | TabStop data class |
+| File | Path (within `enhanced-rich-text-editor/`) | Purpose |
+|------|------|---------|
+| `vcf-enhanced-rich-text-editor.js` | `src/main/resources/META-INF/resources/frontend/` | Web component, blots, toolbar injection, i18n |
+| `vcf-enhanced-rich-text-editor-styles.css` | `src/main/resources/META-INF/resources/frontend/styles/` | CSS custom properties, blot styles, slot styling |
+| `EnhancedRichTextEditor.java` | `src/main/java/com/vaadin/componentfactory/` | Public API, events, configuration, sanitizer |
+| `toolbar/ToolbarSlot.java` | `src/main/java/com/vaadin/componentfactory/toolbar/` | Enum of toolbar slot positions |
+| `toolbar/ToolbarSwitch.java` | `src/main/java/com/vaadin/componentfactory/toolbar/` | Toggle button helper |
+| `toolbar/ToolbarPopover.java` | `src/main/java/com/vaadin/componentfactory/toolbar/` | Dropdown panel helper |
+| `toolbar/ToolbarDialog.java` | `src/main/java/com/vaadin/componentfactory/toolbar/` | Dialog helper |
+| `toolbar/ToolbarSelectPopup.java` | `src/main/java/com/vaadin/componentfactory/toolbar/` | Context menu helper |
+| `SlotUtil.java` | `src/main/java/com/vaadin/componentfactory/` | Toolbar slot injection utilities |
+| `TabConverter.java` | `src/main/java/com/vaadin/componentfactory/` | Delta ↔ Tab value conversion |
+| `Placeholder.java` | `src/main/java/com/vaadin/componentfactory/` | Placeholder data class |
+| `TabStop.java` | `src/main/java/com/vaadin/componentfactory/` | TabStop data class |
 
 ---
 
-**See also:** [`EXTENDING.md`](./EXTENDING.md) for extension patterns, [`USER_GUIDE.md`](../BASE_USER_GUIDE.md) for features.
+**See also:** [`EXTENDING.md`](./EXTENDING.md) for extension patterns, [User Guide](../BASE_USER_GUIDE.md) for features.

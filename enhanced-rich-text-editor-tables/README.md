@@ -49,8 +49,8 @@ Three toolbar buttons appear automatically. Users can now insert and modify tabl
 
 ## What's New in V2
 
-- **Quill 2 / Parchment 3** — Complete rewrite of blots for Quill 2 compatibility
-- **Jackson 3** — Uses modern Jackson 3 (`tools.jackson`) instead of Vaadin's elemental JSON
+- **Quill 2 / Parchment 3** (Quill's document model library) — Complete rewrite of table elements (Quill "blots") for Quill 2 compatibility
+- **Jackson 3** — Uses Jackson 3 (`tools.jackson`) for JSON serialization
 - **Color Validation** — Hover/focus color setters now validate CSS values
 - **CSS Custom Properties** — Variables for theming table appearance
 - **Improved Keyboard Navigation** — Better arrow key support for cell selection
@@ -60,6 +60,3 @@ Three toolbar buttons appear automatically. Users can now insert and modify tabl
 
 [CVALv3](https://vaadin.com/license/cval-3) (Commercial Vaadin Add-On License)
 
-## Contributing
-
-Contributions welcome. See [CONTRIBUTING.md](../docs/dev/CONTRIBUTING.md) for guidelines.

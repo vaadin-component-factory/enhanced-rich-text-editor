@@ -93,7 +93,7 @@ The toolbar supports adding custom components to named slots, controlling button
 
 #### Adding Components
 
-ERTE provides several `ToolbarSlot` positions: `START`/`END`, `BEFORE_GROUP_*/AFTER_GROUP_*` (two per button-group), and `GROUP_CUSTOM`.
+ERTE provides several `ToolbarSlot` positions: `START`/`END`, `BEFORE_GROUP_*/AFTER_GROUP_*` (two per button-group), and `GROUP_CUSTOM`. See the `ToolbarSlot` enum Javadoc for the complete list of positions.
 
 ```java
 Button startBtn = new Button("S");
@@ -108,7 +108,7 @@ editor.addToolbarComponents(ToolbarSlot.BEFORE_GROUP_HISTORY, beforeHistoryBtn);
 // Or add to the custom group
 editor.addCustomToolbarComponents(new Button("Custom"));
 ```
-> **Styling note:** All components added via `addToolbarComponents()` automatically receive `part="toolbar-custom-component"`. This enables consistent styling through ERTE's shadow DOM (hover, focus, active/pressed states for buttons). See [Section 2.10.2](#2102-erte-shadow-parts) for styling details.
+> **Styling note:** All components added via `addToolbarComponents()` automatically receive `part="toolbar-custom-component"`. This enables consistent styling through ERTE's shadow DOM, including hover, focus, and active/pressed states for buttons. See [Section 2.10.2](#2102-erte-shadow-parts) for styling details.
 
 **Removing components:**
 
@@ -131,7 +131,7 @@ editor.setToolbarButtonsVisibility(Map.of(
 editor.setToolbarButtonsVisibility(null);
 ```
 
-When all buttons in a group are hidden, the group container auto-hides. See the Javadoc for the complete enum list.
+When all buttons in a group are hidden, the group container auto-hides. See the `ToolbarButton` enum Javadoc for the complete list.
 
 #### Custom Keyboard Shortcuts
 
@@ -189,7 +189,7 @@ editor.addCustomToolbarComponents(toolbarSwitch);
 
 ##### Toolbar Popovers
 
-`ToolbarPopover` anchors a popover to a `ToolbarSwitch` and syncs open/close state:
+`ToolbarPopover` anchors a popover to a `ToolbarSwitch` and syncs open/close state. Like Vaadin's `Popover` and `Dialog`, toolbar overlays self-attach to the page — no explicit `add()` call needed:
 
 ```java
 ToolbarSwitch colorSwitch = new ToolbarSwitch(VaadinIcon.PAINTBRUSH);
@@ -202,7 +202,7 @@ popover.setFocusOnOpenTarget(colorField);
 editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, colorSwitch);
 ```
 
-Beside the constructor, there are also factory methods for common layouts: `vertical(switch, components...)`, `horizontal(switch, components...)`.
+Besides the constructor, there are also factory methods for common layouts: `vertical(switch, components...)`, `horizontal(switch, components...)`.
 
 ##### Toolbar Select Popups
 
@@ -232,7 +232,7 @@ dialog.add(new Checkbox("Show rulers"), new Checkbox("Show whitespace"));
 editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, settingsSwitch);
 ```
 
-Beside the constructor, there are also factory methods for common layouts: `vertical(switch, components...)`, `horizontal(switch, components...)`.
+Besides the constructor, there are also factory methods for common layouts: `vertical(switch, components...)`, `horizontal(switch, components...)`.
 
 ---
 
@@ -241,6 +241,8 @@ Beside the constructor, there are also factory methods for common layouts: `vert
 Placeholders are embedded tokens for mail merge, templates, and dynamic fields. They support full lifecycle events, formatting (normal and alternative), and keyboard insertion.
 
 #### Configuration
+
+Placeholder text uses the format `"ID=Display Text"` — the part before the `=` is the placeholder ID (e.g., `N-1`) used for programmatic access, and the part after is the display text shown in the editor (e.g., `Company Name`).
 
 ```java
 List<Placeholder> placeholders = new ArrayList<>();
@@ -276,15 +278,17 @@ editor.setPlaceholderTags("@", "");
 editor.setPlaceholderTags("{{", "}}");
 ```
 
-**Alt appearance pattern** -- regex to auto-switch formatting:
+**Alt appearance pattern** -- regex that controls which part of a placeholder's text to show in alt mode. When a placeholder's text matches, the matched substring becomes the "alt text" displayed with `altFormat` styling. This regex matches everything after the `=` sign — so `N-1=Company Name` shows only `Company Name` in alt mode:
 
 ```java
-// Switch to altFormat when text after "=" is matched
+// Define which substring to extract for alt display
 editor.setPlaceholderAltAppearancePattern("(?<=\\=).*$");
 
-// Toggle alt appearance programmatically
+// Switch ALL placeholders to alt appearance at once
 editor.setPlaceholderAltAppearance(true);
 ```
+
+The pattern and the toggle work together: the **pattern** defines *what* to extract as alt text (and makes the toolbar toggle button visible), while `setPlaceholderAltAppearance(true)` activates alt mode (showing the extracted text with `altFormat` styling). Without a pattern, the toolbar toggle button is hidden — but `setPlaceholderAltAppearance(true)` still works programmatically (placeholders without a regex match are hidden in alt mode).
 
 #### Inserting Placeholders
 
@@ -294,7 +298,7 @@ Users insert via: **Toolbar button** (dialog with combo-box), **Keyboard shortcu
 
 **Default behavior** 
 
-ERTE handles placeholders automatically: clicking the toolbar button (or pressing Ctrl+P) opens a dialog where the user selects a placeholder, and pressing Delete/Backspace on a placeholder removes it. No Java code needed for basic usage.
+ERTE handles placeholders automatically: clicking the toolbar button (or pressing Ctrl+P / Cmd+P) opens a dialog where the user selects a placeholder, and pressing Delete/Backspace on a placeholder removes it. No Java code needed for basic usage.
 
 **Customize Behavior** 
 
@@ -445,7 +449,9 @@ Tabstops provide document-style columnar alignment for invoices, forms, or struc
 
 #### Tabstops
 
-Define tabstops as a list of positions (in pixels from the left content edge) with an alignment direction:
+You can define tabstops programmatically (see below) or interactively — clicking the horizontal ruler cycles through directions (LEFT → RIGHT → MIDDLE → remove) at the clicked position.
+
+Define tabstops as a list of positions (in CSS pixels from the left edge of the editor's content area, inside any padding) with an alignment direction:
 
 ```java
 editor.setTabStops(List.of(
@@ -468,6 +474,8 @@ List<TabStop> current = editor.getTabStops();
 
 Rulers provide a visual reference for tabstop positions. The horizontal ruler shows pixel positions and lets users click to cycle through directions (LEFT → RIGHT → MIDDLE → remove). The vertical ruler shows a line-height reference.
 
+Hiding rulers does not disable tabstops — Tab key insertion and alignment still work, only the visual ruler bar is hidden.
+
 ```java
 editor.setNoRulers(true);   // Hide rulers (tabstops still work)
 editor.setNoRulers(false);  // Show rulers (default)
@@ -481,7 +489,7 @@ Readonly sections let you protect specific parts of the text from editing — us
 
 **Interactively:** Select text and click the lock icon in the toolbar to toggle readonly on/off.
 
-**Programmatically:** Use Delta attributes to set readonly content from the server:
+**Programmatically:** Use Delta attributes to set readonly content from the server (see [Section 3.1](#31-value-formats-html-vs-delta) for details on Delta format):
 
 ```java
 editor.asDelta().setValue("["
@@ -496,7 +504,7 @@ Readonly sections are visually marked with a gray background and are delete-prot
 
 > **Whole-editor readonly** 
 > 
-> If you want to set the whole editor readonly, you can use the normal readonly api, that all Vaadin input fields provide:
+> If you want to set the whole editor readonly, you can use the normal readonly API that all Vaadin input fields provide:
 > ```java
 > editor.setReadOnly(true);   // entire editor locked
 > editor.setReadOnly(false);  // back to normal
@@ -534,7 +542,7 @@ Press **Shift+Space** to insert a non-breaking space. Unlike regular spaces, it 
 
 **Soft-Break:** Press **Shift+Enter** to insert a line break *within* a paragraph (no new `<p>` tag). This is useful whenever you need a visual line break without starting a new block — addresses, poetry, multi-line labels, etc.
 
-**Tab Copying:** When you press Shift+Enter on a line that starts with tabs, the new line automatically gets the same leading tabs. This keeps your columnar alignment intact across multiple lines without re-pressing Tab on each new line. The number of copied tabs is limited by the number of defined tabstops. This behavior is soft-wrap only, it does no occur on hard wraps (Enter) or auto wrapping at the border of the editor.
+**Tab Copying:** When you press Shift+Enter on a line that starts with tabs, the new line automatically gets the same leading tabs. This keeps your columnar alignment intact across multiple lines without re-pressing Tab on each new line. The number of copied tabs is limited by the number of defined tabstops — additional Tab presses beyond the last tabstop position have no effect. Tab copying only applies to soft-break lines (Shift+Enter) — it does not occur on hard paragraph breaks (Enter) or when text auto-wraps at the editor border.
 
 ---
 
@@ -560,7 +568,7 @@ editor.getTextLength(length ->
 
 ### 2.9 Align Justify
 
-ERTE adds a justify alignment button to the toolbar, next to the existing left/center/right buttons. It's visible by default — hide it if you don't need it:
+Justify distributes text evenly across the full width of the line, creating straight edges on both left and right sides. ERTE adds a justify alignment button to the toolbar, next to the existing left/center/right buttons. It's visible by default — hide it if you don't need it:
 
 ```java
 editor.setToolbarButtonsVisibility(Map.of(
@@ -580,18 +588,20 @@ ERTE builds on the Vaadin Lumo theme and adds its own CSS custom properties, sha
 
 For the standard RTE properties (`--vaadin-rich-text-editor-*`), see the [Vaadin RTE Styling docs](https://vaadin.com/docs/v25/components/rich-text-editor/styling).
 
+> Please note that 6.0 does not yet support the new Aura theme.
+
 #### 2.10.1 ERTE Custom Properties
 
 ERTE provides CSS custom properties (`--vaadin-erte-*`) that you can override on the host element to customize readonly sections, placeholders, whitespace indicators, and rulers. For example:
 
 ```css
-/* global for all ERTE instances*/
+/* global for all ERTE instances */
 html {
     --vaadin-erte-readonly-background: lightgray;
     --vaadin-erte-placeholder-background: #e0f0ff;
 }
 
-/* only for instances with a certain css class*/
+/* only for instances with a certain CSS class */
 vcf-enhanced-rich-text-editor.some-css-class {
     --vaadin-erte-readonly-background: yellow;
     --vaadin-erte-placeholder-background: #e0f0ff;
@@ -661,6 +671,8 @@ ERTE adds these shadow parts on top of the standard RTE 2 parts. Standard toolba
 | `toolbar-group-custom` | Custom button group container |
 | `toolbar-custom-component` | All components added via `addToolbarComponents()` |
 
+These CSS selectors let you style your custom toolbar buttons in different states (hover, active, disabled). The `[on]` attribute is present when a toggle button is active, and `part~=` matches elements whose `part` attribute contains that value.
+
 Slotted component state selectors:
 
 | State | Selector |
@@ -715,7 +727,7 @@ Standard Quill classes (`ql-align-*`, `ql-indent-*`) are provided by the base RT
 | Shift+Space | Insert non-breaking space |
 | Ctrl+P / Cmd+P | Open placeholder dialog (if placeholders configured) |
 
-> **Note:** Browsers may intercept Ctrl+P. Use the toolbar button as alternative.
+> **Note:** Some browsers can intercept Ctrl+P to open the print dialog. If that happens, use the toolbar button as a reliable alternative.
 
 ---
 
@@ -731,10 +743,10 @@ editor.setValue("<p>Hello <strong>world</strong></p>");
 String html = editor.getValue();
 ```
 
-If you need to work with Quill's Delta JSON — for example, to set readonly attributes or insert placeholders programmatically — use the `asDelta()` wrapper:
+If you need to work with Quill's Delta JSON — for example, to set readonly attributes or insert placeholders programmatically — use the `asDelta()` wrapper. Both `setValue()` and `getValue()` work with JSON strings:
 
 ```java
-// Delta — for structured content manipulation
+// Delta — for structured content manipulation (JSON string)
 editor.asDelta().setValue("[{\"insert\":\"Hello \"},{\"insert\":\"world\",\"attributes\":{\"bold\":true}}]");
 String deltaJson = editor.asDelta().getValue();
 ```
@@ -752,7 +764,7 @@ EnhancedRichTextEditor.EnhancedRichTextEditorI18n i18n =
 // Standard RTE 2 labels
 i18n.setBold("Fett");
 i18n.setItalic("Kursiv");
-i18n.setUndo("Ruckgangig");
+i18n.setUndo("Rückgängig");
 
 // ERTE-specific labels
 i18n.setReadonly("Schreibschutz");
@@ -760,7 +772,7 @@ i18n.setWhitespace("Leerzeichen anzeigen");
 i18n.setPlaceholder("Platzhalter");
 i18n.setPlaceholderAppearance("Platzhalter-Darstellung");
 i18n.setPlaceholderDialogTitle("Platzhalter");
-i18n.setPlaceholderComboBoxLabel("Platzhalter wahlen");
+i18n.setPlaceholderComboBoxLabel("Platzhalter wählen");
 i18n.setPlaceholderAppearanceLabel1("Normal");
 i18n.setPlaceholderAppearanceLabel2("Wert");
 i18n.setAlignJustify("Blocksatz");
@@ -821,7 +833,7 @@ editor.removeAllowedHtmlClasses("my-highlight");
 Set<String> registered = editor.getAllowedHtmlClasses();
 ```
 
-Class names must match `[A-Za-z][A-Za-z0-9-]*` and must not start with `ql-` (reserved for Quill internals).
+Class names must match `[A-Za-z][A-Za-z0-9-]*` (start with a letter, contain only letters, digits, and hyphens) and must not start with `ql-` (reserved for Quill internals).
 
 ---
 
@@ -831,5 +843,5 @@ Further resources:
 
 - **Upgrade from v5.x:** [Upgrade Guide](BASE_UPGRADE_GUIDE.md)
 - **Extension hooks and custom blots:** [EXTENDING.md](dev/EXTENDING.md) — for building your own blots, registering Quill extensions, or hooking into the editor lifecycle
-- **Working examples:** Run the demo module (`enhanced-rich-text-editor-demo/`) to see all features in action
+- **Working examples:** Run the demo module (`enhanced-rich-text-editor-demo/`) to see all features in action — see the [Developer Guide](dev/DEVELOPER_GUIDE.md) for setup instructions
 - **Issues and questions:** [GitHub](https://github.com/vaadin-component-factory/enhanced-rich-text-editor/issues)

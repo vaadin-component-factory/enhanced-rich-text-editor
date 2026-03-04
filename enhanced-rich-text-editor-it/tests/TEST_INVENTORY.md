@@ -1,7 +1,7 @@
 # ERTE Test Suite Inventory
 
-> **V25 Migration Status (Phase 5 QA — tables fixme complete):** 296 pass, 10 skip, 0 fail across 306 tests.
-> Implemented: Shell (7), Toolbar (26), Readonly (18), Tabstops (67 pass, 14 skip), Placeholders (30 pass, 2 skip), extendOptions (4), Whitespace (7 pass, 2 skip), Sanitizer (11), I18n (2), Replace Icons (10), Features (32), Tables (82 pass, 0 skip).
+> **V25 Status:** 298 pass, 8 skip, 0 fail across 306 tests.
+> Per spec: Shell (6), Toolbar (32), Readonly (17+1 skip), Tabstops (81+5 skip), Placeholders (30+2 skip), extendOptions (4), Features (36), Replace Icons (10), Tables (82).
 > Skipped tests document known component bugs and Quill 2/Parchment 3 limitations, not ERTE core bugs.
 
 Total: 381 tests (75 prototype + 306 ERTE including Tables)
@@ -9,7 +9,18 @@ V25 status: 296 passed, 10 skipped, 0 failed
 
 ---
 
-## Tabstops (78 tests) — `erte/tabstops.spec.ts`
+## ERTE Shell (6 tests) — `erte/erte-shell.spec.ts`
+
+- Editor element registers as vcf-enhanced-rich-text-editor
+- Editor has Quill instance
+- Value sync: Java setValue reflected in editor
+- Value sync: editor changes reflected in Java getValue
+- Lit lifecycle: re-render after i18n change preserves content
+- Lit lifecycle: re-render after readonly toggle preserves content
+
+---
+
+## Tabstops (86 tests) — `erte/tabstops.spec.ts`
 
 ### Hard-Break (Enter)
 - Tab in new paragraph aligns to first tabstop
@@ -46,7 +57,7 @@ V25 status: 296 passed, 10 skipped, 0 failed
 
 ### Ruler and Tabstop Manipulation
 - Adding a new tabstop by clicking ruler
-- Cycling tabstop alignment: L -> C -> R -> remove
+- Cycling tabstop alignment: left -> right -> middle -> remove
 - Removing middle tabstop affects tab widths
 - Tab width updates when tabstop alignment changes
 
@@ -92,8 +103,13 @@ V25 status: 296 passed, 10 skipped, 0 failed
 - ArrowDown/ArrowUp navigates between lines containing tabs
 - ArrowUp on first line jumps to line start
 - ArrowDown on last line jumps to line end
+- Click after tab positions cursor correctly
 - Cursor can be placed after the last tab in a line
 - Cursor is visible (non-zero height) at every tab position
+- Cursor height unchanged after tab insertion
+- Cursor height and vertical position consistent around tab
+- ~~Native caret before tab is at tab left edge~~ *(skip — inline-block limitation)*
+- ~~Native caret visually positioned AFTER tab via ArrowRight~~ *(skip — inline-block limitation)*
 - Tab right edges align with ruler markers within 2px
 - End key moves to end of visual line
 - Shift+Arrow creates selection and delete removes selected content
@@ -202,9 +218,10 @@ V25 status: 296 passed, 10 skipped, 0 failed
 
 ---
 
-## Toolbar (28 tests) — `erte/toolbar.spec.ts`
+## Toolbar (32 tests) — `erte/toolbar.spec.ts`
 
-- All 25 slots present in DOM
+- All 25 named slots present in DOM
+- GROUP_CUSTOM "toolbar" slot present in DOM
 - Component in START slot renders
 - Component in END slot renders
 - Component in BEFORE_GROUP_HISTORY renders
@@ -226,9 +243,14 @@ V25 status: 296 passed, 10 skipped, 0 failed
 - Custom button click fires Java event - START slot
 - Custom group button click fires event
 - Toolbar keyboard navigation - arrow keys move focus
+- Arrow navigation includes custom components - ToolbarSwitch
+- TextField in toolbar consumes arrow keys - no toolbar navigation
 - Toolbar survives re-render after i18n change - custom components still exist
 - I18n labels updated - German tooltips applied
 - All standard toolbar button parts exist
+- Only one focus indicator after arrow navigation - no duplicates
+- Shift+Tab consistently focuses first element over multiple cycles
+- Shift+Tab focuses first visible toolbar element including slotted
 - Screenshot: Toolbar with custom components
 
 ---

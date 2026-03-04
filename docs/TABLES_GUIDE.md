@@ -42,13 +42,13 @@ That's it — the three toolbar buttons appear automatically. Everything else in
 
 ### Buttons
 
-The Table extension automatically adds toolbar buttons to create and modify tables and their stylings.
+The Table extension automatically adds toolbar buttons to create and modify tables and their styling.
 
 | Button | Behavior |
 |--------|----------|
 | **Add Table** | Popover with row/column inputs (default 3×3, 1–20 range). Insert at cursor. Disabled inside tables. |
 | **Modify Table** | Menu: append/remove rows/columns, merge, split, delete. Enabled only when table selected. |
-| **Style Templates** | Dialog for template management. Disabled when no table. |
+| **Style Templates** | Dialog for template management. Disabled when cursor is not inside a table. |
 
 ### Customization
 
@@ -64,8 +64,10 @@ addPopover.setAutofocus(false); // don't focus first field on open
 
 // Access the dropdown menu for Modify Table
 ToolbarSelectPopup modifyMenu = tables.getModifyTableSelectPopup();
-modifyMenu.getMenuItems(); // list of all menu items
+modifyMenu.getItems(); // list of all menu items
 ```
+
+For details on toolbar component types (`ToolbarPopover`, `ToolbarSelectPopup`, etc.), see the [User Guide](BASE_USER_GUIDE.md#21-toolbar-customization). For a full list of accessor methods, see the [API Quick Reference](#9-api-quick-reference).
 
 ---
 
@@ -104,7 +106,11 @@ tables.setTemplateIdForCurrentTable("myTemplate"); // for selected table
 
 ### Template JSON Structure
 
-Each template is keyed by its **template ID** (a CSS class name) and has the following structure:
+Each template is keyed by its **template ID**, which is applied as a CSS class to the `<table>` element. The ID must be a valid CSS class name — use `TemplateParser.isValidTemplateId()` to check.
+
+Here's a complete template example showing all available options. You only need to include the properties relevant to your use case — `table` properties are the minimum.
+
+The `rows` and `cols` entries use an `index` field with CSS `nth-child()` syntax to select which rows/columns to style (e.g., `"0n+1"` = first only, `"2n"` = every even row). See [Row and Column Index Patterns](#row-and-column-index-patterns) below for the full syntax.
 
 ```json
 {
@@ -158,9 +164,20 @@ Each template is keyed by its **template ID** (a CSS class name) and has the fol
 }
 ```
 
-### Row Index Patterns
+**Cell coordinates:** `x` is the row position (1-based, maps to `tr:nth-of-type()`), `y` is the column position (1-based, maps to `td:nth-of-type()`). So `"x": 1, "y": 1` targets the first cell in the first row.
 
-CSS pseudo-class syntax: `"0n+1"` (first/header), `"2n"` (even), `"2n+1"` (odd), `"1"` (specific). Use `"last": true` to distinguish footer from header.
+### Row and Column Index Patterns
+
+The `index` field in `rows` and `cols` entries follows CSS `nth-child()` formula syntax (`An+B`):
+
+| Pattern | Meaning | Selects |
+|---------|---------|---------|
+| `"0n+1"` or `"1"` | First row only | Header row (both forms are equivalent) |
+| `"2n"` | Every even row | Even rows (2nd, 4th, 6th…) |
+| `"2n+1"` | Every odd row | Odd rows (1st, 3rd, 5th…) |
+| `"3"` | Third row only | A specific single row |
+
+Add `"last": true` to a row entry to count from the bottom instead of the top — useful for footer rows. For example, `{"index": "0n+1", "last": true}` targets the last row only.
 
 ### Style Properties
 
@@ -258,14 +275,14 @@ tables.addTableCellChangedListener(e -> {
 
 ### Template Events
 
-All extend `TemplateModificationEvent`. Fire on user interaction or code:
-
-**TemplatesInitializedEvent**
+**TemplatesInitializedEvent** — fired after `setTemplates()`. Provides `getTemplates()` and `getCssString()`.
 ```java
 tables.addTemplatesInitializedListener(e -> {
     log.info("Loaded {} templates", e.getTemplates().size());
 });
 ```
+
+The following modification events extend `TemplateModificationEvent` and all provide `getTemplateId()`:
 
 **TemplateCreatedEvent** — user clicked Create
 
@@ -277,7 +294,7 @@ tables.addTemplatesInitializedListener(e -> {
 
 **TemplateSelectedEvent** — active template changed for table
 
-All provide `getTemplateId()`. Common pattern:
+Common pattern:
 
 ```java
 tables.addTemplateCreatedListener(e -> saveTemplatesToDatabase(tables.getTemplates()));
@@ -327,7 +344,9 @@ vcf-enhanced-rich-text-editor {
 
 ### Programmatic Color Control
 
-If you need to change hover and focus colors at runtime — say, because the user switched themes — you can set them from Java:
+Besides styling and templates, you can also set hover and focus colors for different parts of the table. These methods apply to the specific `EnhancedRichTextEditorTables` instance — each editor on the page can have its own values. This allows you to give the user visual feedback about table interactions without the need for explicit stylesheets.
+
+We recommend highlighting on hover or focus when the table itself gives no visual clues by itself (e.g. when the borders are transparent).
 
 ```java
 tables.setTableHoverColor("var(--lumo-primary-color)"); // table border
@@ -376,17 +395,18 @@ Setter names follow the pattern `set[Component][Property](String)`. Use IDE auto
 
 ---
 
-## 8. Customizing the Toolbar
-
-See [Section 2 — Toolbar Components](#2-toolbar-components) for accessing and customizing the table toolbar buttons, popovers, and dialogs. The [API Quick Reference](#10-api-quick-reference) lists all accessor methods.
-
----
-
-## 9. Data Formats
+## 8. Data Formats
 
 ### Delta Representation
 
-Under the hood, tables are stored as Quill Delta JSON. Each cell line carries a `td` attribute with pipe-separated metadata: `tableId|rowId|cellId|mergeId|colspan|rowspan|templateClass` (7 fields). For merged cells, the root cell has the actual rowspan/colspan values while the other cells reference the root's cellId. The template class is stored on the first cell of each table only.
+Under the hood, tables are stored as Quill Delta JSON. Each cell line carries a `td` attribute with pipe-separated metadata (7 fields):
+
+`tableId|rowId|cellId|mergeId|colspan|rowspan|templateId`
+
+- **Unmerged cells:** `mergeId`, `colspan`, and `rowspan` are empty (the runtime reads empty as `1`)
+- **Merged cells (root):** The top-left cell carries the actual `colspan`/`rowspan` values
+- **Merged cells (non-root):** Their `mergeId` references the root cell's `cellId`; their own `colspan`/`rowspan` are empty
+- **Template:** Stored on the first cell of each table only
 
 You usually don't need to work with this directly — the Java API handles it for you. But it's useful to know if you're building custom delta processors (e.g., for PDF export).
 
@@ -411,7 +431,7 @@ Templates are stored as an `ObjectNode` (Jackson 3). See [Section 4 — Style Te
 
 ---
 
-## 10. API Quick Reference
+## 9. API Quick Reference
 
 A quick overview of what's available. For full details, check the Javadoc in the source.
 
@@ -479,7 +499,7 @@ Static utility methods:
 
 ### Defaults
 
-Access via `table.getStyleTemplatesDialog().getDefaults()`:
+Access via `tables.getStyleTemplatesDialog().getDefaults()`:
 
 | Method | Description |
 |--------|-------------|
@@ -489,7 +509,7 @@ Access via `table.getStyleTemplatesDialog().getDefaults()`:
 
 ---
 
-## Common Patterns
+## 10. Common Patterns
 
 ### Save Templates to Database
 
@@ -505,13 +525,15 @@ private void saveTemplates() {
 }
 ```
 
-### Warn Before Deleting a Template
+### Detect Deletion of In-Use Templates
+
+The `TemplateDeletedEvent` fires after a template has been deleted. Use it to detect when a template that is still assigned to tables was removed:
 
 ```java
 tables.addTemplateDeletedListener(e -> {
     if (EnhancedRichTextEditorTables.getAssignedTemplateIds(
             editor.asDelta().getValue()).contains(e.getTemplateId())) {
-        log.warn("Template {} still in use", e.getTemplateId());
+        log.warn("Deleted template {} was still in use", e.getTemplateId());
     }
 });
 ```
