@@ -161,7 +161,7 @@ Multi-module Maven project. V25 target: Java 21+, Vaadin 25.0.x, Spring Boot 4.x
 
 ### Data Format
 Content is stored as Quill Delta JSON. Tables encode cell metadata in a pipe-separated format within the `td` attribute:
-`{tableId}|{rowId}|{cellId}|{rowspan}|{colspan}|{templateId}|{uniqueId}`
+`{tableId}|{rowId}|{cellId}|{mergeId}|{colspan}|{rowspan}|{tableClass}`
 
 The V25 primary value format is HTML (matching RTE 2), with Delta access via `asDelta()` wrapper.
 

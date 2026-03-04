@@ -816,7 +816,7 @@ ERTE includes a server-side HTML sanitizer that runs automatically whenever cont
 - Unknown CSS classes (anything not in the lists above)
 - Dangerous CSS: `@import`, `expression()`, `url()`, `behavior()`, and other non-whitelisted CSS functions
 - `data:` URLs with non-image MIME types (e.g., `data:text/html`)
-- `contenteditable="true"` (only `"false"` is preserved, for readonly spans)
+- `contenteditable="true"` and `contenteditable=""` (only `"false"` is preserved, for readonly spans)
 
 #### Extending the allowlist
 

@@ -172,7 +172,8 @@ The `index` field in `rows` and `cols` entries follows CSS `nth-child()` formula
 
 | Pattern | Meaning | Selects |
 |---------|---------|---------|
-| `"0n+1"` or `"1"` | First row only | Header row (both forms are equivalent) |
+| `"0n+1"` | First row only | Header row |
+| `"1"` | First row only | Same selection as `"0n+1"`, but generates a more specific CSS rule (appears later in the stylesheet, so it wins on conflicts) |
 | `"2n"` | Every even row | Even rows (2nd, 4th, 6th…) |
 | `"2n+1"` | Every odd row | Odd rows (1st, 3rd, 5th…) |
 | `"3"` | Third row only | A specific single row |
@@ -401,12 +402,12 @@ Setter names follow the pattern `set[Component][Property](String)`. Use IDE auto
 
 Under the hood, tables are stored as Quill Delta JSON. Each cell line carries a `td` attribute with pipe-separated metadata (7 fields):
 
-`tableId|rowId|cellId|mergeId|colspan|rowspan|templateId`
+`tableId|rowId|cellId|mergeId|colspan|rowspan|tableClass`
 
 - **Unmerged cells:** `mergeId`, `colspan`, and `rowspan` are empty (the runtime reads empty as `1`)
 - **Merged cells (root):** The top-left cell carries the actual `colspan`/`rowspan` values
 - **Merged cells (non-root):** Their `mergeId` references the root cell's `cellId`; their own `colspan`/`rowspan` are empty
-- **Template:** Stored on the first cell of each table only
+- **Table class:** The 7th field is the CSS class of the `<table>` element (equals the template ID when one is applied). Stored on the first cell of each table only.
 
 You usually don't need to work with this directly — the Java API handles it for you. But it's useful to know if you're building custom delta processors (e.g., for PDF export).
 
