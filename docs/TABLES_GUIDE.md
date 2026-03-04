@@ -47,8 +47,8 @@ The Table extension automatically adds toolbar buttons to create and modify tabl
 | Button | Behavior |
 |--------|----------|
 | **Add Table** | Popover with row/column inputs (default 3×3, 1–20 range). Insert at cursor. Disabled inside tables. |
-| **Modify Table** | Menu: append/remove rows/columns, merge, split, delete. Enabled only when table selected. |
-| **Style Templates** | Dialog for template management. Disabled when cursor is not inside a table. |
+| **Modify Table** | Menu: append/remove rows/columns, merge, split, delete. Enabled when cursor is inside a table. |
+| **Style Templates** | Dialog for template management. Enabled when cursor is inside a table. |
 
 ### Customization
 
@@ -164,7 +164,7 @@ The `rows` and `cols` entries use an `index` field with CSS `nth-child()` syntax
 }
 ```
 
-**Cell coordinates:** `x` is the row position (1-based, maps to `tr:nth-of-type()`), `y` is the column position (1-based, maps to `td:nth-of-type()`). So `"x": 1, "y": 1` targets the first cell in the first row.
+**Cell coordinates:** `x` is the row position (1-based, maps to `tr:nth-of-type()`), `y` is the column position (1-based, maps to `td:nth-of-type()`). So `"x": 1, "y": 1` targets the first cell in the first row. **Note:** This is opposite to the typical `x=horizontal, y=vertical` convention — here `x` means row and `y` means column.
 
 ### Row and Column Index Patterns
 
@@ -283,7 +283,7 @@ tables.addTemplatesInitializedListener(e -> {
 });
 ```
 
-The following modification events extend `TemplateModificationEvent` and all provide `getTemplateId()`:
+The following modification events extend `TemplateModificationEvent` and all provide `getTemplateId()` and `getTemplate()` (the full template JSON):
 
 **TemplateCreatedEvent** — user clicked Create
 
@@ -293,7 +293,7 @@ The following modification events extend `TemplateModificationEvent` and all pro
 
 **TemplateDeletedEvent** — user confirmed deletion
 
-**TemplateSelectedEvent** — active template changed for table
+**TemplateSelectedEvent** — active template changed for table. This event extends `EnhancedRichTextEditorTablesComponentEvent` directly (not `TemplateModificationEvent`). It provides `getTemplateId()` but not `getTemplate()`.
 
 Common pattern:
 

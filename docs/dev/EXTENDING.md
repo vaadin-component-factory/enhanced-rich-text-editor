@@ -29,7 +29,7 @@ This works because every layer of the architecture supports parallel extensions:
 | **Toolbar** | Each extension places components in different slots — or shares a slot without conflict |
 | **CSS** | Each extension injects a `<style>` element with a unique ID into the shadow root |
 | **Events** | Each extension dispatches its own CustomEvents (`table-selected`, `footnote-clicked`) and registers its own Java-side listeners |
-| **Sanitizer** | Each extension registers its CSS classes and attributes via `addAllowedHtmlClasses()` |
+| **Sanitizer** | Each extension registers its CSS classes via `addAllowedHtmlClasses()` and HTML attributes via `addAllowedHtmlAttributes()` |
 | **Connector namespace** | Each extension lives under its own key (`extensions.tables`, `extensions.footnotes`) |
 
 The rest of this guide walks through each of these layers.
@@ -97,7 +97,7 @@ extNs.extendEditor.push(function(editor, Quill) {
 
 ### Loading Extensions
 
-Load your extension connector via `@JsModule` on your view or layout:
+Load your extension's JavaScript connector via `@JsModule` on the extension class itself. Vaadin's frontend scanner detects the annotation on any class in the classpath — it doesn't need to be on a Component or View:
 
 ```java
 @JsModule("./src/erte-table/connector.js")  // Table addon
@@ -229,7 +229,7 @@ editor.getElement().executeJs(
     "})");
 ```
 
-Use `this.quill` (binding context), string key names (`"Tab"`, `"Enter"`), return `false` to prevent default (return `true` to let the next handler run).
+Quill's keyboard module calls the handler with a special context where `this.quill` is the Quill instance — use `function()` (not arrow `() =>`), or `this.quill` won't be available. Use string key names (`"Tab"`, `"Enter"`), return `false` to prevent default (return `true` to let the next handler run).
 
 ---
 
@@ -262,11 +262,18 @@ private static final Set<String> ALLOWED_ERTE_CLASSES = Set.of(
 rte.addAllowedHtmlClasses("my-extension-class", "my-other-class");
 ```
 
-**HTML attributes** — there is currently no public API for extensions to register custom HTML attributes. If your extension needs custom attributes preserved through sanitization, modify `erteSanitize()` in ERTE core (`EnhancedRichTextEditor.java`).
+Class names must match `[A-Za-z][A-Za-z0-9-]*` and must not start with `ql-` (reserved for Quill/ERTE internal classes). Use a namespace prefix like `myext-highlight` instead.
+
+**HTML attributes (extension authors)** — use the public API from your extension code:
+```java
+rte.addAllowedHtmlAttributes("span", "data-footnote-id", "data-footnote-ref");
+```
+
+Attribute names must match `[a-zA-Z][a-zA-Z0-9-_]*` and must not start with `on` (event handlers are never allowed). Tag names must be lowercase.
 
 **CSS properties** — add to `ALLOWED_CSS_PROPERTIES` if your blot uses inline styles.
 
-The Table addon handles this differently — it registers its allowed classes dynamically via `addAllowedHtmlClasses()` on the editor, and its table-specific attributes (`table_id`, `row_id`, `cell_id`, etc.) are part of the core sanitizer allowlist because tables use `<td>`, `<tr>`, and `<table>` elements.
+The Table addon registers its allowed classes dynamically via `addAllowedHtmlClasses()`. Its table-specific attributes (`table_id`, `row_id`, `cell_id`, etc.) are part of ERTE core's sanitizer allowlist because tables are a first-party extension — third-party extensions use `addAllowedHtmlAttributes()` instead.
 
 ### What the Sanitizer Strips
 
@@ -306,7 +313,7 @@ static get styles() {
 }
 ```
 
-**Extension authors** cannot use `static get styles()` — extensions don't subclass the web component. Instead, inject CSS into the shadow root at runtime (see [Injecting CSS into Shadow DOM](#injecting-css-into-shadow-dom) below). The Table addon demonstrates this pattern.
+**Extension authors** cannot use `static get styles()` — extensions don't subclass the web component. Instead, inject CSS into the shadow root at runtime (see [Injecting CSS into Shadow DOM](#injecting-css-into-shadow-dom) below). Note that extension blots should avoid the `ql-` prefix for their CSS classes — that prefix is reserved for Quill and ERTE internal classes and is rejected by `addAllowedHtmlClasses()`. Use a namespace prefix like `myext-highlight` instead. The Table addon demonstrates this pattern.
 
 ---
 
@@ -334,7 +341,7 @@ Use a unique ID on the `<style>` element to prevent duplicate injection on re-at
 
 ## Building a Java Extension
 
-An extension is a regular Java class in its own Maven module. It holds a reference to the editor and interacts with it exclusively through public API — `getElement()`, `addToolbarComponents()`, `addAllowedHtmlClasses()`, `executeJs()`, and DOM event listeners. No subclassing, no access to ERTE internals.
+An extension is a regular Java class in its own Maven module. It holds a reference to the editor and interacts with it exclusively through public API — `getElement()`, `addToolbarComponents()`, `addAllowedHtmlClasses()`, `addAllowedHtmlAttributes()`, `executeJs()`, and DOM event listeners. No subclassing, no access to ERTE internals.
 
 The Table addon is the reference (simplified — see the actual source for the full implementation):
 
@@ -395,6 +402,7 @@ public class EnhancedRichTextEditorTables {
 | `getElement().addEventListener(...)` | Listen to custom DOM events from JS |
 | `addToolbarComponents(slot, ...)` | Place buttons and controls in the toolbar |
 | `addAllowedHtmlClasses(...)` | Register CSS classes with the sanitizer |
+| `addAllowedHtmlAttributes(...)` | Register HTML attributes with the sanitizer |
 | `addAttachListener(...)` | Re-initialize connector on re-attach |
 
 That's it. No protected methods, no package-private access, no reflection. The extension is completely decoupled from ERTE internals, which means ERTE can evolve its internal implementation without breaking extensions.

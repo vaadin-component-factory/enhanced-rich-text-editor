@@ -35,8 +35,6 @@ The project is a multi-module Maven build. Each module has its own job, and you'
 | **enhanced-rich-text-editor-demo/** | Demo application with sample views and prototype tests |
 | **enhanced-rich-text-editor-it/** | Integration tests (dedicated test views + Playwright specs) |
 
-All development happens on the `v25` branch.
-
 ---
 
 ## Building from Source
@@ -92,7 +90,9 @@ The integration tests use Playwright and run against a dedicated IT server (port
 ```bash
 bash build-it.sh                          # Build IT module
 bash it-server-start.sh                   # Start IT server (port 8081)
+bash it-server-status.sh --wait           # Wait until server is ready
 cd enhanced-rich-text-editor-it
+npx playwright install                    # First time: download browser binaries
 npx playwright test tests/erte/           # Run all ERTE tests
 cd ..
 bash it-server-stop.sh                    # Stop IT server when done

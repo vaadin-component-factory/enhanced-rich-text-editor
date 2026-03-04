@@ -214,6 +214,7 @@ public class EnhancedRichTextEditor extends RichTextEditor {
 
     private boolean ertePendingPresentationUpdate;
     private final Set<String> dynamicAllowedClasses = new LinkedHashSet<>();
+    private final Map<String, Set<String>> dynamicAllowedAttributes = new LinkedHashMap<>();
 
     /**
      * Sanitizes HTML with ERTE's extended whitelist using only static allowed
@@ -228,11 +229,8 @@ public class EnhancedRichTextEditor extends RichTextEditor {
 
     /**
      * Sanitizes HTML with ERTE's extended whitelist plus additional dynamic
-     * classes.
-     * <p>
-     * The {@code extraClasses} set is trusted (no validation) — callers are
-     * responsible for ensuring class names are safe. The public API
-     * {@link #addAllowedHtmlClasses(String...)} performs validation.
+     * classes. Equivalent to
+     * {@code erteSanitize(html, extraClasses, Map.of())}.
      *
      * @param html         the raw HTML
      * @param extraClasses additional CSS classes to preserve (may be empty)
@@ -240,6 +238,30 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      */
     protected static String erteSanitize(String html,
             Set<String> extraClasses) {
+        return erteSanitize(html, extraClasses, Map.of());
+    }
+
+    /**
+     * Sanitizes HTML with ERTE's extended whitelist plus additional dynamic
+     * classes and attributes.
+     * <p>
+     * The {@code extraClasses} set is trusted (no validation) — callers are
+     * responsible for ensuring class names are safe. The public API
+     * {@link #addAllowedHtmlClasses(String...)} performs validation.
+     * <p>
+     * The {@code extraAttributes} map is trusted — callers are responsible
+     * for ensuring attribute names are safe. The public API
+     * {@link #addAllowedHtmlAttributes(String, String...)} performs
+     * validation.
+     *
+     * @param html            the raw HTML
+     * @param extraClasses    additional CSS classes to preserve (may be empty)
+     * @param extraAttributes additional tag→attributes to preserve
+     * @return sanitized HTML safe for ERTE rendering
+     */
+    protected static String erteSanitize(String html,
+            Set<String> extraClasses,
+            Map<String, Set<String>> extraAttributes) {
         if (html == null || html.isEmpty()) {
             return html;
         }
@@ -263,6 +285,15 @@ public class EnhancedRichTextEditor extends RichTextEditor {
                         "merge_id", "colspan", "rowspan", "table-class")
                 .addAttributes("tr", "row_id")
                 .addAttributes("table", "table_id");
+
+        // Dynamic attributes registered via addAllowedHtmlAttributes()
+        for (var entry : extraAttributes.entrySet()) {
+            String tag = entry.getKey();
+            Set<String> attrs = entry.getValue();
+            if (!attrs.isEmpty()) {
+                safelist.addAttributes(tag, attrs.toArray(String[]::new));
+            }
+        }
 
         String safe = Jsoup.clean(html, "", safelist, settings);
 
@@ -448,6 +479,113 @@ public class EnhancedRichTextEditor extends RichTextEditor {
         return Collections.unmodifiableSet(dynamicAllowedClasses);
     }
 
+    // ---- Dynamic HTML attribute allowlist ----
+
+    private static final Pattern VALID_ATTR_NAME = Pattern
+            .compile("[a-zA-Z][a-zA-Z0-9\\-_]*");
+    private static final Pattern VALID_TAG_NAME = Pattern
+            .compile("[a-z][a-z0-9]*");
+
+    /**
+     * Registers additional HTML attributes that the sanitizer should
+     * preserve on the given tag. Use this when your extension's blots
+     * produce custom HTML attributes (e.g., {@code data-footnote-id}).
+     * <p>
+     * Attribute names must match {@code [a-zA-Z][a-zA-Z0-9-_]*} and must
+     * not start with {@code "on"} (event handlers are never allowed).
+     * Tag names must be lowercase HTML tag names.
+     * <p>
+     * Must be called from the Vaadin session (UI) thread.
+     *
+     * @param tag        the HTML tag name (e.g., "span", "div")
+     * @param attributes one or more attribute names
+     * @throws IllegalArgumentException if a tag or attribute name is invalid
+     * @since 6.0.0
+     */
+    public void addAllowedHtmlAttributes(String tag, String... attributes) {
+        validateTagName(tag);
+        for (String attr : attributes) {
+            validateAttributeName(attr);
+        }
+        dynamicAllowedAttributes
+                .computeIfAbsent(tag, k -> new LinkedHashSet<>())
+                .addAll(Arrays.asList(attributes));
+    }
+
+    /**
+     * Removes previously registered dynamic HTML attributes for the given
+     * tag.
+     *
+     * @param tag        the HTML tag name
+     * @param attributes one or more attribute names to remove
+     * @since 6.0.0
+     */
+    public void removeAllowedHtmlAttributes(String tag,
+            String... attributes) {
+        Set<String> attrs = dynamicAllowedAttributes.get(tag);
+        if (attrs != null) {
+            for (String attr : attributes) {
+                attrs.remove(attr);
+            }
+            if (attrs.isEmpty()) {
+                dynamicAllowedAttributes.remove(tag);
+            }
+        }
+    }
+
+    /**
+     * Returns the currently registered dynamic allowed attributes
+     * (unmodifiable view).
+     *
+     * @return unmodifiable map of tag → attribute names
+     * @since 6.0.0
+     */
+    public Map<String, Set<String>> getAllowedHtmlAttributes() {
+        Map<String, Set<String>> result = new LinkedHashMap<>();
+        for (var entry : dynamicAllowedAttributes.entrySet()) {
+            result.put(entry.getKey(),
+                    Collections.unmodifiableSet(entry.getValue()));
+        }
+        return Collections.unmodifiableMap(result);
+    }
+
+    /**
+     * Validates an HTML tag name.
+     * Package-private for test access.
+     */
+    static void validateTagName(String tag) {
+        if (tag == null || tag.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Tag name must not be null or empty");
+        }
+        if (!VALID_TAG_NAME.matcher(tag).matches()) {
+            throw new IllegalArgumentException(
+                    "Invalid tag name (must match "
+                            + "[a-z][a-z0-9]*): " + tag);
+        }
+    }
+
+    /**
+     * Validates an HTML attribute name for use with
+     * {@link #addAllowedHtmlAttributes}.
+     * Package-private for test access.
+     */
+    static void validateAttributeName(String attr) {
+        if (attr == null || attr.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Attribute name must not be null or empty");
+        }
+        if (attr.toLowerCase(Locale.ROOT).startsWith("on")) {
+            throw new IllegalArgumentException(
+                    "Event handler attributes are not allowed: " + attr);
+        }
+        if (!VALID_ATTR_NAME.matcher(attr).matches()) {
+            throw new IllegalArgumentException(
+                    "Invalid attribute name (must match "
+                            + "[a-zA-Z][a-zA-Z0-9-_]*): " + attr);
+        }
+    }
+
     /**
      * Validates a CSS class name for use with {@link #addAllowedHtmlClasses}.
      * Package-private for test access.
@@ -486,7 +624,7 @@ public class EnhancedRichTextEditor extends RichTextEditor {
     @Override
     protected void setPresentationValue(String newPresentationValue) {
         String sanitized = erteSanitize(newPresentationValue,
-                dynamicAllowedClasses);
+                dynamicAllowedClasses, dynamicAllowedAttributes);
         getElement().setProperty("htmlValue", sanitized);
         if (!ertePendingPresentationUpdate) {
             ertePendingPresentationUpdate = true;
@@ -541,7 +679,8 @@ public class EnhancedRichTextEditor extends RichTextEditor {
         String rawHtml = getElement().getProperty("htmlValue", "");
         if (rawHtml != null && !rawHtml.isEmpty()) {
             super.setModelValue(erteSanitize(rawHtml,
-                    dynamicAllowedClasses), fromClient);
+                    dynamicAllowedClasses, dynamicAllowedAttributes),
+                    fromClient);
         } else {
             super.setModelValue(newModelValue, fromClient);
         }

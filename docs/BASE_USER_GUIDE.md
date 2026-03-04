@@ -242,7 +242,7 @@ Placeholders are embedded tokens for mail merge, templates, and dynamic fields. 
 
 #### Configuration
 
-Placeholder text uses the format `"ID=Display Text"` — the part before the `=` is the placeholder ID (e.g., `N-1`) used for programmatic access, and the part after is the display text shown in the editor (e.g., `Company Name`).
+Placeholder text is a freeform string — the API treats it as an opaque value. A common convention for mail-merge scenarios is `"ID=Display Text"` (e.g., `"N-1=Company Name"`), where the part before `=` serves as an identifier and the part after as display text. This convention works well with the `altAppearancePattern` regex (see below), but the `=` delimiter is not required or parsed by the API. Placeholders are identified by their full text value.
 
 ```java
 List<Placeholder> placeholders = new ArrayList<>();
@@ -288,7 +288,12 @@ editor.setPlaceholderAltAppearancePattern("(?<=\\=).*$");
 editor.setPlaceholderAltAppearance(true);
 ```
 
-The pattern and the toggle work together: the **pattern** defines *what* to extract as alt text (and makes the toolbar toggle button visible), while `setPlaceholderAltAppearance(true)` activates alt mode (showing the extracted text with `altFormat` styling). Without a pattern, the toolbar toggle button is hidden — but `setPlaceholderAltAppearance(true)` still works programmatically (placeholders without a regex match are hidden in alt mode).
+The pattern and the toggle work together:
+
+- The **pattern** defines *what* to extract as alt text. Setting a pattern also makes the toolbar toggle button visible.
+- `setPlaceholderAltAppearance(true)` activates alt mode, showing the extracted text with `altFormat` styling.
+
+Without a pattern, the toolbar toggle button is hidden. You can still call `setPlaceholderAltAppearance(true)` programmatically, but be aware: placeholders whose text does not match the regex will be hidden entirely in alt mode (they have no alt text to display).
 
 #### Inserting Placeholders
 
@@ -834,6 +839,18 @@ Set<String> registered = editor.getAllowedHtmlClasses();
 ```
 
 Class names must match `[A-Za-z][A-Za-z0-9-]*` (start with a letter, contain only letters, digits, and hyphens) and must not start with `ql-` (reserved for Quill internals).
+
+Similarly, if your content uses custom HTML attributes (e.g., from an extension's blots), register them:
+
+```java
+// Register custom attributes on specific tags
+editor.addAllowedHtmlAttributes("span", "data-footnote-id");
+
+// Remove them later if needed
+editor.removeAllowedHtmlAttributes("span", "data-footnote-id");
+```
+
+Attribute names must not start with `on` (event handlers are never allowed).
 
 ---
 

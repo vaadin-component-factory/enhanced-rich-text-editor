@@ -108,7 +108,7 @@ All ERTE logic lives in `EnhancedRichTextEditor`, which extends Vaadin's `RichTe
 - **Server-side (`erteSanitize()`)**: jsoup Safelist extended with ERTE classes, attributes, and safe CSS properties. Called on `setPresentationValue()`.
 - **Client-side (`__updateHtmlValue()`)**: Preserves ERTE classes during the Quill → HTML → server round-trip.
 
-Both layers must agree on which classes are allowed — if you add a class to one side but forget the other, content will either be stripped on save or not preserved on load. See [EXTENDING.md — Sanitizer Integration](./EXTENDING.md#sanitizer-integration) for how to add custom classes.
+Both layers must agree on which classes are allowed — if you add a class to one side but forget the other, content will either be stripped on save or not preserved on load. See [EXTENDING.md — Sanitizer Integration](./EXTENDING.md#sanitizer-integration) for how to add custom classes and attributes.
 
 ### Value Format
 
