@@ -23,7 +23,7 @@
 
 ### 1. Jackson 3 Migration (Json → ObjectNode)
 
-Vaadin 25 uses Jackson 3 (`tools.jackson`) instead of the elemental JSON library. All template parsing and access code needs to be updated.
+Vaadin 25 ships Jackson 3 (`tools.jackson`) instead of the elemental JSON library. If you work with template JSON in your code, you'll need to update those calls — but the changes are mechanical and IDE-friendly.
 
 ```java
 // V1: elemental Json
@@ -35,28 +35,45 @@ ObjectNode templates = TemplateParser.parseJson(jsonString);
 String name = templates.get("myTemplate").get("name").asText();
 ```
 
-### 2. I18n Field Names (Placeholders → Labels)
+### 2. Table Delta Format Change
 
-Input fields in Vaadin 25 use labels instead of placeholder text. All i18n setter names have been updated accordingly.
+The internal Delta format for table cells has changed slightly. Don't worry — ERTE handles this for you. It reads old V1 deltas just fine and automatically produces the clean V2 format on output. For normal editor usage, there's nothing to do.
 
-```java
-// V1: i18n.setInsertTableRowsFieldPlaceholder("Number of rows")
-// V2: i18n.setInsertTableRowsFieldLabel("Rows")
+This only matters if you have your own code that parses table deltas directly — for instance a PDF exporter or a server-side content processor that reads raw Delta JSON. If that's you, read on.
+
+Quill 1 used to add five extra attributes (`"0":"T"`, `"1":"A"`, `"2":"B"`, `"3":"L"`, `"4":"E"`) to every table cell op. Quill 2 dropped them — only the `td` attribute remains. The `td` value itself (pipe-separated: `tableId|rowId|cellId|mergeId|colspan|rowspan|templateClass`) hasn't changed at all.
+
+```json
+// V1: five extra attributes alongside td
+{"attributes":{"0":"T","1":"A","2":"B","3":"L","4":"E","td":"id|id|id||||template1"},"insert":"\n"}
+
+// V2: just td
+{"attributes":{"td":"id|id|id||||template1"},"insert":"\n"}
 ```
 
-### 3. Color Validation
+### 3. Color Validation on Hover/Focus Setters
 
-V2 now validates color values strictly and throws `IllegalArgumentException` for invalid inputs. Accepted formats: hex (`#2196f3`), named colors (`blue`), rgb/rgba, hsl/hsla, and CSS variables (`var(--color)`). If you pass user-provided colors, wrap them in a try-catch or validate before passing.
+V1 accepted any string in `setTableHoverColor()` and similar setters without validation. V2 now validates those values and throws `IllegalArgumentException` if the color isn't valid CSS. Accepted formats: hex (`#2196f3`), named colors (`blue`), rgb/rgba, hsl/hsla, and CSS variables (`var(--color)`).
 
-### 4. Template ID Validation
+If you're passing hardcoded colors, you're probably fine. But if you accept user input, wrap the call in a try-catch:
 
-Template IDs are now used as CSS class names and must match the pattern `[A-Za-z][A-Za-z0-9\-]*`. If you have template IDs with special characters (e.g., `"my-template@123"`), rename them to valid CSS names (e.g., `"my-template-123"`). This applies to both hardcoded IDs in your Java code and stored template JSON.
+```java
+// V1: silently accepted any string
+tables.setTableHoverColor("not-a-color"); // no error
+
+// V2: validates and throws
+try {
+    tables.setTableHoverColor(userColor);
+} catch (IllegalArgumentException e) {
+    // handle invalid color
+}
+```
 
 ---
 
 ## Migration Steps
 
-Walk through these steps in order. Most changes are straightforward search-and-replace.
+Walk through these in order. Most are straightforward search-and-replace — your IDE will do the heavy lifting.
 
 **1. Update pom.xml**
 ```xml
@@ -82,13 +99,14 @@ JsonNode template = templates.get("myTemplate"); // was: getObject()
 String name = template.get("name").asText(); // was: getString()
 ```
 
-**4. Update i18n method names**
-```java
-// Change all setters from *FieldPlaceholder to *FieldLabel
-i18n.setInsertTableRowsFieldLabel("Rows"); // was: setInsertTableRowsFieldPlaceholder
-```
+**4. Update custom Delta parsers (if applicable)**
 
-**5. Add color validation**
+Only needed if you parse table deltas outside of ERTE (e.g., for PDF export). Remove any logic that relies on the `"0":"T"` through `"4":"E"` attributes — see [Breaking Change 2](#2-table-delta-format-change).
+
+**5. Handle color validation**
+
+If you pass user-provided colors to `setTableHoverColor()` or `setTableFocusColor()`, add error handling — V2 now validates and throws `IllegalArgumentException` for invalid values:
+
 ```java
 try {
     tables.setTableHoverColor(userColor);
@@ -97,33 +115,19 @@ try {
 }
 ```
 
-**6. Rename template IDs**
-Search for hardcoded IDs. Must match pattern `[A-Za-z][A-Za-z0-9\-]*`:
-```java
-tables.insertTableAtCurrentPosition(3, 3, "template-v1"); // was: "template@v1"
-```
-Also update stored JSON template keys.
-
-**7. Test:** `bash build.sh && bash server-start.sh` then verify tables work
-
 ---
 
 ## New Features in V2
 
-These features are new in Tables V2 and were not available in V1:
+New in V2:
 
-- **11 CSS custom properties** (`--vaadin-erte-table-*`) for fine-grained control over borders, padding, and selection colors
-- **Programmatic hover/focus colors** — set colors from Java with `tables.setTableHoverColor(...)` etc.
-- **Template ID scanning** — find which templates are used in a delta with `getAssignedTemplateIds(delta)`
-- **Custom CSS injection** — inject additional CSS before or after generated template styles with `tables.setCustomStyles(...)`
+- **CSS custom properties** (`--vaadin-erte-table-*`) for fine-grained control over borders, padding, and selection colors
 - **Better keyboard navigation** within tables (Quill 2 improvement)
 
 ---
 
 ## Known Limitations & Notes
 
-- **Cell styling UI (planned):** The template dialog doesn't have a visual editor for individual cells yet. You can edit them programmatically via `tables.getTemplates()` → modify the `"cells"` array → reload.
-- **Delta format unchanged:** The `td` attribute format is the same as V1, so stored content is fully compatible.
 - **Undo/redo:** Undoing a table removal may produce slightly different row ordering. This is a Quill 2 limitation, not an ERTE bug.
 - **All V1 features supported** — no features have been dropped in V2.
 
@@ -135,13 +139,10 @@ Before deploying V2 to production:
 
 - [ ] Dependencies updated in `pom.xml`
 - [ ] All `Json` → `ObjectNode` references updated
-- [ ] All `Placeholder` → `Label` i18n methods updated
-- [ ] Template IDs validated against regex `[A-Za-z][A-Za-z0-9\-]*`
-- [ ] Color values validated (test invalid colors to confirm exceptions)
+- [ ] Custom Delta parsers updated (no more `"0":"T"` character-spread attributes)
+- [ ] Color values validated (test invalid colors to confirm exceptions on hover/focus setters)
 - [ ] Stored templates reloaded and verified visually
-- [ ] Test suite passes: `npx playwright test tests/erte/tables.spec.ts`
-- [ ] Demo app tables work: `/erte-test/tables`
-- [ ] Events fire correctly (add/delete/update listeners test)
+- [ ] Events fire correctly (add/delete/update listeners)
 - [ ] Custom CSS properties work (test via theme CSS)
 
 ---

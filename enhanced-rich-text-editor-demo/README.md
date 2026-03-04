@@ -1,8 +1,11 @@
 # Enhanced Rich Text Editor -- Demo Application
 
-Demo and test application for the Enhanced Rich Text Editor (ERTE) V25. Provides a
-full-featured demo view and individual test views for each ERTE feature, plus a
-Playwright test suite.
+Demo application for the Enhanced Rich Text Editor (ERTE) V25. Provides interactive
+playground views for exploring ERTE features, comparing with stock RTE 2, and
+loading sample content.
+
+> **Looking for tests?** ERTE integration tests (Playwright) live in the
+> [`enhanced-rich-text-editor-it/`](../enhanced-rich-text-editor-it/) module.
 
 ## Quick Start
 
@@ -23,79 +26,39 @@ bash server-stop.sh
 
 ## Available Views
 
-### Demo
-
 | Route | View Class | Description |
 |-------|-----------|-------------|
-| `/` | `V25DemoView` | Main demo with all features, toolbar customization, dark/light mode |
+| `/` | `ErtePlaygroundView` | Full-featured ERTE demo with tables, toolbar customization, dark/light mode |
+| `/erte-samples` | `ErteSamplesView` | Pre-built sample content showcasing ERTE features |
+| `/rte-playground` | `RtePlaygroundView` | Stock Vaadin RTE 2 (unmodified) for side-by-side comparison |
 
-### Test Views
-
-All test views are accessible under `/erte-test/*` with a shared side navigation
-(`ErteTestLayout`).
-
-| Route | View Class | Features Tested |
-|-------|-----------|-----------------|
-| `/erte-test/toolbar` | `ErteToolbarTestView` | Slots, visibility, shortcuts |
-| `/erte-test/readonly` | `ErteReadonlyTestView` | Readonly sections, protection |
-| `/erte-test/tabstops` | `ErteTabStopTestView` | Tabstops, rulers, soft-break, whitespace |
-| `/erte-test/placeholders` | `ErtePlaceholderTestView` | Placeholder dialog, events, formatting |
-| `/erte-test/extend-options` | `ErteExtendOptionsTestView` | extendQuill, extendEditor hooks |
-| `/erte-test/features` | `ErteFeatureTestView` | NBSP, addText, align, indent, i18n, sanitizer, focus |
-| `/erte-test/replace-icons` | `ErteReplaceIconTestView` | Toolbar icon replacement |
-| `/erte-test/toolbar-popover` | `ErteToolbarPopoverTestView` | ToolbarPopover component |
-| `/erte-test/toolbar-select-popup` | `ErteToolbarSelectPopupTestView` | ToolbarSelectPopup component |
-| `/erte-test/toolbar-dialog` | `ErteToolbarDialogTestView` | ToolbarDialog component |
-
-### Spike/Prototype
+### Spike / Prototype
 
 | Route | View Class | Description |
 |-------|-----------|-------------|
 | `/tab-stop` | *(frontend-only)* | Quill 2 tabstop prototype (pure JS, no ERTE) |
 | `/erte-spike/aura-proxy` | `ErteAuraSpikeView` | Aura theme proxy spike |
 
-## Running Tests
+## Prototype Tests
 
-The demo includes a Playwright test suite. The server must be running before executing tests.
+The demo module includes a Playwright test for the tabstop prototype (75 tests).
+This is a standalone Quill 2 prototype, separate from the ERTE component tests.
 
 ```bash
-# Build and start server
+# Build and start demo server
 bash build.sh
 bash server-start.sh
 
-# Run all tests (287 total: 75 prototype + 212 ERTE)
+# Run prototype tests
 cd enhanced-rich-text-editor-demo
-npx playwright test
-
-# Run only ERTE tests
-npx playwright test tests/erte/
-
-# Run a specific spec file
-npx playwright test tests/erte/tabstops.spec.ts
-
-# Run with Playwright UI for debugging
-npx playwright test --ui
+npx playwright test tests/tab-stop-prototype.spec.ts
 
 # Stop server when done
 cd ..
 bash server-stop.sh
 ```
 
-### Test Suite Overview
-
-| Spec File | Tests | Features |
-|-----------|-------|----------|
-| `erte/tabstops.spec.ts` | 78 | Tabstops, rulers, soft-break, whitespace indicators |
-| `erte/placeholders.spec.ts` | 32 | Placeholder dialog, events, appearance, keyboard |
-| `erte/toolbar.spec.ts` | 28 | Slot system, visibility, shortcuts, keyboard nav |
-| `erte/features.spec.ts` | 36 | NBSP, addText, align, indent, i18n, sanitizer, focus |
-| `erte/readonly.spec.ts` | 18 | Readonly sections, protection, whole-editor readonly |
-| `erte/replace-icons.spec.ts` | 10 | Toolbar icon replacement |
-| `erte/erte-shell.spec.ts` | 6 | Basic shell rendering, value sync |
-| `erte/extend-options.spec.ts` | 4 | Extension hooks |
-| `tab-stop-prototype.spec.ts` | 75 | Tabstop prototype (standalone Quill 2) |
-
-See [TEST_INVENTORY.md](tests/TEST_INVENTORY.md) for the full test listing.
+See [prototype_tests.md](prototype_tests.md) for details on the prototype test suite.
 
 ## Server Management Scripts
 
@@ -117,21 +80,22 @@ enhanced-rich-text-editor-demo/
   src/
     main/
       java/com/vaadin/componentfactory/
-        V25DemoView.java          # Main demo
-        ErteTestLayout.java       # Side nav layout for test views
-        Erte*TestView.java        # Individual test views
+        Application.java              # Spring Boot entry point
+        DemoLayout.java               # App layout with navigation
+        ErtePlaygroundView.java       # Main ERTE demo
+        ErteSamplesView.java          # Sample content showcase
+        RtePlaygroundView.java        # Stock RTE 2 comparison
+        ErteAuraSpikeView.java        # Aura theme spike
       frontend/
         src/
-          tab-stop-prototype.js   # Quill 2 tabstop prototype
+          tab-stop-prototype.js       # Quill 2 tabstop prototype
+          sampleEditorExtensionConnector.js  # Extension example
   tests/
-    erte/                         # ERTE Playwright tests
-      helpers.ts                  # Shared test utilities
-      *.spec.ts                   # Test specs by feature
-    tab-stop-prototype.spec.ts    # Prototype tests
-  playwright.config.ts            # Playwright configuration
+    tab-stop-prototype.spec.ts        # Prototype tests (75)
+  playwright.config.ts                # Playwright configuration
 ```
 
 ## Tech Stack
 
-- Java 21, Vaadin 25.0.5, Spring Boot 4.0.2
-- Playwright for end-to-end testing
+- Java 21, Vaadin 25.0.x, Spring Boot 4.x
+- Playwright for prototype testing

@@ -1,14 +1,14 @@
 # Extending ERTE V25
 
-This guide covers how to extend ERTE with your own blots, toolbar components, keyboard shortcuts, and custom styling. If you want to understand the internals first, start with [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+Everything you need to add your own content types, toolbar components, keyboard shortcuts, and styling to ERTE. If you want to understand the internals first, start with [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
 ## Custom Blots
 
-If you want to add your own content types to the editor (like special tokens, badges, or inline widgets), you'll need a custom Quill blot.
+To add your own content types to the editor — things like special tokens, badges, or inline widgets — you'll need a custom Quill blot. ERTE's own `TabBlot`, `PlaceholderBlot`, and `ReadOnlyBlot` are all built this way.
 
 ### Embed Blot Patterns
 
-An embed blot is a discrete, non-text element inside the editor (like ERTE's `TabBlot` or `PlaceholderBlot`). There are three critical patterns to get right:
+An embed blot is a discrete, non-text element inside the editor. There are three patterns you need to get right — miss any one of them and things will break in subtle ways:
 
 1. **Lifecycle:** `static create()` runs before constructor. Initialize outer DOM in `create()`, configure inner `contentNode` in `constructor()`.
 
@@ -18,7 +18,7 @@ An embed blot is a discrete, non-text element inside the editor (like ERTE's `Ta
 
 ### Sanitization Integration
 
-ERTE sanitizes all HTML on the server to prevent XSS. If your custom blot uses its own CSS class or HTML attributes, you need to add them to the allowlists — otherwise they'll be stripped on the next round-trip.
+This one catches people off-guard: ERTE sanitizes all HTML on the server to prevent XSS. If your custom blot uses its own CSS class or HTML attributes, you need to add them to the allowlists on **both** client and server — otherwise they'll silently disappear on the next round-trip and you'll wonder what happened.
 
 1. **Client preservable list** — `vcf-enhanced-rich-text-editor.js` (~line 385):
    ```javascript
@@ -40,7 +40,7 @@ ERTE sanitizes all HTML on the server to prevent XSS. If your custom blot uses i
 
 ## Extending the Toolbar
 
-ERTE's toolbar is fully customizable — you can bind keyboard shortcuts, add your own components, and replace icons.
+The toolbar is one of ERTE's most flexible parts — you can bind keyboard shortcuts to existing buttons, drop in your own components at any position, and even replace the built-in icons.
 
 ### Keyboard Shortcuts for Standard Buttons
 
@@ -59,16 +59,18 @@ editor.addStandardToolbarButtonShortcut(
 
 ### Focus Toolbar
 
+A nice touch for accessibility — let users jump directly to the toolbar with a shortcut:
+
 ```java
 editor.addToolbarFocusShortcut(Key.F10);                    // F10 (no modifiers)
 editor.addToolbarFocusShortcut(Key.F10, KeyModifier.SHIFT); // Shift+F10
 ```
 
-Useful for screen readers and keyboard-only workflows.
+Especially useful for screen readers and keyboard-only workflows.
 
 ### Custom Toolbar Components
 
-Add Java components (buttons, inputs, popups) to any toolbar slot:
+You can add any Java component (buttons, text fields, popups) to any toolbar slot:
 
 ```java
 // Simple button in the custom group
@@ -90,9 +92,11 @@ editor.addToolbarComponents(
 
 ### Toolbar Helper Classes
 
+ERTE ships several helper classes for common toolbar UI patterns — toggle state, popover panels, and context menus.
+
 #### ToolbarSwitch
 
-Toggle button with active state:
+A toggle button with an active/inactive state — the building block for everything below:
 
 ```java
 ToolbarSwitch mySwitch = new ToolbarSwitch(VaadinIcon.COG);
@@ -102,7 +106,7 @@ editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, mySwitch);
 
 #### ToolbarPopover
 
-Dropdown panel synced with switch:
+A dropdown panel that opens when the switch is activated. The open/close state stays in sync automatically:
 
 ```java
 ToolbarSwitch settingsSwitch = new ToolbarSwitch(VaadinIcon.PAINTBRUSH);
@@ -113,7 +117,7 @@ editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, settingsSwitch);
 
 #### ToolbarDialog
 
-Non-modal resizable dialog synced with switch:
+Like `ToolbarPopover`, but opens a resizable, non-modal dialog instead — good for larger tool panels:
 
 ```java
 ToolbarSwitch settingsSwitch = new ToolbarSwitch(VaadinIcon.COG);
@@ -125,7 +129,7 @@ editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, settingsSwitch);
 
 #### ToolbarSelectPopup
 
-Context menu synced with switch:
+A context menu that appears when the switch is clicked — perfect for format selection or quick actions:
 
 ```java
 ToolbarSwitch formatSwitch = new ToolbarSwitch(VaadinIcon.COGS);
@@ -137,7 +141,7 @@ editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, formatSwitch);
 
 ### Dynamic Button Injection
 
-If injecting after Quill init, manually bind events:
+If you're injecting buttons after Quill has already initialized, you'll need to manually bind the editor actions — the toolbar's automatic wiring only happens during init:
 
 ```java
 Button alignJustify = new Button("Justify");
@@ -150,7 +154,7 @@ Used internally for align-justify button.
 
 ## Custom Keyboard Shortcuts
 
-Beyond binding shortcuts to existing toolbar buttons, you can also create completely custom keyboard actions by talking to the Quill API directly.
+Beyond binding shortcuts to existing toolbar buttons, you can also create entirely new keyboard actions by talking to the Quill keyboard API directly. This gives you full control over what happens when the user presses a key combination.
 
 ### Binding Custom Actions
 
@@ -170,7 +174,7 @@ editor.getElement().executeJs(
 
 ### Extension Hooks (JavaScript-Only)
 
-ERTE provides two hooks for extending Quill from JavaScript. These aren't Java APIs — you register them via the global namespace and load them with `@JsModule`.
+For deeper customization, ERTE provides two hooks that let you extend Quill directly from JavaScript. These aren't Java APIs — you register callback functions via the global namespace and load them with `@JsModule`.
 
 **`extendQuill`** — Called before `super.ready()` with Quill class. Register custom blots:
 
@@ -208,7 +212,7 @@ public class MyView extends VerticalLayout { }
 
 ## Styling & Theming
 
-ERTE exposes CSS custom properties and shadow parts for theming. You can customize colors, sizes, and spacing without touching the component source.
+ERTE looks good out of the box with Lumo, but you can customize just about every visual detail. CSS custom properties let you change colors, sizes, and spacing without touching component source code.
 
 ### CSS Custom Properties
 
@@ -226,7 +230,7 @@ See the [User Guide — Custom Properties](../BASE_USER_GUIDE.md#2101-erte-custo
 
 ### Styling Custom Toolbar Components
 
-Components inherit RTE 2 toolbar styling via `toolbar-custom-component` part. Includes hover, focus ring, active state, disabled state.
+Custom toolbar components automatically inherit the native RTE 2 toolbar styling via the `toolbar-custom-component` part — hover effects, focus rings, active state, and disabled state all work out of the box.
 
 ### Replacing Toolbar Button Icons
 
@@ -239,7 +243,7 @@ editor.replaceStandardToolbarButtonIcon(
 
 ### Inline Blot CSS
 
-Use `--vaadin-*` properties referencing `--lumo-*` tokens for light/dark compatibility:
+When styling your own blots, use `--vaadin-*` custom properties that fall back to `--lumo-*` tokens. This ensures correct appearance in both light and dark mode:
 
 ```javascript
 static get styles() {
@@ -253,7 +257,7 @@ static get styles() {
 
 ## Example: Custom Tag Embed
 
-Here's a complete example of a custom embed blot — a "tag" element that displays like `<tagname>` inside the editor. This shows the full lifecycle: JavaScript blot, Java insertion, CSS styling, and sanitizer integration.
+Here's a complete example of a custom embed blot — a "tag" element that displays like `<tagname>` inside the editor. It covers the full lifecycle: JavaScript blot definition, Java insertion API, CSS styling, and sanitizer integration.
 
 **JavaScript (vcf-enhanced-rich-text-editor.js):**
 ```javascript
@@ -304,7 +308,7 @@ Add `'ql-tag'` to `ALLOWED_ERTE_CLASSES` in `EnhancedRichTextEditor.java` for sa
 
 ## Sanitizer Allowlists
 
-The server-side sanitizer (`erteSanitize()`) extends Vaadin RTE 2's safelist. If you're adding custom blots or attributes, you'll need to know what's already allowed so you can decide what to add. For a user-facing summary, see the [User Guide — Sanitization](../BASE_USER_GUIDE.md#33-sanitization). The complete reference lists follow below.
+This is the full reference of what the server-side sanitizer allows through. You'll need this when adding custom blots or attributes — check what's already allowed so you know what to add. For a user-facing summary, see the [User Guide — Sanitization](../BASE_USER_GUIDE.md#33-sanitization).
 
 ### Allowed Tags
 

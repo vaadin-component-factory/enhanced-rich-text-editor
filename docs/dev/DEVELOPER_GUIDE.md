@@ -1,6 +1,6 @@
 # Developer Guide
 
-Everything you need to build, test, and run ERTE v6.x from source. For end-user features, see the [User Guide](../BASE_USER_GUIDE.md).
+Everything you need to build, test, and run ERTE from source. Whether you're fixing a bug, adding a feature, or just exploring — this gets you up and running. For end-user features, see the [User Guide](../BASE_USER_GUIDE.md).
 
 ---
 
@@ -25,7 +25,7 @@ Everything you need to build, test, and run ERTE v6.x from source. For end-user 
 
 ## Repository Structure
 
-The project is a multi-module Maven build. Each module has a distinct role:
+The project is a multi-module Maven build. Each module has its own job, and you'll rarely need to touch more than one or two at a time:
 
 | Module | Purpose |
 |--------|---------|
@@ -40,21 +40,21 @@ All development happens on the `v25` branch.
 
 ## Building from Source
 
-Always use the root scripts instead of running Maven directly. They handle module ordering and skip tests automatically.
+Use the root scripts rather than running Maven directly — they handle module ordering and skip tests automatically, so you don't have to remember the right flags.
 
 ```bash
-bash build.sh             # mvn clean install -DskipTests
-bash build.sh -q          # Quiet mode
-bash build-clean.sh       # Clean frontend cache (for JS changes)
+bash build.sh             # Standard build (clean install, skip tests)
+bash build.sh -q          # Quiet mode (less output)
+bash build-clean.sh       # Clean frontend cache + rebuild
 ```
 
-Use `build-clean.sh` if your JS changes aren't showing up, or when troubleshooting build issues. Always rebuild before starting the server after code changes.
+If your JS changes aren't showing up, `build-clean.sh` usually fixes it — it wipes Vaadin's dev bundle cache and forces a fresh frontend build. Always rebuild before starting the server after code changes.
 
 ---
 
 ## Running the Demo
 
-The demo is a Spring Boot application that showcases all ERTE features with interactive examples. It runs on port 8080 by default.
+The demo is a Spring Boot application that showcases all ERTE features with interactive examples. Runs on port 8080 by default.
 
 **Start server:**
 ```bash
@@ -80,26 +80,24 @@ bash server-logs.sh -errors  # Errors only
 bash server-stop.sh
 ```
 
-**Important:** Always stop server when done — runs in container, wastes resources if left running.
+**Important:** Always stop the server when you're done — it runs in a container and continues consuming resources until explicitly stopped.
 
 ---
 
 ## Running Tests
 
-The integration tests run against a dedicated IT server (port 8081) with purpose-built test views. The tests use Playwright.
+The integration tests use Playwright and run against a dedicated IT server (port 8081) with purpose-built test views. The workflow is straightforward:
 
 ```bash
 bash build-it.sh                          # Build IT module
-bash it-server-start.sh                   # Start IT server
+bash it-server-start.sh                   # Start IT server (port 8081)
 cd enhanced-rich-text-editor-it
-npx playwright test tests/erte/               # Run tests
-bash it-server-stop.sh                    # Stop IT server
+npx playwright test tests/erte/           # Run all ERTE tests
+bash it-server-stop.sh                    # Stop IT server when done
 ```
 
-See [TEST_INVENTORY.md](../../enhanced-rich-text-editor-it/tests/TEST_INVENTORY.md) for current test counts.
-
-For architecture, debugging, and advanced commands, see [CONTRIBUTING.md](CONTRIBUTING.md#testing-requirements).
+See [TEST_INVENTORY.md](../../enhanced-rich-text-editor-it/tests/TEST_INVENTORY.md) for the current test suite overview. For test architecture details, debugging tips, and advanced commands, see [CONTRIBUTING.md](CONTRIBUTING.md#testing-requirements).
 
 ---
 
-**See also:** [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR process, [EXTENDING.md](EXTENDING.md) for custom blots and extensions, [User Guide](../BASE_USER_GUIDE.md) for features.
+**Where to go from here:** [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR process, [EXTENDING.md](EXTENDING.md) for adding your own blots and toolbar components, [User Guide](../BASE_USER_GUIDE.md) for the full feature reference.

@@ -27,7 +27,7 @@ ERTE extends Vaadin 25's Rich Text Editor (RTE 2, built on Quill 2 and Parchment
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-Key constraint: **never copy RTE 2 source code.** ERTE extends at runtime via ES class inheritance (JS) and Java class inheritance (Java). The only "fork" is the `render()` passthrough in the JS subclass.
+The most important rule: **never copy RTE 2 source code.** ERTE extends at runtime via ES class inheritance (JS) and Java class inheritance (Java). This keeps ERTE updatable — when Vaadin ships a new RTE version, ERTE picks up the improvements automatically. The only "fork" is the `render()` passthrough in the JS subclass.
 
 ## Module Structure
 
@@ -50,7 +50,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
 customElements.define('vcf-enhanced-rich-text-editor', VcfEnhancedRichTextEditor);
 ```
 
-`customElements.get()` decouples from RTE 2's import path. Direct ES class extension ensures full Lit lifecycle participation.
+Using `customElements.get()` instead of a direct import keeps ERTE decoupled from RTE 2's internal module paths. Direct ES class extension means ERTE participates fully in the Lit lifecycle — no hacks, no side-channel patching.
 
 ### Lifecycle
 
@@ -69,11 +69,11 @@ Five blots registered globally via `Quill.register()` before element creation:
 | PlaceholderBlot | Embed | `.ql-placeholder` | Configurable placeholder token |
 | NbspBlot | Embed | `.ql-nbsp` | Non-breaking space |
 
-**Quill 2 Embed guard nodes:** Quill 2 places zero-width guard characters (`\uFEFF`) inside Embed domNodes. Never set `contenteditable="false"` on the outer domNode — guard nodes must remain editable for cursor placement. The inner `contentNode` already has `contenteditable="false"`. See [EXTENDING.md](EXTENDING.md) for details.
+**Quill 2 Embed guard nodes — this is a common gotcha.** Quill 2 places invisible zero-width characters (`\uFEFF`) inside Embed domNodes so the cursor can sit next to them. If you set `contenteditable="false"` on the outer domNode, those guard nodes become non-editable too, and the cursor can't be placed before or after the embed. The inner `contentNode` already has `contenteditable="false"` — that's all you need. See [EXTENDING.md](EXTENDING.md) for details.
 
 ### Toolbar Slot Injection
 
-ERTE injects `<slot>` elements into RTE 2's toolbar DOM after `ready()`. Injected slots survive all Lit re-renders (i18n changes, readonly toggle, `requestUpdate`) because Lit ignores DOM nodes between its comment markers.
+ERTE injects `<slot>` elements into RTE 2's toolbar DOM after `ready()`. Injected slots survive all Lit re-renders (i18n changes, readonly toggle, `requestUpdate`) because Lit ignores DOM nodes between its comment markers. No template copy needed, updatability preserved.
 
 ```
 START
@@ -92,7 +92,7 @@ ERTE overrides `__updateHtmlValue()` to preserve ERTE CSS classes that RTE 2's b
 
 ### Lumo Theme Injection
 
-ERTE overrides `static get lumoInjector()` to reuse the parent's tag name (`vaadin-rich-text-editor`). Without this, ERTE would get base SVG toolbar icons instead of Lumo's font-based icons.
+ERTE overrides `static get lumoInjector()` to reuse the parent's tag name (`vaadin-rich-text-editor`). This is easy to miss — without it, ERTE falls back to base SVG toolbar icons instead of Lumo's font-based icons.
 
 ## Java Layer
 
@@ -102,14 +102,14 @@ All ERTE logic lives in `EnhancedRichTextEditor`, which extends Vaadin's `RichTe
 - `com.vaadin.flow.component.richtexteditor` — `RteExtensionBase` only (bridge class that lifts package-private RTE 2 methods to protected)
 - `com.vaadin.componentfactory` — Everything else (ERTE API, toolbar helpers, events, data classes)
 
-Only one class lives in the foreign package. This is the minimal bridge needed to access RTE 2 internals.
+Only one class lives in the foreign package — deliberately. This is the minimal bridge needed to access RTE 2 internals, and keeping it to a single class makes the dependency obvious and auditable.
 
 ### Dual-Layer Sanitizer
 
 - **Server-side (`erteSanitize()`)**: jsoup Safelist extended with ERTE classes, attributes, and safe CSS properties. Called on `setPresentationValue()`.
 - **Client-side (`__updateHtmlValue()`)**: Preserves ERTE classes during the Quill → HTML → server round-trip.
 
-Both layers must agree on which classes are allowed. See [EXTENDING.md — Sanitization Integration](./EXTENDING.md#sanitization-integration) for how to add custom classes.
+Both layers must agree on which classes are allowed — if you add a class to one side but forget the other, content will either be stripped on save or not preserved on load. See [EXTENDING.md — Sanitization Integration](./EXTENDING.md#sanitization-integration) for how to add custom classes.
 
 ### Value Format
 

@@ -1,6 +1,6 @@
 # Contributing to ERTE
 
-Thanks for contributing to ERTE! This guide covers the workflow, code style, and testing requirements. Make sure you have the dev environment set up first — see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md).
+Welcome, and thanks for contributing! This guide covers the workflow, code style, and testing expectations. Before diving in, make sure your dev environment is ready — [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) has the setup steps.
 
 ---
 
@@ -17,6 +17,8 @@ Thanks for contributing to ERTE! This guide covers the workflow, code style, and
 
 ## Getting Started
 
+Clone, build, and run the demo to see ERTE in action:
+
 ```bash
 git clone https://github.com/your-org/enhanced-rich-text-editor.git
 cd enhanced-rich-text-editor
@@ -24,19 +26,24 @@ bash build.sh
 bash server-start.sh
 ```
 
-Verify with: `bash build-it.sh && bash it-server-start.sh && cd enhanced-rich-text-editor-it && npx playwright test tests/erte/`
+To make sure everything works, run the test suite:
 
-See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for details.
+```bash
+bash build-it.sh && bash it-server-start.sh
+cd enhanced-rich-text-editor-it && npx playwright test tests/erte/
+```
+
+See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for more details on the build and test workflow.
 
 ---
 
 ## Git Workflow
 
-All development on `v25` branch. Create `feature/*` and `fix/*` branches from `v25`, PR back to `v25`. **Never merge to `master`.**
+All development happens on the `v25` branch. Create `feature/*` and `fix/*` branches from `v25`, and PR back to `v25`. **Never merge to `master`** — that's the V24 production branch.
 
 ### Commit Messages
 
-Use clear, concise English messages:
+Keep them clear and concise, in English:
 
 ```
 Add tabstop blot for Parchment 3
@@ -100,24 +107,22 @@ package com.example;
 
 ## Architecture Constraints
 
-Hard requirements. Violating breaks updatability or introduces security issues.
+These are hard rules — violating them compromises updatability or introduces security issues:
 
-1. **Never copy RTE 2 source** — Extend via inheritance, not copying
-2. **Keep ERTE logic in `com.vaadin.componentfactory`** — All classes in one package
-3. **Never set content in `ready()`** — It gets overwritten by Java value sync. Use `setPresentationValue()`
-4. **Embed guard nodes (Quill 2)** — Never set `contenteditable="false"` on outer domNode. Guard nodes inside must stay editable. See [EXTENDING.md](EXTENDING.md#embed-blot-gotchas)
-
-See [CLAUDE.md](../../CLAUDE.md) for confirmed patterns.
+1. **Never copy RTE 2 source** — ERTE extends at runtime via inheritance. This is what keeps us updatable when Vaadin ships new RTE versions.
+2. **Keep ERTE logic in `com.vaadin.componentfactory`** — Only `RteExtensionBase` lives in the foreign package (it's a minimal bridge). Everything else stays together.
+3. **Never set content in `ready()`** — Java value sync overwrites it. Always use `setPresentationValue()`.
+4. **Embed guard nodes (Quill 2)** — Never set `contenteditable="false"` on the outer domNode — Quill 2's invisible guard nodes inside must stay editable for cursor placement. See [EXTENDING.md](EXTENDING.md#embed-blot-patterns) for details.
 
 ---
 
 ## Test Architecture
 
-Java test views (backend) + Playwright specs (tests).
+Every feature has two parts: a Java test view (the backend setup) and a Playwright spec (the actual tests). The test views live in the IT module and provide a controlled environment for each feature.
 
 ### Test Commands
 
-From `enhanced-rich-text-editor-it/`:
+Run from within `enhanced-rich-text-editor-it/`:
 
 | Command | Purpose |
 |---------|---------|
@@ -131,7 +136,7 @@ See TEST_INVENTORY.md for current test counts.
 
 ### Test Views
 
-Java test views in `enhanced-rich-text-editor-it/src/main/java/com/vaadin/componentfactory/`. Each provides: `#test-editor`, `#delta-output`, `#html-output`, `#event-log`, `#test-ready`.
+Each test view follows a consistent pattern: it provides `#test-editor`, `#delta-output`, `#html-output`, `#event-log`, and a `#test-ready` indicator. This makes it easy to write tests that work the same way across all features.
 
 | View | Route | Purpose |
 |------|-------|---------|
@@ -155,16 +160,18 @@ Java test views in `enhanced-rich-text-editor-it/src/main/java/com/vaadin/compon
 
 ### Debugging Tips
 
-- **Shadow DOM:** Playwright pierces it, but `page.evaluate()` doesn't — use `el.shadowRoot.querySelector()`
-- **Ready indicator:** `#test-ready` has `display:none` — use `state: 'attached'`
-- **Delta:** Use `getDelta()` from element, or `getDeltaFromEditor()` from Quill
-- **Server errors:** `bash it-server-logs.sh -errors`
+Common pitfalls:
+
+- **Shadow DOM:** Playwright locators pierce it automatically, but `page.evaluate()` does NOT — you'll need `el.shadowRoot.querySelector()` inside evaluate calls
+- **Ready indicator:** `#test-ready` has `display:none` — use `state: 'attached'`, not the default `visible`
+- **Delta:** Use `getDelta()` to read from the output element, or `getDeltaFromEditor()` to read directly from the Quill instance
+- **Server errors:** `bash it-server-logs.sh -errors` shows you just the errors without scrolling through the full log
 
 ---
 
 ## Testing Requirements
 
-Every feature needs tests. Create test view + Playwright spec.
+Every feature needs tests — no exceptions. The pattern: create a test view (Java) and a Playwright spec (TypeScript).
 
 ### Test View Example
 
@@ -204,24 +211,24 @@ test.describe('ERTE My Feature', () => {
 });
 ```
 
-Requirements: real user interactions (`click()`, `type()`, `press()`), not programmatic shortcuts. All tests must pass before PR.
+**Important:** Always use real user interactions in tests — `click()`, `type()`, `press()` — never programmatic shortcuts like `setSelection()` or `element.value = ...`. Programmatic APIs bypass the browser's event chain and don't reflect what actual users experience. All tests must pass before merging.
 
 ---
 
 ## Pull Request Process
 
-1. Create branch from `v25`: `git checkout -b feature/my-feature`
-2. Implement feature + tests (Java, JS, test view, Playwright spec)
-3. Run full suite: `bash build-it.sh && bash it-server-start.sh && cd enhanced-rich-text-editor-it && npx playwright test tests/erte/`
-4. Push and PR to `v25` (never `master`)
+1. Create a branch from `v25`: `git checkout -b feature/my-feature`
+2. Implement your feature with tests (Java + JS + test view + Playwright spec)
+3. Run the full test suite to make sure nothing broke
+4. Push and open a PR to `v25` (never `master`)
 
-**PR Checklist:**
-- ✅ All tests pass
-- ✅ Code style (Java license header, English, consistent naming)
-- ✅ Architecture constraints (no RTE 2 copies, single foreign class)
-- ✅ Tests cover feature
-- ✅ Documentation updated ([USER_GUIDE.md](../BASE_USER_GUIDE.md))
+**Before submitting, double-check:**
+- All tests pass (not just your new ones — the whole suite)
+- Code style is consistent (Java license headers, English identifiers, standard formatting)
+- Architecture constraints are respected (no RTE 2 source copies, minimal foreign-package classes)
+- Your feature is covered by tests
+- Documentation is updated if the feature is user-facing ([USER_GUIDE.md](../BASE_USER_GUIDE.md))
 
 ---
 
-**See also:** [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md), [USER_GUIDE.md](../BASE_USER_GUIDE.md), [CLAUDE.md](../../CLAUDE.md)
+**See also:** [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for build and run instructions, [EXTENDING.md](EXTENDING.md) for adding custom blots and toolbar components, [User Guide](../BASE_USER_GUIDE.md) for the full feature reference.

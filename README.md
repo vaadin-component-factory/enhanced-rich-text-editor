@@ -59,7 +59,7 @@ editor.addValueChangeListener(e -> save(e.getValue()));
 | **Rulers** | Horizontal and vertical rulers with click-to-add tabstops |
 | **Placeholders** | Embedded tokens with dialog, formatting, and alt appearance |
 | **Readonly Sections** | Inline content protection with delete prevention |
-| **Toolbar Customization** | 27 slots, 30 button visibility controls, custom keyboard shortcuts |
+| **Toolbar Customization** | Named slots, button visibility controls, custom keyboard shortcuts |
 | **Toolbar Icon Replacement** | Replace any standard button icon with Vaadin icons |
 | **Non-Breaking Space** | Shift+Space inserts non-breaking space |
 | **Soft-Break** | Shift+Enter inserts line break within paragraph |
@@ -92,30 +92,34 @@ See the [Tables Guide](docs/TABLES_GUIDE.md) for full documentation, and the [Ta
 
 ```bash
 # Build all modules
-mvn clean install -DskipTests
+bash build.sh
 
 # Start the demo server on port 8080
-mvn -pl enhanced-rich-text-editor-demo spring-boot:run
+bash server-start.sh
 
 # Browse to http://localhost:8080
 
-# In another terminal, stop the server
-mvn -pl enhanced-rich-text-editor-demo spring-boot:stop
+# Stop the server when done
+bash server-stop.sh
 ```
 
 ## Running Tests
 
+ERTE tests use Playwright and run against a dedicated IT server (port 8081):
+
 ```bash
-# Build and start server first
-mvn clean install
-mvn -pl enhanced-rich-text-editor-demo spring-boot:run &
+# Build including IT module
+bash build-it.sh
+
+# Start the IT server
+bash it-server-start.sh
 
 # Run Playwright tests
-cd enhanced-rich-text-editor-demo
+cd enhanced-rich-text-editor-it
 npx playwright test tests/erte/
 
-# Stop server after testing
-mvn -pl enhanced-rich-text-editor-demo spring-boot:stop
+# Stop the IT server when done
+bash it-server-stop.sh
 ```
 
 ## Project Structure

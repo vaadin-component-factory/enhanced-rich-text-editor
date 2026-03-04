@@ -55,12 +55,11 @@ See [Section 2.1](#21-primary-value-format-delta-to-html) for details and migrat
 
 ## 2. Breaking Changes
 
-This section gives you an overview of the breaking changes, when upgrading to ERTE 6.0.
+Overview of breaking changes when upgrading to ERTE 6.0.
 
 ### 2.1 Primary Value Format (Delta to HTML)
 
-With Vaadin 25, the value of the Rich Text Editor is not delta anymore, but html. You can still
-use the delta value, if you want or need to process it.
+With Vaadin 25, the Rich Text Editor's primary value format changed from Delta JSON to HTML. You can still access the Delta value through the `asDelta()` wrapper.
 
 **Impact:** High — affects all code that reads or writes editor content.
 
@@ -83,8 +82,7 @@ editor.asDelta().addValueChangeListener(e -> database.save(e.getValue()));
 
 ### 2.2 getTextLength()
 
-The text length is read from the client via internal JavaScript. Since any client side interaction is
-asynchronous, the method to obtain the current text length has changed. It works now with a `Consumer<Integer>`.
+Text length is read from the client via JavaScript, which is inherently asynchronous. The method now uses a `Consumer<Integer>` callback instead of returning a value directly.
 
 ```java
 // ERTE 1: synchronous (removed)
@@ -100,25 +98,25 @@ editor.getTextLength(length -> {
 
 ### 2.3 I18n Class
 
-The i18n class name has changed. Also the name for the "deindent" toolbar button has changed to "outdent".
+The i18n class has been renamed, and `setDeindent()` is now `setOutdent()`.
 
 ```java
-// ERTE 1: RichTextEditorI18n with all fields
+// ERTE 1: RichTextEditorI18n
 var i18n = new EnhancedRichTextEditor.RichTextEditorI18n();
 i18n.setDeindent("...");
 
 // ERTE 2: EnhancedRichTextEditorI18n (extends RTE 2 base)
-var new EnhancedRichTextEditor.EnhancedRichTextEditorI18n();
-var i18n .setOutdent("...");
+var i18n = new EnhancedRichTextEditor.EnhancedRichTextEditorI18n();
+i18n.setOutdent("...");
 ```
 
 Key changes: class name, `setDeindent()` → `setOutdent()`, typo fix `setPlaceholderAppeance()` → `setPlaceholderAppearance()`
 
 ### 2.4 ToolbarButton Enum Changes
 
-As with 2.3, the enum for the "deindent" button has changed.
+The `DEINDENT` enum value has been renamed to `OUTDENT`, matching Vaadin RTE 2's naming.
 
-**Impact:** Low -- only affects code referencing `DEINDENT`.
+**Impact:** Low — only affects code referencing `DEINDENT`.
 
 ```java
 // --- ERTE 1 (V24) ---
@@ -148,7 +146,7 @@ Each enum constant now has a `getPartSuffix()` method (e.g., `"bold"`) and a
 
 ### 2.5 Keyboard Shortcut API
 
-The old API used numeric keyCodes and three boolean parameters for modifier keys. The new API uses Vaadin's `Key` and `KeyModifier` classes, which is more readable and less error-prone. Also, the typo in `addToobarFocusShortcut()` has been fixed.
+The keyboard shortcut API now uses Vaadin's `Key` and `KeyModifier` classes instead of numeric keyCodes and boolean modifier parameters. The typo `addToobarFocusShortcut()` has also been fixed.
 
 ```java
 // ERTE 1: numeric keyCodes + boolean modifiers
@@ -164,7 +162,7 @@ Common key mappings: `66`→`Key.KEY_B`, `73`→`Key.KEY_I`, `85`→`Key.KEY_U`,
 
 ### 2.6 Typo Fixes (Placeholder)
 
-A few method names from ERTE 1 had typos that have been corrected:
+Method name typos from ERTE 1 have been corrected:
 - `setPlacehoderAltAppearance()` → `setPlaceholderAltAppearance()`
 - `addToobarFocusShortcut()` → `addToolbarFocusShortcut()` (see also 2.5)
 
@@ -184,7 +182,7 @@ p.setFormat(Map.of("bold", true, "italic", true));
 
 ### 2.8 Removed V24 Methods
 
-Some methods have been removed or replaced. If you used any of these, here are the replacements:
+Some methods have been removed or replaced:
 
 | V24 Method                    | V25 Replacement                                                                                     |
 |-------------------------------|-----------------------------------------------------------------------------------------------------|
@@ -194,15 +192,15 @@ Some methods have been removed or replaced. If you used any of these, here are t
 
 ### 2.9 extendOptions Hook
 
-The `extendOptions` callback from ERTE 1 is deprecated. It has been replaced by two more specific hooks: `extendQuill` for registering custom blots before the editor initializes, and `extendEditor` for adding event handlers or other post-init logic. See [EXTENDING.md](dev/EXTENDING.md) for details and examples.
+The `extendOptions` callback from ERTE 1 is deprecated, replaced by two more specific hooks: `extendQuill` (register custom blots before init) and `extendEditor` (add event handlers after init). See [EXTENDING.md](dev/EXTENDING.md) for details.
 
-_Side note: this is only relevant, if you develop your own ERTE extension._
+> **Note:** Only relevant if you develop your own ERTE extension.
 
 ---
 
 ## 3. New in ERTE 2
 
-ERTE 2 introduces a few new features that weren't available in ERTE 1:
+New in ERTE 2:
 
 - **CSS custom properties** (`--vaadin-erte-*`) for fine-grained theming of colors, sizes, and spacing
 - **Toolbar part-based styling** — custom toolbar components get `part="toolbar-custom-component"` for easy CSS targeting
@@ -223,7 +221,7 @@ These are Quill 2 / Parchment 3 platform constraints, not ERTE bugs. They affect
 
 ## 5. Quick Troubleshooting
 
-If you hit a compilation error or unexpected runtime behavior after upgrading, check this table first:
+Common errors after upgrading and their solutions:
 
 | Error | Fix |
 |-------|-----|
@@ -241,7 +239,7 @@ If you hit a compilation error or unexpected runtime behavior after upgrading, c
 
 ## 6. Migration Checklist
 
-A step-by-step checklist for upgrading your project. Work through it top to bottom.
+Step-by-step checklist for upgrading your project:
 
 ### Before Starting
 - [ ] Back up database if storing content

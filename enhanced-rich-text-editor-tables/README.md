@@ -12,7 +12,7 @@ Add professional table support to your ERTE documents: create tables, modify str
 - **Events** — React to table selection, cell changes, and template modifications
 - **I18n Support** — Customize all toolbar labels and dialog text for any language
 - **Keyboard Navigation** — Arrow keys and Tab navigate between cells
-- **Theming** — 11 CSS custom properties for fine-grained control over table appearance
+- **Theming** — CSS custom properties for fine-grained control over table appearance
 
 ## Quick Start
 
@@ -51,8 +51,8 @@ Three toolbar buttons appear automatically. Users can now insert and modify tabl
 
 - **Quill 2 / Parchment 3** — Complete rewrite of blots for Quill 2 compatibility
 - **Jackson 3** — Uses modern Jackson 3 (`tools.jackson`) instead of Vaadin's elemental JSON
-- **Better Validation** — Color and template ID validation with clear error messages
-- **CSS Custom Properties** — 11 variables for theming table appearance
+- **Color Validation** — Hover/focus color setters now validate CSS values
+- **CSS Custom Properties** — Variables for theming table appearance
 - **Improved Keyboard Navigation** — Better arrow key support for cell selection
 - **Forced-Colors Mode** — Accessible in Windows High Contrast Mode
 

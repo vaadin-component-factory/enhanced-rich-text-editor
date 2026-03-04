@@ -89,7 +89,7 @@ editor.getTextLength(len -> Notification.show("Length: " + len));
 
 ### 2.1 Toolbar Customization
 
-The toolbar is ERTE's most flexible feature. It supports adding custom components to over 20 named slots, controlling button visibility, binding keyboard shortcuts, and replacing button icons.
+The toolbar supports adding custom components to named slots, controlling button visibility, binding keyboard shortcuts, and replacing button icons.
 
 #### Adding Components
 
@@ -174,7 +174,7 @@ editor.replaceStandardToolbarButtonIcon(ToolbarButton.BOLD, null);
 
 #### Ready-to-use toolbar components
 
-The ERTE provides a set of ready-to-use toolbar components to integrate custom functionality easily.
+ERTE provides ready-to-use toolbar components for integrating custom functionality.
 
 ##### Toolbar Switch 
 
@@ -441,7 +441,7 @@ When `altAppearance` is off, placeholders render with `format` (italic field nam
 
 ### 2.3 Tabstops and Rulers
 
-If you need document-style columnar alignment (think invoices, forms, or structured layouts), tabstops are the way to go. Pressing Tab inserts an embedded tab character whose width is calculated from the defined tabstop positions.
+Tabstops provide document-style columnar alignment for invoices, forms, or structured layouts. Pressing Tab inserts an embedded tab character whose width is calculated from the defined tabstop positions.
 
 #### Tabstops
 
@@ -506,7 +506,7 @@ Readonly sections are visually marked with a gray background and are delete-prot
 
 ### 2.5 Whitespace Indicators
 
-Sometimes you need to see what's really in the document — where the tabs are, whether that blank line is a soft-break or a new paragraph, or if someone used a non-breaking space. Whitespace indicators overlay visual markers on invisible characters:
+Whitespace indicators overlay visual markers on invisible characters — tabs, soft-breaks, paragraph ends, and non-breaking spaces — so you can see the exact structure of the document:
 
 - → Tab
 - ↵ Soft-break
@@ -520,7 +520,7 @@ boolean showing = editor.isShowWhitespace();
 
 Users can also toggle this from the toolbar (the whitespace button).
 
-> Please note, that due to the nature of HTML there are no whitespace indicators for normal whitespaces. Introducing them would lead to performance issues and might also break browser behavior. Therefore we decided to not introduce them via workarounds.
+> **Note:** Regular whitespace does not have indicators. Due to how HTML handles whitespace natively, adding visual markers for regular spaces would cause performance issues and could break browser rendering.
 
 ---
 
@@ -788,7 +788,7 @@ For the standard RTE 2 labels (bold, italic, headings, etc.), see the [Vaadin RT
 
 ### 3.3 Sanitization
 
-ERTE includes a server-side HTML sanitizer that runs automatically whenever content is received from the client. You don't need to configure anything — it works out of the box and protects against XSS while preserving all ERTE-specific content.
+ERTE includes a server-side HTML sanitizer that runs automatically whenever content is received from the client. No configuration needed — it protects against XSS while preserving all ERTE-specific content.
 
 #### What gets preserved
 
@@ -827,7 +827,7 @@ Class names must match `[A-Za-z][A-Za-z0-9-]*` and must not start with `ql-` (re
 
 ## 4. Getting Help
 
-If you get stuck or want to explore further:
+Further resources:
 
 - **Upgrade from v5.x:** [Upgrade Guide](BASE_UPGRADE_GUIDE.md)
 - **Extension hooks and custom blots:** [EXTENDING.md](dev/EXTENDING.md) — for building your own blots, registering Quill extensions, or hooking into the editor lifecycle

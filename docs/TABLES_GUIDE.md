@@ -1,8 +1,8 @@
 # ERTE Tables Extension Guide
 
-**For developers who need to add table support to their ERTE-based applications.** This guide covers everything from setup through advanced customization. No prior experience with Quill tables required.
+Everything you need to add table support to your ERTE editor — from a three-line quickstart to advanced template styling. No prior experience with Quill tables required.
 
-**Related documentation:** Extend the ERTE core component with [EXTENDING.md](dev/EXTENDING.md). Use I18n across your app with [CONTRIBUTING.md](dev/CONTRIBUTING.md) patterns.
+**Related:** [EXTENDING.md](dev/EXTENDING.md) for extending the ERTE core, [User Guide](BASE_USER_GUIDE.md) for core ERTE features.
 
 ---
 
@@ -10,7 +10,7 @@
 
 ### What You Get
 
-Three toolbar buttons: **Add Table** (insert new table), **Modify Table** (rows/columns/merge/delete), **Style Templates** (apply styling rules). Plus 8 event types for table/cell/template changes.
+Enabling the tables addon gives you three toolbar buttons out of the box: **Add Table** (insert new table), **Modify Table** (rows/columns/merge/delete), and **Style Templates** (apply styling rules). You also get event listeners for table selection, cell changes, and template modifications.
 
 ### Installation
 
@@ -34,13 +34,15 @@ EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte);
 add(rte);
 ```
 
-The three buttons appear automatically in the toolbar.
+That's it — the three toolbar buttons appear automatically. Everything else in this guide is optional.
 
 ---
 
 ## 2. Toolbar Components
 
-### The Three Buttons
+### Buttons
+
+The Table extension automatically adds toolbar buttons to create and modify tables and their stylings.
 
 | Button | Behavior |
 |--------|----------|
@@ -69,7 +71,7 @@ modifyMenu.getMenuItems(); // list of all menu items
 
 ## 3. Table Operations
 
-Users interact with tables through the toolbar buttons or you can control them programmatically.
+Your users interact with tables through the toolbar buttons, but you can also drive everything from Java.
 
 **Insert:** Click the Add Table button or call `tables.insertTableAtCurrentPosition(rows, cols)`. You can also pass a template ID to apply styling immediately: `insertTableAtCurrentPosition(rows, cols, templateId)`.
 
@@ -83,7 +85,7 @@ Users interact with tables through the toolbar buttons or you can control them p
 
 ## 4. Style Templates
 
-Named collections of styling rules for table, rows, columns, or cells. Define once, apply to multiple tables.
+Templates let you define a visual style once — borders, colors, alternating rows — and apply it to any table with a single click. Think of them as CSS classes for your tables.
 
 ### How to Use Templates
 
@@ -230,7 +232,7 @@ The CSS is injected into the editor's shadow DOM, so it only affects table styli
 
 ## 5. Events
 
-ERTE Tables fires 8 event types that let you react to table and template changes. All listeners are registered on the `EnhancedRichTextEditorTables` instance and return a `Registration` for cleanup.
+ERTE Tables fires events when a table gets selected, the user moves to a different cell, or a template changes. All listeners return a `Registration` for cleanup, following the standard Vaadin pattern.
 
 ### Table Selection Events
 
@@ -296,11 +298,13 @@ reg.remove();
 
 ## 6. Theming & Styling
 
-Tables come with sensible defaults, but you can customize every visual aspect through CSS custom properties or programmatic color control.
+This section covers **global** table styling — the default look that applies to every table in the editor. CSS custom properties control borders, padding, and selection colors for all tables uniformly.
+
+For **per-table** styling — giving individual tables their own colors, borders, and row patterns — use [Style Templates](#4-style-templates) instead. Templates are applied to specific tables and override the global defaults defined here.
 
 ### CSS Custom Properties
 
-ERTE Tables provides 11 CSS custom properties for borders, padding, colors, and selection styling:
+ERTE Tables provides CSS custom properties for borders, padding, colors, and selection styling:
 
 ```css
 vcf-enhanced-rich-text-editor {
@@ -323,7 +327,7 @@ vcf-enhanced-rich-text-editor {
 
 ### Programmatic Color Control
 
-If you need to change hover and focus colors dynamically (e.g., based on user preferences or a theme switch), you can set them from Java:
+If you need to change hover and focus colors at runtime — say, because the user switched themes — you can set them from Java:
 
 ```java
 tables.setTableHoverColor("var(--lumo-primary-color)"); // table border
@@ -350,7 +354,7 @@ Selected cells (multi-select) get `ql-cell-selected` class. High contrast mode s
 
 ## 7. Internationalization (i18n)
 
-Customize all toolbar labels and dialog text:
+All user-facing labels and tooltips are customizable. Here's a German example:
 
 ```java
 TablesI18n i18n = new TablesI18n();
@@ -374,30 +378,7 @@ Setter names follow the pattern `set[Component][Property](String)`. Use IDE auto
 
 ## 8. Customizing the Toolbar
 
-Access and modify toolbar components:
-
-```java
-tables.getAddTableToolbarButton().setVisible(false);
-tables.getModifyTableToolbarButton().setEnabled(false);
-
-ToolbarPopover addPopover = tables.getAddTablePopup();
-addPopover.setAutofocus(false);
-
-TemplateDialog templateDialog = tables.getStyleTemplatesDialog();
-templateDialog.setWidth("30rem");
-templateDialog.setHeight("50vh");
-```
-
-**Accessor methods:**
-
-| Method | Returns |
-|--------|---------|
-| `getAddTableToolbarButton()` | `ToolbarSwitch` for Add Table |
-| `getAddTablePopup()` | `ToolbarPopover` for rows/cols |
-| `getModifyTableToolbarButton()` | `ToolbarSwitch` for Modify Table |
-| `getModifyTableSelectPopup()` | `ToolbarSelectPopup` for menu |
-| `getStyleTemplatesDialogToolbarButton()` | `ToolbarSwitch` for Templates |
-| `getStyleTemplatesDialog()` | `TemplateDialog` for management |
+See [Section 2 — Toolbar Components](#2-toolbar-components) for accessing and customizing the table toolbar buttons, popovers, and dialogs. The [API Quick Reference](#10-api-quick-reference) lists all accessor methods.
 
 ---
 
@@ -405,7 +386,9 @@ templateDialog.setHeight("50vh");
 
 ### Delta Representation
 
-Tables are stored as Quill Delta JSON. Each cell line carries a `td` attribute with pipe-separated metadata: `"tableId|rowId|cellId|rowspan|colspan|templateId|uniqueId"` (7 fields). For merged cells, the root cell has the actual rowspan/colspan values while the other cells reference the root's cellId. The template ID is stored on the first cell of each table only.
+Under the hood, tables are stored as Quill Delta JSON. Each cell line carries a `td` attribute with pipe-separated metadata: `tableId|rowId|cellId|mergeId|colspan|rowspan|templateClass` (7 fields). For merged cells, the root cell has the actual rowspan/colspan values while the other cells reference the root's cellId. The template class is stored on the first cell of each table only.
+
+You usually don't need to work with this directly — the Java API handles it for you. But it's useful to know if you're building custom delta processors (e.g., for PDF export).
 
 ### Finding Used Templates
 
@@ -424,48 +407,13 @@ This is useful for:
 
 ### Template JSON Schema
 
-Templates are stored as an `ObjectNode` (Jackson 3). The structure is:
-
-```json
-{
-  "templateId": {
-    "name": "Display Name",
-    "table": {
-      "bgColor": "#fff",
-      "color": "#000",
-      "width": "100%",
-      "height": "auto",
-      "border": "2px solid black",
-      "borderCells": "1px solid gray"
-    },
-    "rows": [
-      {
-        "index": "2n",
-        "declarations": { "bgColor": "#f0f0f0", "height": "2rem" }
-      }
-    ],
-    "cols": [
-      {
-        "index": "1",
-        "declarations": { "width": "10rem" }
-      }
-    ],
-    "cells": [
-      {
-        "x": 1,
-        "y": 2,
-        "declarations": { "bgColor": "#ffff00" }
-      }
-    ]
-  }
-}
-```
+Templates are stored as an `ObjectNode` (Jackson 3). See [Section 4 — Style Templates](#4-style-templates) for the complete JSON structure, row index patterns, and supported style properties.
 
 ---
 
 ## 10. API Quick Reference
 
-A compact listing of the most important methods. For full Javadoc, see the source.
+A quick overview of what's available. For full details, check the Javadoc in the source.
 
 ### EnhancedRichTextEditorTables
 
