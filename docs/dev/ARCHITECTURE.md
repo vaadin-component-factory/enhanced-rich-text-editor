@@ -1,4 +1,4 @@
-# ERTE V25 Architecture
+# ERTE Architecture
 
 How ERTE is built internally. Read this if you want to understand the codebase before making changes — it covers the three-layer architecture, module structure, and key design decisions. For practical extension patterns, see [`EXTENDING.md`](./EXTENDING.md).
 
@@ -59,7 +59,7 @@ Using `customElements.get()` instead of a direct import keeps ERTE decoupled fro
 
 ### Custom Blots
 
-Five blots registered globally via `Quill.register()` before element creation:
+Five blots registered globally via `Quill.register()` before element creation (once per page load — all editor instances on the page share the same blot registry):
 
 | Blot | Type | CSS Class | Purpose |
 |------|------|-----------|---------|
@@ -92,7 +92,7 @@ ERTE overrides `__updateHtmlValue()` to preserve ERTE CSS classes that RTE 2's b
 
 ### Lumo Theme Injection
 
-ERTE overrides `static get lumoInjector()` to reuse the parent's tag name (`vaadin-rich-text-editor`). This is easy to miss — without it, ERTE falls back to base SVG toolbar icons instead of Lumo's font-based icons.
+ERTE overrides `static get lumoInjector()` to reuse the parent's tag name (`vaadin-rich-text-editor`). This is easy to miss — without it, ERTE falls back to base SVG toolbar icons instead of Lumo's font-based icons. This is handled in ERTE core — extension authors don't need to override `lumoInjector`.
 
 ## Java Layer
 
@@ -130,6 +130,8 @@ HTML-primary (matching RTE 2). `setValue()`/`getValue()` work with HTML strings.
 | `TabConverter.java` | `src/main/java/com/vaadin/componentfactory/` | Delta ↔ Tab value conversion |
 | `Placeholder.java` | `src/main/java/com/vaadin/componentfactory/` | Placeholder data class |
 | `TabStop.java` | `src/main/java/com/vaadin/componentfactory/` | TabStop data class |
+
+For Tables addon source files, see the [Tables Guide](../TABLES_GUIDE.md).
 
 ---
 

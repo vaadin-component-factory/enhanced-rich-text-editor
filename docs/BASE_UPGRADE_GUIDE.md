@@ -4,6 +4,8 @@ Migration guide from ERTE 1 (v5.x, Vaadin 24, Quill 1) to ERTE 2 (v6.x, Vaadin 2
 
 **Terminology:** ERTE 1 = v5.x = V24; ERTE 2 = v6.x = V25. Code examples marked with `// --- ERTE 1 (V24) ---` and `// --- ERTE 2 (V25) ---`.
 
+> **Using tables?** Also complete the [Tables Upgrade Guide](TABLES_UPGRADE_GUIDE.md) for table-specific migration steps.
+
 ---
 
 ## Table of Contents
@@ -192,15 +194,15 @@ Some methods have been removed or replaced:
 
 ### 2.9 extendOptions Hook
 
-The `extendOptions` callback from ERTE 1 is deprecated, replaced by two more specific hooks: `extendQuill` (register custom blots before init) and `extendEditor` (add event handlers after init). See [EXTENDING.md](dev/EXTENDING.md) for details.
-
 > **Note:** Only relevant if you develop your own ERTE extension.
+
+The `extendOptions` callback from ERTE 1 is deprecated, replaced by two more specific hooks: `extendQuill` (register custom blots before init) and `extendEditor` (add event handlers after init). See [EXTENDING.md](dev/EXTENDING.md) for details.
 
 ---
 
 ## 3. New in ERTE 2
 
-New in ERTE 2:
+ERTE 2 adds several quality-of-life improvements that require no migration work:
 
 - **CSS custom properties** (`--vaadin-erte-*`) for fine-grained theming of colors, sizes, and spacing
 - **Toolbar part-based styling** — custom toolbar components get `part="toolbar-custom-component"` for easy CSS targeting

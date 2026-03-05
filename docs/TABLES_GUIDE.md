@@ -6,6 +6,28 @@ Everything you need to add table support to your ERTE editor — from a three-li
 
 ---
 
+## Table of Contents
+
+- [1. Getting Started](#1-getting-started)
+- [2. Toolbar Components](#2-toolbar-components)
+- [3. Table Operations](#3-table-operations)
+- [4. Style Templates](#4-style-templates)
+  - [How to Use Templates](#how-to-use-templates)
+  - [Template JSON Structure](#template-json-structure)
+  - [Row and Column Index Patterns](#row-and-column-index-patterns)
+  - [Style Properties](#style-properties)
+  - [The Templates Dialog](#the-templates-dialog)
+  - [Dimension Units](#dimension-units)
+  - [Injecting Custom CSS](#injecting-custom-css)
+- [5. Events](#5-events)
+- [6. Theming & Styling](#6-theming--styling)
+- [7. Internationalization (i18n)](#7-internationalization-i18n)
+- [8. Data Formats](#8-data-formats)
+- [9. API Quick Reference](#9-api-quick-reference)
+- [10. Common Patterns](#10-common-patterns)
+
+---
+
 ## 1. Getting Started
 
 ### What You Get
@@ -42,7 +64,7 @@ That's it — the three toolbar buttons appear automatically. Everything else in
 
 ### Buttons
 
-The Table extension automatically adds toolbar buttons to create and modify tables and their styling.
+The Tables addon automatically adds toolbar buttons to create and modify tables and their styling.
 
 | Button | Behavior |
 |--------|----------|
@@ -97,6 +119,8 @@ ObjectNode templates = TemplateParser.parseJson(jsonString);
 tables.setTemplates(templates);
 ```
 
+> **Note:** `ObjectNode` is `tools.jackson.databind.node.ObjectNode` (Jackson 3, shipped with Vaadin 25) — not the familiar `com.fasterxml.jackson` package.
+
 **Apply via UI:** Select a table, click **Style Templates**, choose template from dropdown.
 
 **Programmatic application:**
@@ -111,6 +135,8 @@ Each template is keyed by its **template ID**, which is applied as a CSS class t
 Here's a complete template example showing all available options. You only need to include the properties relevant to your use case — `table` properties are the minimum.
 
 The `rows` and `cols` entries use an `index` field with CSS `nth-child()` syntax to select which rows/columns to style (e.g., `"0n+1"` = first only, `"2n"` = every even row). See [Row and Column Index Patterns](#row-and-column-index-patterns) below for the full syntax.
+
+**Cell coordinates in `cells`:** `x` is the row position (1-based, maps to `tr:nth-of-type()`), `y` is the column position (1-based, maps to `td:nth-of-type()`). So `"x": 1, "y": 1` targets the first cell in the first row. **Note:** This is opposite to the typical `x=horizontal, y=vertical` convention — here `x` means row and `y` means column.
 
 ```json
 {
@@ -163,8 +189,6 @@ The `rows` and `cols` entries use an `index` field with CSS `nth-child()` syntax
   }
 }
 ```
-
-**Cell coordinates:** `x` is the row position (1-based, maps to `tr:nth-of-type()`), `y` is the column position (1-based, maps to `td:nth-of-type()`). So `"x": 1, "y": 1` targets the first cell in the first row. **Note:** This is opposite to the typical `x=horizontal, y=vertical` convention — here `x` means row and `y` means column.
 
 ### Row and Column Index Patterns
 
@@ -327,7 +351,7 @@ ERTE Tables provides CSS custom properties for borders, padding, colors, and sel
 ```css
 vcf-enhanced-rich-text-editor {
   /* Borders & Padding */
-  --vaadin-erte-table-border-color: #e0e0e0;
+  --vaadin-erte-table-border-color: var(--vaadin-border-color, var(--lumo-contrast-30pct));
   --vaadin-erte-table-border-width: 1px;
   --vaadin-erte-table-border-style: solid;
   --vaadin-erte-table-cell-padding: 2px 5px;
@@ -336,10 +360,10 @@ vcf-enhanced-rich-text-editor {
   --vaadin-erte-table-cell-vertical-align: top;
 
   /* Selection & Focus */
-  --vaadin-erte-table-cell-selected-background: var(--lumo-primary-color-10pct);
+  --vaadin-erte-table-cell-selected-background: var(--lumo-primary-color-10pct, rgba(25, 118, 210, 0.1));
   --vaadin-erte-table-cell-hover-background: transparent;
-  --vaadin-erte-table-cell-focus-color: var(--vaadin-focus-ring-color);
-  --vaadin-erte-table-cell-focus-width: 2px;
+  --vaadin-erte-table-cell-focus-color: var(--vaadin-focus-ring-color, var(--lumo-primary-color-50pct));
+  --vaadin-erte-table-cell-focus-width: var(--vaadin-focus-ring-width, 2px);
 }
 ```
 

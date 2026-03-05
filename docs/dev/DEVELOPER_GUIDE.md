@@ -32,7 +32,7 @@ The project is a multi-module Maven build. Each module has its own job, and you'
 | Module | Purpose |
 |--------|---------|
 | **enhanced-rich-text-editor/** | Core ERTE addon (Java + JavaScript) |
-| **enhanced-rich-text-editor-tables/** | Tables extension for ERTE |
+| **enhanced-rich-text-editor-tables/** | Tables addon for ERTE |
 | **enhanced-rich-text-editor-demo/** | Demo application with sample views and prototype tests |
 | **enhanced-rich-text-editor-it/** | Integration tests (dedicated test views + Playwright specs) |
 

@@ -1,4 +1,4 @@
-# Enhanced Rich Text Editor V25 -- Core Component
+# Enhanced Rich Text Editor V25 — Core Component
 
 Core ERTE component for Vaadin 25. Extends Vaadin's built-in Rich Text Editor 2
 (Quill 2, Lit) with tabstops, placeholders, readonly sections, rulers, customizable
@@ -19,18 +19,7 @@ toolbar, whitespace indicators, and more.
 
 ## Quick Start
 
-```java
-EnhancedRichTextEditor editor = new EnhancedRichTextEditor();
-
-// Configure tabstops
-editor.setTabStops(List.of(
-    new TabStop(TabStop.Direction.LEFT, 150),
-    new TabStop(TabStop.Direction.RIGHT, 350)
-));
-
-// Set HTML content
-editor.setValue("<p>Hello, world!</p>");
-```
+For a complete Quick Start with examples, see the [root README](../README.md#quick-start).
 
 ## Requirements
 

@@ -1,10 +1,10 @@
-# Extending ERTE V25
+# Extending ERTE
 
 How to add your own content types, toolbar components, keyboard shortcuts, and styling to ERTE. For understanding the internals first, see [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
 ## The Extension Pattern
 
-ERTE is designed so that extensions add functionality **without subclassing** the Java component. The Table addon is the reference implementation — it extends ERTE with table support using only public APIs: toolbar helpers, extension hooks, and `executeJs()`.
+ERTE is designed so that extensions add functionality **without subclassing** the Java component. The Tables addon is the reference implementation — it extends ERTE with table support using only public APIs: toolbar helpers, extension hooks, and `executeJs()`.
 
 The key benefit: you never need to modify ERTE source code. Extensions work entirely through ERTE's public API — Java methods, toolbar slots, JS hooks, and sanitizer registration. Your extension is a separate module with its own `@JsModule` connector, its own Java class, and its own tests. When ERTE is updated, your extension keeps working as long as the public API stays stable.
 
@@ -54,7 +54,7 @@ extNs.extendQuill.push((Quill) => {
 });
 ```
 
-The Table addon uses this to register its four blots (ContainBlot, TableCell, TableRow, Table):
+The Tables addon uses this to register its four blots (ContainBlot, TableCell, TableRow, Table):
 
 ```javascript
 // From connector.js — tables register their blots in extendQuill
@@ -83,7 +83,7 @@ extNs.extendEditor.push((editor, Quill) => {
 });
 ```
 
-The Table addon uses this to initialize the table module, wire up mouse events for cell selection, and set up keyboard handlers:
+The Tables addon uses this to initialize the table module, wire up mouse events for cell selection, and set up keyboard handlers:
 
 ```javascript
 // From connector.js — tables init their module in extendEditor
@@ -100,7 +100,7 @@ extNs.extendEditor.push(function(editor, Quill) {
 Load your extension's JavaScript connector via `@JsModule` on the extension class itself. Vaadin's frontend scanner detects the annotation on any class in the classpath — it doesn't need to be on a Component or View:
 
 ```java
-@JsModule("./src/erte-table/connector.js")  // Table addon
+@JsModule("./src/erte-table/connector.js")  // Tables addon
 public class EnhancedRichTextEditorTables { ... }
 ```
 
@@ -121,6 +121,47 @@ Three things to get right:
 1. **`static create(value)`** runs before the constructor. Initialize outer DOM here. In Quill 2, `create()` must return the created DOM node.
 2. **Constructor** — `contentNode` is created by the Embed base class. Set text and configure the visual appearance here.
 3. **Guard nodes** — Quill 2 places invisible zero-width characters inside Embed domNodes so the cursor can sit next to them. Never set `contenteditable="false"` on the outer domNode — the inner `contentNode` already has it.
+
+Here's a minimal skeleton showing both patterns side by side:
+
+```javascript
+// Inline blot — wraps existing text content
+class HighlightBlot extends Inline {
+  static blotName = 'highlight';
+  static tagName = 'SPAN';
+  static className = 'ql-highlight';
+
+  static create(value) {
+    const node = super.create(value);
+    // Initialize outer DOM here (attributes, classes)
+    node.setAttribute('data-highlight', value);
+    return node;
+  }
+}
+
+// Embed blot — discrete non-text element
+// class BadgeBlot extends Embed {
+//   static blotName = 'badge';
+//   static tagName = 'SPAN';
+//   static className = 'myext-badge';
+//
+//   static create(value) {
+//     const node = super.create(value);
+//     // Initialize outer DOM here — do NOT set contenteditable="false" here
+//     // Guard nodes (zero-width chars) inside domNode must remain editable
+//     return node;
+//   }
+//
+//   constructor(scroll, domNode) {
+//     super(scroll, domNode);
+//     // contentNode is created by Embed constructor — configure it here
+//     this.contentNode.textContent = '...';
+//     // this.contentNode already has contenteditable="false"
+//   }
+// }
+```
+
+Register your blot in the `extendQuill` hook (see [Extension Hooks](#extension-hooks) above) using `Quill.register('formats/highlight', HighlightBlot, true)`.
 
 ### Inline Blot vs Embed Blot
 
@@ -145,12 +186,12 @@ editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, customButton);
 
 ### Toolbar Helper Classes
 
-ERTE ships helper classes for common toolbar UI patterns. The Table addon uses all of them:
+ERTE ships helper classes for common toolbar UI patterns. The Tables addon uses all of them:
 
 **ToolbarSwitch** — Toggle button with active/inactive state:
 
 ```java
-// Table addon: "Add Table" button
+// Tables addon: "Add Table" button
 addTableButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.PLUS);
 addTableButton.setTooltipText("Add new table");
 ```
@@ -158,7 +199,7 @@ addTableButton.setTooltipText("Add new table");
 **ToolbarPopover** — Dropdown panel that opens when the switch is activated:
 
 ```java
-// Table addon: table size input (rows × cols)
+// Tables addon: table size input (rows × cols)
 addTablePopup = ToolbarPopover.horizontal(addTableButton,
     Alignment.BASELINE, rows, new Span("x"), cols, add);
 addTablePopup.setAutofocus(false);
@@ -168,7 +209,7 @@ addTablePopup.setFocusOnOpenTarget(rows);
 **ToolbarSelectPopup** — Context menu for actions:
 
 ```java
-// Table addon: "Modify Table" menu (add/remove rows/cols, merge, etc.)
+// Tables addon: "Modify Table" menu (add/remove rows/cols, merge, etc.)
 modifyTableSelectPopup = new ToolbarSelectPopup(modifyTableButton);
 modifyTableSelectPopup.addItem("Add row below", e -> executeAction("append-row-below"));
 modifyTableSelectPopup.addItem("Remove row", e -> executeAction("remove-row"));
@@ -231,6 +272,8 @@ editor.getElement().executeJs(
 
 Quill's keyboard module calls the handler with a special context where `this.quill` is the Quill instance — use `function()` (not arrow `() =>`), or `this.quill` won't be available. Use string key names (`"Tab"`, `"Enter"`), return `false` to prevent default (return `true` to let the next handler run).
 
+Vaadin queues `executeJs()` calls until the component is attached to the page — you can safely call it in the constructor or `onAttach()`.
+
 ---
 
 ## Sanitizer Integration
@@ -278,7 +321,7 @@ rte.addAllowedCssProperties("border-radius", "box-shadow");
 
 Property names must be lowercase, hyphenated CSS property names matching `[a-z][a-z0-9-]*`.
 
-The Table addon registers its allowed classes dynamically via `addAllowedHtmlClasses()`. Its table-specific attributes (`table_id`, `row_id`, `cell_id`, etc.) are part of ERTE core's sanitizer allowlist because tables are a first-party extension — third-party extensions use `addAllowedHtmlAttributes()` instead.
+The Tables addon registers its allowed classes dynamically via `addAllowedHtmlClasses()`. Its table-specific attributes (`table_id`, `row_id`, `cell_id`, etc.) are part of ERTE core's sanitizer allowlist because tables are a first-party extension — third-party extensions use `addAllowedHtmlAttributes()` instead.
 
 ### What the Sanitizer Strips
 
@@ -318,13 +361,13 @@ static get styles() {
 }
 ```
 
-**Extension authors** cannot use `static get styles()` — extensions don't subclass the web component. Instead, inject CSS into the shadow root at runtime (see [Injecting CSS into Shadow DOM](#injecting-css-into-shadow-dom) below). Note that extension blots should avoid the `ql-` prefix for their CSS classes — that prefix is reserved for Quill and ERTE internal classes and is rejected by `addAllowedHtmlClasses()`. Use a namespace prefix like `myext-highlight` instead. The Table addon demonstrates this pattern.
+**Extension authors** cannot use `static get styles()` — extensions don't subclass the web component. Instead, inject CSS into the shadow root at runtime (see [Injecting CSS into Shadow DOM](#injecting-css-into-shadow-dom) below). Third-party extensions should avoid the `ql-` prefix for their CSS classes — that prefix is reserved for Quill and ERTE internal classes and is rejected by `addAllowedHtmlClasses()`. Use a namespace prefix like `myext-highlight` instead. (The Tables addon is a first-party extension — its `ql-` prefixed classes are pre-registered in ERTE core's `ALLOWED_ERTE_CLASSES`. Third-party extensions always use `addAllowedHtmlClasses()`.)
 
 ---
 
 ## Injecting CSS into Shadow DOM
 
-Extensions that add visual elements inside the editor need their styles inside the shadow root. The Table addon demonstrates the pattern:
+Extensions that add visual elements inside the editor need their styles inside the shadow root. The Tables addon demonstrates the pattern:
 
 ```javascript
 // From connector.js — inside the extension's namespace object
@@ -348,7 +391,7 @@ Use a unique ID on the `<style>` element to prevent duplicate injection on re-at
 
 An extension is a regular Java class in its own Maven module. It holds a reference to the editor and interacts with it exclusively through public API — `getElement()`, `addToolbarComponents()`, `addAllowedHtmlClasses()`, `addAllowedHtmlAttributes()`, `addAllowedCssProperties()`, `executeJs()`, and DOM event listeners. No subclassing, no access to ERTE internals.
 
-The Table addon is the reference (simplified — see the actual source for the full implementation):
+The Tables addon is the reference (simplified — see the actual source for the full implementation):
 
 ```java
 @JsModule("./src/erte-table/connector.js")
@@ -381,6 +424,7 @@ public class EnhancedRichTextEditorTables {
 
         // Listen to custom DOM events dispatched by the JS connector
         rte.getElement().addEventListener("table-selected", event -> {
+            // import tools.jackson.databind.JsonNode; — Vaadin 25 ships Jackson 3, not Jackson 2
             JsonNode data = event.getEventData();
             boolean selected = data.get("event.detail.selected").asBoolean();
             boolean cellSelectionActive = data.get("event.detail.cellSelectionActive").asBoolean();
@@ -431,7 +475,7 @@ window.Vaadin.Flow.vcfEnhancedRichTextEditor.extensions.footnotes = {
 };
 ```
 
-Both connectors load independently via their own `@JsModule`, both push to the shared `extendQuill`/`extendEditor` arrays, and both manage their own DOM listeners with proper cleanup on `disconnectedCallback`. Since connectors are not web component subclasses, patch the host element's `disconnectedCallback` directly:
+Both connectors load independently via their own `@JsModule`, both push to the shared `extendQuill`/`extendEditor` arrays, and both manage their own DOM listeners with proper cleanup on `disconnectedCallback`. The `disconnectedCallback` fires when the web component is removed from the DOM — for example, on view navigation. Patch it to clean up your extension's event listeners and prevent memory leaks. Since connectors are not web component subclasses, patch the host element's `disconnectedCallback` directly:
 
 ```javascript
 // In your connector's init function:

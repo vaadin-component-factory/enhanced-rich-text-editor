@@ -12,7 +12,7 @@
 | Vaadin | 24.x | 25.0.x |
 | Quill | 1.3.6 | 2.0.3 |
 | Parchment | 1.x | 3.x |
-| Jackson | 2.x (elemental `Json`) | 3.x (`tools.jackson`) |
+| JSON Library | elemental `Json` | Jackson 3 (`tools.jackson`) |
 | Maven artifact | `enhanced-rich-text-editor-tables` | `enhanced-rich-text-editor-tables` |
 | Package | `com.vaadin.componentfactory.erte.tables` | (same) |
 | License | CVALv3 | CVALv3 |
@@ -149,7 +149,7 @@ Before deploying V2 to production:
 
 ## Getting Help
 
-- **Detailed API:** See [TABLES_GUIDE.md](./TABLES_GUIDE.md)
+- **Detailed API:** See [TABLES_GUIDE.md](TABLES_GUIDE.md)
 - **Architecture:** See [ARCHITECTURE.md](dev/ARCHITECTURE.md)
 - **Issues:** Open an issue on the ERTE GitHub repo
 

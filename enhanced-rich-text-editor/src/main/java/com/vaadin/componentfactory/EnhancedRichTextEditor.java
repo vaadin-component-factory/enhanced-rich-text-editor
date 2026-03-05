@@ -57,11 +57,11 @@ import tools.jackson.databind.node.ObjectNode;
  * <p>
  * Placeholders are configured via three related methods that work together:
  * <ol>
- *   <li><b>{@link #setPlaceholders(List)}</b> — Defines the master list of
+ *   <li><b>{@link #setPlaceholders(Collection)}</b> — Defines the master list of
  *       available placeholders shown in the placeholder dialog. Each placeholder
  *       has a text (e.g., "{{name}}"), optional tag for grouping, and optional
  *       format/altFormat for appearance customization.</li>
- *   <li><b>{@link #setPlaceholderTags(List)}</b> — (Optional) Defines tags
+ *   <li><b>{@link #setPlaceholderTags(String, String)}</b> — (Optional) Defines tags
  *       for grouping placeholders in the dialog. If not set, all placeholders
  *       appear in a single list.</li>
  *   <li><b>{@link #setPlaceholderAltAppearancePattern(String)}</b> — (Optional)
@@ -73,14 +73,16 @@ import tools.jackson.databind.node.ObjectNode;
  * <b>Example usage:</b>
  * <pre>{@code
  * // 1. Define placeholders with default and alternative formatting
- * editor.setPlaceholders(List.of(
- *     new Placeholder("{{name}}", "user",
- *         Map.of("bold", true),           // default format
- *         Map.of("bold", true, "italic", true))  // altFormat
- * ));
+ * Placeholder p = new Placeholder("{{name}}");
+ * p.getFormat().put("bold", true);           // default format
+ * p.getFormat().put("color", "#1565c0");
+ * p.getAltFormat().put("bold", true);        // altFormat (e.g., for "Dear {{name}}")
+ * p.getAltFormat().put("italic", true);
+ * p.setTag("user");
+ * editor.setPlaceholders(List.of(p));
  *
  * // 2. (Optional) Define tags for dialog grouping
- * editor.setPlaceholderTags(List.of("user", "system", "date"));
+ * editor.setPlaceholderTags("user", null);
  *
  * // 3. (Optional) Auto-switch to altFormat when preceded by "Dear "
  * editor.setPlaceholderAltAppearancePattern("Dear\\s+$");
@@ -1385,7 +1387,7 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      * <p>
      * This base class handles deserialization of placeholder data from the client
      * and provides a {@link #getPlaceholders()} method that returns the full
-     * placeholder objects from the master list (via {@link #setPlaceholders(List)}),
+     * placeholder objects from the master list (via {@link #setPlaceholders(Collection)}),
      * not just the lightweight event payload.
      */
     public static abstract class AbstractMultiPlaceholderEvent
@@ -1415,7 +1417,7 @@ public class EnhancedRichTextEditor extends RichTextEditor {
          * Returns the placeholders involved in this event.
          * <p>
          * The returned placeholders are looked up from the master list set via
-         * {@link EnhancedRichTextEditor#setPlaceholders(List)}, so they contain
+         * {@link EnhancedRichTextEditor#setPlaceholders(Collection)}, so they contain
          * all configured properties (text, tag, format, altFormat), not just the
          * minimal data sent from the client. The {@code index} property is set
          * to the placeholder's position in the editor's delta.
@@ -1471,7 +1473,7 @@ public class EnhancedRichTextEditor extends RichTextEditor {
          * <p>
          * This bypasses the placeholder dialog and inserts the placeholder directly.
          * The placeholder must be defined in the master list via
-         * {@link EnhancedRichTextEditor#setPlaceholders(List)}.
+         * {@link EnhancedRichTextEditor#setPlaceholders(Collection)}.
          *
          * @param placeholder the placeholder to insert
          */
@@ -1484,7 +1486,7 @@ public class EnhancedRichTextEditor extends RichTextEditor {
          * <p>
          * This bypasses the placeholder dialog and inserts the placeholder directly.
          * The placeholder must be defined in the master list via
-         * {@link EnhancedRichTextEditor#setPlaceholders(List)}.
+         * {@link EnhancedRichTextEditor#setPlaceholders(Collection)}.
          *
          * @param placeholder the placeholder to insert
          * @param position the zero-based index in the editor's delta where to insert

@@ -1,4 +1,4 @@
-# Enhanced Rich Text Editor -- User Guide
+# Enhanced Rich Text Editor — User Guide
 
 This guide walks you through all ERTE v6.x features for Vaadin 25 — from basic setup to advanced customization. Each section includes working code examples you can drop into your project.
 
@@ -43,7 +43,7 @@ ERTE v6.x requires Vaadin 25.0.x. Add the dependency to your `pom.xml`:
 </dependency>
 ```
 
-> **Note:** The base Rich Text Editor is part of the `vaadin` artifact (not `vaadin-core`). Make sure your project uses `vaadin` as dependency.
+> **Note:** The base Rich Text Editor is part of the commercial `vaadin` artifact (not `vaadin-core`). A Vaadin Pro subscription or higher is required for production use.
 
 ### 1.2 Basic Usage
 
@@ -96,6 +96,9 @@ The toolbar supports adding custom components to named slots, controlling button
 ERTE provides several `ToolbarSlot` positions: `START`/`END`, `BEFORE_GROUP_*/AFTER_GROUP_*` (two per button-group), and `GROUP_CUSTOM`. See the `ToolbarSlot` enum Javadoc for the complete list of positions.
 
 ```java
+import com.vaadin.componentfactory.toolbar.ToolbarSlot;
+// Also in toolbar package: ToolbarSwitch, ToolbarPopover, ToolbarSelectPopup, ToolbarDialog
+
 Button startBtn = new Button("S");
 editor.addToolbarComponents(ToolbarSlot.START, startBtn);
 
@@ -268,7 +271,7 @@ placeholders.add(p3);
 editor.setPlaceholders(placeholders);
 ```
 
-**Display tags** -- wrap placeholder text with markers:
+**Display tags** — wrap placeholder text with markers:
 
 ```java
 // Display as @N-1=Company Name (start tag only)
@@ -278,7 +281,7 @@ editor.setPlaceholderTags("@", "");
 editor.setPlaceholderTags("{{", "}}");
 ```
 
-**Alt appearance pattern** -- regex that controls which part of a placeholder's text to show in alt mode. When a placeholder's text matches, the matched substring becomes the "alt text" displayed with `altFormat` styling. This regex matches everything after the `=` sign — so `N-1=Company Name` shows only `Company Name` in alt mode:
+**Alt appearance pattern** — regex that controls which part of a placeholder's text to show in alt mode. When a placeholder's text matches, the matched substring becomes the "alt text" displayed with `altFormat` styling. This regex matches everything after the `=` sign — so `N-1=Company Name` shows only `Company Name` in alt mode:
 
 ```java
 // Define which substring to extract for alt display
@@ -313,6 +316,8 @@ There are two types of events:
 
 - **Gate events** (`ButtonClicked`, `BeforeInsert`, `BeforeRemove`): These *intercept* the default action. When you register a listener, the default action is suppressed — your listener **must** call `event.insert()` or `event.remove()` to proceed, or do nothing to cancel.
 - **Notification events** (`Inserted`, `Removed`, `Selected`, `Leave`, `AppearanceChanged`): These fire *after* the action. Use them for logging, UI updates, etc. They don't affect the operation.
+
+> **Important:** Registering a gate event listener suppresses the default action. If you only want to observe events (e.g., for logging), use notification events instead.
 
 **Insert flow:**
 
@@ -400,7 +405,7 @@ editor.addPlaceholderLeaveListener(event ->
 
 ```java
 editor.addPlaceholderAppearanceChangedListener(event -> {
-    boolean isAlt = event.getAltAppearance();
+    Boolean isAlt = event.getAltAppearance();
     statusLabel.setText(isAlt ? "Showing values" : "Showing names");
 });
 ```
@@ -456,7 +461,7 @@ Tabstops provide document-style columnar alignment for invoices, forms, or struc
 
 You can define tabstops programmatically (see below) or interactively — clicking the horizontal ruler cycles through directions (LEFT → RIGHT → MIDDLE → remove) at the clicked position.
 
-Define tabstops as a list of positions (in CSS pixels from the left edge of the editor's content area, inside any padding) with an alignment direction:
+Define tabstops as a list of positions (in CSS pixels, measured from the left edge of the text content area (after any editor padding)) with an alignment direction:
 
 ```java
 editor.setTabStops(List.of(
@@ -657,7 +662,7 @@ vcf-enhanced-rich-text-editor.some-css-class {
 
 #### 2.10.2 ERTE Shadow Parts
 
-ERTE adds these shadow parts on top of the standard RTE 2 parts. Standard toolbar parts (bold, italic, etc.) and groups are provided by the Vaadin RTE 2 component -- see [Vaadin RTE Styling docs](https://vaadin.com/docs/v25/components/rich-text-editor/styling).
+ERTE adds these shadow parts on top of the standard RTE 2 parts. Standard toolbar parts (bold, italic, etc.) and groups are provided by the Vaadin RTE 2 component — see [Vaadin RTE Styling docs](https://vaadin.com/docs/v25/components/rich-text-editor/styling).
 
 **ERTE toolbar buttons:**
 
@@ -721,6 +726,16 @@ These classes are applied to elements inside the editor content area (`.ql-edito
 
 Standard Quill classes (`ql-align-*`, `ql-indent-*`) are provided by the base RTE 2 component.
 
+> **Note:** The editor content lives inside the component's shadow DOM. To style these classes from your application's CSS, use `::part(content)` to scope into the content area:
+> ```css
+> vcf-enhanced-rich-text-editor::part(content) .ql-placeholder {
+>     background: lightyellow;
+> }
+> vcf-enhanced-rich-text-editor::part(content) .ql-readonly {
+>     background: lightgray;
+> }
+> ```
+
 ---
 
 ### 2.11 Built-in Keyboard Shortcuts
@@ -748,7 +763,7 @@ editor.setValue("<p>Hello <strong>world</strong></p>");
 String html = editor.getValue();
 ```
 
-If you need to work with Quill's Delta JSON — for example, to set readonly attributes or insert placeholders programmatically — use the `asDelta()` wrapper. Both `setValue()` and `getValue()` work with JSON strings:
+If you need to work with Quill's Delta JSON — for example, to set readonly attributes or insert placeholders programmatically — use the `asDelta()` wrapper (inherited from Vaadin's `RichTextEditor`). Both `setValue()` and `getValue()` work with JSON strings:
 
 ```java
 // Delta — for structured content manipulation (JSON string)
@@ -869,6 +884,7 @@ editor.removeAllowedCssProperties("border-radius");
 Further resources:
 
 - **Upgrade from v5.x:** [Upgrade Guide](BASE_UPGRADE_GUIDE.md)
+- **Table support:** [Tables Guide](TABLES_GUIDE.md) — table support (separate Tables addon)
 - **Extension hooks and custom blots:** [EXTENDING.md](dev/EXTENDING.md) — for building your own blots, registering Quill extensions, or hooking into the editor lifecycle
 - **Working examples:** Run the demo module (`enhanced-rich-text-editor-demo/`) to see all features in action — see the [Developer Guide](dev/DEVELOPER_GUIDE.md) for setup instructions
 - **Issues and questions:** [GitHub](https://github.com/vaadin-component-factory/enhanced-rich-text-editor/issues)

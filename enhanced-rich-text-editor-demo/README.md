@@ -1,4 +1,4 @@
-# Enhanced Rich Text Editor -- Demo Application
+# Enhanced Rich Text Editor — Demo Application
 
 Demo application for the Enhanced Rich Text Editor (ERTE) V25. Provides interactive
 playground views for exploring ERTE features, comparing with stock RTE 2, and
