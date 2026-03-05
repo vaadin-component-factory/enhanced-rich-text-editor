@@ -732,7 +732,7 @@ vcf-enhanced-rich-text-editor::part(horizontalRuler) {
 
 ### 3.1 Value Formats (HTML vs Delta)
 
-With Vaadin 25, the Rich Text Editor uses **HTML as its primary format**. `getValue()` returns HTML, `setValue()` expects HTML. This is the format you'll use for storage and form binding.
+With Vaadin 25, the Rich Text Editor uses **HTML as its primary format**. `getValue()` returns HTML, `setValue()` expects HTML. This is the format you'll normally use for storage and form binding.
 
 ```java
 // HTML — the default and recommended format
