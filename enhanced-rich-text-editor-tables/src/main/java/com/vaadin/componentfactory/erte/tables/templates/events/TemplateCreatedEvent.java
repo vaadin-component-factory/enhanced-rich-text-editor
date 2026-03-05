@@ -1,17 +1,31 @@
+/*-
+ * #%L
+ * Enhanced Rich Text Editor Tables Extension V25
+ * %%
+ * Copyright (C) 2025 Vaadin Ltd
+ * %%
+ * This program is available under Commercial Vaadin Add-On License 3.0
+ * (CVALv3).
+ *
+ * See the file license.html distributed with this software for more
+ * information about licensing.
+ *
+ * You should have received a copy of the CVALv3 along with this program.
+ * If not, see <http://vaadin.com/license/cval-3>.
+ * #L%
+ */
 package com.vaadin.componentfactory.erte.tables.templates.events;
 
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
-import elemental.json.JsonObject;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
- * Fired, when a new template has been created. Contains the id of the created template.
- * <p/>
- * This event is also fired, when a copy of an existing template is created. In that case the {@link #copiedTemplateId}
- * contains the origin template id.
+ * Fired when a new template is created, either by the user clicking the Create button
+ * in the template dialog or programmatically.
  */
 public class TemplateCreatedEvent extends TemplateModificationEvent {
-
-    public TemplateCreatedEvent(EnhancedRichTextEditorTables source, boolean fromClient, String templateId, JsonObject template) {
+    public TemplateCreatedEvent(EnhancedRichTextEditorTables source, boolean fromClient,
+                                String templateId, ObjectNode template) {
         super(source, fromClient, templateId, template);
     }
 }

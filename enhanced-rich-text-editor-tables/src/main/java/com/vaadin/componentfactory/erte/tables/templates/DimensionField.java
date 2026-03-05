@@ -1,26 +1,35 @@
+/*-
+ * #%L
+ * Enhanced Rich Text Editor Tables Extension V25
+ * %%
+ * Copyright (C) 2025 Vaadin Ltd
+ * %%
+ * This program is available under Commercial Vaadin Add-On License 3.0
+ * (CVALv3).
+ *
+ * See the file license.html distributed with this software for more
+ * information about licensing.
+ *
+ * You should have received a copy of the CVALv3 along with this program.
+ * If not, see <http://vaadin.com/license/cval-3>.
+ * #L%
+ */
 package com.vaadin.componentfactory.erte.tables.templates;
 
 import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
-import com.vaadin.flow.theme.lumo.LumoUtility;
-import org.apache.commons.lang3.StringUtils;
-
-import java.time.format.TextStyle;
-
-import static com.vaadin.flow.theme.lumo.LumoUtility.*;
 
 public class DimensionField extends CustomField<Dimension> {
 
     private final IntegerField valueField;
-    private final Span unitField; // might be replaced with a combobox or select later
+    private final Span unitField;
     private String defaultUnit = TemplateDialog.Defaults.DIMENSION_UNIT;
 
     public DimensionField(String label) {
         valueField = new IntegerField(label);
         valueField.setMin(1);
-
         valueField.addThemeVariants(TextFieldVariant.LUMO_SMALL);
         valueField.setWidth("6rem");
 
@@ -37,20 +46,17 @@ public class DimensionField extends CustomField<Dimension> {
         if (value == null || value == 0) {
             return null;
         }
-
-        return new Dimension(value, StringUtils.trimToEmpty(unitField.getText()));
+        return new Dimension(value, unitField.getText().strip());
     }
 
     @Override
     protected void setPresentationValue(Dimension newPresentationValue) {
         unitField.getStyle().remove("font-style").remove("font-weight");
-
         if (newPresentationValue != null) {
             valueField.setValue((int) newPresentationValue.getValue());
             String unit = newPresentationValue.getUnit();
             unitField.setText(unit);
-
-            if(!unit.equals(defaultUnit)) {
+            if (!unit.equals(defaultUnit)) {
                 unitField.getStyle()
                         .set("font-style", "italic")
                         .set("font-weight", "bold");
@@ -70,4 +76,3 @@ public class DimensionField extends CustomField<Dimension> {
         valueField.setStepButtonsVisible(stepButtonsVisible);
     }
 }
-

@@ -9,7 +9,7 @@
 
     <name>Enhanced Rich Text Editor</name>
 
-    <version>5.2.0</version>
+    <version>6.0.0-SNAPSHOT</version>
     <inceptionYear>2019</inceptionYear>
     <organization>
         <name>Vaadin Ltd</name>
@@ -17,17 +17,10 @@
     </organization>
 
     <properties>
-        <powermock.version>1.7.1</powermock.version>
-        <vaadin.version>24.9.7</vaadin.version>
-        <vaadin.test-generic.version>24.4.7</vaadin.test-generic.version>
-        <testbench.version>6.0.1</testbench.version>
-        <maven.compiler.release>17</maven.compiler.release>
+        <vaadin.version>25.0.6</vaadin.version>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8
-        </project.reporting.outputEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
     <licenses>
@@ -50,17 +43,18 @@
     </dependencyManagement>
 
     <dependencies>
+        <!-- Pro artifact: RTE is a Pro component in V25 (not in vaadin-core) -->
         <dependency>
             <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-core</artifactId>
+            <artifactId>vaadin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <version>3.0.0</version>
         </dependency>
 
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.1</version>
-            <scope>test</scope>
-        </dependency>
+        <!-- Test dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -69,37 +63,11 @@
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.10.19</version>
+            <artifactId>mockito-core</artifactId>
+            <version>5.14.2</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-module-junit4</artifactId>
-            <version>${powermock.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito</artifactId>
-            <version>${powermock.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.annotation</groupId>
-            <artifactId>jakarta.annotation-api</artifactId>
-            <version>3.0.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.vaadin</groupId>
-            <artifactId>flow-test-generic</artifactId>
-            <version>${vaadin.test-generic.version}</version>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
-
 
     <build>
         <plugins>
@@ -148,7 +116,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-assembly-plugin</artifactId>
-                        <version>3.7.0</version>
+                        <version>3.8.0</version>
                         <configuration>
                             <appendAssemblyId>false</appendAssemblyId>
                             <descriptors>

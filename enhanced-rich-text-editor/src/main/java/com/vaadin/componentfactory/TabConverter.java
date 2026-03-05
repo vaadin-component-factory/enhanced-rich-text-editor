@@ -1,10 +1,8 @@
-package com.vaadin.componentfactory;
-
-/*
+/*-
  * #%L
- * EnhancedRichTextEditor for Vaadin 10
+ * Enhanced Rich Text Editor V25
  * %%
- * Copyright (C) 2017 - 2019 Vaadin Ltd
+ * Copyright (C) 2019 - 2025 Vaadin Ltd
  * %%
  * This program is available under Commercial Vaadin Add-On License 3.0
  * (CVALv3).
@@ -16,57 +14,82 @@ package com.vaadin.componentfactory;
  * If not, see <http://vaadin.com/license/cval-3>.
  * #L%
  */
+package com.vaadin.componentfactory;
 
-import elemental.json.Json;
-import elemental.json.JsonArray;
-import elemental.json.JsonObject;
-import elemental.json.JsonType;
-import elemental.json.JsonValue;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
- * Converter for transforming old ERTE tab delta format to the new prototype format.
+ * Converter for transforming old ERTE tab delta format (pre-5.2.0) to the
+ * current format.
  * <p>
- * This class handles the conversion of legacy tab-related blots (tab, line-part, tabs-cont, pre-tab)
- * to the simplified new format while preserving all other content and formatting.
+ * This class handles the conversion of legacy tab-related blots
+ * ({@code tab}, {@code line-part}, {@code tabs-cont}, {@code pre-tab})
+ * to the simplified current format while preserving all other content and
+ * formatting.
+ * <p>
+ * <b>Breaking change in ERTE 6.0:</b> This converter is no longer applied
+ * automatically in {@code setValue()}. Applications that store deltas created
+ * with ERTE versions prior to 5.2.0 must call {@link #convertIfNeeded(String)}
+ * explicitly before passing them to the editor.
+ *
+ * @since 5.2.0
  */
 public class TabConverter {
 
     private static final String ZERO_WIDTH_SPACE = "\uFEFF";
+    private static final JsonMapper MAPPER = JsonMapper.shared();
+
+    private TabConverter() {
+        // Utility class
+    }
 
     /**
-     * Detects whether a delta JSON string contains old-format tab blots and converts if needed.
-     * Returns the value unchanged if it does not contain old-format markers.
-     * Handles both array format ([{...}]) and object format ({"ops":[{...}]}).
+     * Detects whether a delta JSON string contains old-format tab blots and
+     * converts if needed. Returns the value unchanged if it does not contain
+     * old-format markers.
+     * <p>
+     * Handles both array format ({@code [{...}]}) and object format
+     * ({@code {"ops":[{...}]}}).
      *
      * @param deltaJson the delta JSON string (may be old or new format)
-     * @return the converted delta JSON string, or the original if no conversion needed
+     * @return the converted delta JSON string, or the original if no
+     *         conversion needed
      */
     public static String convertIfNeeded(String deltaJson) {
         if (deltaJson == null || deltaJson.isBlank()) {
             return deltaJson;
         }
         // Quick string check for old-format markers before parsing JSON
-        if (deltaJson.contains("\"tabs-cont\"") || deltaJson.contains("\"pre-tab\"")
+        if (deltaJson.contains("\"tabs-cont\"")
+                || deltaJson.contains("\"pre-tab\"")
                 || deltaJson.contains("\"line-part\"")
-                || (deltaJson.contains("\"tab\"") && deltaJson.contains("\"tab\":\""))
-        ) {
-            String trimmed = deltaJson.trim();
-            if (trimmed.startsWith("[")) {
-                // Array format: wrap in {"ops":...}, convert, unwrap
-                String wrapped = "{\"ops\":" + trimmed + "}";
-                String converted = convertToNewFormat(wrapped);
-                // Extract the ops array back out
-                JsonObject obj = Json.parse(converted);
-                return obj.getArray("ops").toJson();
-            } else {
-                return convertToNewFormat(deltaJson);
+                || (deltaJson.contains("\"tab\"")
+                        && deltaJson.contains("\"tab\":\""))) {
+            try {
+                String trimmed = deltaJson.trim();
+                if (trimmed.startsWith("[")) {
+                    // Array format: wrap in {"ops":...}, convert, unwrap
+                    String wrapped = "{\"ops\":" + trimmed + "}";
+                    String converted = convertToNewFormat(wrapped);
+                    JsonNode obj = MAPPER.readTree(converted);
+                    return MAPPER.writeValueAsString(obj.get("ops"));
+                } else {
+                    return convertToNewFormat(deltaJson);
+                }
+            } catch (Exception e) {
+                // If JSON parsing fails, return unchanged
+                return deltaJson;
             }
         }
         return deltaJson;
     }
 
     /**
-     * Converts a delta JSON string from the old ERTE tab format to the new prototype format.
+     * Converts a delta JSON string from the old ERTE tab format to the new
+     * format.
      *
      * @param oldDeltaJson the old delta JSON string
      * @return the converted delta JSON string in the new format
@@ -76,60 +99,61 @@ public class TabConverter {
             return oldDeltaJson;
         }
 
-        JsonObject oldDelta = Json.parse(oldDeltaJson);
-        JsonArray oldOps = oldDelta.getArray("ops");
+        try {
+            JsonNode oldDelta = MAPPER.readTree(oldDeltaJson);
+            JsonNode oldOps = oldDelta.get("ops");
 
-        if (oldOps == null) {
+            if (oldOps == null || !oldOps.isArray()) {
+                return oldDeltaJson;
+            }
+
+            ArrayNode newOps = MAPPER.createArrayNode();
+
+            for (JsonNode op : oldOps) {
+                convertOp(op, newOps);
+            }
+
+            ObjectNode newDelta = MAPPER.createObjectNode();
+            newDelta.set("ops", newOps);
+            return MAPPER.writeValueAsString(newDelta);
+        } catch (Exception e) {
             return oldDeltaJson;
         }
-
-        JsonArray newOps = Json.createArray();
-
-        for (int i = 0; i < oldOps.length(); i++) {
-            JsonObject op = oldOps.getObject(i);
-            convertOp(op, newOps);
-        }
-
-        JsonObject newDelta = Json.createObject();
-        newDelta.put("ops", newOps);
-        return newDelta.toJson();
     }
 
-    private static void convertOp(JsonObject op, JsonArray newOps) {
-        JsonValue insertValue = op.get("insert");
-        JsonObject attributes = op.hasKey("attributes") ? op.getObject("attributes") : null;
+    private static void convertOp(JsonNode op, ArrayNode newOps) {
+        JsonNode insertValue = op.get("insert");
+        JsonNode attributes = op.get("attributes");
 
         // Handle tab attribute (old format with level)
-        if (attributes != null && attributes.hasKey("tab")) {
-            String tabValue = attributes.getString("tab");
+        if (attributes != null && attributes.has("tab")) {
+            String tabValue = attributes.get("tab").asText();
             int tabCount = parseTabLevel(tabValue);
 
-            // Create separate tab embeds for each tab level
             for (int t = 0; t < tabCount; t++) {
-                JsonObject tabEmbed = Json.createObject();
+                ObjectNode tabOp = MAPPER.createObjectNode();
+                ObjectNode tabEmbed = MAPPER.createObjectNode();
                 tabEmbed.put("tab", true);
-
-                JsonObject tabOp = Json.createObject();
-                tabOp.put("insert", tabEmbed);
-                newOps.set(newOps.length(), tabOp);
+                tabOp.set("insert", tabEmbed);
+                newOps.add(tabOp);
             }
             return;
         }
 
         // Handle pre-tab (temporary tab, convert to single tab)
-        if (attributes != null && attributes.hasKey("pre-tab")) {
-            JsonObject tabEmbed = Json.createObject();
+        if (attributes != null && attributes.has("pre-tab")) {
+            ObjectNode tabOp = MAPPER.createObjectNode();
+            ObjectNode tabEmbed = MAPPER.createObjectNode();
             tabEmbed.put("tab", true);
-
-            JsonObject tabOp = Json.createObject();
-            tabOp.put("insert", tabEmbed);
-            newOps.set(newOps.length(), tabOp);
+            tabOp.set("insert", tabEmbed);
+            newOps.add(tabOp);
             return;
         }
 
         // Handle line-part attribute
-        if (attributes != null && attributes.hasKey("line-part")) {
-            String text = insertValue.getType() == JsonType.STRING ? insertValue.asString() : null;
+        if (attributes != null && attributes.has("line-part")) {
+            String text = insertValue != null && insertValue.isTextual()
+                    ? insertValue.asText() : null;
 
             // If it's just a zero-width space, remove completely
             if (ZERO_WIDTH_SPACE.equals(text)) {
@@ -137,36 +161,36 @@ public class TabConverter {
             }
 
             // Otherwise, keep the text but remove line-part attribute
-            JsonObject newOp = Json.createObject();
+            ObjectNode newOp = MAPPER.createObjectNode();
             newOp.put("insert", text);
 
             // Copy other attributes except line-part
-            JsonObject remainingAttributes = removeAttribute(attributes, "line-part");
-            if (remainingAttributes != null && remainingAttributes.keys().length > 0) {
-                newOp.put("attributes", remainingAttributes);
+            ObjectNode remaining = removeAttribute(attributes, "line-part");
+            if (remaining != null && !remaining.isEmpty()) {
+                newOp.set("attributes", remaining);
             }
 
-            newOps.set(newOps.length(), newOp);
+            newOps.add(newOp);
             return;
         }
 
         // Handle tabs-cont block format (convert to normal newline)
-        if (attributes != null && attributes.hasKey("tabs-cont")) {
-            JsonObject newOp = Json.createObject();
+        if (attributes != null && attributes.has("tabs-cont")) {
+            ObjectNode newOp = MAPPER.createObjectNode();
             newOp.put("insert", "\n");
 
             // Copy other attributes except tabs-cont
-            JsonObject remainingAttributes = removeAttribute(attributes, "tabs-cont");
-            if (remainingAttributes != null && remainingAttributes.keys().length > 0) {
-                newOp.put("attributes", remainingAttributes);
+            ObjectNode remaining = removeAttribute(attributes, "tabs-cont");
+            if (remaining != null && !remaining.isEmpty()) {
+                newOp.set("attributes", remaining);
             }
 
-            newOps.set(newOps.length(), newOp);
+            newOps.add(newOp);
             return;
         }
 
-        // Pass through all other ops unchanged (readonly, nbsp, placeholder, standard formatting)
-        newOps.set(newOps.length(), copyJsonObject(op));
+        // Pass through all other ops unchanged
+        newOps.add(op.deepCopy());
     }
 
     private static int parseTabLevel(String tabValue) {
@@ -180,48 +204,16 @@ public class TabConverter {
         }
     }
 
-    private static JsonObject removeAttribute(JsonObject attributes, String attributeToRemove) {
-        JsonObject result = Json.createObject();
-        for (String key : attributes.keys()) {
-            if (!key.equals(attributeToRemove)) {
-                result.put(key, copyJsonValue(attributes.get(key)));
+    private static ObjectNode removeAttribute(JsonNode attributes,
+            String attributeToRemove) {
+        ObjectNode result = MAPPER.createObjectNode();
+        var it = attributes.properties().iterator();
+        while (it.hasNext()) {
+            var entry = it.next();
+            if (!entry.getKey().equals(attributeToRemove)) {
+                result.set(entry.getKey(), entry.getValue().deepCopy());
             }
         }
         return result;
-    }
-
-    private static JsonObject copyJsonObject(JsonObject original) {
-        JsonObject copy = Json.createObject();
-        for (String key : original.keys()) {
-            copy.put(key, copyJsonValue(original.get(key)));
-        }
-        return copy;
-    }
-
-    private static JsonValue copyJsonValue(JsonValue value) {
-        if (value == null) {
-            return Json.createNull();
-        }
-
-        switch (value.getType()) {
-            case STRING:
-                return Json.create(value.asString());
-            case NUMBER:
-                return Json.create(value.asNumber());
-            case BOOLEAN:
-                return Json.create(value.asBoolean());
-            case OBJECT:
-                return copyJsonObject((JsonObject) value);
-            case ARRAY:
-                JsonArray arrayCopy = Json.createArray();
-                JsonArray original = (JsonArray) value;
-                for (int i = 0; i < original.length(); i++) {
-                    arrayCopy.set(i, copyJsonValue(original.get(i)));
-                }
-                return arrayCopy;
-            case NULL:
-            default:
-                return Json.createNull();
-        }
     }
 }

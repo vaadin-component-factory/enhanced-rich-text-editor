@@ -1,9 +1,9 @@
 # DOCKERFILE TO BUILD THE DEMO
-# Builds the addon and tables extension from local sources, then builds the demo.
+# Builds the V25 addon and tables extension from local sources, then builds the demo.
 
 FROM ghcr.io/jqlang/jq:latest AS jq-stage
 
-FROM eclipse-temurin:17-jdk AS build
+FROM eclipse-temurin:21-jdk AS build
 COPY --from=jq-stage /jq /usr/bin/jq
 RUN jq --version
 
@@ -35,6 +35,6 @@ RUN --mount=type=cache,target=/root/.m2 \
     ./mvnw -f /build/pom.xml clean install -pl enhanced-rich-text-editor,enhanced-rich-text-editor-tables -DskipTests && \
     ./mvnw clean package -Pproduction -DskipTests -Dvaadin.proKey=${PRO_KEY} -Dvaadin.offlineKey=${OFFLINE_KEY}'
 
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 COPY --from=build /build/enhanced-rich-text-editor-demo/target/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "/app.jar"]

@@ -1,10 +1,8 @@
-package com.vaadin.componentfactory;
-
-/*
+/*-
  * #%L
- * Vaadin EnhancedRichTextEditor for Vaadin 10
+ * Enhanced Rich Text Editor V25
  * %%
- * Copyright (C) 2019 Vaadin Ltd
+ * Copyright (C) 2019 - 2025 Vaadin Ltd
  * %%
  * This program is available under Commercial Vaadin Add-On License 3.0
  * (CVALv3).
@@ -16,20 +14,25 @@ package com.vaadin.componentfactory;
  * If not, see <http://vaadin.com/license/cval-3>.
  * #L%
  */
+package com.vaadin.componentfactory;
 
 import java.io.Serializable;
 import java.util.Objects;
 
-/*
-  TabStop is class for defining where tab stop should be located on ruler(by setting @position in pixels)
-  and how text should be aligned to this tab stop(by setting @direction).
-  There are 3 possible directions: Left, Right and Middle.
-  When Direction set to Left: then left side of text will be aligned to right side of tab stop (>text)
-  When Direction set to Right: then right side of text will be aligned to left side of tab stop  (text<)
-  When Direction set to Middle: then text will be centered to tab stop  (te|xt)
+/**
+ * TabStop defines where a tab stop is located on the ruler (by setting
+ * {@code position} in pixels) and how text is aligned to this tab stop
+ * (by setting {@code direction}).
+ * <p>
+ * There are 3 possible directions: Left, Right and Middle.
+ * <ul>
+ *   <li>LEFT: left side of text aligns to right side of tab stop (&gt;text)</li>
+ *   <li>RIGHT: right side of text aligns to left side of tab stop (text&lt;)</li>
+ *   <li>MIDDLE: text is centered at the tab stop (te|xt)</li>
+ * </ul>
  */
-
 public class TabStop implements Serializable {
+
     private final Direction direction;
     private final double position;
 
@@ -58,10 +61,13 @@ public class TabStop implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         TabStop tabStop = (TabStop) o;
-        return Double.compare(position, tabStop.position) == 0 && direction == tabStop.direction;
+        return Double.compare(position, tabStop.position) == 0
+                && direction == tabStop.direction;
     }
 
     @Override

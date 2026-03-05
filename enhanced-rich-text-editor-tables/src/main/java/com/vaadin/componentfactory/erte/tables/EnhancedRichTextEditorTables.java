@@ -1,9 +1,26 @@
+/*-
+ * #%L
+ * Enhanced Rich Text Editor Tables Extension V25
+ * %%
+ * Copyright (C) 2025 Vaadin Ltd
+ * %%
+ * This program is available under Commercial Vaadin Add-On License 3.0
+ * (CVALv3).
+ *
+ * See the file license.html distributed with this software for more
+ * information about licensing.
+ *
+ * You should have received a copy of the CVALv3 along with this program.
+ * If not, see <http://vaadin.com/license/cval-3>.
+ * #L%
+ */
 package com.vaadin.componentfactory.erte.tables;
 
 import com.vaadin.componentfactory.EnhancedRichTextEditor;
 import com.vaadin.componentfactory.erte.tables.events.TableCellChangedEvent;
 import com.vaadin.componentfactory.erte.tables.events.TableSelectedEvent;
 import com.vaadin.componentfactory.erte.tables.templates.TemplateDialog;
+import com.vaadin.componentfactory.erte.tables.templates.TemplateJsonConstants;
 import com.vaadin.componentfactory.erte.tables.templates.TemplateParser;
 import com.vaadin.componentfactory.erte.tables.templates.events.*;
 import com.vaadin.componentfactory.toolbar.ToolbarPopover;
@@ -14,9 +31,7 @@ import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.contextmenu.MenuItem;
-import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dependency.JsModule;
-import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -25,9 +40,9 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.shared.Registration;
-import elemental.json.JsonObject;
 import jakarta.annotation.Nullable;
-import org.apache.commons.lang3.StringUtils;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -39,23 +54,24 @@ import java.util.regex.Pattern;
  * A table extension for the {@link EnhancedRichTextEditor}. Allows the user to define new or modify existing
  * tables in an ERTE document.
  */
-@NpmPackage(value = "quill-delta", version = "5.1.0")
 @JsModule("./src/erte-table/connector.js")
-@CssImport(value = "./src/erte-table/css/erte-shadow.css", themeFor = "vcf-enhanced-rich-text-editor")
-@CssImport(value = "./src/erte-table/css/toolbar.css")
 public class EnhancedRichTextEditorTables {
 
     private static final Pattern ASSIGNED_TEMPLATE_IDS_DELTA_PATTERN =
-            Pattern.compile("\\{\"attributes\":\\{\"0\":\"T\",\"1\":\"A\",\"2\":\"B\",\"3\":\"L\",\"4\":\"E\",\"td\":\"" +
-                            // extend these if the pipe pattern changes
-                            "([a-zA-Z0-9]+)\\|([a-zA-Z0-9]+)\\|([a-zA-Z0-9]+)\\|" +
+            Pattern.compile("\"td\":\"([a-zA-Z0-9]+)\\|([a-zA-Z0-9]+)\\|([a-zA-Z0-9]+)\\|" +
                             "([a-zA-Z0-9]*)\\|([a-zA-Z0-9]*)\\|([a-zA-Z0-9]*)\\|" +
-                            "([a-zA-Z0-9]+)" +
-                            "\"},");
+                            "([a-zA-Z0-9-]*)\"");
 
     private static final int ASSIGNED_TEMPLATE_IDS_DELTA_PATTERN_INDEX = 7;
 
     private static final String SCRIPTS_TABLE = "window.Vaadin.Flow.vcfEnhancedRichTextEditor.extensions.tables.";
+
+    private static final Set<String> VALID_ACTIONS = Set.of(
+        "append-row-above", "append-row-below", "remove-row",
+        "append-col-before", "append-col-after", "remove-col",
+        "merge-selection", "split-cell", "remove-table",
+        "undo", "redo", "copy", "border-toggle"
+    );
 
     private final EnhancedRichTextEditor rte;
     private final TablesI18n i18n;
@@ -69,6 +85,7 @@ public class EnhancedRichTextEditorTables {
     private String cellHoverColor;
     private ToolbarSelectPopup modifyTableSelectPopup;
     private ToolbarPopover addTablePopup;
+    private Set<String> registeredTemplateClasses = new HashSet<>();
 
     /**
      * Extends the given ERTE instance with table functionality. Uses the given i18n instance to initialize
@@ -90,21 +107,25 @@ public class EnhancedRichTextEditorTables {
 
         Element element = rte.getElement();
         element.addEventListener("table-selected", event -> {
-                    JsonObject eventData = event.getEventData();
-                    fireEvent(new TableSelectedEvent(
-                            this,
-                            true,
-                            eventData.getBoolean("event.detail.selected"),
-                            eventData.getBoolean("event.detail.cellSelectionActive"),
-                            eventData.hasKey("event.detail.template") ? eventData.getString("event.detail.template") : null
-                    ));
+                    JsonNode eventData = event.getEventData();
+                    boolean selected = eventData.get("event.detail.selected").asBoolean();
+                    boolean cellSelectionActive = eventData.get("event.detail.cellSelectionActive").asBoolean();
+                    String template = eventData.has("event.detail.template")
+                        ? eventData.get("event.detail.template").asText() : null;
+
+                    // Validate template
+                    if (template != null && !template.isBlank() && !TemplateParser.isValidTemplateId(template)) {
+                        template = null;
+                    }
+
+                    fireEvent(new TableSelectedEvent(this, true, selected, cellSelectionActive, template));
                 })
                 .addEventData("event.detail.selected")
                 .addEventData("event.detail.cellSelectionActive")
                 .addEventData("event.detail.template");
 
         element.addEventListener("table-cell-changed", event -> {
-                    JsonObject eventData = event.getEventData();
+                    JsonNode eventData = event.getEventData();
                     fireEvent(new TableCellChangedEvent(
                             this,
                             true,
@@ -124,8 +145,8 @@ public class EnhancedRichTextEditorTables {
         rte.getElement().executeJs(SCRIPTS_TABLE + "init(this)");
     }
 
-    private Integer toInteger(JsonObject object, String key) {
-        return object.hasKey(key) ? Double.valueOf(object.getNumber(key)).intValue() : null;
+    private Integer toInteger(JsonNode data, String key) {
+        return data.has(key) && !data.get(key).isNull() ? data.get(key).asInt() : null;
     }
 
     /**
@@ -170,14 +191,17 @@ public class EnhancedRichTextEditorTables {
 
         addTableButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.PLUS);
         addTableButton.setTooltipText(getI18nOrDefault(TablesI18n::getInsertTableToolbarSwitchTooltip, "Add new table"));
+        addTableButton.setId("erte-add-table-btn");
 
         addTablePopup = ToolbarPopover.horizontal(addTableButton, Alignment.BASELINE, rows, new Span("x"), cols, add);
+        addTablePopup.setAutofocus(false);
         addTablePopup.setFocusOnOpenTarget(rows);
         add.addClickListener(event -> addTablePopup.setOpened(false));
 
         modifyTableButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.TOOLS);
         modifyTableButton.setTooltipText(getI18nOrDefault(TablesI18n::getModifyTableToolbarSwitchTooltip, "Modify Table"));
         modifyTableButton.setEnabled(false);
+        modifyTableButton.setId("erte-modify-table-btn");
 
         modifyTableSelectPopup = new ToolbarSelectPopup(modifyTableButton);
         modifyTableSelectPopup.addItem(
@@ -193,7 +217,7 @@ public class EnhancedRichTextEditorTables {
                 getI18nOrDefault(TablesI18n::getModifyTableRemoveRowItemLabel, "Remove row"),
                 event -> executeTableRowAction("remove-row")
         );
-        modifyTableSelectPopup.add(new Hr());
+        modifyTableSelectPopup.addComponent(new Hr());
         modifyTableSelectPopup.addItem(
                 getI18nOrDefault(TablesI18n::getModifyTableAppendColumnBeforeItemLabel, "Append column before"),
                 event -> executeTableColumnAction("append-col-before")
@@ -207,7 +231,7 @@ public class EnhancedRichTextEditorTables {
                 event -> executeTableColumnAction("remove-col")
         );
 
-        modifyTableSelectPopup.add(new Hr());
+        modifyTableSelectPopup.addComponent(new Hr());
         MenuItem mergeCells = modifyTableSelectPopup.addItem(
                 getI18nOrDefault(TablesI18n::getModifyTableMergeCellsItemLabel, "Merge selected cells"),
                 event -> executeTableAction( "merge-selection")
@@ -218,7 +242,7 @@ public class EnhancedRichTextEditorTables {
                 event -> executeTableAction("split-cell")
         );
 
-        modifyTableSelectPopup.add(new Hr());
+        modifyTableSelectPopup.addComponent(new Hr());
         modifyTableSelectPopup.addItem(
                 getI18nOrDefault(TablesI18n::getModifyTableRemoveTableItemLabel, "Remove table"),
                 event -> executeTableAction("remove-table")
@@ -227,6 +251,7 @@ public class EnhancedRichTextEditorTables {
         styleTemplatesDialogButton = new ToolbarSwitch(VaadinIcon.TABLE, VaadinIcon.EYE);
         styleTemplatesDialogButton.setTooltipText(getI18nOrDefault(TablesI18n::getTableTemplatesToolbarSwitchTooltip, "Style Templates"));
         styleTemplatesDialogButton.setEnabled(false);
+        styleTemplatesDialogButton.setId("erte-style-templates-btn");
         templatesDialog = new TemplateDialog(styleTemplatesDialogButton, i18n.getTemplatesI18n());
         templatesDialog.setWidth("26rem"); // turned out to be the best width by default - if not, change in future
 
@@ -304,9 +329,34 @@ public class EnhancedRichTextEditorTables {
      * To be called, when the dialog modifies the templates in any way.
      */
     private void onTemplateModificationByTemplateDialog() {
-        JsonObject templates = getTemplates();
+        ObjectNode templates = getTemplates();
+        updateAllowedTemplateClasses(templates);
         String string = TemplateParser.convertToCss(templates);
-        setClientSideStyles(string);
+        refreshClientSideStyles(string);
+    }
+
+    /**
+     * Syncs template class names with the editor's sanitizer allowed-classes
+     * set. Removes previously registered classes, then registers current
+     * template IDs.
+     */
+    private void updateAllowedTemplateClasses(ObjectNode templates) {
+        // Remove previously registered
+        if (!registeredTemplateClasses.isEmpty()) {
+            rte.removeAllowedHtmlClasses(
+                    registeredTemplateClasses.toArray(String[]::new));
+            registeredTemplateClasses.clear();
+        }
+        // Register current template IDs
+        if (templates != null) {
+            for (String name : templates.propertyNames()) {
+                registeredTemplateClasses.add(name);
+            }
+            if (!registeredTemplateClasses.isEmpty()) {
+                rte.addAllowedHtmlClasses(
+                        registeredTemplateClasses.toArray(String[]::new));
+            }
+        }
     }
 
     /**
@@ -314,20 +364,21 @@ public class EnhancedRichTextEditorTables {
      * applied to the client side to modify the tables' appearance.
      * @param templates templates json object.
      */
-    public void setTemplates(JsonObject templates) {
+    public void setTemplates(ObjectNode templates) {
         if (templatesDialog != null) {
             templatesDialog.setTemplates(templates);
         }
+        updateAllowedTemplateClasses(templates);
         String cssString = TemplateParser.convertToCss(templates);
-        setClientSideStyles(cssString);
-        fireEvent(new TemplatesInitialiazedEvent(this, false, templates, cssString));
+        refreshClientSideStyles(cssString);
+        fireEvent(new TemplatesInitializedEvent(this, false, templates, cssString));
     }
 
     /**
      * Returns the current templates. Only available when the style popup has been activated.
      * @return templates json object or null
      */
-    public JsonObject getTemplates() {
+    public ObjectNode getTemplates() {
         return templatesDialog != null ? templatesDialog.getTemplates() : null;
     }
 
@@ -343,7 +394,8 @@ public class EnhancedRichTextEditorTables {
         Set<String> ids = new HashSet<>();
         while (matcher.find()) {
             if(matcher.groupCount() >= ASSIGNED_TEMPLATE_IDS_DELTA_PATTERN_INDEX) {
-                String templateId = StringUtils.trimToEmpty(matcher.group(ASSIGNED_TEMPLATE_IDS_DELTA_PATTERN_INDEX));
+                String templateId = matcher.group(ASSIGNED_TEMPLATE_IDS_DELTA_PATTERN_INDEX);
+                templateId = (templateId != null ? templateId.trim() : "");
                 if (!templateId.isEmpty()) {
                     ids.add(templateId);
                 }
@@ -358,13 +410,13 @@ public class EnhancedRichTextEditorTables {
      * @return css string or null
      */
     public String getTemplatesAsCssString() {
-        JsonObject templates = getTemplates();
+        ObjectNode templates = getTemplates();
         return templates != null ? TemplateParser.convertToCss(templates) : null;
     }
 
     /**
      * Extends any auto generated styles with custom styles.
-     * Interpretes the given string as css (without any additional parsing or escaping!)
+     * Interprets the given string as css (without any additional parsing or escaping!)
      * <p/>
      * Depending on the boolean parameter, these custom
      * styles will be placed before or after the auto generated styles. Calling this method again will replace
@@ -381,12 +433,12 @@ public class EnhancedRichTextEditorTables {
     }
 
     /**
-     * Interpretes the given string as css (without any additional parsing or escaping!) and sets it
-     * as the client side style for tables in the RTE. This will override any internal set styles and might
-     * be overriden itself, when the styles popup is used together with templates.
-     * @param cssString css string
+     * Refreshes client-side styles with auto-generated CSS plus any hover/focus colors.
+     * @param baseCssString base CSS string from templates
      */
-    private void setClientSideStyles(String cssString) {
+    private void refreshClientSideStyles(String baseCssString) {
+        String cssString = baseCssString != null ? baseCssString : "";
+
         if (tableHoverColor != null) {
             cssString = "table td {border: 1px solid transparent}\n\n" + cssString;
             cssString = cssString + "\n\n table:hover td {border: 1px dashed " + tableHoverColor + " !important}\n\n";
@@ -417,7 +469,16 @@ public class EnhancedRichTextEditorTables {
     }
 
     /**
-     * Inserst a new table with the given dimension at the current cursor position.
+     * Refresh client-side styles using the current template CSS.
+     */
+    private void refreshClientSideStyles() {
+        ObjectNode templates = getTemplates();
+        String baseCss = templates != null ? TemplateParser.convertToCss(templates) : "";
+        refreshClientSideStyles(baseCss);
+    }
+
+    /**
+     * Inserts a new table with the given dimension at the current cursor position.
      * @param rows amount of rows
      * @param cols amount of cols
      */
@@ -426,15 +487,19 @@ public class EnhancedRichTextEditorTables {
     }
 
     /**
-     * Inserst a new table with the given dimension at the current cursor position. Applies the given template
+     * Inserts a new table with the given dimension at the current cursor position. Applies the given template
      * to the table. This template must match the css class name of the template / its id, not its display name.
      * @param rows amount of rows
      * @param cols amount of cols
      * @param templateId template class name
+     * @throws IllegalArgumentException if rows or cols are less than 1, or if templateId is invalid
      */
     public void insertTableAtCurrentPosition(int rows, int cols, String templateId) {
         if (rows <= 0 || cols <= 0) {
             throw new IllegalArgumentException("Rows and cols must be greater than 0!");
+        }
+        if (templateId != null && !TemplateParser.isValidTemplateId(templateId)) {
+            throw new IllegalArgumentException("Invalid template ID: " + templateId);
         }
 
         rte.getElement().executeJs(SCRIPTS_TABLE+ "insert(this, $0, $1, $2)", rows, cols, templateId);
@@ -469,6 +534,9 @@ public class EnhancedRichTextEditorTables {
      * @param action action
      */
     protected void executeTableAction(String action) {
+        if (!VALID_ACTIONS.contains(action)) {
+            throw new IllegalArgumentException("Invalid table action: " + action);
+        }
         rte.getElement().executeJs(SCRIPTS_TABLE+ "action(this, $0)", action);
     }
 
@@ -499,7 +567,7 @@ public class EnhancedRichTextEditorTables {
 
     private IntegerField createTableInsertNumberField(String placeholder, String tooltip) {
         IntegerField field = new IntegerField();
-        field.setValue(1);
+        field.setValue(3); // Default 3 rows/cols
         field.addValueChangeListener(event -> {
             if (event.getSource().isEmpty()) {
                 event.getSource().setValue(1);
@@ -507,7 +575,7 @@ public class EnhancedRichTextEditorTables {
         });
 
         field.setMin(1);
-        field.setMax(10);
+        field.setMax(20); // Max 20 rows/cols
         field.setAutoselect(true);
 
         field.setStepButtonsVisible(true);
@@ -525,42 +593,116 @@ public class EnhancedRichTextEditorTables {
         return ComponentUtil.addListener(rte, type, listener);
     }
 
-    public Registration addTemplatesInitializedListener(ComponentEventListener<TemplatesInitialiazedEvent> listener) {
-        return addListener(TemplatesInitialiazedEvent.class, listener);
+    /**
+     * Registers a listener that is notified when templates are initialized via {@link #setTemplates(ObjectNode)}.
+     * The event carries the templates and the generated CSS string.
+     *
+     * @param listener the listener to register
+     * @return a registration for removing the listener
+     */
+    public Registration addTemplatesInitializedListener(ComponentEventListener<TemplatesInitializedEvent> listener) {
+        return addListener(TemplatesInitializedEvent.class, listener);
     }
 
+    /**
+     * Registers a listener that is notified when a new template is created, either by the user clicking the
+     * create button in the template dialog or programmatically. The event carries the new template's ID and
+     * its JSON object.
+     *
+     * @param listener the listener to register
+     * @return a registration for removing the listener
+     */
     public Registration addTemplateCreatedListener(ComponentEventListener<TemplateCreatedEvent> listener) {
         return addListener(TemplateCreatedEvent.class, listener);
     }
 
+    /**
+     * Registers a listener that is notified when an existing template is copied. The event carries the new
+     * template's ID, the original template's ID, and the copied JSON object.
+     *
+     * @param listener the listener to register
+     * @return a registration for removing the listener
+     */
     public Registration addTemplateCopiedListener(ComponentEventListener<TemplateCopiedEvent> listener) {
         return addListener(TemplateCopiedEvent.class, listener);
     }
 
+    /**
+     * Registers a listener that is notified when a template is modified, for example when the user changes
+     * a style property or renames a template in the dialog. The event carries the template's ID and its
+     * updated JSON object.
+     *
+     * @param listener the listener to register
+     * @return a registration for removing the listener
+     */
     public Registration addTemplateUpdatedListener(ComponentEventListener<TemplateUpdatedEvent> listener) {
         return addListener(TemplateUpdatedEvent.class, listener);
     }
 
+    /**
+     * Registers a listener that is notified when a template is deleted, typically by the user clicking the
+     * delete button and confirming the deletion. The event carries the deleted template's ID and its JSON
+     * object before deletion.
+     *
+     * @param listener the listener to register
+     * @return a registration for removing the listener
+     */
     public Registration addTemplateDeletedListener(ComponentEventListener<TemplateDeletedEvent> listener) {
         return addListener(TemplateDeletedEvent.class, listener);
     }
 
+    /**
+     * Registers a listener that is notified when the active template for the currently selected table changes,
+     * for example when the user picks a different template from the dropdown. The event carries the newly
+     * selected template's ID (or null if unselected).
+     *
+     * @param listener the listener to register
+     * @return a registration for removing the listener
+     */
     public Registration addTemplateSelectedListener(ComponentEventListener<TemplateSelectedEvent> listener) {
         return addListener(TemplateSelectedEvent.class, listener);
     }
 
+    /**
+     * Registers a listener that is notified when a table is selected or deselected in the editor. The event
+     * indicates whether a table is selected, whether cell selection (Ctrl+Click) is active, and which template
+     * is applied to the table.
+     *
+     * @param listener the listener to register
+     * @return a registration for removing the listener
+     */
     public Registration addTableSelectedListener(ComponentEventListener<TableSelectedEvent> listener) {
         return addListener(TableSelectedEvent.class, listener);
     }
 
+    /**
+     * Registers a listener that is notified when the cursor moves to a different table cell. The event carries
+     * the new row and column indices (0-based), as well as the previous indices. Indices are null when no table
+     * is selected.
+     *
+     * @param listener the listener to register
+     * @return a registration for removing the listener
+     */
     public Registration addTableCellChangedListener(ComponentEventListener<TableCellChangedEvent> listener) {
         return addListener(TableCellChangedEvent.class, listener);
     }
 
+    /**
+     * Returns the ERTE instance that this table extension is attached to.
+     *
+     * @return the enhanced rich text editor instance
+     */
     public EnhancedRichTextEditor getRte() {
         return rte;
     }
 
+    /**
+     * Returns the i18n value for the given provider, falling back to the default value if not set.
+     *
+     * @param valueProvider the value provider to extract the i18n value
+     * @param defaultValue the default value to use if the i18n value is null
+     * @return the i18n value or the default value
+     */
     public String getI18nOrDefault(ValueProvider<TablesI18n, String> valueProvider, String defaultValue) {
         String value = valueProvider.apply(this.i18n);
         return value != null ? value : defaultValue;
@@ -574,22 +716,47 @@ public class EnhancedRichTextEditorTables {
         return templatesDialog;
     }
 
+    /**
+     * Returns the toolbar button for adding new tables.
+     *
+     * @return the add table toolbar button
+     */
     public ToolbarSwitch getAddTableToolbarButton() {
         return addTableButton;
     }
 
+    /**
+     * Returns the popover that opens when the Add Table button is clicked. Contains the rows/columns input fields.
+     *
+     * @return the add table popover
+     */
     public ToolbarPopover getAddTablePopup() {
         return addTablePopup;
     }
 
+    /**
+     * Returns the toolbar button for the table modification menu.
+     *
+     * @return the modify table toolbar button
+     */
     public ToolbarSwitch getModifyTableToolbarButton() {
         return modifyTableButton;
     }
 
+    /**
+     * Returns the context menu popup for table modification operations (row/column add/remove, merge, split, delete).
+     *
+     * @return the modify table select popup
+     */
     public ToolbarSelectPopup getModifyTableSelectPopup() {
         return modifyTableSelectPopup;
     }
 
+    /**
+     * Returns the toolbar button that opens the style templates dialog.
+     *
+     * @return the style templates dialog toolbar button
+     */
     public ToolbarSwitch getStyleTemplatesDialogToolbarButton() {
         return styleTemplatesDialogButton;
     }
@@ -598,56 +765,56 @@ public class EnhancedRichTextEditorTables {
      * This method activates a UX helping feature. When setting a css color, that color will be shown as
      * the table cells border, when the user hovers the table. Passing null will disable this feature.
      * @param hoverColor css color
+     * @throws IllegalArgumentException if the color format is invalid
      */
     public void setTableHoverColor(@Nullable String hoverColor) {
-        this.tableHoverColor = hoverColor;
-        if (templatesDialog != null && templatesDialog.getTemplates() != null) {
-            setClientSideStyles(TemplateParser.convertToCss(templatesDialog.getTemplates()));
-        } else {
-            setClientSideStyles("");
+        if (hoverColor != null && !TemplateJsonConstants.isValidColor(hoverColor)) {
+            throw new IllegalArgumentException("Invalid CSS color: " + hoverColor);
         }
+        this.tableHoverColor = hoverColor;
+        refreshClientSideStyles();
     }
 
     /**
      * This method activates a UX helping feature. When setting a css color, that color will be shown as
      * a slight cell background color, when the user hovers a table cell. Passing null will disable this feature.
      * @param hoverColor css color
+     * @throws IllegalArgumentException if the color format is invalid
      */
     public void setTableCellHoverColor(@Nullable String hoverColor) {
-        this.cellHoverColor = hoverColor;
-        if (templatesDialog != null && templatesDialog.getTemplates() != null) {
-            setClientSideStyles(TemplateParser.convertToCss(templatesDialog.getTemplates()));
-        } else {
-            setClientSideStyles("");
+        if (hoverColor != null && !TemplateJsonConstants.isValidColor(hoverColor)) {
+            throw new IllegalArgumentException("Invalid CSS color: " + hoverColor);
         }
+        this.cellHoverColor = hoverColor;
+        refreshClientSideStyles();
     }
 
     /**
      * This method activates a UX helping feature. When setting a css color, that color will be shown as
      * a slight cell background color, when the user focuses a table cell. Passing null will disable this feature.
      * @param focusColor css color
+     * @throws IllegalArgumentException if the color format is invalid
      */
     public void setTableCellFocusColor(@Nullable String focusColor) {
-        this.cellFocusColor = focusColor;
-        if (templatesDialog != null && templatesDialog.getTemplates() != null) {
-            setClientSideStyles(TemplateParser.convertToCss(templatesDialog.getTemplates()));
-        } else {
-            setClientSideStyles("");
+        if (focusColor != null && !TemplateJsonConstants.isValidColor(focusColor)) {
+            throw new IllegalArgumentException("Invalid CSS color: " + focusColor);
         }
+        this.cellFocusColor = focusColor;
+        refreshClientSideStyles();
     }
 
     /**
      * This method activates a UX helping feature. When setting a css color, that color will be shown as
-     * a the table border color, when the user focuses a table cell. Passing null will disable this feature.
+     * the table border color, when the user focuses a table cell. Passing null will disable this feature.
      * @param focusColor css color
+     * @throws IllegalArgumentException if the color format is invalid
      */
     public void setTableFocusColor(@Nullable String focusColor) {
-        this.tableFocusColor = focusColor;
-        if (templatesDialog != null && templatesDialog.getTemplates() != null) {
-            setClientSideStyles(TemplateParser.convertToCss(templatesDialog.getTemplates()));
-        } else {
-            setClientSideStyles("");
+        if (focusColor != null && !TemplateJsonConstants.isValidColor(focusColor)) {
+            throw new IllegalArgumentException("Invalid CSS color: " + focusColor);
         }
+        this.tableFocusColor = focusColor;
+        refreshClientSideStyles();
     }
 
 }

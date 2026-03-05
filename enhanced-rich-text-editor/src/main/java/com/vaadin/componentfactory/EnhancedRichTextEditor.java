@@ -1,10 +1,8 @@
-package com.vaadin.componentfactory;
-
-/*
+/*-
  * #%L
- * EnhancedRichTextEditor for Vaadin 10
+ * Enhanced Rich Text Editor V25
  * %%
- * Copyright (C) 2017 - 2019 Vaadin Ltd
+ * Copyright (C) 2019 - 2025 Vaadin Ltd
  * %%
  * This program is available under Commercial Vaadin Add-On License 3.0
  * (CVALv3).
@@ -16,129 +14,99 @@ package com.vaadin.componentfactory;
  * If not, see <http://vaadin.com/license/cval-3>.
  * #L%
  */
-
-import com.vaadin.componentfactory.toolbar.ToolbarSlot;
-import com.vaadin.flow.component.*;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.dependency.JavaScript;
-import com.vaadin.flow.component.dependency.JsModule;
-import com.vaadin.flow.component.dependency.NpmPackage;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.value.HasValueChangeMode;
-import com.vaadin.flow.data.value.ValueChangeMode;
-import com.vaadin.flow.function.SerializableConsumer;
-import com.vaadin.flow.internal.JsonSerializer;
-import elemental.json.JsonArray;
-import elemental.json.JsonObject;
-import elemental.json.impl.JreJsonArray;
-import elemental.json.impl.JreJsonFactory;
-import org.jsoup.safety.Safelist;
+package com.vaadin.componentfactory;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.vaadin.componentfactory.toolbar.ToolbarSlot;
+import com.vaadin.flow.component.AbstractField;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.ComponentEvent;
+import com.vaadin.flow.component.ComponentEventListener;
+import com.vaadin.flow.component.DomEvent;
+import com.vaadin.flow.component.EventData;
+import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.KeyModifier;
+import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.richtexteditor.RichTextEditor;
+import com.vaadin.flow.function.SerializableConsumer;
+import com.vaadin.flow.internal.JacksonUtils;
+import com.vaadin.flow.shared.Registration;
+
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
- * Server-side component for the {@code <vcf-enhanced-rich-text-editor>}
- * component.
+ * Enhanced Rich Text Editor — V25 / Quill 2.
+ * <p>
+ * Extends {@link RichTextEditor} directly. All ERTE-specific logic —
+ * including the sanitizer, value overrides, toolbar, placeholders, and
+ * tabstops — lives in this class.
  *
- * @author Vaadin Ltd
+ * <h2>Placeholder Workflow</h2>
+ * <p>
+ * Placeholders are configured via three related methods that work together:
+ * <ol>
+ *   <li><b>{@link #setPlaceholders(Collection)}</b> — Defines the master list of
+ *       available placeholders shown in the placeholder dialog. Each placeholder
+ *       has a text (e.g., "{{name}}"), optional tag for grouping, and optional
+ *       format/altFormat for appearance customization.</li>
+ *   <li><b>{@link #setPlaceholderTags(String, String)}</b> — (Optional) Defines tags
+ *       for grouping placeholders in the dialog. If not set, all placeholders
+ *       appear in a single list.</li>
+ *   <li><b>{@link #setPlaceholderAltAppearancePattern(String)}</b> — (Optional)
+ *       Defines a regex pattern to automatically switch placeholder appearance
+ *       based on surrounding text. When the text matching this pattern is found
+ *       before the placeholder, the altFormat is used instead of format.</li>
+ * </ol>
+ * <p>
+ * <b>Example usage:</b>
+ * <pre>{@code
+ * // 1. Define placeholders with default and alternative formatting
+ * Placeholder p = new Placeholder("{{name}}");
+ * p.getFormat().put("bold", true);           // default format
+ * p.getFormat().put("color", "#1565c0");
+ * p.getAltFormat().put("bold", true);        // altFormat (e.g., for "Dear {{name}}")
+ * p.getAltFormat().put("italic", true);
+ * p.setTag("user");
+ * editor.setPlaceholders(List.of(p));
+ *
+ * // 2. (Optional) Define tags for dialog grouping
+ * editor.setPlaceholderTags("user", null);
+ *
+ * // 3. (Optional) Auto-switch to altFormat when preceded by "Dear "
+ * editor.setPlaceholderAltAppearancePattern("Dear\\s+$");
+ * }</pre>
+ * <p>
+ * When a user types "Dear {{name}}", the placeholder will use its altFormat
+ * (bold + italic) instead of the default format (bold only).
  */
 @Tag("vcf-enhanced-rich-text-editor")
-@JsModule("./richTextEditorConnector-npm.js")
-@JavaScript("./richTextEditorConnector.js")
-@NpmPackage(value = "@vaadin/vaadin-license-checker", version = "^2.1.2")
-public class EnhancedRichTextEditor
-        extends GeneratedEnhancedRichTextEditor<EnhancedRichTextEditor, String>
-        implements HasSize, HasValueChangeMode, InputNotifier, KeyNotifier,
-        CompositionNotifier {
-
-    private ValueChangeMode currentMode;
-    private RichTextEditorI18n i18n;
-    private Map<ToolbarButton, Boolean> toolbarButtonsVisibility;
-    private Collection<Placeholder> placeholders;
-
-    /**
-     * Gets the internationalization object previously set for this component.
-     * <p>
-     * Note: updating the object content that is gotten from this method will
-     * not update the lang on the component if not set back using
-     * {@link EnhancedRichTextEditor#setI18n(RichTextEditorI18n)}
-     *
-     * @return the i18n object. It will be <code>null</code>, If the i18n
-     *         properties weren't set.
-     */
-    public RichTextEditorI18n getI18n() {
-        return i18n;
-    }
-
-    /**
-     * Sets the internationalization properties for this component.
-     *
-     * @param i18n
-     *            the internationalized properties, not <code>null</code>
-     */
-    public void setI18n(RichTextEditorI18n i18n) {
-        Objects.requireNonNull(i18n,
-                "The I18N properties object should not be null");
-        this.i18n = i18n;
-        runBeforeClientResponse(ui -> {
-            if (i18n == this.i18n) {
-                JsonObject i18nObject = (JsonObject) JsonSerializer
-                        .toJson(this.i18n);
-                for (String key : i18nObject.keys()) {
-                    ui.getPage().executeJs(
-                            "$0.set('i18n." + key + "', $1)", getElement(),
-                            i18nObject.get(key));
-                }
-            }
-        });
-    }
-
-    public Map<ToolbarButton, Boolean> getToolbarButtonsVisibility() {
-        return toolbarButtonsVisibility;
-    }
-
-    /**
-     * Set which toolbar buttons are visible.
-     * 
-     * @param toolbarButtonsVisibility
-     *            Map of button and boolean value. Boolean value false
-     *            associated with the button means that button will be hidden.
-     */
-    public void setToolbarButtonsVisibility(
-            Map<ToolbarButton, Boolean> toolbarButtonsVisibility) {
-        this.toolbarButtonsVisibility = toolbarButtonsVisibility;
-        runBeforeClientResponse(ui -> {
-            String str = toolbarButtonsVisibility.toString();
-            str = str.replaceAll("=", ":");
-            ui.getPage().executeJs("setToolbarButtons($0, $1)",
-                    getElement(), str);
-        });
-    }
-
-    void runBeforeClientResponse(SerializableConsumer<UI> command) {
-        getElement().getNode().runWhenAttached(ui -> ui
-                .beforeClientResponse(this, context -> command.accept(ui)));
-    }
+@JsModule("./vcf-enhanced-rich-text-editor.js")
+public class EnhancedRichTextEditor extends RichTextEditor {
 
     /**
      * Constructs an empty {@code EnhancedRichTextEditor}.
      */
     public EnhancedRichTextEditor() {
-        super("", "", false);
-        setValueChangeMode(ValueChangeMode.ON_CHANGE);
+        super();
     }
 
     /**
-     * Constructs a {@code EnhancedRichTextEditor} with the initial value
+     * Constructs a {@code EnhancedRichTextEditor} with the initial value.
      *
-     * @param initialValue
-     *            the initial value
-     * @see #setValue(Object)
+     * @param initialValue the initial value in HTML format
+     * @see #setValue(String)
      */
     public EnhancedRichTextEditor(String initialValue) {
         this();
@@ -146,99 +114,988 @@ public class EnhancedRichTextEditor
     }
 
     /**
-     * Constructs an empty {@code TextField} with a value change listener.
+     * Constructs an empty {@code EnhancedRichTextEditor} with a value change
+     * listener.
      *
-     * @param listener
-     *            the value change listener
-     * @see #addValueChangeListener(com.vaadin.flow.component.HasValue.ValueChangeListener)
+     * @param listener the value change listener
+     * @see #addValueChangeListener(HasValue.ValueChangeListener)
      */
     public EnhancedRichTextEditor(
-            ValueChangeListener<? super ComponentValueChangeEvent<EnhancedRichTextEditor, String>> listener) {
+            HasValue.ValueChangeListener<? super AbstractField.ComponentValueChangeEvent<
+                    RichTextEditor, String>> listener) {
         this();
         addValueChangeListener(listener);
     }
 
     /**
-     * Constructs an empty {@code EnhancedRichTextEditor} with a value change
-     * listener and an initial value.
+     * Constructs a {@code EnhancedRichTextEditor} with the initial value and a
+     * value change listener.
      *
-     * @param initialValue
-     *            the initial value
-     * @param listener
-     *            the value change listener
-     * @see #setValue(Object)
-     * @see #addValueChangeListener(com.vaadin.flow.component.HasValue.ValueChangeListener)
+     * @param initialValue the initial value in HTML format
+     * @param listener     the value change listener
+     * @see #setValue(String)
+     * @see #addValueChangeListener(HasValue.ValueChangeListener)
      */
     public EnhancedRichTextEditor(String initialValue,
-            ValueChangeListener<? super ComponentValueChangeEvent<EnhancedRichTextEditor, String>> listener) {
+            HasValue.ValueChangeListener<? super AbstractField.ComponentValueChangeEvent<
+                    RichTextEditor, String>> listener) {
         this();
         setValue(initialValue);
         addValueChangeListener(listener);
     }
 
     /**
-     * {@inheritDoc}
+     * Schedules a command to run before the next client response.
      * <p>
-     * The default value is {@link ValueChangeMode#ON_CHANGE}.
+     * Reimplements RichTextEditor's package-private method using public
+     * Vaadin API, so ERTE can extend RichTextEditor directly without
+     * needing a bridge class in the foreign package.
      */
-    @Override
-    public ValueChangeMode getValueChangeMode() {
-        return currentMode;
-    }
-
-    @Override
-    public void setValueChangeMode(ValueChangeMode valueChangeMode) {
-        currentMode = valueChangeMode;
-        setSynchronizedEvent(
-                ValueChangeMode.eventForMode(valueChangeMode, "value-changed"));
+    protected void runBeforeClientResponse(
+            SerializableConsumer<UI> command) {
+        getElement().getNode().runWhenAttached(ui -> ui
+                .beforeClientResponse(this,
+                        context -> command.accept(ui)));
     }
 
     /**
-     * Sets the value of this editor. Should be in
-     * <a href="https://github.com/quilljs/delta">Delta</a> format. If the new
-     * value is not equal to {@code getValue()}, fires a value change event.
-     * Throws {@code NullPointerException}, if the value is null.
-     * <p>
-     * Automatically detects and converts old-format deltas (containing
-     * tabs-cont, pre-tab, line-part blots) to the new embed-based tab format.
-     * <p>
-     * Note: {@link Binder} will take care of the {@code null} conversion when
-     * integrates with the editor, as long as no new converter is defined.
-     *
-     * @param value
-     *            the new value in Delta format, not {@code null}
+     * ERTE-specific CSS classes allowed through the sanitizer.
+     * Each migration phase adds its classes here.
      */
-    @Override
-    public void setValue(String value) {
-        super.setValue(TabConverter.convertIfNeeded(value));
+    private static final Set<String> ALLOWED_ERTE_CLASSES = Set.of(
+            "ql-readonly", "ql-tab", "ql-soft-break", "ql-placeholder",
+            "ql-nbsp", "td-q", "ql-editor__table--hideBorder");
+    private static final Set<String> ALLOWED_CSS_PROPERTIES = Set.of(
+            // Text
+            "color", "background-color", "background", "font-size",
+            "font-family", "font-weight", "font-style",
+            // Layout
+            "text-align", "text-indent", "text-decoration",
+            "text-decoration-line", "text-decoration-style",
+            "text-decoration-color", "direction",
+            // Spacing
+            "line-height", "letter-spacing", "word-spacing",
+            // Box
+            "margin", "margin-top", "margin-right", "margin-bottom",
+            "margin-left", "padding", "padding-top", "padding-right",
+            "padding-bottom", "padding-left",
+            // Border
+            "border", "border-top", "border-right", "border-bottom",
+            "border-left", "border-width", "border-style", "border-color",
+            "border-collapse", "border-spacing",
+            // Display
+            "display", "white-space", "vertical-align", "visibility",
+            "opacity",
+            // Size
+            "width", "height", "min-width", "max-width", "min-height",
+            "max-height",
+            // Position
+            "position", "top", "right", "bottom", "left", "float",
+            // Other
+            "list-style-type", "overflow", "overflow-x", "overflow-y",
+            "cursor");
+    private static final Set<String> SAFE_CSS_FUNCTIONS = Set.of(
+            "rgb(", "rgba(", "hsl(", "hsla(", "calc(");
+    private static final Set<String> SAFE_DATA_MIMES = Set.of(
+            "image/png", "image/jpeg", "image/jpg", "image/gif",
+            "image/webp", "image/bmp", "image/x-icon");
+    private static final Pattern CLASS_ATTR_PATTERN = Pattern
+            .compile("class=\"([^\"]*)\"");
+    private static final Pattern STYLE_ATTR_PATTERN = Pattern
+            .compile("style=\"([^\"]*)\"");
+    private static final Pattern CSS_COMMENT_PATTERN = Pattern
+            .compile("/\\*.*?\\*/");
+    private static final Pattern CSS_FUNCTION_PATTERN = Pattern
+            .compile("\\w+\\s*\\(");
+    private static final Pattern DATA_SRC_PATTERN = Pattern.compile(
+            "src=\"data:\\s*([^;\"]+)[^\"]*\"",
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern VALID_CLASS_NAME = Pattern
+            .compile("[A-Za-z][A-Za-z0-9\\-]*");
+    private List<Placeholder> placeholders;
+
+    private boolean ertePendingPresentationUpdate;
+    private final Set<String> dynamicAllowedClasses = new LinkedHashSet<>();
+    private final Map<String, Set<String>> dynamicAllowedAttributes = new LinkedHashMap<>();
+    private final Set<String> dynamicAllowedCssProperties = new LinkedHashSet<>();
+
+    /**
+     * Sanitizes HTML with ERTE's extended whitelist using only static allowed
+     * classes. Equivalent to {@code erteSanitize(html, Set.of())}.
+     *
+     * @param html the raw HTML
+     * @return sanitized HTML safe for ERTE rendering
+     */
+    protected static String erteSanitize(String html) {
+        return erteSanitize(html, Set.of());
     }
 
     /**
-     * Returns the current value of the text editor in
-     * <a href="https://github.com/quilljs/delta">Delta</a> format. By default,
-     * the empty editor will return an empty string.
+     * Sanitizes HTML with ERTE's extended whitelist plus additional dynamic
+     * classes. Equivalent to
+     * {@code erteSanitize(html, extraClasses, Map.of())}.
      *
-     * @return the current value.
+     * @param html         the raw HTML
+     * @param extraClasses additional CSS classes to preserve (may be empty)
+     * @return sanitized HTML safe for ERTE rendering
      */
-    @Override
-    public String getValue() {
-        return super.getValue();
+    protected static String erteSanitize(String html,
+            Set<String> extraClasses) {
+        return erteSanitize(html, extraClasses, Map.of(), Set.of());
     }
 
     /**
-     * Value of the editor presented as HTML string.
+     * Sanitizes HTML with ERTE's extended whitelist plus additional dynamic
+     * classes, attributes, and CSS properties.
+     * <p>
+     * The {@code extraClasses} set is trusted (no validation) — callers are
+     * responsible for ensuring class names are safe. The public API
+     * {@link #addAllowedHtmlClasses(String...)} performs validation.
+     * <p>
+     * The {@code extraAttributes} map is trusted — callers are responsible
+     * for ensuring attribute names are safe. The public API
+     * {@link #addAllowedHtmlAttributes(String, String...)} performs
+     * validation.
      *
-     * @return the sanitized {@code htmlValue} property from the webcomponent.
+     * @param html               the raw HTML
+     * @param extraClasses       additional CSS classes to preserve
+     * @param extraAttributes    additional tag→attributes to preserve
+     * @param extraCssProperties additional CSS properties to preserve
+     * @return sanitized HTML safe for ERTE rendering
      */
-    public String getHtmlValue() {
-        // Using basic whitelist and adding img tag with data protocol enabled.
-        return sanitize(getHtmlValueString());
+    protected static String erteSanitize(String html,
+            Set<String> extraClasses,
+            Map<String, Set<String>> extraAttributes,
+            Set<String> extraCssProperties) {
+        if (html == null || html.isEmpty()) {
+            return html;
+        }
+        var settings = new org.jsoup.nodes.Document.OutputSettings();
+        settings.prettyPrint(false);
+
+        // Start from RTE 2's safelist and extend for ERTE
+        Safelist safelist = Safelist.basic()
+                .addTags("img", "h1", "h2", "h3", "s",
+                         "table", "tbody", "tr", "td", "th",
+                         "colgroup", "col")
+                .addAttributes("img", "align", "alt", "height", "src",
+                        "title", "width")
+                .addAttributes(":all", "style", "class")
+                .addProtocols("img", "src", "data", "http", "https")
+                // ERTE additions
+                .addAttributes("span", "contenteditable",
+                        "aria-readonly", "data-placeholder")
+                // Table additions
+                .addAttributes("td", "table_id", "row_id", "cell_id",
+                        "merge_id", "colspan", "rowspan", "table-class")
+                .addAttributes("tr", "row_id")
+                .addAttributes("table", "table_id");
+
+        // Dynamic attributes registered via addAllowedHtmlAttributes()
+        for (var entry : extraAttributes.entrySet()) {
+            String tag = entry.getKey();
+            Set<String> attrs = entry.getValue();
+            if (!attrs.isEmpty()) {
+                safelist.addAttributes(tag, attrs.toArray(String[]::new));
+            }
+        }
+
+        String safe = Jsoup.clean(html, "", safelist, settings);
+
+        // Post-filter: only allow known ERTE classes, strip unknown ones
+        safe = filterErteClasses(safe, extraClasses);
+
+        // Post-filter: restrict style attributes to safe CSS properties
+        safe = filterStyleAttributes(safe, extraCssProperties);
+
+        // Post-filter: restrict data: URLs to safe image MIME types
+        safe = filterDataUrls(safe);
+
+        // Post-filter: only allow contenteditable="false"
+        safe = safe.replace("contenteditable=\"true\"", "");
+        safe = safe.replace("contenteditable=\"\"", "");
+
+        return safe;
     }
+
+    /**
+     * Filters class attributes to only keep standard Quill classes
+     * (ql-align-*, ql-indent-*), known ERTE classes, and dynamic extra
+     * classes registered via {@link #addAllowedHtmlClasses(String...)}.
+     */
+    private static String filterErteClasses(String html,
+            Set<String> extraClasses) {
+        Matcher m = CLASS_ATTR_PATTERN.matcher(html);
+        StringBuilder sb = new StringBuilder();
+        while (m.find()) {
+            String classValue = m.group(1);
+            String[] classes = classValue.split("\\s+");
+            StringBuilder filtered = new StringBuilder();
+            for (String cls : classes) {
+                if (cls.isEmpty()) continue;
+                // Keep standard Quill classes for alignment/indent
+                if (cls.startsWith("ql-align")
+                        || cls.startsWith("ql-indent")) {
+                    if (filtered.length() > 0) filtered.append(' ');
+                    filtered.append(cls);
+                }
+                // Keep known ERTE classes
+                else if (ALLOWED_ERTE_CLASSES.contains(cls)) {
+                    if (filtered.length() > 0) filtered.append(' ');
+                    filtered.append(cls);
+                }
+                // Keep dynamic extra classes (e.g., template IDs)
+                else if (!extraClasses.isEmpty()
+                        && extraClasses.contains(cls)) {
+                    if (filtered.length() > 0) filtered.append(' ');
+                    filtered.append(cls);
+                }
+                // Strip everything else
+            }
+            m.appendReplacement(sb,
+                    "class=\"" + Matcher.quoteReplacement(filtered.toString())
+                            + "\"");
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
+
+    /**
+     * Filters style attributes to only allow safe CSS properties. Strips
+     * dangerous CSS functions (only whitelisted ones like rgb/calc allowed),
+     * {@code @import} directives, and CSS comments.
+     */
+    private static String filterStyleAttributes(String html,
+            Set<String> extraCssProperties) {
+        Matcher m = STYLE_ATTR_PATTERN.matcher(html);
+        StringBuilder sb = new StringBuilder();
+        while (m.find()) {
+            String styleValue = m.group(1);
+            // Strip CSS comments first
+            styleValue = CSS_COMMENT_PATTERN.matcher(styleValue).replaceAll("");
+            String[] declarations = styleValue.split(";");
+            StringBuilder filtered = new StringBuilder();
+            for (String decl : declarations) {
+                decl = decl.trim();
+                if (decl.isEmpty()) continue;
+                int colon = decl.indexOf(':');
+                if (colon < 0) continue;
+                String property = decl.substring(0, colon).trim()
+                        .toLowerCase(Locale.ROOT);
+                String value = decl.substring(colon + 1).trim();
+                // Skip unknown properties
+                if (!ALLOWED_CSS_PROPERTIES.contains(property)
+                        && (extraCssProperties.isEmpty()
+                            || !extraCssProperties.contains(property)))
+                    continue;
+                // Skip values containing @import
+                if (value.toLowerCase(Locale.ROOT).contains("@import"))
+                    continue;
+                // Check for CSS function calls — only allow whitelisted ones
+                Matcher funcMatcher = CSS_FUNCTION_PATTERN.matcher(
+                        value.toLowerCase(Locale.ROOT));
+                boolean hasDangerousFunction = false;
+                while (funcMatcher.find()) {
+                    String func = funcMatcher.group();
+                    if (!SAFE_CSS_FUNCTIONS.contains(func)) {
+                        hasDangerousFunction = true;
+                        break;
+                    }
+                }
+                if (hasDangerousFunction) continue;
+                if (filtered.length() > 0) filtered.append("; ");
+                filtered.append(property).append(": ").append(value);
+            }
+            if (filtered.length() > 0) {
+                m.appendReplacement(sb, "style=\""
+                        + Matcher.quoteReplacement(filtered.toString())
+                        + "\"");
+            } else {
+                // Remove empty style attribute entirely
+                m.appendReplacement(sb, "");
+            }
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
+
+    /**
+     * Filters {@code data:} URLs in {@code src} attributes to only allow
+     * safe image MIME types. SVG is excluded (can contain scripts).
+     */
+    private static String filterDataUrls(String html) {
+        Matcher m = DATA_SRC_PATTERN.matcher(html);
+        StringBuilder sb = new StringBuilder();
+        while (m.find()) {
+            String mime = m.group(1).trim().toLowerCase(Locale.ROOT);
+            if (SAFE_DATA_MIMES.contains(mime)) {
+                // Keep safe data URL as-is
+                m.appendReplacement(sb,
+                        Matcher.quoteReplacement(m.group()));
+            } else {
+                // Strip entire src attribute for unsafe MIME types
+                m.appendReplacement(sb, "");
+            }
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
+
+    // ---- Dynamic Allowed HTML Classes API ----
+
+    /**
+     * Registers additional CSS class names to be preserved by the sanitizer.
+     * Used by addons (e.g., Tables) to whitelist template classes dynamically.
+     * <p>
+     * Class names must match {@code [A-Za-z][A-Za-z0-9-]*} (same pattern as
+     * template IDs) and must not start with {@code "ql-"} (reserved for Quill
+     * internals). Note: underscores are not permitted — this matches the
+     * template ID validation in the Tables addon.
+     * <p>
+     * Must be called from the Vaadin session (UI) thread.
+     *
+     * @param classNames one or more CSS class names
+     * @throws IllegalArgumentException if a class name is invalid
+     * @since 6.0.0
+     */
+    public void addAllowedHtmlClasses(String... classNames) {
+        for (String cls : classNames) {
+            validateClassName(cls);
+            dynamicAllowedClasses.add(cls);
+        }
+    }
+
+    /**
+     * Removes previously registered dynamic CSS class names.
+     *
+     * @param classNames one or more CSS class names to remove
+     * @since 6.0.0
+     */
+    public void removeAllowedHtmlClasses(String... classNames) {
+        for (String cls : classNames) {
+            dynamicAllowedClasses.remove(cls);
+        }
+    }
+
+    /**
+     * Returns the currently registered dynamic allowed classes (unmodifiable
+     * view).
+     *
+     * @return unmodifiable set of registered class names
+     * @since 6.0.0
+     */
+    public Set<String> getAllowedHtmlClasses() {
+        return Collections.unmodifiableSet(dynamicAllowedClasses);
+    }
+
+    // ---- Dynamic HTML attribute allowlist ----
+
+    private static final Pattern VALID_ATTR_NAME = Pattern
+            .compile("[a-zA-Z][a-zA-Z0-9\\-_]*");
+    private static final Pattern VALID_TAG_NAME = Pattern
+            .compile("[a-z][a-z0-9]*");
+
+    /**
+     * Registers additional HTML attributes that the sanitizer should
+     * preserve on the given tag. Use this when your extension's blots
+     * produce custom HTML attributes (e.g., {@code data-footnote-id}).
+     * <p>
+     * Attribute names must match {@code [a-zA-Z][a-zA-Z0-9-_]*} and must
+     * not start with {@code "on"} (event handlers are never allowed).
+     * Tag names must be lowercase HTML tag names.
+     * <p>
+     * Must be called from the Vaadin session (UI) thread.
+     *
+     * @param tag        the HTML tag name (e.g., "span", "div")
+     * @param attributes one or more attribute names
+     * @throws IllegalArgumentException if a tag or attribute name is invalid
+     * @since 6.0.0
+     */
+    public void addAllowedHtmlAttributes(String tag, String... attributes) {
+        validateTagName(tag);
+        for (String attr : attributes) {
+            validateAttributeName(attr);
+        }
+        dynamicAllowedAttributes
+                .computeIfAbsent(tag, k -> new LinkedHashSet<>())
+                .addAll(Arrays.asList(attributes));
+    }
+
+    /**
+     * Removes previously registered dynamic HTML attributes for the given
+     * tag.
+     *
+     * @param tag        the HTML tag name
+     * @param attributes one or more attribute names to remove
+     * @since 6.0.0
+     */
+    public void removeAllowedHtmlAttributes(String tag,
+            String... attributes) {
+        Set<String> attrs = dynamicAllowedAttributes.get(tag);
+        if (attrs != null) {
+            for (String attr : attributes) {
+                attrs.remove(attr);
+            }
+            if (attrs.isEmpty()) {
+                dynamicAllowedAttributes.remove(tag);
+            }
+        }
+    }
+
+    /**
+     * Returns the currently registered dynamic allowed attributes
+     * (unmodifiable view).
+     *
+     * @return unmodifiable map of tag → attribute names
+     * @since 6.0.0
+     */
+    public Map<String, Set<String>> getAllowedHtmlAttributes() {
+        Map<String, Set<String>> result = new LinkedHashMap<>();
+        for (var entry : dynamicAllowedAttributes.entrySet()) {
+            result.put(entry.getKey(),
+                    Collections.unmodifiableSet(entry.getValue()));
+        }
+        return Collections.unmodifiableMap(result);
+    }
+
+    /**
+     * Validates an HTML tag name.
+     * Package-private for test access.
+     */
+    static void validateTagName(String tag) {
+        if (tag == null || tag.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Tag name must not be null or empty");
+        }
+        if (!VALID_TAG_NAME.matcher(tag).matches()) {
+            throw new IllegalArgumentException(
+                    "Invalid tag name (must match "
+                            + "[a-z][a-z0-9]*): " + tag);
+        }
+    }
+
+    /**
+     * Validates an HTML attribute name for use with
+     * {@link #addAllowedHtmlAttributes}.
+     * Package-private for test access.
+     */
+    static void validateAttributeName(String attr) {
+        if (attr == null || attr.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Attribute name must not be null or empty");
+        }
+        if (attr.toLowerCase(Locale.ROOT).startsWith("on")) {
+            throw new IllegalArgumentException(
+                    "Event handler attributes are not allowed: " + attr);
+        }
+        if (!VALID_ATTR_NAME.matcher(attr).matches()) {
+            throw new IllegalArgumentException(
+                    "Invalid attribute name (must match "
+                            + "[a-zA-Z][a-zA-Z0-9-_]*): " + attr);
+        }
+    }
+
+    // ---- Dynamic CSS property allowlist ----
+
+    private static final Pattern VALID_CSS_PROPERTY = Pattern
+            .compile("[a-z][a-z0-9\\-]*");
+
+    /**
+     * Registers additional CSS properties that the sanitizer should
+     * preserve in inline {@code style} attributes. Use this when your
+     * extension's blots produce inline styles with non-standard properties
+     * (e.g., {@code border-radius}, {@code box-shadow}).
+     * <p>
+     * Property names must be lowercase, hyphenated CSS property names
+     * matching {@code [a-z][a-z0-9-]*}.
+     * <p>
+     * Must be called from the Vaadin session (UI) thread.
+     *
+     * @param properties one or more CSS property names
+     * @throws IllegalArgumentException if a property name is invalid
+     * @since 6.0.0
+     */
+    public void addAllowedCssProperties(String... properties) {
+        for (String prop : properties) {
+            validateCssProperty(prop);
+            dynamicAllowedCssProperties.add(prop);
+        }
+    }
+
+    /**
+     * Removes previously registered dynamic CSS properties.
+     *
+     * @param properties one or more CSS property names to remove
+     * @since 6.0.0
+     */
+    public void removeAllowedCssProperties(String... properties) {
+        for (String prop : properties) {
+            dynamicAllowedCssProperties.remove(prop);
+        }
+    }
+
+    /**
+     * Returns the currently registered dynamic allowed CSS properties
+     * (unmodifiable view).
+     *
+     * @return unmodifiable set of registered CSS property names
+     * @since 6.0.0
+     */
+    public Set<String> getAllowedCssProperties() {
+        return Collections.unmodifiableSet(dynamicAllowedCssProperties);
+    }
+
+    /**
+     * Validates a CSS property name.
+     * Package-private for test access.
+     */
+    static void validateCssProperty(String prop) {
+        if (prop == null || prop.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "CSS property name must not be null or empty");
+        }
+        if (!VALID_CSS_PROPERTY.matcher(prop).matches()) {
+            throw new IllegalArgumentException(
+                    "Invalid CSS property name (must match "
+                            + "[a-z][a-z0-9-]*): " + prop);
+        }
+    }
+
+    /**
+     * Validates a CSS class name for use with {@link #addAllowedHtmlClasses}.
+     * Package-private for test access.
+     */
+    static void validateClassName(String cls) {
+        if (cls == null || cls.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Class name must not be null or empty");
+        }
+        if (cls.startsWith("ql-")) {
+            throw new IllegalArgumentException(
+                    "Class name must not start with 'ql-' (reserved for "
+                            + "Quill): " + cls);
+        }
+        if (!VALID_CLASS_NAME.matcher(cls).matches()) {
+            throw new IllegalArgumentException(
+                    "Invalid class name (must match "
+                            + "[A-Za-z][A-Za-z0-9-]*): " + cls);
+        }
+    }
+
+    /**
+     * Override server→client HTML path to use ERTE sanitizer instead of
+     * parent's package-private {@code sanitize()}.
+     * <p>
+     * Replicates the parent's debounce pattern (own flag since parent's
+     * {@code pendingPresentationUpdate} is private).
+     * <p>
+     * When the delta value property is set (via {@code asDelta().setValue()}),
+     * the client-side {@code _valueChanged} observer already applies the content
+     * directly via {@code setContents()}. In that case, we skip the
+     * {@code dangerouslySetHtmlValue} call to avoid an HTML roundtrip that would
+     * lose table structure data (template classes, cell IDs via clipboard
+     * re-conversion).
+     * <p>
+     * Workaround for upstream issue where {@code asDelta().setValue()} content
+     * gets overwritten by the HTML roundtrip. Review whether this is still
+     * needed after: <a href="https://github.com/vaadin/flow-components/issues/8854">
+     * vaadin/flow-components#8854</a>
+     */
+    @Override
+    protected void setPresentationValue(String newPresentationValue) {
+        String sanitized = erteSanitize(newPresentationValue,
+                dynamicAllowedClasses, dynamicAllowedAttributes,
+                dynamicAllowedCssProperties);
+        getElement().setProperty("htmlValue", sanitized);
+        if (!ertePendingPresentationUpdate) {
+            ertePendingPresentationUpdate = true;
+            runBeforeClientResponse(ui -> {
+                // If a non-empty delta value is set, the client-side _valueChanged
+                // observer will have already applied the content via setContents().
+                // Skip dangerouslySetHtmlValue to avoid overwriting with the HTML
+                // roundtrip, which loses table template classes and can corrupt
+                // table structure through clipboard re-conversion.
+                String deltaValue = getElement().getProperty("value");
+                if (deltaValue != null && !deltaValue.isEmpty()
+                        && !"[{\"insert\":\"\\n\"}]".equals(deltaValue)) {
+                    ertePendingPresentationUpdate = false;
+                    return;
+                }
+                getElement().callJsFunction("dangerouslySetHtmlValue",
+                        getElement().getProperty("htmlValue"));
+                ertePendingPresentationUpdate = false;
+            });
+        }
+    }
+
+    /**
+     * Intercepts the client→server HTML value sync to use ERTE's extended
+     * sanitizer instead of the parent's {@code sanitize()}.
+     * <p>
+     * {@code AbstractSinglePropertyField} registers a property change listener
+     * for {@code htmlValue} that converts via
+     * {@code RichTextEditor::presentationToModel} which calls the parent's
+     * package-private {@code sanitize()}. That safelist does NOT include
+     * {@code <table>}, {@code <tr>}, {@code <td>} — so all table elements
+     * are stripped, turning tables into plain paragraphs.
+     * <p>
+     * This override re-reads the raw {@code htmlValue} from the element
+     * property and applies {@code erteSanitize()} instead, preserving table
+     * structure and ERTE-specific attributes.
+     */
+    @Override
+    protected void setModelValue(String newModelValue, boolean fromClient) {
+        // Always re-sanitize using erteSanitize instead of parent's sanitize().
+        // The parent's presentationToModel converter (RichTextEditor::sanitize)
+        // strips <table>, <tr>, <td> elements. We intercept here and re-read
+        // the raw htmlValue from the element property, then apply erteSanitize()
+        // which preserves table structure and ERTE-specific attributes.
+        //
+        // This override fires in two scenarios:
+        // 1. fromClient=true: html-value-changed event from the client
+        // 2. fromClient=false: property change triggered by setPresentationValue
+        //    setting the htmlValue element property (server-side)
+        // Both need re-sanitization because the parent's converter always strips
+        // tables before passing the value here.
+        String rawHtml = getElement().getProperty("htmlValue", "");
+        if (rawHtml != null && !rawHtml.isEmpty()) {
+            super.setModelValue(erteSanitize(rawHtml,
+                    dynamicAllowedClasses, dynamicAllowedAttributes,
+                    dynamicAllowedCssProperties), fromClient);
+        } else {
+            super.setModelValue(newModelValue, fromClient);
+        }
+    }
+
+    // ---- Toolbar component API ----
+
+    /**
+     * Ensures the component has the given part name so that
+     * {@code ::slotted([part~='toolbar-custom-component'])} styles apply.
+     */
+    private void addOrAppendPartAttribute(Component component,
+            String partName) {
+        String existingPart = component.getElement().getAttribute("part");
+        if (existingPart == null || existingPart.isEmpty()) {
+            component.getElement().setAttribute("part", partName);
+        } else if (!existingPart.contains(partName)) {
+            component.getElement().setAttribute("part",
+                    existingPart + " " + partName);
+        }
+    }
+
+    /**
+     * Adds components to the given toolbar slot (appended).
+     */
+    public void addToolbarComponents(ToolbarSlot toolbarSlot,
+            Component... components) {
+        Objects.requireNonNull(components);
+        for (Component component : components) {
+            Objects.requireNonNull(component);
+            addOrAppendPartAttribute(component, "toolbar-custom-component");
+            SlotUtil.addComponent(this, toolbarSlot.getSlotName(), component);
+        }
+    }
+
+    /**
+     * Adds components to the given toolbar slot at the specified index.
+     */
+    public void addToolbarComponentsAtIndex(ToolbarSlot toolbarSlot,
+            int index, Component... components) {
+        Objects.requireNonNull(components);
+        for (Component component : components) {
+            Objects.requireNonNull(component);
+            addOrAppendPartAttribute(component, "toolbar-custom-component");
+            SlotUtil.addComponentAtIndex(this, toolbarSlot.getSlotName(),
+                    component, index);
+        }
+    }
+
+    /**
+     * Returns a toolbar component with the given id from the slot.
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends Component> T getToolbarComponent(
+            ToolbarSlot toolbarSlot, String id) {
+        Objects.requireNonNull(id);
+        return (T) SlotUtil.getComponent(this, toolbarSlot.getSlotName(), id);
+    }
+
+    /**
+     * Removes a toolbar component by id.
+     */
+    public void removeToolbarComponent(ToolbarSlot toolbarSlot, String id) {
+        Objects.requireNonNull(id);
+        SlotUtil.removeComponent(this, toolbarSlot.getSlotName(), id);
+    }
+
+    /**
+     * Removes a toolbar component by reference.
+     */
+    public void removeToolbarComponent(ToolbarSlot toolbarSlot,
+            Component component) {
+        Objects.requireNonNull(component);
+        SlotUtil.removeComponent(this, toolbarSlot.getSlotName(), component);
+    }
+
+    /**
+     * Convenience: adds components to {@link ToolbarSlot#GROUP_CUSTOM}.
+     */
+    public void addCustomToolbarComponents(Component... components) {
+        addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, components);
+    }
+
+    /**
+     * Convenience: adds components to {@link ToolbarSlot#GROUP_CUSTOM}
+     * at the given index.
+     */
+    public void addCustomToolbarComponentsAtIndex(int index,
+            Component... components) {
+        addToolbarComponentsAtIndex(ToolbarSlot.GROUP_CUSTOM, index,
+                components);
+    }
+
+    /**
+     * Replaces a standard toolbar button icon via its named slot.
+     *
+     * @param icon          the replacement icon
+     * @param iconSlotName  the slot name of the button to replace (e.g. "undo")
+     */
+    public void replaceStandardButtonIcon(Icon icon, String iconSlotName) {
+        SlotUtil.replaceStandardButtonIcon(this, icon, iconSlotName);
+    }
+
+    /**
+     * Replaces a standard toolbar button's icon via its enum constant.
+     * <p>
+     * The icon is projected into the button's light DOM slot, replacing the
+     * default SVG icon. Pass {@code null} to clear a previously set icon and
+     * restore the default appearance.
+     * <p>
+     * Example:
+     * <pre>
+     * editor.replaceStandardToolbarButtonIcon(
+     *     ToolbarButton.BOLD,
+     *     new Icon(VaadinIcon.STAR)
+     * );
+     * </pre>
+     *
+     * @param button the toolbar button to modify (not null)
+     * @param icon   the replacement icon, or {@code null} to restore default
+     * @throws NullPointerException if button is null
+     */
+    public void replaceStandardToolbarButtonIcon(ToolbarButton button, Icon icon) {
+        Objects.requireNonNull(button, "ToolbarButton cannot be null");
+        replaceStandardButtonIcon(icon, button.getPartSuffix());
+    }
+
+    // ---- Toolbar button visibility API ----
+
+    /**
+     * Toolbar buttons that can be shown or hidden via
+     * {@link #setToolbarButtonsVisibility(Map)}.
+     * <p>
+     * Each constant maps to a shadow DOM button identified by part name
+     * {@code toolbar-button-<partSuffix>}.
+     */
+    public enum ToolbarButton {
+        // Standard RTE 2 buttons (25)
+        UNDO("undo"), REDO("redo"),
+        BOLD("bold"), ITALIC("italic"), UNDERLINE("underline"), STRIKE("strike"),
+        COLOR("color"), BACKGROUND("background"),
+        H1("h1"), H2("h2"), H3("h3"),
+        SUBSCRIPT("subscript"), SUPERSCRIPT("superscript"),
+        LIST_ORDERED("list-ordered"), LIST_BULLET("list-bullet"),
+        OUTDENT("outdent"), INDENT("indent"),
+        ALIGN_LEFT("align-left"), ALIGN_CENTER("align-center"),
+        ALIGN_RIGHT("align-right"),
+        IMAGE("image"), LINK("link"),
+        BLOCKQUOTE("blockquote"), CODE_BLOCK("code-block"),
+        CLEAN("clean"),
+        // ERTE-specific buttons (5)
+        READONLY("readonly"),
+        PLACEHOLDER("placeholder"),
+        PLACEHOLDER_APPEARANCE("placeholder-display"),
+        WHITESPACE("whitespace"),
+        ALIGN_JUSTIFY("align-justify");
+
+        private final String partSuffix;
+
+        ToolbarButton(String partSuffix) {
+            this.partSuffix = partSuffix;
+        }
+
+        /** Returns the suffix portion (e.g. {@code "bold"}). */
+        public String getPartSuffix() {
+            return partSuffix;
+        }
+
+        /**
+         * Returns the button name.
+         * @deprecated Use {@link #getPartSuffix()} instead.
+         */
+        @Deprecated
+        public String getButtonName() {
+            return partSuffix;
+        }
+
+        /** Returns the full part name (e.g. {@code "toolbar-button-bold"}). */
+        public String getPartName() {
+            return "toolbar-button-" + partSuffix;
+        }
+    }
+
+    private Map<ToolbarButton, Boolean> toolbarButtonsVisibility;
+
+    /**
+     * Shows or hides individual toolbar buttons. Pass {@code false} for a
+     * button to hide it; pass {@code true} (or omit) to show it. Groups
+     * whose <em>all</em> buttons are hidden are auto-hidden.
+     * <p>
+     * Pass {@code null} to reset all buttons to visible.
+     *
+     * @param visibility the visibility map, or {@code null} to reset
+     */
+    public void setToolbarButtonsVisibility(
+            Map<ToolbarButton, Boolean> visibility) {
+        this.toolbarButtonsVisibility = visibility;
+        runBeforeClientResponse(ui -> {
+            ObjectNode json = JacksonUtils.getMapper().createObjectNode();
+            if (visibility != null) {
+                for (var entry : visibility.entrySet()) {
+                    json.put(entry.getKey().getPartSuffix(),
+                            entry.getValue());
+                }
+            }
+            getElement().executeJs(
+                    "this.setToolbarButtonsVisibility($0)", json);
+        });
+    }
+
+    /**
+     * Returns the current toolbar button visibility map, or {@code null}
+     * if no visibility has been set.
+     *
+     * @return the visibility map
+     */
+    public Map<ToolbarButton, Boolean> getToolbarButtonsVisibility() {
+        return toolbarButtonsVisibility;
+    }
+
+    // ---- Keyboard Shortcut API ----
+
+    /**
+     * Binds a keyboard shortcut to a standard toolbar button. When the
+     * shortcut is pressed, the button is clicked, triggering its native
+     * handler (format toggle, dialog open, undo/redo, etc.).
+     *
+     * <p>Example: {@code addStandardToolbarButtonShortcut(ToolbarButton.BOLD,
+     * Key.KEY_B, KeyModifier.CONTROL, KeyModifier.SHIFT)}
+     *
+     * @param toolbarButton the toolbar button to trigger
+     * @param key           the key, e.g. {@link Key#F9}, {@link Key#KEY_B}
+     * @param modifiers     zero or more key modifiers.
+     *                      {@link KeyModifier#CONTROL} maps to Ctrl on
+     *                      Windows/Linux and Cmd on Mac (cross-platform).
+     */
+    public void addStandardToolbarButtonShortcut(ToolbarButton toolbarButton,
+            Key key, KeyModifier... modifiers) {
+        getElement().executeJs(
+                "this._applyToolbarButtonShortcut($0, $1, $2)",
+                toolbarButton.getPartSuffix(), toQuillKeyName(key),
+                toJsonArray(modifiers));
+    }
+
+    /**
+     * Binds a keyboard shortcut to a standard toolbar button. When the
+     * shortcut is pressed, the button is clicked, triggering its native
+     * handler (format toggle, dialog open, undo/redo, etc.).
+     *
+     * @param toolbarButton the toolbar button to trigger
+     * @param key           Quill 2 key name (e.g. {@code "F9"}, {@code "b"})
+     * @param shortKey      {@code true} for Ctrl (Win/Linux) or Cmd (Mac)
+     * @param shiftKey      {@code true} for Shift modifier
+     * @param altKey        {@code true} for Alt modifier
+     * @deprecated Use {@link #addStandardToolbarButtonShortcut(ToolbarButton, Key, KeyModifier...)} instead
+     */
+    @Deprecated(since = "6.0", forRemoval = true)
+    public void addStandardToolbarButtonShortcut(ToolbarButton toolbarButton,
+            String key, boolean shortKey, boolean shiftKey, boolean altKey) {
+        getElement().executeJs(
+                "this.addStandardToolbarButtonShortcut($0, $1, $2, $3, $4)",
+                toolbarButton.getPartSuffix(), key, shortKey, shiftKey, altKey);
+    }
+
+    /**
+     * Binds a keyboard shortcut that moves focus from the editor to the
+     * toolbar. The first visible toolbar button receives focus.
+     *
+     * <p>Example: {@code addToolbarFocusShortcut(Key.F10, KeyModifier.SHIFT)}
+     *
+     * @param key       the key, e.g. {@link Key#F10}
+     * @param modifiers zero or more key modifiers.
+     *                  {@link KeyModifier#CONTROL} maps to Ctrl on
+     *                  Windows/Linux and Cmd on Mac (cross-platform).
+     */
+    public void addToolbarFocusShortcut(Key key,
+            KeyModifier... modifiers) {
+        getElement().executeJs(
+                "this._applyToolbarFocusShortcut($0, $1)",
+                toQuillKeyName(key), toJsonArray(modifiers));
+    }
+
+    /**
+     * Binds a keyboard shortcut that moves focus from the editor to the
+     * toolbar. The first visible toolbar button receives focus.
+     *
+     * @param key      Quill 2 key name (e.g. {@code "F10"})
+     * @param shortKey {@code true} for Ctrl (Win/Linux) or Cmd (Mac)
+     * @param shiftKey {@code true} for Shift modifier
+     * @param altKey   {@code true} for Alt modifier
+     * @deprecated Use {@link #addToolbarFocusShortcut(Key, KeyModifier...)} instead
+     */
+    @Deprecated(since = "6.0", forRemoval = true)
+    public void addToolbarFocusShortcut(String key, boolean shortKey,
+            boolean shiftKey, boolean altKey) {
+        getElement().executeJs(
+                "this.addToolbarFocusShortcut($0, $1, $2, $3)",
+                key, shortKey, shiftKey, altKey);
+    }
+
+    /**
+     * Converts a Vaadin {@link Key} to a Quill 2 key name string.
+     * <p>Vaadin uses {@code event.code} for letters ({@code "KeyB"}) and
+     * digits ({@code "Digit1"}), while Quill expects {@code event.key}
+     * format ({@code "b"}, {@code "1"}). Function keys, Enter, Tab, etc.
+     * are identical in both systems.
+     */
+    private static String toQuillKeyName(Key key) {
+        String value = key.getKeys().get(0);
+        // "KeyA".."KeyZ" → "a".."z"
+        if (value.startsWith("Key") && value.length() == 4) {
+            return value.substring(3).toLowerCase();
+        }
+        // "Digit0".."Digit9" → "0".."9"
+        if (value.startsWith("Digit") && value.length() == 6) {
+            return value.substring(5);
+        }
+        return value;
+    }
+
+    private static ArrayNode toJsonArray(KeyModifier[] modifiers) {
+        ArrayNode arr = JacksonUtils.getMapper().createArrayNode();
+        for (KeyModifier mod : modifiers) {
+            arr.add(mod.name());
+        }
+        return arr;
+    }
+
+    // ---- Whitespace Indicators API ----
 
     /**
      * Sets whether whitespace indicators are shown in the editor.
-     * When true, special characters are displayed: → (tab), ↵ (soft-break),
-     * ¶ (paragraph), ⮐ (auto-wrap).
+     * When enabled, special characters are displayed: → (tab), ↵ (soft-break),
+     * ¶ (paragraph end), ⮐→ (auto-wrap).
      *
      * @param show true to show whitespace indicators
      */
@@ -255,1086 +1112,982 @@ public class EnhancedRichTextEditor
         return getElement().getProperty("showWhitespace", false);
     }
 
-    String sanitize(String html) {
-        String cleaned = org.jsoup.Jsoup.clean(html,
-                org.jsoup.safety.Safelist.basic()
-                        .addTags("img", "h1", "h2", "h3", "s", "span", "br")
-                        .addAttributes("img", "align", "alt", "height", "src",
-                                "title", "width")
-                        .addAttributes("span", "class", "contenteditable")
-                        .addAttributes(":all", "style")
-                        .addProtocols("img", "src", "data"));
+    // ---- TabStop API ----
 
-        // Post-sanitization: restrict span class values to known safe classes
-        // and contenteditable to only "false", to prevent CSS injection and
-        // unintended editing behavior in contexts where HTML output is reused.
-        org.jsoup.nodes.Document doc = org.jsoup.Jsoup.parse(cleaned);
-        java.util.Set<String> allowedClasses = java.util.Set.of(
-                "ql-tab", "ql-soft-break", "ql-readonly", "ql-placeholder");
-        for (org.jsoup.nodes.Element span : doc.select("span[class]")) {
-            String[] classes = span.attr("class").split("\\s+");
-            StringBuilder filtered = new StringBuilder();
-            for (String cls : classes) {
-                if (allowedClasses.contains(cls)) {
-                    if (filtered.length() > 0) filtered.append(' ');
-                    filtered.append(cls);
-                }
-            }
-            if (filtered.length() > 0) {
-                span.attr("class", filtered.toString());
-            } else {
-                span.removeAttr("class");
-            }
+    /**
+     * Sets tabstop positions and alignments on the ruler.
+     *
+     * @param tabStops the list of tab stops to set
+     */
+    public void setTabStops(List<TabStop> tabStops) {
+        ArrayNode array = JacksonUtils.getMapper().createArrayNode();
+        for (TabStop ts : tabStops) {
+            ObjectNode obj = array.addObject();
+            obj.put("direction", ts.getDirection().name().toLowerCase());
+            obj.put("position", ts.getPosition());
         }
-        for (org.jsoup.nodes.Element span : doc.select("span[contenteditable]")) {
-            if (!"false".equals(span.attr("contenteditable"))) {
-                span.removeAttr("contenteditable");
-            }
-        }
-        return doc.body().html();
+        getElement().setPropertyJson("tabStops", array);
     }
 
     /**
-     * Set placeholders shown in the Placeholder drop down menu.
-     * 
-     * @param placeholders
-     *            Collection of Placeholder objects
+     * Returns the current tabstop configuration.
+     *
+     * @return list of tab stops, never null
+     */
+    public List<TabStop> getTabStops() {
+        ArrayNode raw = (ArrayNode) getElement().getPropertyRaw("tabStops");
+        if (raw == null) {
+            return List.of();
+        }
+        List<TabStop> result = new ArrayList<>();
+        for (int i = 0; i < raw.size(); i++) {
+            var obj = raw.get(i);
+            result.add(new TabStop(
+                    TabStop.Direction.valueOf(
+                            obj.get("direction").asText().toUpperCase()),
+                    obj.get("position").asDouble()));
+        }
+        return result;
+    }
+
+    /**
+     * When true, the rulers are not visible.
+     *
+     * @param noRulers true to hide rulers, false to show them
+     */
+    public void setNoRulers(boolean noRulers) {
+        getElement().setProperty("noRulers", noRulers);
+    }
+
+    /**
+     * Returns whether rulers are hidden.
+     *
+     * @return true if rulers are hidden
+     */
+    public boolean isNoRulers() {
+        return getElement().getProperty("noRulers", false);
+    }
+
+    // ---- Placeholder API ----
+
+    /**
+     * Sets the available placeholders for the editor.
+     *
+     * @param placeholders the placeholder definitions
      */
     public void setPlaceholders(Collection<Placeholder> placeholders) {
-        Objects.requireNonNull(placeholders, "placeholders cannot be null");
-        JreJsonFactory factory = new JreJsonFactory();
-        JsonArray jsonArray = new JreJsonArray(factory);
-
-        int index = 0;
-        for (Placeholder placeholder : placeholders) {
-            jsonArray.set(index++, placeholder.toJson());
+        this.placeholders = new ArrayList<>(placeholders);
+        ArrayNode array = JacksonUtils.getMapper().createArrayNode();
+        for (Placeholder p : placeholders) {
+            array.add(p.toJson());
         }
-
-        this.placeholders = placeholders;
-        getElement().setPropertyJson("placeholders", jsonArray);
+        getElement().setPropertyJson("placeholders", array);
     }
 
-    @Synchronize(property = "placeholders", value = "placeholders-changed")
-    public Collection<Placeholder> getPlaceholders() {
-        ArrayList<Placeholder> placeholders = new ArrayList<>();
-        JsonArray rawArray = (JsonArray) getElement()
-                .getPropertyRaw("placeholders");
-
-        if (rawArray == null) {
-            return placeholders;
-        }
-
-        for (int i = 0; i < rawArray.length(); i++) {
-            JsonObject obj = rawArray.getObject(i);
-            try {
-                Placeholder placeholder = new Placeholder(obj);
-                placeholders.add(placeholder);
-
-            } catch (IllegalArgumentException e) {
-            }
-        }
-
-        return placeholders;
+    /**
+     * Returns the current placeholder configuration.
+     *
+     * @return list of placeholders, never null
+     */
+    public List<Placeholder> getPlaceholders() {
+        return placeholders != null ? List.copyOf(placeholders) : List.of();
     }
 
+    /**
+     * Sets the start and end tags displayed around placeholder text.
+     *
+     * @param start the start tag (e.g. "@", "[")
+     * @param end   the end tag (e.g. "", "]"), may be null
+     */
+    public void setPlaceholderTags(String start, String end) {
+        ObjectNode tags = JacksonUtils.getMapper().createObjectNode();
+        tags.put("start", start);
+        tags.put("end", end != null ? end : "");
+        getElement().setPropertyJson("placeholderTags", tags);
+    }
+
+    /**
+     * Sets the regex pattern used to extract alt appearance text from
+     * placeholder text. Groups matched by this pattern are shown in alt mode.
+     *
+     * @param pattern the regex pattern
+     */
     public void setPlaceholderAltAppearancePattern(String pattern) {
         getElement().setProperty("placeholderAltAppearancePattern", pattern);
     }
 
-    @Synchronize(property = "placeholderAltAppearancePattern", value = "placeholder-alt-appearance-pattern-changed")
+    /**
+     * Returns the regex pattern used for alt appearance matching.
+     *
+     * @return the pattern, or {@code null} if not set
+     */
     public String getPlaceholderAltAppearancePattern() {
         return getElement().getProperty("placeholderAltAppearancePattern");
     }
 
-    public void setPlacehoderAltAppearance(boolean altAppearance) {
-        getElement().setProperty("placeholderAltAppearance", altAppearance);
+    /**
+     * Toggles between normal and alternative placeholder appearance.
+     *
+     * @param alt true for alt appearance, false for normal
+     */
+    public void setPlaceholderAltAppearance(boolean alt) {
+        getElement().setProperty("placeholderAltAppearance", alt);
     }
 
-    @Synchronize(property = "placeholderAltAppearance", value = "placeholder-alt-appearance-changed")
-    public boolean isPlacehoderAltAppearance() {
+    /**
+     * Returns whether the editor is currently showing alt placeholder
+     * appearance.
+     *
+     * @return true if alt appearance is active
+     */
+    public boolean isPlaceholderAltAppearance() {
         return getElement().getProperty("placeholderAltAppearance", false);
     }
 
     /**
-     * For internal use only. Return Placeholder from the master list matching
-     * the given Placeholder by getText.
-     * 
-     * @param placeholder
-     *            The Placeholder to be searched.
-     * @return A Placeholder
+     * Look up a full Placeholder from the master list by text match.
+     *
+     * @param placeholder the placeholder to look up (matched by text)
+     * @return the matching placeholder from the master list, or the input
+     *         placeholder if not found
      */
     protected Placeholder getPlaceholder(Placeholder placeholder) {
-        Objects.requireNonNull(placeholder, "Placeholder cannot be null");
-        Objects.requireNonNull(placeholders,
-                "getPlaceholder cannot be called before placeholders are set");
+        if (placeholders == null || placeholder == null) return placeholder;
         return placeholders.stream()
                 .filter(p -> p.getText().equals(placeholder.getText()))
-                .findFirst().orElse(null);
+                .findFirst().orElse(placeholder);
     }
 
+    // ---- Placeholder event listeners ----
+
     /**
-     * Return the length of the content stripped as text.
-     * 
-     * @return The length of the text content.
+     * Adds a listener for when the placeholder toolbar button is clicked.
+     * <p>
+     * Fired when the user clicks the placeholder button in the toolbar. The event
+     * provides the current cursor position and an {@code insert()} method to
+     * programmatically insert a placeholder at that position.
+     *
+     * @param listener the listener to add
+     * @return a registration object for removing the listener
      */
-    public int getTextLength() {
-        return org.jsoup.Jsoup.clean(getHtmlValueString(),Safelist.none()).length();    
+    public Registration addPlaceholderButtonClickedListener(
+            ComponentEventListener<PlaceholderButtonClickedEvent> listener) {
+        return addListener(PlaceholderButtonClickedEvent.class, listener);
     }
 
     /**
-     * Add a text to the position. Text will be added if position
-     * is within 0 .. length of the current value of the text area.
-     * 
-     * @param text Text to be inserted
-     * @param position Position
+     * Adds a listener for when placeholders are about to be inserted.
+     * <p>
+     * Fired before placeholders are inserted into the editor (via dialog or
+     * programmatically). The event can be used to validate or modify the
+     * placeholders before insertion. If {@link PlaceholderBeforeInsertEvent#insert()}
+     * is not called, the insertion is cancelled.
+     *
+     * @param listener the listener to add
+     * @return a registration object for removing the listener
+     */
+    public Registration addPlaceholderBeforeInsertListener(
+            ComponentEventListener<PlaceholderBeforeInsertEvent> listener) {
+        return addListener(PlaceholderBeforeInsertEvent.class, listener);
+    }
+
+    /**
+     * Adds a listener for when placeholders have been inserted.
+     * <p>
+     * Fired after placeholders are successfully inserted into the editor.
+     * This is a notification event (read-only) — use
+     * {@link #addPlaceholderBeforeInsertListener} to prevent or modify insertion.
+     *
+     * @param listener the listener to add
+     * @return a registration object for removing the listener
+     */
+    public Registration addPlaceholderInsertedListener(
+            ComponentEventListener<PlaceholderInsertedEvent> listener) {
+        return addListener(PlaceholderInsertedEvent.class, listener);
+    }
+
+    /**
+     * Adds a listener for when placeholders are about to be removed.
+     * <p>
+     * Fired before placeholders are removed from the editor (via Delete/Backspace
+     * key). The event can be used to prevent removal of protected placeholders.
+     * If {@link PlaceholderBeforeRemoveEvent#remove()} is not called, the
+     * removal is cancelled.
+     *
+     * @param listener the listener to add
+     * @return a registration object for removing the listener
+     */
+    public Registration addPlaceholderBeforeRemoveListener(
+            ComponentEventListener<PlaceholderBeforeRemoveEvent> listener) {
+        return addListener(PlaceholderBeforeRemoveEvent.class, listener);
+    }
+
+    /**
+     * Adds a listener for when placeholders have been removed.
+     * <p>
+     * Fired after placeholders are successfully removed from the editor.
+     * This is a notification event (read-only) — use
+     * {@link #addPlaceholderBeforeRemoveListener} to prevent removal.
+     *
+     * @param listener the listener to add
+     * @return a registration object for removing the listener
+     */
+    public Registration addPlaceholderRemovedListener(
+            ComponentEventListener<PlaceholderRemovedEvent> listener) {
+        return addListener(PlaceholderRemovedEvent.class, listener);
+    }
+
+    /**
+     * Adds a listener for when a placeholder is selected.
+     * <p>
+     * Fired when the user clicks on a placeholder in the editor or navigates
+     * to it via keyboard (arrow keys, Tab). The event provides the selected
+     * placeholder(s).
+     *
+     * @param listener the listener to add
+     * @return a registration object for removing the listener
+     */
+    public Registration addPlaceholderSelectedListener(
+            ComponentEventListener<PlaceholderSelectedEvent> listener) {
+        return addListener(PlaceholderSelectedEvent.class, listener);
+    }
+
+    /**
+     * Adds a listener for when a placeholder loses selection.
+     * <p>
+     * Fired when the cursor moves away from a placeholder (e.g., user clicks
+     * elsewhere or presses an arrow key). Useful for cleaning up UI state
+     * related to placeholder selection.
+     *
+     * @param listener the listener to add
+     * @return a registration object for removing the listener
+     */
+    public Registration addPlaceholderLeaveListener(
+            ComponentEventListener<PlaceholderLeaveEvent> listener) {
+        return addListener(PlaceholderLeaveEvent.class, listener);
+    }
+
+    /**
+     * Adds a listener for when placeholder appearance changes.
+     * <p>
+     * Fired when a placeholder switches between its default format and altFormat,
+     * based on the {@link #setPlaceholderAltAppearancePattern(String)} regex.
+     * The event provides the new appearance state (altAppearance boolean) and
+     * the appearance label (if set).
+     *
+     * @param listener the listener to add
+     * @return a registration object for removing the listener
+     */
+    public Registration addPlaceholderAppearanceChangedListener(
+            ComponentEventListener<PlaceholderAppearanceChangedEvent> listener) {
+        return addListener(PlaceholderAppearanceChangedEvent.class, listener);
+    }
+
+    // ========================================================================
+    // Placeholder Event Classes
+    // ========================================================================
+
+    /**
+     * Abstract base for events that carry a list of placeholders.
+     * <p>
+     * This base class handles deserialization of placeholder data from the client
+     * and provides a {@link #getPlaceholders()} method that returns the full
+     * placeholder objects from the master list (via {@link #setPlaceholders(Collection)}),
+     * not just the lightweight event payload.
+     */
+    public static abstract class AbstractMultiPlaceholderEvent
+            extends ComponentEvent<EnhancedRichTextEditor> {
+
+        private final List<Placeholder> placeholders = new ArrayList<>();
+
+        public AbstractMultiPlaceholderEvent(EnhancedRichTextEditor source,
+                boolean fromClient, JsonNode placeholderJson) {
+            super(source, fromClient);
+            if (placeholderJson != null && placeholderJson.isArray()) {
+                for (JsonNode node : placeholderJson) {
+                    JsonNode pNode = node;
+                    int idx = -1;
+                    if (node.has("placeholder") && node.has("index")) {
+                        idx = node.get("index").asInt();
+                        pNode = node.get("placeholder");
+                    }
+                    Placeholder p = new Placeholder(pNode);
+                    if (idx != -1) p.setIndex(idx);
+                    placeholders.add(p);
+                }
+            }
+        }
+
+        /**
+         * Returns the placeholders involved in this event.
+         * <p>
+         * The returned placeholders are looked up from the master list set via
+         * {@link EnhancedRichTextEditor#setPlaceholders(Collection)}, so they contain
+         * all configured properties (text, tag, format, altFormat), not just the
+         * minimal data sent from the client. The {@code index} property is set
+         * to the placeholder's position in the editor's delta.
+         *
+         * @return the list of placeholders, never null
+         */
+        public List<Placeholder> getPlaceholders() {
+            List<Placeholder> actual = new ArrayList<>();
+            for (Placeholder p : placeholders) {
+                Placeholder found = ((EnhancedRichTextEditor) source)
+                        .getPlaceholder(p);
+                if (found != null) {
+                    if (p.getIndex() != -1) found.setIndex(p.getIndex());
+                    actual.add(found);
+                }
+            }
+            return actual;
+        }
+    }
+
+    /**
+     * Event fired when the placeholder toolbar button is clicked.
+     * <p>
+     * This event is fired before the placeholder dialog opens. You can use it
+     * to programmatically insert a placeholder without showing the dialog, or
+     * to customize the dialog behavior.
+     */
+    @DomEvent("placeholder-button-click")
+    public static class PlaceholderButtonClickedEvent
+            extends ComponentEvent<EnhancedRichTextEditor> {
+
+        private final int position;
+
+        public PlaceholderButtonClickedEvent(EnhancedRichTextEditor source,
+                boolean fromClient,
+                @EventData("event.preventDefault()") Object ignored,
+                @EventData("event.detail.position") int position) {
+            super(source, fromClient);
+            this.position = position;
+        }
+
+        /**
+         * Returns the cursor position where the placeholder would be inserted.
+         *
+         * @return the zero-based index in the editor's delta
+         */
+        public int getPosition() {
+            return position;
+        }
+
+        /**
+         * Inserts a placeholder at the current cursor position.
+         * <p>
+         * This bypasses the placeholder dialog and inserts the placeholder directly.
+         * The placeholder must be defined in the master list via
+         * {@link EnhancedRichTextEditor#setPlaceholders(Collection)}.
+         *
+         * @param placeholder the placeholder to insert
+         */
+        public void insert(Placeholder placeholder) {
+            insert(placeholder, position);
+        }
+
+        /**
+         * Inserts a placeholder at the specified position.
+         * <p>
+         * This bypasses the placeholder dialog and inserts the placeholder directly.
+         * The placeholder must be defined in the master list via
+         * {@link EnhancedRichTextEditor#setPlaceholders(Collection)}.
+         *
+         * @param placeholder the placeholder to insert
+         * @param position the zero-based index in the editor's delta where to insert
+         */
+        public void insert(Placeholder placeholder, int position) {
+            Objects.requireNonNull(placeholder, "Placeholder cannot be null");
+            EnhancedRichTextEditor s = (EnhancedRichTextEditor) source;
+            s.getElement().executeJs(
+                    "this._confirmInsertPlaceholders([{$0,index: $1}])",
+                    placeholder.toJson(), position);
+        }
+    }
+
+    /**
+     * Event fired before placeholders are inserted into the editor.
+     * <p>
+     * This is a cancellable event. The insertion will only proceed if
+     * {@link #insert()} is called. If {@code insert()} is not called, the
+     * placeholders are NOT inserted and no {@link PlaceholderInsertedEvent}
+     * will be fired.
+     * <p>
+     * Use this event to validate placeholders before insertion, modify them,
+     * or cancel the operation entirely.
+     */
+    @DomEvent("placeholder-before-insert")
+    public static class PlaceholderBeforeInsertEvent
+            extends AbstractMultiPlaceholderEvent {
+
+        public PlaceholderBeforeInsertEvent(EnhancedRichTextEditor source,
+                boolean fromClient,
+                @EventData("event.preventDefault()") Object ignored,
+                @EventData("event.detail") ObjectNode detail) {
+            super(source, fromClient, detail.get("placeholders"));
+        }
+
+        /**
+         * Confirms insertion of the placeholders.
+         * <p>
+         * <b>IMPORTANT:</b> If this method is not called, the placeholders will
+         * NOT be inserted into the editor. This allows validation or cancellation
+         * of the insertion operation.
+         * <p>
+         * Example:
+         * <pre>{@code
+         * editor.addPlaceholderBeforeInsertListener(e -> {
+         *     if (isValid(e.getPlaceholders())) {
+         *         e.insert(); // Proceed with insertion
+         *     }
+         *     // Otherwise, do nothing to cancel
+         * });
+         * }</pre>
+         */
+        public void insert() {
+            EnhancedRichTextEditor s = (EnhancedRichTextEditor) source;
+            s.getElement().executeJs("this._confirmInsertPlaceholders()");
+        }
+    }
+
+    /**
+     * Event fired after placeholders have been successfully inserted.
+     * <p>
+     * This is a notification event fired after the insertion is complete.
+     * Use {@link PlaceholderBeforeInsertEvent} if you need to prevent or
+     * modify the insertion.
+     */
+    @DomEvent("placeholder-insert")
+    public static class PlaceholderInsertedEvent
+            extends AbstractMultiPlaceholderEvent {
+
+        public PlaceholderInsertedEvent(EnhancedRichTextEditor source,
+                boolean fromClient,
+                @EventData("event.detail") ObjectNode detail) {
+            super(source, fromClient, detail.get("placeholders"));
+        }
+    }
+
+    /**
+     * Event fired before placeholders are removed from the editor.
+     * <p>
+     * This is a cancellable event. The removal will only proceed if
+     * {@link #remove()} is called. If {@code remove()} is not called, the
+     * placeholders are NOT removed and no {@link PlaceholderRemovedEvent}
+     * will be fired.
+     * <p>
+     * Use this event to prevent deletion of protected placeholders or to
+     * prompt the user for confirmation.
+     */
+    @DomEvent("placeholder-before-delete")
+    public static class PlaceholderBeforeRemoveEvent
+            extends AbstractMultiPlaceholderEvent {
+
+        public PlaceholderBeforeRemoveEvent(EnhancedRichTextEditor source,
+                boolean fromClient,
+                @EventData("event.preventDefault()") Object ignored,
+                @EventData("event.detail") ObjectNode detail) {
+            super(source, fromClient, detail.get("placeholders"));
+        }
+
+        /**
+         * Confirms removal of the placeholders.
+         * <p>
+         * <b>IMPORTANT:</b> If this method is not called, the placeholders will
+         * NOT be removed from the editor. This allows preventing deletion of
+         * protected placeholders.
+         * <p>
+         * Example:
+         * <pre>{@code
+         * editor.addPlaceholderBeforeRemoveListener(e -> {
+         *     if (!isProtected(e.getPlaceholders())) {
+         *         e.remove(); // Allow removal
+         *     }
+         *     // Otherwise, do nothing to cancel
+         * });
+         * }</pre>
+         */
+        public void remove() {
+            EnhancedRichTextEditor s = (EnhancedRichTextEditor) source;
+            s.getElement().executeJs("this._confirmRemovePlaceholders()");
+        }
+    }
+
+    /**
+     * Event fired after placeholders have been successfully removed.
+     * <p>
+     * This is a notification event fired after the removal is complete.
+     * Use {@link PlaceholderBeforeRemoveEvent} if you need to prevent removal.
+     */
+    @DomEvent("placeholder-delete")
+    public static class PlaceholderRemovedEvent
+            extends AbstractMultiPlaceholderEvent {
+
+        public PlaceholderRemovedEvent(EnhancedRichTextEditor source,
+                boolean fromClient,
+                @EventData("event.detail") ObjectNode detail) {
+            super(source, fromClient, detail.get("placeholders"));
+        }
+    }
+
+    /**
+     * Event fired when a placeholder is selected in the editor.
+     * <p>
+     * This event is fired when the user clicks on a placeholder or navigates
+     * to it via keyboard (arrow keys, Tab). The cursor is positioned at the
+     * placeholder.
+     */
+    @DomEvent("placeholder-select")
+    public static class PlaceholderSelectedEvent
+            extends AbstractMultiPlaceholderEvent {
+
+        public PlaceholderSelectedEvent(EnhancedRichTextEditor source,
+                boolean fromClient,
+                @EventData("event.detail") ObjectNode detail) {
+            super(source, fromClient, detail.get("placeholders"));
+        }
+    }
+
+    /**
+     * Event fired when a placeholder loses selection.
+     * <p>
+     * This event is fired when the cursor moves away from a placeholder
+     * (e.g., user clicks elsewhere, presses an arrow key, or types text).
+     * Useful for cleaning up UI state related to placeholder selection.
+     */
+    @DomEvent("placeholder-leave")
+    public static class PlaceholderLeaveEvent
+            extends ComponentEvent<EnhancedRichTextEditor> {
+
+        public PlaceholderLeaveEvent(EnhancedRichTextEditor source,
+                boolean fromClient) {
+            super(source, fromClient);
+        }
+    }
+
+    /**
+     * Event fired when a placeholder's appearance changes.
+     * <p>
+     * This event is fired when a placeholder switches between its default
+     * format and altFormat, based on the regex pattern set via
+     * {@link EnhancedRichTextEditor#setPlaceholderAltAppearancePattern(String)}.
+     * <p>
+     * For example, if the pattern is "Dear\\s+$" and the user types "Dear ",
+     * any following placeholder will switch to its altFormat. When the user
+     * deletes "Dear ", the placeholder switches back to its default format.
+     */
+    @DomEvent("placeholder-appearance-change")
+    public static class PlaceholderAppearanceChangedEvent
+            extends ComponentEvent<EnhancedRichTextEditor> {
+
+        private final Boolean altAppearance;
+        private final String appearanceLabel;
+
+        public PlaceholderAppearanceChangedEvent(
+                EnhancedRichTextEditor source, boolean fromClient,
+                @EventData("event.detail") ObjectNode detail) {
+            super(source, fromClient);
+            altAppearance = detail.has("altAppearance")
+                    ? detail.get("altAppearance").asBoolean() : null;
+            appearanceLabel = detail.has("appearanceLabel")
+                    ? detail.get("appearanceLabel").asText() : null;
+        }
+
+        /**
+         * Returns whether the placeholder is using its alternative appearance.
+         * <p>
+         * {@code true} if the placeholder is using its altFormat, {@code false}
+         * if using the default format, {@code null} if appearance state is unknown.
+         *
+         * @return the alternative appearance state, or null if unknown
+         */
+        public Boolean getAltAppearance() {
+            return altAppearance;
+        }
+
+        /**
+         * Returns the appearance label (if set on the placeholder).
+         * <p>
+         * This is a custom label that can be set on placeholders to identify
+         * different appearance states. Returns {@code null} if no label is set.
+         *
+         * @return the appearance label, or null if not set
+         */
+        public String getAppearanceLabel() {
+            return appearanceLabel;
+        }
+    }
+
+    // ========================================================================
+    // Programmatic Text Insertion (Feature 14)
+    // ========================================================================
+
+    /**
+     * Asynchronously retrieves the editor's text length.
+     * <p>
+     * The callback is invoked once the length is available from the browser.
+     * Quill's internal trailing newline is excluded from the count to match
+     * user expectations (e.g., "Hello" returns 5, not 6).
+     * </p>
+     * <p>
+     * <strong>Breaking Change from V24:</strong> V24's synchronous
+     * {@code int getTextLength()} was replaced because Vaadin Flow's
+     * {@code executeJs()} is inherently asynchronous — there is no way
+     * to block the server thread until the browser responds.
+     * </p>
+     *
+     * @param callback Consumer that receives the text length (never null)
+     * @throws NullPointerException if callback is null
+     */
+    public void getTextLength(SerializableConsumer<Integer> callback) {
+        Objects.requireNonNull(callback, "Callback cannot be null");
+        getElement()
+            .executeJs(
+                "return Math.max(0, ($0._editor ? $0._editor.getLength() : 0) - 1)",
+                getElement()
+            )
+            .then(Integer.class, callback::accept);
+    }
+
+    /**
+     * Inserts text at the specified position.
+     * <p>
+     * Position is clamped to valid range [0, length-1] on the client side.
+     * No insertion occurs if the editor is disabled.
+     * </p>
+     * <p>
+     * <strong>Behavior Change from V24:</strong> V24 rejected out-of-bounds
+     * positions silently. V25 clamps to nearest valid position.
+     * </p>
+     *
+     * @param text Text to be inserted (not null)
+     * @param position Position where text should be inserted (0-based index)
+     * @throws NullPointerException if text is null
      */
     public void addText(String text, int position) {
-        Objects.requireNonNull(text, "Text can't be null");
-        this.getHtmlValue();
-        if (position >= 0 && position <= getTextLength()) {
-            getElement().executeJs("$0._editor.insertText($1,$2)", getElement(),
-                    position, text);
-        }
+        Objects.requireNonNull(text, "Text cannot be null");
+        getElement().executeJs(
+            "if ($0._editor && $0._editor.isEnabled()) {" +
+            "  const len = Math.max(1, $0._editor.getLength());" +
+            "  const pos = Math.max(0, Math.min($1, len - 1));" +
+            "  $0._editor.insertText(pos, $2);" +
+            "}",
+            getElement(), position, text
+        );
     }
 
     /**
-     * Add text to the caret position, when the focus is in the text area.
-     * 
-     * @param text Text to be inserted
+     * Inserts text at the current cursor position.
+     * <p>
+     * If no selection exists, editor is not focused, or editor is disabled,
+     * no insertion occurs.
+     * </p>
+     *
+     * @param text Text to be inserted (not null)
+     * @throws NullPointerException if text is null
      */
     public void addText(String text) {
-        Objects.requireNonNull(text, "Text can't be null");
+        Objects.requireNonNull(text, "Text cannot be null");
         getElement().executeJs(
-                "if ($0._editor.getSelection()) $0._editor.insertText($0._editor.getSelection().index,$1)",
-                getElement(), text);
+            "if ($0._editor && $0._editor.isEnabled() && $0._editor.getSelection()) {" +
+            "  $0._editor.insertText($0._editor.getSelection().index, $1);" +
+            "}",
+            getElement(), text
+        );
     }
 
-    /**
-     * Add a custom button to the toolbar.<br>
-     * This method does NOT apply any toolbar styling to the button, but will keep it "Vaadin native".
-     *
-     * @param button A custom button to be added, not null
-     * @deprecated use {@link #addCustomToolbarComponents(Component...)} instead
-     */
-    @Deprecated
-    public void addCustomButton(Button button) {
-        Objects.requireNonNull(button, "Button can't be null");
-        addCustomToolbarComponents(button);
-    }
+    // ========================================================================
+    // I18n
+    // ========================================================================
 
     /**
-     * A convenience method to add multiple custom buttons at one call.<br>
-     * This method does NOT apply any toolbar styling to the button, but will keep it "Vaadin native".
-     *
-     * @param buttons Custom buttons to be added.
-     * @deprecated use {@link #addCustomToolbarComponents(Component...)} instead
+     * Extended i18n for ERTE — adds labels for ERTE-specific toolbar
+     * buttons and the placeholder dialog.
+     * <p>
+     * Inherits all standard RTE 2 labels. Only set ERTE-specific fields
+     * if you need to translate them; defaults are English.
+     * <p>
+     * Usage:
+     * <pre>
+     * editor.setI18n(new EnhancedRichTextEditorI18n()
+     *     .setBold("Fett")
+     *     .setReadonly("Schreibschutz")
+     *     .setPlaceholder("Platzhalter"));
+     * </pre>
      */
-    @Deprecated
-    public void addCustomButtons(Button ...buttons) {
-        addCustomToolbarComponents(buttons);
-    }
+    public static class EnhancedRichTextEditorI18n
+            extends com.vaadin.flow.component.richtexteditor
+                    .RichTextEditor.RichTextEditorI18n
+            implements Serializable {
 
-    /**
-     * A convenience method to add multiple custom components at one call. Uses the
-     * {@link ToolbarSlot#GROUP_CUSTOM}.
-     *
-     * @param components Custom components to be added.
-     */
-    public void addCustomToolbarComponents(Component... components) {
-        addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, components);
-    }
-
-    /**
-     * A convenience method to add multiple custom components at one call. Uses the
-     * {@link ToolbarSlot#GROUP_CUSTOM}. The index allows to define the position of the newly added components
-     * relative to already existing ones.
-     *
-     * @param index index
-     * @param components Custom components to be added.
-     */
-    public void addCustomToolbarComponentsAtIndex(int index, Component... components) {
-        addToolbarComponentsAtIndex(ToolbarSlot.GROUP_CUSTOM, index, components);
-    }
-
-    /**
-     * Adds the components to the toolbar slot. Appends the components to existing ones.
-     *
-     * @param toolbarSlot slot to add the components to
-     * @param components Components to be added
-     */
-    public void addToolbarComponents(ToolbarSlot toolbarSlot, Component... components) {
-        Objects.requireNonNull(components);
-        for (Component component : components) {
-            Objects.requireNonNull(component);
-            SlotUtil.addComponent(this, toolbarSlot.getSlotName(), component);
-        }
-    }
-
-    /**
-     * Adds the components to the toolbar slot. Appends the components to existing ones. The index allows to
-     * define the position of the newly added components relative to already existing ones.
-     *
-     * @param toolbarSlot slot to add the components to
-     * @param components Components to be added
-     */
-    public void addToolbarComponentsAtIndex(ToolbarSlot toolbarSlot, int index, Component... components) {
-        Objects.requireNonNull(components);
-        for (Component component : components) {
-            Objects.requireNonNull(component);
-            SlotUtil.addComponentAtIndex(this, toolbarSlot.getSlotName(), component, index);
-        }
-    }
-
-    /**
-     * Returns a toolbar component with the given id from the toolbar slot. The component must have been
-     * added using one of the {@code addToolbarComponents} methods beforehand.
-     * @param toolbarSlot toolbar slot
-     * @param id component id
-     * @return component
-     * @param <T> return type
-     */
-    @SuppressWarnings("unchecked")
-    public <T extends Component> T getToolbarComponent(ToolbarSlot toolbarSlot, String id) {
-        Objects.requireNonNull(id, "Id can't be null");
-        return (T) SlotUtil.getComponent(this, toolbarSlot.getSlotName(), id);
-    }
-
-    /**
-     * Remove the given component from the toolbar. The component must have been
-     * added using one of the {@code addToolbarComponents} methods beforehand.
-     *
-     * @param id component id
-     */
-    public void removeToolbarComponent(ToolbarSlot toolbarSlot, String id) {
-        Objects.requireNonNull(id, "Id can't be null");
-        SlotUtil.removeComponent(this, toolbarSlot.getSlotName(), id);
-    }
-
-    /**
-     * Remove a custom component from the toolbar. The component must have been
-     * added using one of the {@code addToolbarComponents} methods beforehand.
-     *
-     * @param component The component to be removed.
-     */
-    public void removeToolbarComponent(ToolbarSlot toolbarSlot, Component component) {
-        Objects.requireNonNull(component, "Button can't be null");
-        SlotUtil.removeComponent(this, toolbarSlot.getSlotName(), component);
-    }
-
-    /**
-     * Get the custom button using its id.
-     *
-     * @param id Id as a string
-     * @return A button
-     * @deprecated use {@link #getToolbarComponent(ToolbarSlot, String)} instead with the {@link ToolbarSlot#GROUP_CUSTOM}
-     */
-    @Deprecated
-    public Button getCustomButton(String id) {
-        Objects.requireNonNull(id, "Id can't be null");
-        return SlotUtil.getButton(this, id);
-    }
-
-    /**
-     * Remove the given button from the toolbar.
-     *
-     * @param id Id as a string.
-     * @deprecated use {@link #removeToolbarComponent(ToolbarSlot, String)} instead with the {@link ToolbarSlot#GROUP_CUSTOM}
-     */
-    @Deprecated
-    public void removeCustomButton(String id) {
-        Objects.requireNonNull(id, "Id can't be null");
-        SlotUtil.removeButton(this, id);
-    }
-
-    /**
-     * Remove a custom button from the toolbar.
-     *
-     * @param button The button to be removed.
-     * @deprecated use {@link #removeToolbarComponent(ToolbarSlot, Component)} instead with the {@link ToolbarSlot#GROUP_CUSTOM}
-     */
-    @Deprecated
-    public void removeCustomButton(Button button) {
-        Objects.requireNonNull(button, "Button can't be null");
-        SlotUtil.removeButton(this, button);
-    }
-    
-    /**
-     * Adds a custom shortcut to a specific toolbar standard button.
-     * 
-     * @param toolbarButton The toolbar button to add the shortcut to.
-     * @param keyCode The key code for the new shortcut.
-     * @param shortKey True if modifier ctrl is part of the shortcut.
-     * @param shiftKey True if modifier shift is part of the shortcut.
-     * @param altKey True if modifier alt is part of the shortcut.
-     */
-    public void addStandardToolbarButtonShortcut(ToolbarButton toolbarButton, Number keyCode,
-        Boolean shortKey, Boolean shiftKey, Boolean altKey) {
-      getElement().executeJs("$0.addStandardButtonBinding($1, $2, $3, $4, $5)", getElement(),
-          toolbarButton.getButtonName(), keyCode, shortKey, shiftKey, altKey);
-    }
-    
-    /**
-     * Adds a custom shortcut to focus the editor toolbar.
-     * 
-     * @param keyCode The key code for the new shortcut.
-     * @param shortKey True if modifier ctrl is part of the shortcut.
-     * @param shiftKey True if modifier shift is part of the shortcut.
-     * @param altKey True if modifier alt is part of the shortcut.
-     */
-    public void addToobarFocusShortcut(Number keyCode, Boolean shortKey, Boolean shiftKey,
-        Boolean altKey) {
-      getElement().executeJs("$0.addToolbarFocusBinding($1, $2, $3, $4)", getElement(), keyCode,
-          shortKey, shiftKey, altKey);
-    }
-    
-    /**
-     * Allows to replace the icon of a standard {@link ToolbarButton toolbar button}.
-     * 
-     * @param toolbarButton toolbar button to replace icon
-     * @param icon replacement icon
-     */
-    public void replaceStandardToolbarButtonIcon(ToolbarButton toolbarButton, Icon icon) {
-   	 	Objects.requireNonNull(icon, "Icon can't be null");
-        SlotUtil.replaceStandardButtonIcon(this, icon, toolbarButton.getButtonName());
-    }
-
-    /**
-     * The internationalization properties for {@link EnhancedRichTextEditor}.
-     */
-    public static class RichTextEditorI18n implements Serializable {
-        private String undo;
-        private String redo;
-        private String bold;
-        private String italic;
-        private String underline;
-        private String strike;
-        private String h1;
-        private String h2;
-        private String h3;
-        private String subscript;
-        private String superscript;
-        private String listOrdered;
-        private String listBullet;
-        private String deindent;
-        private String indent;
-        private String alignLeft;
-        private String alignCenter;
-        private String alignRight;
-        private String alignJustify;
-        private String image;
-        private String link;
-        private String blockquote;
-        private String codeBlock;
         private String readonly;
+        private String whitespace;
         private String placeholder;
         private String placeholderAppearance;
+        private String placeholderDialogTitle;
         private String placeholderComboBoxLabel;
         private String placeholderAppearanceLabel1;
         private String placeholderAppearanceLabel2;
-        private String placeholderDialogTitle;
-        private String clean;
+        private String alignJustify;
 
-        /**
-         * Gets the translated word for {@code undo}
-         *
-         * @return the translated word for undo
-         */
-        public String getUndo() {
-            return undo;
-        }
-
-        /**
-         * Sets the translated word for {@code undo}.
-         *
-         * @param undo
-         *            the translated word for undo
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setUndo(String undo) {
-            this.undo = undo;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code redo}
-         *
-         * @return the translated word for redo
-         */
-        public String getRedo() {
-            return redo;
-        }
-
-        /**
-         * Sets the translated word for {@code redo}.
-         *
-         * @param redo
-         *            the translated word for redo
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setRedo(String redo) {
-            this.redo = redo;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code bold}
-         *
-         * @return the translated word for bold
-         */
-        public String getBold() {
-            return bold;
-        }
-
-        /**
-         * Sets the translated word for {@code bold}.
-         *
-         * @param bold
-         *            the translated word for bold
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setBold(String bold) {
-            this.bold = bold;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code italic}
-         *
-         * @return the translated word for italic
-         */
-        public String getItalic() {
-            return italic;
-        }
-
-        /**
-         * Sets the translated word for {@code italic}.
-         *
-         * @param italic
-         *            the translated word for italic
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setItalic(String italic) {
-            this.italic = italic;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code underline}
-         *
-         * @return the translated word for underline
-         */
-        public String getUnderline() {
-            return underline;
-        }
-
-        /**
-         * Sets the translated word for {@code underline}.
-         *
-         * @param underline
-         *            the translated word for underline
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setUnderline(String underline) {
-            this.underline = underline;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code strike}
-         *
-         * @return the translated word for strike
-         */
-        public String getStrike() {
-            return strike;
-        }
-
-        /**
-         * Sets the translated word for {@code strike}.
-         *
-         * @param strike
-         *            the translated word for strike
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setStrike(String strike) {
-            this.strike = strike;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code h1}
-         *
-         * @return the translated word for h1
-         */
-        public String getH1() {
-            return h1;
-        }
-
-        /**
-         * Sets the translated word for {@code h1}.
-         *
-         * @param h1
-         *            the translated word for h1
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setH1(String h1) {
-            this.h1 = h1;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code h2}
-         *
-         * @return the translated word for h2
-         */
-        public String getH2() {
-            return h2;
-        }
-
-        /**
-         * Sets the translated word for {@code h2}.
-         *
-         * @param h2
-         *            the translated word for h2
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setH2(String h2) {
-            this.h2 = h2;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code h3}
-         *
-         * @return the translated word for h3
-         */
-        public String getH3() {
-            return h3;
-        }
-
-        /**
-         * Sets the translated word for {@code h3}.
-         *
-         * @param h3
-         *            the translated word for h3
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setH3(String h3) {
-            this.h3 = h3;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code subscript}
-         *
-         * @return the translated word for subscript
-         */
-        public String getSubscript() {
-            return subscript;
-        }
-
-        /**
-         * Sets the translated word for {@code subscript}.
-         *
-         * @param subscript
-         *            the translated word for subscript
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setSubscript(String subscript) {
-            this.subscript = subscript;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code superscript}
-         *
-         * @return the translated word for superscript
-         */
-        public String getSuperscript() {
-            return superscript;
-        }
-
-        /**
-         * Sets the translated word for {@code superscript}.
-         *
-         * @param superscript
-         *            the translated word for superscript
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setSuperscript(String superscript) {
-            this.superscript = superscript;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code listOrdered}
-         *
-         * @return the translated word for listOrdered
-         */
-        public String getListOrdered() {
-            return listOrdered;
-        }
-
-        /**
-         * Sets the translated word for {@code listOrdered}.
-         *
-         * @param listOrdered
-         *            the translated word for listOrdered
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setListOrdered(String listOrdered) {
-            this.listOrdered = listOrdered;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code listBullet}
-         *
-         * @return the translated word for listBullet
-         */
-        public String getListBullet() {
-            return listBullet;
-        }
-
-        /**
-         * Sets the translated word for {@code listBullet}.
-         *
-         * @param listBullet
-         *            the translated word for listBullet
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setListBullet(String listBullet) {
-            this.listBullet = listBullet;
-            return this;
-        }
-        
-        /**
-         * Gets the translated word for {@code deindent}
-         *
-         * @return the translated word for deindent (outdent)
-         */
-        public String getDeindent() {
-            return deindent;
-        }
-
-        /**
-         * Sets the translated word for {@code deindent}.
-         *
-         * @param deindent
-         *            the translated word for deindent
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setDeindent(String deindent) {
-            this.deindent = deindent;
-            return this;
-        }
-        
-        /**
-         * Gets the translated word for {@code indent}
-         *
-         * @return the translated word for indent
-         */
-        public String getIndent() {
-            return indent;
-        }
-
-        /**
-         * Sets the translated word for {@code indent}.
-         *
-         * @param indent
-         *            the translated word for indent
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setIndent(String indent) {
-            this.indent = indent;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code alignLeft}
-         *
-         * @return the translated word for alignLeft
-         */
-        public String getAlignLeft() {
-            return alignLeft;
-        }
-
-        /**
-         * Sets the translated word for {@code alignLeft}.
-         *
-         * @param alignLeft
-         *            the translated word for alignLeft
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setAlignLeft(String alignLeft) {
-            this.alignLeft = alignLeft;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code alignCenter}
-         *
-         * @return the translated word for alignCenter
-         */
-        public String getAlignCenter() {
-            return alignCenter;
-        }
-
-        /**
-         * Sets the translated word for {@code alignCenter}.
-         *
-         * @param alignCenter
-         *            the translated word for alignCenter
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setAlignCenter(String alignCenter) {
-            this.alignCenter = alignCenter;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code alignRight}
-         *
-         * @return the translated word for alignRight
-         */
-        public String getAlignRight() {
-            return alignRight;
-        }
-
-        /**
-         * Sets the translated word for {@code alignRight}.
-         *
-         * @param alignRight
-         *            the translated word for alignRight
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setAlignRight(String alignRight) {
-            this.alignRight = alignRight;
-            return this;
-        }
-        
-        /**
-         * Gets the translated word for {@code alignJustify}
-         *
-         * @return the translated word for alignJustify
-         */
-        public String getAlignJustify() {
-            return alignJustify;
-        }
-
-        /**
-         * Sets the translated word for {@code alignJustify}.
-         *
-         * @param alignJustify
-         *            the translated word for alignJustify
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setAlignJustify(String alignJustify) {
-            this.alignJustify = alignJustify;
-            return this;
-        }
-        
-
-        /**
-         * Gets the translated word for {@code image}
-         *
-         * @return the translated word for image
-         */
-        public String getImage() {
-            return image;
-        }
-
-        /**
-         * Sets the translated word for {@code image}.
-         *
-         * @param image
-         *            the translated word for image
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setImage(String image) {
-            this.image = image;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code link}
-         *
-         * @return the translated word for link
-         */
-        public String getLink() {
-            return link;
-        }
-
-        /**
-         * Sets the translated word for {@code link}.
-         *
-         * @param link
-         *            the translated word for link
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setLink(String link) {
-            this.link = link;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code blockquote}
-         *
-         * @return the translated word for blockquote
-         */
-        public String getBlockquote() {
-            return blockquote;
-        }
-
-        /**
-         * Sets the translated word for {@code blockquote}.
-         *
-         * @param blockquote
-         *            the translated word for blockquote
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setBlockquote(String blockquote) {
-            this.blockquote = blockquote;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code codeBlock}
-         *
-         * @return the translated word for codeBlock
-         */
-        public String getCodeBlock() {
-            return codeBlock;
-        }
-
-        /**
-         * Sets the translated word for {@code codeBlock}.
-         *
-         * @param codeBlock
-         *            the translated word for codeBlock
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setCodeBlock(String codeBlock) {
-            this.codeBlock = codeBlock;
-            return this;
-        }
-
-        /**
-         * Gets the translated word for {@code readonly}
-         *
-         * @return the translated word for readonly
-         */
         public String getReadonly() {
             return readonly;
         }
 
-        /**
-         * Sets the translated word for {@code readonly}.
-         *
-         * @param readonly
-         *            the translated word for readonly
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setReadonly(String readonly) {
+        public EnhancedRichTextEditorI18n setReadonly(String readonly) {
             this.readonly = readonly;
             return this;
         }
 
-        /**
-         * Gets the translated word for {@code placeholder}
-         *
-         * @return the translated word for placeholder
-         */
+        public String getWhitespace() {
+            return whitespace;
+        }
+
+        public EnhancedRichTextEditorI18n setWhitespace(String whitespace) {
+            this.whitespace = whitespace;
+            return this;
+        }
+
         public String getPlaceholder() {
             return placeholder;
         }
 
-        /**
-         * Sets the translated word for {@code placeholder}.
-         *
-         * @param placeholder
-         *            the translated word for placeholder
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setPlaceholder(String placeholder) {
+        public EnhancedRichTextEditorI18n setPlaceholder(
+                String placeholder) {
             this.placeholder = placeholder;
             return this;
         }
 
-        /**
-         * Gets the translated word for {@code placeholderAppearance}
-         *
-         * @return the translated word for placeholderAppearance
-         */
         public String getPlaceholderAppearance() {
             return placeholderAppearance;
         }
 
-        /**
-         * Sets the translated word for {@code placeholderAppearance}.
-         *
-         * @param placeholderAppearance
-         *            the translated word for placeholderAppearance
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setPlaceholderAppeance(
+        public EnhancedRichTextEditorI18n setPlaceholderAppearance(
                 String placeholderAppearance) {
             this.placeholderAppearance = placeholderAppearance;
             return this;
         }
 
-        /**
-         * Gets the translated word for {@code placeholderComboBoxLabel}
-         *
-         * @return the translated word for placeholderComboBoxLabel
-         */
+        public String getPlaceholderDialogTitle() {
+            return placeholderDialogTitle;
+        }
+
+        public EnhancedRichTextEditorI18n setPlaceholderDialogTitle(
+                String placeholderDialogTitle) {
+            this.placeholderDialogTitle = placeholderDialogTitle;
+            return this;
+        }
+
         public String getPlaceholderComboBoxLabel() {
             return placeholderComboBoxLabel;
         }
 
-        /**
-         * Sets the translated word for {@code placeholderComboBoxLabel}.
-         *
-         * @param placeholderComboBoxLabel
-         *            the translated word for placeholderComboBoxLabel
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setPlaceholderComboBoxLabel(
+        public EnhancedRichTextEditorI18n setPlaceholderComboBoxLabel(
                 String placeholderComboBoxLabel) {
             this.placeholderComboBoxLabel = placeholderComboBoxLabel;
             return this;
         }
 
-        /**
-         * Gets the translated word for {@code placeholderAppearanceLabel1}
-         *
-         * @return the translated word for placeholderAppearanceLabel1
-         */
-        public String setPlaceholderAppearanceLabel1() {
+        public String getPlaceholderAppearanceLabel1() {
             return placeholderAppearanceLabel1;
         }
 
-        /**
-         * Sets the translated word for {@code placeholderAppearanceLabel1}.
-         *
-         * @param placeholderAppearanceLabel1
-         *            the translated word for placeholderAppearanceLabel1
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n getPlaceholderAppearanceLabel1(
+        public EnhancedRichTextEditorI18n setPlaceholderAppearanceLabel1(
                 String placeholderAppearanceLabel1) {
             this.placeholderAppearanceLabel1 = placeholderAppearanceLabel1;
             return this;
         }
 
-        /**
-         * Gets the translated word for {@code placeholderAppearanceLabel2}
-         *
-         * @return the translated word for placeholderAppearanceLabel2
-         */
-        public String setPlaceholderAppearanceLabel2() {
+        public String getPlaceholderAppearanceLabel2() {
             return placeholderAppearanceLabel2;
         }
 
-        /**
-         * Sets the translated word for {@code placeholderAppearanceLabel2}.
-         *
-         * @param placeholderAppearanceLabel2
-         *            the translated word for placeholderAppearanceLabel2
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n getPlaceholderAppearanceLabel2(
+        public EnhancedRichTextEditorI18n setPlaceholderAppearanceLabel2(
                 String placeholderAppearanceLabel2) {
             this.placeholderAppearanceLabel2 = placeholderAppearanceLabel2;
             return this;
         }
 
         /**
-         * Gets the translated word for {@code placeholderDialogTitle}
+         * Gets the label for the justify alignment button.
          *
-         * @return the translated word for placeholderDialogTitle
+         * @return the label, or null if not set
          */
-        public String getPlaceholderDialogTitle() {
-            return placeholderDialogTitle;
+        public String getAlignJustify() {
+            return alignJustify;
         }
 
         /**
-         * Sets the translated word for {@code placeholderDialogTitle}.
+         * Sets the label for the justify alignment button. RTE 2 only provides
+         * left, center, right alignment buttons; the justify button is
+         * ERTE-specific.
          *
-         * @param placeholderDialogTitle
-         *            the translated word for placeholderDialogTitle
-         * @return this instance for method chaining
+         * @param alignJustify the label
+         * @return this instance for fluent chaining
          */
-        public RichTextEditorI18n getPlaceholderDialogTitle(
-                String placeholderDialogTitle) {
-            this.placeholderDialogTitle = placeholderDialogTitle;
+        public EnhancedRichTextEditorI18n setAlignJustify(
+                String alignJustify) {
+            this.alignJustify = alignJustify;
             return this;
         }
 
-        /**
-         * Gets the translated word for {@code clean}
-         *
-         * @return the translated word for clean
-         */
-        public String getClean() {
-            return clean;
-        }
+        // Covariant return type overrides for fluent chaining
 
-        /**
-         * Sets the translated word for {@code clean}.
-         *
-         * @param clean
-         *            the translated word for clean
-         * @return this instance for method chaining
-         */
-        public RichTextEditorI18n setClean(String clean) {
-            this.clean = clean;
+        @Override
+        public EnhancedRichTextEditorI18n setUndo(String undo) {
+            super.setUndo(undo);
             return this;
         }
 
-        /**
-         * Gets the stringified values of the tooltips.
-         *
-         * @return stringified values of the tooltips
-         */
         @Override
-        public String toString() {
-            return "[" + undo + ", " + redo + ", " + bold + ", " + italic + ", "
-                   + underline + ", " + strike + ", " + h1 + ", " + h2 + ", "
-                   + h3 + ", " + subscript + ", " + superscript + ", "
-                   + listOrdered + ", " + listBullet + ", " + deindent
-                   + ", " + indent + ", " + alignLeft + ", " + alignCenter
-                   + ", " + alignRight + ", " + alignJustify + ", " + image + ", "
-                   + link + ", " + blockquote + ", " + codeBlock + ", "
-                   + readonly + ", " + placeholder + ", "
-                   + placeholderAppearance + ", " + placeholderComboBoxLabel
-                   + ", " + placeholderAppearanceLabel1 + ", "
-                   + placeholderAppearanceLabel2 + ", "
-                   + placeholderDialogTitle + ", " + clean + "]";
+        public EnhancedRichTextEditorI18n setRedo(String redo) {
+            super.setRedo(redo);
+            return this;
         }
-    }
-
-    public enum ToolbarButton {
-        UNDO, REDO, BOLD, ITALIC, UNDERLINE, STRIKE, H1, H2, H3, SUBSCRIPT, SUPERSCRIPT, LIST_ORDERED, LIST_BULLET, DEINDENT, INDENT, ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT, ALIGN_JUSTIFY, IMAGE, LINK, BLOCKQUOTE, CODE_BLOCK, WHITESPACE, READONLY, CLEAN, PLACEHOLDER, PLACEHOLDER_APPEARANCE;
 
         @Override
-        public String toString() {
-            String name = getButtonName();
-            return "\"" + name + "\"";
+        public EnhancedRichTextEditorI18n setBold(String bold) {
+            super.setBold(bold);
+            return this;
         }
-        
-        public String getButtonName() {
-          String str = this.name().toLowerCase();
-          String[] parts = str.split("_");
-          if (parts.length == 1)
-              return str;
 
-          for (int i = 1; i < parts.length; i++)
-              parts[i] = Character.toUpperCase(parts[i].charAt(0))
-                      + parts[i].substring(1);
-          
-          return String.join("", parts);
+        @Override
+        public EnhancedRichTextEditorI18n setItalic(String italic) {
+            super.setItalic(italic);
+            return this;
         }
-        
+
+        @Override
+        public EnhancedRichTextEditorI18n setUnderline(String underline) {
+            super.setUnderline(underline);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setStrike(String strike) {
+            super.setStrike(strike);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setH1(String h1) {
+            super.setH1(h1);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setH2(String h2) {
+            super.setH2(h2);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setH3(String h3) {
+            super.setH3(h3);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setColor(String color) {
+            super.setColor(color);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setBackground(
+                String background) {
+            super.setBackground(background);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setSubscript(String subscript) {
+            super.setSubscript(subscript);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setSuperscript(
+                String superscript) {
+            super.setSuperscript(superscript);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setListOrdered(
+                String listOrdered) {
+            super.setListOrdered(listOrdered);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setListBullet(
+                String listBullet) {
+            super.setListBullet(listBullet);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setOutdent(String outdent) {
+            super.setOutdent(outdent);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setIndent(String indent) {
+            super.setIndent(indent);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setAlignLeft(String alignLeft) {
+            super.setAlignLeft(alignLeft);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setAlignCenter(
+                String alignCenter) {
+            super.setAlignCenter(alignCenter);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setAlignRight(
+                String alignRight) {
+            super.setAlignRight(alignRight);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setImage(String image) {
+            super.setImage(image);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setLink(String link) {
+            super.setLink(link);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setBlockquote(
+                String blockquote) {
+            super.setBlockquote(blockquote);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setCodeBlock(String codeBlock) {
+            super.setCodeBlock(codeBlock);
+            return this;
+        }
+
+        @Override
+        public EnhancedRichTextEditorI18n setClean(String clean) {
+            super.setClean(clean);
+            return this;
+        }
     }
-
 }

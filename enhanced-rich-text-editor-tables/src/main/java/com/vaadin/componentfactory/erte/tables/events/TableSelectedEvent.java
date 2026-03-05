@@ -1,8 +1,24 @@
+/*-
+ * #%L
+ * Enhanced Rich Text Editor Tables Extension V25
+ * %%
+ * Copyright (C) 2025 Vaadin Ltd
+ * %%
+ * This program is available under Commercial Vaadin Add-On License 3.0
+ * (CVALv3).
+ *
+ * See the file license.html distributed with this software for more
+ * information about licensing.
+ *
+ * You should have received a copy of the CVALv3 along with this program.
+ * If not, see <http://vaadin.com/license/cval-3>.
+ * #L%
+ */
 package com.vaadin.componentfactory.erte.tables.events;
 
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTablesComponentEvent;
-import org.apache.commons.lang3.StringUtils;
+import com.vaadin.componentfactory.erte.tables.templates.TemplateParser;
 
 /**
  * This event is fired, when a table has been (de-) selected in an ERTE instance. Contains additional information,
@@ -26,13 +42,13 @@ public class TableSelectedEvent extends EnhancedRichTextEditorTablesComponentEve
     ) {
         super(source, fromClient);
 
-        if (StringUtils.isNotBlank(template) && !template.matches("[A-Za-z0-9\\-]+")) {
+        if (template != null && !template.isBlank() && !TemplateParser.isValidTemplateId(template)) {
             throw new IllegalArgumentException("Illegal template name: " + template);
         }
 
         this.selected = selected;
         this.cellSelectionActive = cellSelectionActive;
-        this.template = template != null ? StringUtils.trimToEmpty(template) : null;
+        this.template = template != null ? template.strip() : null;
     }
 
     /**

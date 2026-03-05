@@ -1,47 +1,55 @@
+/*-
+ * #%L
+ * Enhanced Rich Text Editor Tables Extension V25
+ * %%
+ * Copyright (C) 2025 Vaadin Ltd
+ * %%
+ * This program is available under Commercial Vaadin Add-On License 3.0
+ * (CVALv3).
+ *
+ * See the file license.html distributed with this software for more
+ * information about licensing.
+ *
+ * You should have received a copy of the CVALv3 along with this program.
+ * If not, see <http://vaadin.com/license/cval-3>.
+ * #L%
+ */
 package com.vaadin.componentfactory.erte.tables.templates.events;
 
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTablesComponentEvent;
-import com.vaadin.componentfactory.erte.tables.templates.TemplateParser;
-import elemental.json.JsonObject;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
- * Base class of all events, that are to be fired, when a specific template has been modified in any way. This includes
- * the creation of a new template.
+ * Abstract base class for template modification events (create, copy, update, delete).
+ * Carries the affected template's ID and its JSON object.
  */
 public abstract class TemplateModificationEvent extends EnhancedRichTextEditorTablesComponentEvent {
-
     private final String templateId;
-    private final JsonObject template;
+    private final ObjectNode template;
 
-    /**
-     * Creates a new event using the given source and indicator whether the
-     * event originated from the client side or the server side.
-     *
-     * @param source     the source component
-     * @param fromClient <code>true</code> if the event originated from the client
-     *                   side, <code>false</code> otherwise
-     */
-    public TemplateModificationEvent(EnhancedRichTextEditorTables source, boolean fromClient, String templateId, JsonObject template) {
+    public TemplateModificationEvent(EnhancedRichTextEditorTables source, boolean fromClient,
+                                     String templateId, ObjectNode template) {
         super(source, fromClient);
         this.templateId = templateId;
-        this.template = TemplateParser.clone(template);
+        this.template = template != null ? template.deepCopy() : null;
     }
 
     /**
-     * Returns the affected template id.
-     * @return template id
+     * Returns the ID of the affected template.
+     *
+     * @return the template ID
      */
     public String getTemplateId() {
         return templateId;
     }
 
     /**
-     * Returns the template object resulting from the modification. Modifications to this object will NOT affect
-     * the source.
-     * @return template object
+     * Returns the JSON object of the affected template.
+     *
+     * @return the template JSON object, or null if not available
      */
-    public JsonObject getTemplate() {
+    public ObjectNode getTemplate() {
         return template;
     }
 }

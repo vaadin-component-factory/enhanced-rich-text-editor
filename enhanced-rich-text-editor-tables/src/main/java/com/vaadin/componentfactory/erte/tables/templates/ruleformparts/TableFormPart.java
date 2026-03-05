@@ -1,3 +1,19 @@
+/*-
+ * #%L
+ * Enhanced Rich Text Editor Tables Extension V25
+ * %%
+ * Copyright (C) 2025 Vaadin Ltd
+ * %%
+ * This program is available under Commercial Vaadin Add-On License 3.0
+ * (CVALv3).
+ *
+ * See the file license.html distributed with this software for more
+ * information about licensing.
+ *
+ * You should have received a copy of the CVALv3 along with this program.
+ * If not, see <http://vaadin.com/license/cval-3>.
+ * #L%
+ */
 package com.vaadin.componentfactory.erte.tables.templates.ruleformparts;
 
 import com.vaadin.componentfactory.erte.tables.TablesI18n.TemplatesI18n;
@@ -5,8 +21,8 @@ import com.vaadin.componentfactory.erte.tables.templates.TemplateDialog;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
-import elemental.json.Json;
-import elemental.json.JsonObject;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 
 import static com.vaadin.componentfactory.erte.tables.templates.TemplateJsonConstants.*;
 
@@ -22,17 +38,19 @@ public class TableFormPart extends RuleFormPart {
     }
 
     @Override
-    public void readTemplate(JsonObject template, Binder<JsonObject> binder) {
-        JsonObject table = template.getObject(TABLE);
-        if (table == null) {
-            table = Json.createObject();
-            template.put(TABLE, table);
+    protected void readTemplate(ObjectNode template, Binder<ObjectNode> binder) {
+        ObjectNode table;
+        if (template.has(TABLE)) {
+            table = (ObjectNode) template.get(TABLE);
+        } else {
+            table = JsonNodeFactory.instance.objectNode();
+            template.set(TABLE, table);
         }
         binder.setBean(table);
     }
 
     @Override
-    void initForm(Binder<JsonObject> binder) {
+    void initForm(Binder<ObjectNode> binder) {
         textColorField = createTextColorField();
         backgroundColorField = createBackgroundColorField();
         tableOutlineBorderField = createBorderField(getI18nOrDefault(TemplatesI18n::getFormTableBorderFieldLabel, "Table border"), P_BORDER);

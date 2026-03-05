@@ -1,0 +1,37 @@
+# Enhanced Rich Text Editor V25 — Core Component
+
+Core ERTE component for Vaadin 25. Extends Vaadin's built-in Rich Text Editor 2
+(Quill 2, Lit) with tabstops, placeholders, readonly sections, rulers, customizable
+toolbar, whitespace indicators, and more.
+
+## Maven Dependency
+
+```xml
+<dependency>
+    <groupId>com.vaadin.componentfactory</groupId>
+    <artifactId>enhanced-rich-text-editor</artifactId>
+    <version>6.0.0</version>
+</dependency>
+```
+
+> **Note:** Vaadin 25 moved the Rich Text Editor to the commercial `vaadin` artifact.
+> A Vaadin Pro subscription or higher is required for production use.
+
+## Quick Start
+
+For a complete Quick Start with examples, see the [root README](../README.md#quick-start).
+
+## Requirements
+
+- Java 21+
+- Vaadin 25.0.x
+- Quill 2.0.3 (vendored by Vaadin RTE 2)
+
+## Documentation
+
+- [User Guide](../docs/BASE_USER_GUIDE.md)
+- [Upgrade Guide](../docs/BASE_UPGRADE_GUIDE.md) (migrating from v5.x / Vaadin 24)
+
+## License
+
+[CVALv3](https://vaadin.com/license/cval-3) (Commercial Vaadin Add-On License)

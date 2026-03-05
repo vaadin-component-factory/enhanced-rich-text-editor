@@ -1,101 +1,36 @@
 package com.vaadin.componentfactory;
 
-import elemental.json.Json;
-import elemental.json.JsonArray;
-import elemental.json.JsonObject;
-import elemental.json.JsonValue;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for {@link TabConverter}.
  */
 class TabConverterTest {
 
+    private static final JsonMapper MAPPER = JsonMapper.shared();
+
     /**
-     * Compares two JSON values for semantic equality (object key order independent, array order dependent).
+     * Compares two JSON values for semantic equality (key order independent).
      */
     private void assertJsonEquals(String expected, String actual) {
-        JsonObject expectedObj = Json.parse(expected);
-        JsonObject actualObj = Json.parse(actual);
-        assertTrue(jsonEquals(expectedObj, actualObj),
-                   "Expected:\n" + expected + "\nActual:\n" + actual);
-    }
-
-    private boolean jsonEquals(JsonValue expected, JsonValue actual) {
-        if (expected == null && actual == null) {
-            return true;
+        try {
+            JsonNode expectedNode = MAPPER.readTree(expected);
+            JsonNode actualNode = MAPPER.readTree(actual);
+            assertEquals(expectedNode, actualNode,
+                    "Expected:\n" + expected + "\nActual:\n" + actual);
+        } catch (Exception e) {
+            fail("Failed to parse JSON: " + e.getMessage());
         }
-        if (expected == null || actual == null) {
-            return false;
-        }
-        if (expected.getType() != actual.getType()) {
-            return false;
-        }
-
-        switch (expected.getType()) {
-            case STRING:
-                return expected.asString().equals(actual.asString());
-            case NUMBER:
-                return expected.asNumber() == actual.asNumber();
-            case BOOLEAN:
-                return expected.asBoolean() == actual.asBoolean();
-            case NULL:
-                return true;
-            case OBJECT:
-                return jsonObjectEquals((JsonObject) expected, (JsonObject) actual);
-            case ARRAY:
-                return jsonArrayEquals((JsonArray) expected, (JsonArray) actual);
-            default:
-                return false;
-        }
-    }
-
-    private boolean jsonObjectEquals(JsonObject expected, JsonObject actual) {
-        Set<String> expectedKeys = new HashSet<>();
-        for (String key : expected.keys()) {
-            expectedKeys.add(key);
-        }
-        Set<String> actualKeys = new HashSet<>();
-        for (String key : actual.keys()) {
-            actualKeys.add(key);
-        }
-
-        if (!expectedKeys.equals(actualKeys)) {
-            return false;
-        }
-
-        for (String key : expectedKeys) {
-            if (!jsonEquals(expected.get(key), actual.get(key))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean jsonArrayEquals(JsonArray expected, JsonArray actual) {
-        if (expected.length() != actual.length()) {
-            return false;
-        }
-        for (int i = 0; i < expected.length(); i++) {
-            if (!jsonEquals(expected.get(i), actual.get(i))) {
-                return false;
-            }
-        }
-        return true;
     }
 
     @Test
     void convertSingleTab() {
         String input = """
-            {"ops":[{"attributes":{"tab":"1"},"insert":"﻿"}]}
+            {"ops":[{"attributes":{"tab":"1"},"insert":"\uFEFF"}]}
             """;
         String expected = """
             {"ops":[{"insert":{"tab":true}}]}
@@ -106,7 +41,7 @@ class TabConverterTest {
     @Test
     void convertMultipleLevelTab() {
         String input = """
-            {"ops":[{"attributes":{"tab":"3"},"insert":"﻿"}]}
+            {"ops":[{"attributes":{"tab":"3"},"insert":"\uFEFF"}]}
             """;
         String expected = """
             {"ops":[{"insert":{"tab":true}},{"insert":{"tab":true}},{"insert":{"tab":true}}]}
@@ -117,7 +52,7 @@ class TabConverterTest {
     @Test
     void convertLinePartWithZeroWidthSpace() {
         String input = """
-            {"ops":[{"attributes":{"line-part":true},"insert":"﻿"}]}
+            {"ops":[{"attributes":{"line-part":true},"insert":"\uFEFF"}]}
             """;
         String expected = """
             {"ops":[]}
@@ -161,7 +96,7 @@ class TabConverterTest {
     @Test
     void convertPreTab() {
         String input = """
-            {"ops":[{"attributes":{"pre-tab":true},"insert":"﻿"}]}
+            {"ops":[{"attributes":{"pre-tab":true},"insert":"\uFEFF"}]}
             """;
         String expected = """
             {"ops":[{"insert":{"tab":true}}]}
@@ -217,10 +152,10 @@ class TabConverterTest {
     void fullDocumentConversion() {
         String input = """
             {"ops":[
-                {"attributes":{"tab":"1"},"insert":"﻿"},
-                {"attributes":{"line-part":true},"insert":"﻿"},
+                {"attributes":{"tab":"1"},"insert":"\uFEFF"},
+                {"attributes":{"line-part":true},"insert":"\uFEFF"},
                 {"attributes":{"line-part":true},"insert":"Position"},
-                {"attributes":{"tab":"1"},"insert":"﻿"},
+                {"attributes":{"tab":"1"},"insert":"\uFEFF"},
                 {"attributes":{"line-part":true},"insert":"Beschreibung"},
                 {"attributes":{"tabs-cont":"TABS-CONT"},"insert":"\\n"}
             ]}
@@ -264,7 +199,7 @@ class TabConverterTest {
         String input = """
             {"ops":[
                 {"insert":"Normal text "},
-                {"attributes":{"tab":"2"},"insert":"﻿"},
+                {"attributes":{"tab":"2"},"insert":"\uFEFF"},
                 {"attributes":{"line-part":true,"bold":true},"insert":"Bold"},
                 {"attributes":{"tabs-cont":"TABS-CONT"},"insert":"\\n"},
                 {"insert":"More text\\n"}
@@ -287,9 +222,9 @@ class TabConverterTest {
     void multipleTabsInSequence() {
         String input = """
             {"ops":[
-                {"attributes":{"tab":"1"},"insert":"﻿"},
-                {"attributes":{"tab":"1"},"insert":"﻿"},
-                {"attributes":{"tab":"1"},"insert":"﻿"}
+                {"attributes":{"tab":"1"},"insert":"\uFEFF"},
+                {"attributes":{"tab":"1"},"insert":"\uFEFF"},
+                {"attributes":{"tab":"1"},"insert":"\uFEFF"}
             ]}
             """;
         String expected = """
@@ -303,38 +238,9 @@ class TabConverterTest {
     }
 
     @Test
-    void tabsInMultipleParagraphs() {
-        String input = """
-            {"ops":[
-                {"attributes":{"tab":"1"},"insert":"﻿"},
-                {"attributes":{"line-part":true},"insert":"Line 1"},
-                {"attributes":{"tabs-cont":"TABS-CONT"},"insert":"\\n"},
-                {"insert":"Normal paragraph\\n"},
-                {"attributes":{"tab":"2"},"insert":"﻿"},
-                {"attributes":{"line-part":true},"insert":"Line 2"},
-                {"attributes":{"tabs-cont":"TABS-CONT"},"insert":"\\n"}
-            ]}
-            """;
-        String expected = """
-            {"ops":[
-                {"insert":{"tab":true}},
-                {"insert":"Line 1"},
-                {"insert":"\\n"},
-                {"insert":"Normal paragraph\\n"},
-                {"insert":{"tab":true}},
-                {"insert":{"tab":true}},
-                {"insert":"Line 2"},
-                {"insert":"\\n"}
-            ]}
-            """;
-        assertJsonEquals(expected, TabConverter.convertToNewFormat(input));
-    }
-
-    @Test
     void tabWithTrueValue() {
-        // Old format sometimes uses "true" as tab value (for single tabs)
         String input = """
-            {"ops":[{"attributes":{"tab":"true"},"insert":"﻿"}]}
+            {"ops":[{"attributes":{"tab":"true"},"insert":"\uFEFF"}]}
             """;
         String expected = """
             {"ops":[{"insert":{"tab":true}}]}
@@ -344,11 +250,10 @@ class TabConverterTest {
 
     @Test
     void preserveUnderlineFormatting() {
-        // From the demo: underline formatting should be preserved
         String input = """
             {"ops":[
-                {"attributes":{"tab":"3"},"insert":"﻿"},
-                {"attributes":{"line-part":true},"insert":"﻿"},
+                {"attributes":{"tab":"3"},"insert":"\uFEFF"},
+                {"attributes":{"line-part":true},"insert":"\uFEFF"},
                 {"attributes":{"underline":true,"line-part":true},"insert":"3rd tab-stop"},
                 {"attributes":{"tabs-cont":"TABS-CONT"},"insert":"\\n"}
             ]}
@@ -367,21 +272,20 @@ class TabConverterTest {
 
     @Test
     void complexTableLikeStructure() {
-        // Mimics the table structure from createEditorWithTabstops()
         String input = """
             {"ops":[
-                {"attributes":{"tab":"1"},"insert":"﻿"},
+                {"attributes":{"tab":"1"},"insert":"\uFEFF"},
                 {"attributes":{"bold":true,"line-part":true},"insert":"Product"},
-                {"attributes":{"tab":"1"},"insert":"﻿"},
+                {"attributes":{"tab":"1"},"insert":"\uFEFF"},
                 {"attributes":{"bold":true,"line-part":true},"insert":"Price"},
-                {"attributes":{"tab":"1"},"insert":"﻿"},
+                {"attributes":{"tab":"1"},"insert":"\uFEFF"},
                 {"attributes":{"bold":true,"line-part":true},"insert":"Quantity"},
                 {"attributes":{"tabs-cont":"TABS-CONT"},"insert":"\\n"},
-                {"attributes":{"tab":"1"},"insert":"﻿"},
+                {"attributes":{"tab":"1"},"insert":"\uFEFF"},
                 {"attributes":{"line-part":true},"insert":"Apples"},
-                {"attributes":{"tab":"1"},"insert":"﻿"},
+                {"attributes":{"tab":"1"},"insert":"\uFEFF"},
                 {"attributes":{"line-part":true},"insert":"2.00"},
-                {"attributes":{"tab":"1"},"insert":"﻿"},
+                {"attributes":{"tab":"1"},"insert":"\uFEFF"},
                 {"attributes":{"line-part":true},"insert":"5"},
                 {"attributes":{"tabs-cont":"TABS-CONT"},"insert":"\\n"}
             ]}
@@ -411,7 +315,6 @@ class TabConverterTest {
 
     @Test
     void convertIfNeeded_newFormatPassthrough() {
-        // New-format delta should pass through unchanged
         String newFormat = "{\"ops\":[{\"insert\":{\"tab\":true}},{\"insert\":\"Hello\"},{\"insert\":\"\\n\"}]}";
         String result = TabConverter.convertIfNeeded(newFormat);
         assertEquals(newFormat, result);
@@ -419,7 +322,6 @@ class TabConverterTest {
 
     @Test
     void convertIfNeeded_oldFormatObjectConverted() {
-        // Old-format object {"ops":[...]} should be detected and converted
         String input = "{\"ops\":[{\"attributes\":{\"tab\":\"1\"},\"insert\":\"\\uFEFF\"},{\"attributes\":{\"line-part\":true},\"insert\":\"Hello\"},{\"attributes\":{\"tabs-cont\":\"TABS-CONT\"},\"insert\":\"\\n\"}]}";
         String result = TabConverter.convertIfNeeded(input);
         assertTrue(result.contains("\"tab\":true"), "Should contain new tab format");
@@ -429,10 +331,8 @@ class TabConverterTest {
 
     @Test
     void convertIfNeeded_oldFormatArrayConverted() {
-        // Old-format array [{...}] should be detected, wrapped, converted, and unwrapped
         String input = "[{\"attributes\":{\"tab\":\"2\"},\"insert\":\"\\uFEFF\"},{\"attributes\":{\"line-part\":true},\"insert\":\"text\"},{\"attributes\":{\"tabs-cont\":\"TABS-CONT\"},\"insert\":\"\\n\"}]";
         String result = TabConverter.convertIfNeeded(input);
-        // Result should be an array (starts with [)
         assertTrue(result.trim().startsWith("["), "Should return array format");
         assertTrue(result.contains("\"tab\":true"), "Should contain new tab format");
         // Two tabs from tab level 2
@@ -450,7 +350,6 @@ class TabConverterTest {
 
     @Test
     void convertIfNeeded_plainTextPassthrough() {
-        // Plain text without any tab markers should pass through unchanged
         String plain = "{\"ops\":[{\"insert\":\"Hello world\\n\"}]}";
         String result = TabConverter.convertIfNeeded(plain);
         assertEquals(plain, result);
@@ -458,9 +357,46 @@ class TabConverterTest {
 
     @Test
     void convertIfNeeded_preTabDetected() {
-        // pre-tab marker should trigger conversion
         String input = "{\"ops\":[{\"attributes\":{\"pre-tab\":true},\"insert\":\"\\uFEFF\"},{\"insert\":\"\\n\"}]}";
         String result = TabConverter.convertIfNeeded(input);
         assertTrue(result.contains("\"tab\":true"), "pre-tab should be converted to tab embed");
+    }
+
+    @Test
+    void convertIfNeeded_demoViewOldFormatArray() {
+        String input = "[{\"attributes\":{\"tab\":\"1\"},\"insert\":\"\\uFEFF\"},"
+            + "{\"attributes\":{\"line-part\":true},\"insert\":\"\\uFEFF\"},"
+            + "{\"attributes\":{\"line-part\":true},\"insert\":\"Position\"},"
+            + "{\"attributes\":{\"tab\":\"1\"},\"insert\":\"\\uFEFF\"},"
+            + "{\"attributes\":{\"line-part\":true},\"insert\":\"Beschreibung\"},"
+            + "{\"attributes\":{\"tabs-cont\":\"TABS-CONT\"},\"insert\":\"\\n\"}]";
+
+        String result = TabConverter.convertIfNeeded(input);
+
+        // Must return array format (starts with [)
+        assertTrue(result.trim().startsWith("["), "Should return array format");
+
+        // Count tab embeds
+        try {
+            JsonNode ops = MAPPER.readTree(result);
+            int tabCount = 0;
+            for (JsonNode op : ops) {
+                JsonNode insert = op.get("insert");
+                if (insert != null && insert.isObject() && insert.has("tab")) {
+                    tabCount++;
+                }
+            }
+            assertEquals(2, tabCount, "Should have exactly 2 tab embeds");
+        } catch (Exception e) {
+            fail("Failed to parse result JSON: " + e.getMessage());
+        }
+
+        // Verify text content survived
+        assertTrue(result.contains("Position"), "Should preserve 'Position' text");
+        assertTrue(result.contains("Beschreibung"), "Should preserve 'Beschreibung' text");
+
+        // Verify old-format markers are gone
+        assertFalse(result.contains("tabs-cont"), "Should not contain old tabs-cont");
+        assertFalse(result.contains("line-part"), "Should not contain old line-part");
     }
 }

@@ -1,3 +1,19 @@
+/*-
+ * #%L
+ * Enhanced Rich Text Editor Tables Extension V25
+ * %%
+ * Copyright (C) 2025 Vaadin Ltd
+ * %%
+ * This program is available under Commercial Vaadin Add-On License 3.0
+ * (CVALv3).
+ *
+ * See the file license.html distributed with this software for more
+ * information about licensing.
+ *
+ * You should have received a copy of the CVALv3 along with this program.
+ * If not, see <http://vaadin.com/license/cval-3>.
+ * #L%
+ */
 package com.vaadin.componentfactory.erte.tables.templates.ruleformparts;
 
 import com.vaadin.componentfactory.erte.tables.TablesI18n.TemplatesI18n;
@@ -15,12 +31,13 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.Setter;
 import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.shared.Registration;
-import elemental.json.JsonObject;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import static com.vaadin.componentfactory.erte.tables.templates.TemplateJsonConstants.*;
 
 public abstract class RuleFormPart extends VerticalLayout {
-    private final Binder<JsonObject> binder;
+    private final Binder<ObjectNode> binder;
     private final TemplateDialog templateDialog;
 
     public RuleFormPart(TemplateDialog templateDialog) {
@@ -29,14 +46,11 @@ public abstract class RuleFormPart extends VerticalLayout {
 
         setPadding(false);
 
-//        addAttachListener(event -> {
-            initForm (binder);
-//            event.unregisterListener();
-//        });
+        initForm(binder);
         addClassName("form-part");
     }
 
-    abstract void initForm(Binder<JsonObject> binder);
+    abstract void initForm(Binder<ObjectNode> binder);
 
     protected TextField createBorderField(String label, String key) {
         TextField field = createTextField(label, key);
@@ -130,25 +144,35 @@ public abstract class RuleFormPart extends VerticalLayout {
         return createSizeField(getI18nOrDefault(TemplatesI18n::getFormHeightFieldLabel, "Height"), P_HEIGHT);
     }
 
-    protected static ValueProvider<JsonObject, String> getter(String key) {
-        return jsonObject -> jsonObject.hasKey(key) ? jsonObject.getString(key) : null;
+    protected static ValueProvider<ObjectNode, String> getter(String key) {
+        return obj -> {
+            if (!obj.has(key)) return null;
+            JsonNode node = obj.get(key);
+            return (node != null && !node.isNull()) ? node.asText() : null;
+        };
     }
 
-    protected static Setter<JsonObject, String> setter(String key) {
-        return (jsonObject1, s) -> jsonObject1.put(key, s);
+    protected static Setter<ObjectNode, String> setter(String key) {
+        return (obj, val) -> {
+            if (val != null && !val.isEmpty()) {
+                obj.put(key, val);
+            } else {
+                obj.remove(key);
+            }
+        };
     }
 
-    public void readTemplate(JsonObject template) {
+    public void readTemplate(ObjectNode template) {
         readTemplate(template, binder);
     }
 
-    protected abstract void readTemplate(JsonObject template, Binder<JsonObject> binder);
+    protected abstract void readTemplate(ObjectNode template, Binder<ObjectNode> binder);
 
-    public void setBean(JsonObject object) {
+    public void setBean(ObjectNode object) {
         binder.setBean(object);
     }
 
-    public JsonObject getBean() {
+    public ObjectNode getBean() {
         return binder.getBean();
     }
 
@@ -166,5 +190,13 @@ public abstract class RuleFormPart extends VerticalLayout {
 
     public void clearValues() {
         binder.removeBean();
+    }
+
+    public boolean hasWidthInputs() {
+        return false;
+    }
+
+    public boolean hasHeightInputs() {
+        return false;
     }
 }

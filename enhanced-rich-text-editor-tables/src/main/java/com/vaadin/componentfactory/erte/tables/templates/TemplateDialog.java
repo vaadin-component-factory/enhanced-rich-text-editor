@@ -1,3 +1,19 @@
+/*-
+ * #%L
+ * Enhanced Rich Text Editor Tables Extension V25
+ * %%
+ * Copyright (C) 2025 Vaadin Ltd
+ * %%
+ * This program is available under Commercial Vaadin Add-On License 3.0
+ * (CVALv3).
+ *
+ * See the file license.html distributed with this software for more
+ * information about licensing.
+ *
+ * You should have received a copy of the CVALv3 along with this program.
+ * If not, see <http://vaadin.com/license/cval-3>.
+ * #L%
+ */
 package com.vaadin.componentfactory.erte.tables.templates;
 
 import com.vaadin.componentfactory.erte.tables.TablesI18n.TemplatesI18n;
@@ -21,17 +37,14 @@ import com.vaadin.flow.function.SerializableBiConsumer;
 import com.vaadin.flow.function.SerializableConsumer;
 import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.shared.Registration;
-import elemental.json.Json;
-import elemental.json.JsonArray;
-import elemental.json.JsonObject;
 import jakarta.annotation.Nonnull;
-import org.apache.commons.lang3.StringUtils;
+import jakarta.annotation.Nullable;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.vaadin.componentfactory.erte.tables.templates.TemplateJsonConstants.*;
 
@@ -55,8 +68,8 @@ public class TemplateDialog extends ToolbarDialog {
     private final FixedIndexRowFormPart evenRowsFormPart;
     private final FixedIndexRowFormPart oddRowsFormPart;
     private ComboBox<String> templateSelectionField;
-    private JsonObject currentTemplate;
-    private JsonObject templates = Json.createObject();
+    private ObjectNode currentTemplate;
+    private ObjectNode templates = JsonNodeFactory.instance.objectNode();
     private final CurrentRowFormPart currentRowFormPart;
     private final CurrentColFormPart currentColFormPart;
 
@@ -78,9 +91,12 @@ public class TemplateDialog extends ToolbarDialog {
         super(referencedSwitch);
         this.i18n = i18n;
 
+        openAtSwitch();
+
         setHeaderTitle(getI18nOrDefault(TemplatesI18n::getDialogTitle, "Table Templates"));
         Button button = new Button(VaadinIcon.CLOSE.create(), event -> close());
         button.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        button.setAriaLabel("Close dialog");
         getHeader().add(button);
 
         layout = new VerticalLayout();
@@ -109,15 +125,6 @@ public class TemplateDialog extends ToolbarDialog {
         add(layout);
 
         setFocusOnOpenTarget(templateSelectionField);
-
-        addOpenedChangeListener(event -> {
-            if (event.isOpened()) {
-                getElement().executeJs("const {left, top, width, height} = $0.getBoundingClientRect();" +
-                                       "this.$.overlay.$.overlay.style.position = 'absolute';" +
-                                       "this.$.overlay.$.overlay.style.left = left + width + 'px';",
-                        getToolbarSwitch());
-            }
-        });
     }
 
     private void initTemplateSelection() {
@@ -139,7 +146,7 @@ public class TemplateDialog extends ToolbarDialog {
         templateSection.addClassNames("form-part");
         layout.add(templateSection);
 
-        Binder<JsonObject> nameBinder = new Binder<>();
+        Binder<ObjectNode> nameBinder = new Binder<>();
         nameBinder.forField(templateNameField)
                 .asRequired()
                 .withValidator(s -> {
@@ -147,7 +154,7 @@ public class TemplateDialog extends ToolbarDialog {
                     boolean b = !strings.contains(s);
                     return b;
                 }, getI18nOrDefault(TemplatesI18n::getCurrentTemplateNameNotUniqueError, "Name already used!"))
-                .bind(o -> o.getString(NAME), (o, s) -> o.put(NAME, s));
+                .bind(o -> o.get(NAME).asText(), (o, s) -> o.put(NAME, s));
 
         nameBinder.addValueChangeListener(event -> {
             if (nameBinder.validate().isOk()) {
@@ -158,9 +165,9 @@ public class TemplateDialog extends ToolbarDialog {
         });
 
         templateSelectionField.addValueChangeListener(event -> {
-            String value = StringUtils.trimToNull(event.getValue());
-            if (value != null && this.templates.hasKey(value)) {
-                currentTemplate = this.templates.getObject(value);
+            String value = event.getValue() != null && !event.getValue().isBlank() ? event.getValue().trim() : null;
+            if (value != null && this.templates.has(value)) {
+                currentTemplate = (ObjectNode) this.templates.get(value);
                 nameBinder.setBean(currentTemplate);
             } else {
                 currentTemplate = null;
@@ -196,13 +203,13 @@ public class TemplateDialog extends ToolbarDialog {
 
         createNewTemplate.addClickListener(event -> {
             String id = generateTemplateId();
-            JsonObject template = Json.createObject();
+            ObjectNode template = JsonNodeFactory.instance.objectNode();
             template.put(NAME, id);
-            templates.put(id, template);
+            templates.set(id, template);
             updateTemplatesField();
 
             if (templateCreatedCallback != null) {
-                String activeTemplateId = getActiveTemplateId().orElse(null); // just for the sake of comleteness
+                String activeTemplateId = getActiveTemplateId().orElse(null); // just for the sake of completeness
                 templateCreatedCallback.accept(new TemplateModificationDetails(id, activeTemplateId, template, event.isFromClient()));
             }
 
@@ -218,9 +225,8 @@ public class TemplateDialog extends ToolbarDialog {
         copySelectedTemplate.addThemeVariants(ButtonVariant.LUMO_SMALL);
         copySelectedTemplate.setTooltipText(getI18nOrDefault(TemplatesI18n::getCopyTemplateButtonTooltip, "Copy template"));
 
-
         copySelectedTemplate.addClickListener(event -> {
-            String currentName = currentTemplate.getString(NAME);
+            String currentName = currentTemplate.get(NAME).asText();
             String id = generateTemplateId();
 
             String i18nCopy = getI18nOrDefault(TemplatesI18n::getTemplateCopySuffix, "Copy");
@@ -234,7 +240,7 @@ public class TemplateDialog extends ToolbarDialog {
                 String firstPart;
                 if (numberedCopyIndex >= 0) { // count the copy up - a convenient feature to prevent "- Kopie - Kopie" etc tails
                     int endOf = currentName.indexOf(")", numberedCopyIndex);
-                    String substring = currentName.substring(numberedCopyIndex, endOf);
+                    String substring = currentName.substring(numberedCopyIndex + 1, endOf);
                     firstPart = currentName.substring(0, numberedCopyIndex);
                     try {
                         start = Integer.parseInt(substring);
@@ -245,12 +251,11 @@ public class TemplateDialog extends ToolbarDialog {
                     firstPart = currentName + " "; // otherwise the parentheses will be attached directly to the copied name
                 }
 
-
                 currentName = generateNumberedName(firstPart + "(", ")", start, collectExistingNames());
             }
-            JsonObject clonedTemplate = TemplateParser.clone(currentTemplate);
+            ObjectNode clonedTemplate = TemplateParser.clone(currentTemplate);
             clonedTemplate.put(NAME, currentName);
-            templates.put(id, clonedTemplate);
+            templates.set(id, clonedTemplate);
 
             String originId = getActiveTemplateIdOrThrow();
 
@@ -271,16 +276,15 @@ public class TemplateDialog extends ToolbarDialog {
     }
 
     private Set<String> collectExistingNames(boolean withCurrentTemplate) {
-        Stream<JsonObject> stream = Stream.of(templates.keys())
-                .map(templates::getObject);
-
-        if (!withCurrentTemplate && currentTemplate != null) {
-            stream = stream.filter(o -> o != currentTemplate);
+        Set<String> names = new HashSet<>();
+        for (String key : templates.propertyNames()) {
+            ObjectNode tmpl = (ObjectNode) templates.get(key);
+            if (!withCurrentTemplate && tmpl == currentTemplate) {
+                continue;
+            }
+            names.add(tmpl.get(NAME).asText());
         }
-
-        return stream
-                .map(o -> o.getString(NAME))
-                .collect(Collectors.toSet());
+        return names;
     }
 
     protected Button initDeleteSelectedTemplateButton() {
@@ -290,13 +294,14 @@ public class TemplateDialog extends ToolbarDialog {
         button.setTooltipText(getI18nOrDefault(TemplatesI18n::getDeleteTemplateButtonTooltip, "Delete template"));
 
         button.addClickListener(event -> {
-            new ConfirmDialog(
-                    getI18nOrDefault(TemplatesI18n::getDeleteTemplateConfirmTitle, "Delete Template"),
-                    getI18nOrDefault(TemplatesI18n::getDeleteTemplateConfirmText, "Shall the selected template be deleted? This process is irreversible."),
-                    getI18nOrDefault(TemplatesI18n::getDeleteTemplateConfirmYesButton, "Delete"), confirmEvent -> {
-
+            ConfirmDialog confirmDialog = new ConfirmDialog();
+            confirmDialog.setHeader(getI18nOrDefault(TemplatesI18n::getDeleteTemplateConfirmTitle, "Delete Template"));
+            confirmDialog.setText(getI18nOrDefault(TemplatesI18n::getDeleteTemplateConfirmText, "Shall the selected template be deleted? This process is irreversible."));
+            confirmDialog.setConfirmText(getI18nOrDefault(TemplatesI18n::getDeleteTemplateConfirmYesButton, "Delete"));
+            confirmDialog.setConfirmButtonTheme("error primary");
+            confirmDialog.addConfirmListener(confirmEvent -> {
                 String id = getActiveTemplateIdOrThrow();
-                JsonObject deletedTemplate = templates.getObject(id);
+                ObjectNode deletedTemplate = (ObjectNode) templates.get(id);
                 templates.remove(id);
 
                 updateTemplatesField();
@@ -306,15 +311,19 @@ public class TemplateDialog extends ToolbarDialog {
                 }
 
                 templateSelectionField.clear();
-            }, getI18nOrDefault(TemplatesI18n::getDeleteTemplateConfirmNoButton, "Cancel"), cancelEvent -> {
-            }).open();
+            });
+            confirmDialog.setCancelable(true);
+            confirmDialog.setCancelText(getI18nOrDefault(TemplatesI18n::getDeleteTemplateConfirmNoButton, "Cancel"));
+            confirmDialog.open();
         });
 
         return button;
     }
 
     private String generateTemplateId() {
-        return generateNumberedName("template", "", 1, Set.of(templates.keys()));
+        Set<String> existingKeys = new HashSet<>();
+        existingKeys.addAll(templates.propertyNames());
+        return generateNumberedName("template", "", 1, existingKeys);
     }
 
     private String generateNumberedName(String prefix, String suffix, int startingCount, Set<String> existingItems) {
@@ -356,21 +365,21 @@ public class TemplateDialog extends ToolbarDialog {
         }
     }
 
-    public JsonObject getTemplates() {
-        JsonObject clone = TemplateParser.clone(templates);
+    public ObjectNode getTemplates() {
+        ObjectNode clone = TemplateParser.clone(templates);
         TemplateParser.removeEmptyChildren(clone);
         return clone;
     }
 
-    public void setTemplates(JsonObject templates) {
+    public void setTemplates(ObjectNode templates) {
         this.templates = TemplateParser.clone(templates);
 
         updateTemplatesField();
     }
 
     private void updateTemplatesField() {
-        List<String> keys = new ArrayList<>(templates.keys().length);
-        for (String key : templates.keys()) {
+        List<String> keys = new ArrayList<>(templates.size());
+        for (String key : templates.propertyNames()) {
             if (!PATTERN_TEMPLATE_ID.matcher(key).matches()) {
                 throw new IllegalArgumentException("Invalid template name: " + key);
             }
@@ -381,8 +390,8 @@ public class TemplateDialog extends ToolbarDialog {
         templateSelectionField.setItems(keys);
         templateSelectionField.setValue(value);
         templateSelectionField.setItemLabelGenerator(item -> {
-            JsonObject object = this.templates.getObject(item);
-            return object != null ? object.getString("name") : ("#" + item);
+            ObjectNode object = (ObjectNode) this.templates.get(item);
+            return object != null ? object.get("name").asText() : ("#" + item);
         });
     }
 
@@ -412,7 +421,7 @@ public class TemplateDialog extends ToolbarDialog {
     }
 
     public void setActiveTemplateId(@Nullable String templateId) {
-        templateSelectionField.setValue(StringUtils.trimToNull(templateId));
+        templateSelectionField.setValue(templateId != null && !templateId.isBlank() ? templateId.trim() : null);
     }
 
     public Optional<String> getActiveTemplateId() {
@@ -461,11 +470,11 @@ public class TemplateDialog extends ToolbarDialog {
                 startingIndex++; // if the item has been added after the current one, we need to increase all indices after ours excluding us
             }
 
-            JsonArray array = currentTemplate.getArray(key);
-            if (array != null) {
-                for (int i = 0; i < array.length(); i++) {
-                    JsonObject value = array.getObject(i);
-                    String sIndex = value.getString(INDEX);
+            if (currentTemplate.has(key)) {
+                ArrayNode array = (ArrayNode) currentTemplate.get(key);
+                for (int i = 0; i < array.size(); i++) {
+                    ObjectNode value = (ObjectNode) array.get(i);
+                    String sIndex = value.get(INDEX).asText();
                     try {
                         int index = Integer.parseInt(sIndex);
                         if (index >= startingIndex) {
@@ -474,7 +483,6 @@ public class TemplateDialog extends ToolbarDialog {
                     } catch (NumberFormatException nfe) {
                         // NOOP
                     }
-
                 }
 
                 notifyTemplateUpdated(true);
@@ -494,11 +502,11 @@ public class TemplateDialog extends ToolbarDialog {
         if (currentTemplate != null) {
             int startingIndex = (ROWS.equals(key) ? currentRowFormPart.getSelectedRow() : currentColFormPart.getSelectedCol()) + 1;
 
-            JsonArray array = currentTemplate.getArray(key);
-            if (array != null) {
-                for (int i = array.length() - 1; i >= 0 ; i--) {
-                    JsonObject value = array.getObject(i);
-                    String sIndex = value.getString(INDEX);
+            if (currentTemplate.has(key)) {
+                ArrayNode array = (ArrayNode) currentTemplate.get(key);
+                for (int i = array.size() - 1; i >= 0 ; i--) {
+                    ObjectNode value = (ObjectNode) array.get(i);
+                    String sIndex = value.get(INDEX).asText();
                     try {
                         int index = Integer.parseInt(sIndex);
                         if (index == startingIndex) {
@@ -509,7 +517,6 @@ public class TemplateDialog extends ToolbarDialog {
                     } catch (NumberFormatException nfe) {
                         // NOOP
                     }
-
                 }
 
                 notifyTemplateUpdated(true);
@@ -668,15 +675,6 @@ public class TemplateDialog extends ToolbarDialog {
         return templateButtonsContainer;
     }
 
-    //    private void applyOverlayPopupCloseWorkaround(Component component) {
-//        component.getElement().executeJs("this.addEventListener('opened-changed', e => {" +
-//                                         "if(e.detail.value) {  " +
-//                                         "    $0.__stayOpen = true;" +
-//                                         "}" +
-//                                         "});", this);
-//    }
-
-
     /**
      * Returns the defaults used for this template dialog instance. Any changes made to this object
      * are reflected to this instance.
@@ -689,12 +687,12 @@ public class TemplateDialog extends ToolbarDialog {
     public static final class TemplateModificationDetails {
         private final String id;
         private final String activeTemplateId;
-        private final JsonObject modifiedTemplate;
+        private final ObjectNode modifiedTemplate;
         private final boolean changedByClient;
 
         TemplateModificationDetails(String id,
                                     String activeTemplateId,
-                                    JsonObject modifiedTemplate,
+                                    ObjectNode modifiedTemplate,
                                     boolean changedByClient) {
             this.id = id;
             this.activeTemplateId = activeTemplateId;
@@ -725,7 +723,7 @@ public class TemplateDialog extends ToolbarDialog {
          * Returns the modified template. This is NOT the whole templates structure, but just the affected part.
          * @return modified template
          */
-        public JsonObject getModifiedTemplate() {
+        public ObjectNode getModifiedTemplate() {
             return modifiedTemplate;
         }
 
@@ -775,7 +773,6 @@ public class TemplateDialog extends ToolbarDialog {
             String old = this.dimensionUnit;
             this.dimensionUnit = Objects.requireNonNull(dimensionUnit);
             fireValueChangeEvent("dimensionUnit", old, dimensionUnit);
-
         }
 
         @SuppressWarnings({"rawtypes", "unchecked"})

@@ -1,0 +1,100 @@
+/**
+ * ERTE Tables — V25 Base Styles
+ * Custom properties allow theming without Shadow DOM styling:
+ *   vcf-enhanced-rich-text-editor { --vaadin-erte-table-border-color: red; }
+ */
+
+/* ============================================================================
+   Table Custom Properties
+   ============================================================================ */
+:host {
+  /* Cell appearance */
+  --vaadin-erte-table-border-color: var(--vaadin-border-color, var(--lumo-contrast-30pct));
+  --vaadin-erte-table-border-width: 1px;
+  --vaadin-erte-table-border-style: solid;
+  --vaadin-erte-table-cell-padding: 2px 5px;
+  --vaadin-erte-table-cell-min-height: 1.625em;
+  --vaadin-erte-table-cell-background: transparent;
+  /* Vertical alignment: useful for tables as form layouts or data grids */
+  --vaadin-erte-table-cell-vertical-align: top;
+
+  /* Cell states */
+  --vaadin-erte-table-cell-selected-background: var(--lumo-primary-color-10pct, rgba(25, 118, 210, 0.1));
+  --vaadin-erte-table-cell-hover-background: transparent;
+  /* Focus ring: matches vaadin-grid cell focus pattern */
+  --vaadin-erte-table-cell-focus-color: var(--vaadin-focus-ring-color, var(--lumo-primary-color-50pct));
+  --vaadin-erte-table-cell-focus-width: var(--vaadin-focus-ring-width, 2px);
+}
+
+/* ============================================================================
+   Table Structure
+   ============================================================================ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  overflow: hidden;
+}
+
+/* ============================================================================
+   Table Cells
+   ============================================================================ */
+table td.td-q {
+  border: var(--vaadin-erte-table-border-width) var(--vaadin-erte-table-border-style) var(--vaadin-erte-table-border-color);
+  padding: var(--vaadin-erte-table-cell-padding);
+  min-height: var(--vaadin-erte-table-cell-min-height);
+  vertical-align: var(--vaadin-erte-table-cell-vertical-align);
+  background-color: var(--vaadin-erte-table-cell-background);
+  white-space: pre-wrap;
+}
+
+/* Cell selection cursor — only shown when Ctrl is held */
+.erte-ctrl-select table td.td-q {
+  cursor: cell;
+}
+
+/* Hidden border variant */
+.ql-editor__table--hideBorder td {
+  border: none !important;
+}
+
+/* Hidden merged cells */
+table td[merge_id] {
+  display: none;
+}
+
+/* ============================================================================
+   Cell States
+   ============================================================================ */
+
+/* Selection highlight — uses gradient to layer over cell background/template styles */
+table td.ql-cell-selected {
+  background-image: linear-gradient(
+    var(--vaadin-erte-table-cell-selected-background),
+    var(--vaadin-erte-table-cell-selected-background)
+  );
+}
+
+/* Focused cell — matches vaadin-grid cell focus pattern */
+td.focused-cell {
+  outline: var(--vaadin-erte-table-cell-focus-width) solid var(--vaadin-erte-table-cell-focus-color);
+  outline-offset: calc(-1 * var(--vaadin-erte-table-cell-focus-width));
+}
+
+/* Cell hover */
+table td:hover {
+  background-color: var(--vaadin-erte-table-cell-hover-background);
+}
+
+/* ============================================================================
+   Forced Colors (Windows High Contrast Mode)
+   ============================================================================ */
+@media (forced-colors: active) {
+  table td.ql-cell-selected {
+    outline: 2px solid Mark;
+    background-image: none;
+  }
+  td.focused-cell {
+    outline: 3px solid Highlight;
+  }
+}
