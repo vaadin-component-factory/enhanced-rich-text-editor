@@ -35,7 +35,8 @@ import tableCss from './css/erte-table-styles.css?inline';
     console.log(TAG, 'Registering table blots');
 
     const Container = Quill.import('blots/container');
-    Container.order = ['list', 'contain', 'td', 'tr', 'table'];
+    if (!Container.order) Container.order = [];
+    Container.order.push('list', 'contain', 'td', 'tr', 'table');
 
     Quill.register('formats/contain', ContainBlot, true);
     Quill.register('formats/td', TableCell, true);
