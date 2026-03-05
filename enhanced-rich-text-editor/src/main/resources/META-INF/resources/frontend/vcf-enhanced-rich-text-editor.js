@@ -626,122 +626,57 @@ class VcfEnhancedRichTextEditor extends RteBase {
     // Apply ERTE i18n labels to custom buttons/dialog (initial defaults)
     this._applyErteI18n();
 
-    // SPIKE: Test Aura Style Proxy (Phase 3.4j)
-    this._injectAuraStyleProxySpike();
+    // Theme style proxy: clone vaadin-rich-text-editor rules for ERTE tag
+    this.constructor.__injectThemeStyleProxy();
 
     console.debug('[ERTE] ready, _editor:', !!this._editor, 'readonly protection active, tab engine initialized');
   }
 
   /**
-   * SPIKE: Aura Style Proxy - scans document stylesheets and clones RTE rules for ERTE.
-   * Part of Phase 3.4j spike investigation.
+   * Theme style proxy: scans document stylesheets for vaadin-rich-text-editor
+   * rules and clones them with vcf-enhanced-rich-text-editor selector.
+   * This ensures ERTE inherits theme-specific chrome (Aura, Lumo, or custom)
+   * without duplicating theme CSS. Only replaces in selectors, preserving
+   * --vaadin-rich-text-editor-* property names in declarations.
    * @private
    */
-  _injectAuraStyleProxySpike() {
-    console.group('ERTE Spike: Aura Style Proxy');
-
-    // Guard: avoid duplicate injection
-    if (document.querySelector('style[data-vcf-erte-spike-proxy]')) {
-      console.log('Proxy already injected, skipping.');
-      console.groupEnd();
-      return;
-    }
-
-    const startTime = performance.now();
-    const stats = {
-      totalSheets: 0,
-      scannedSheets: 0,
-      corsSkipped: 0,
-      totalRules: 0,
-      matchedRules: 0,
-    };
+  static __injectThemeStyleProxy() {
+    if (this.__themeProxyInjected) return;
 
     const rteRules = [];
-
-    // Scan all stylesheets
     for (const sheet of document.styleSheets) {
-      stats.totalSheets++;
-
       try {
-        stats.scannedSheets++;
-        const rules = Array.from(sheet.cssRules || []);
-        stats.totalRules += rules.length;
-
-        for (const rule of rules) {
-          if (rule.cssText && rule.cssText.includes('vaadin-rich-text-editor')) {
-            rteRules.push({
-              original: rule.cssText,
-              sheet: sheet.href || '(inline)',
-            });
-            stats.matchedRules++;
+        for (const rule of sheet.cssRules) {
+          if (rule.cssText?.includes('vaadin-rich-text-editor')) {
+            rteRules.push(rule.cssText);
           }
         }
       } catch (e) {
-        // CORS-protected sheet
-        stats.corsSkipped++;
-        console.warn('Skipped stylesheet (CORS):', sheet.href, e.message);
+        // CORS-protected sheets — skip silently
       }
     }
 
-    if (rteRules.length === 0) {
-      console.log('No RTE-specific rules found.');
-      console.groupEnd();
-      return;
-    }
+    if (rteRules.length === 0) return;
 
-    // Clone rules with ERTE tag (CRITICAL: negative lookbehind to avoid CSS var collision)
-    const proxyStyles = rteRules.map(({ original }) =>
-      original.replace(/(?<!--)vaadin-rich-text-editor/g, 'vcf-enhanced-rich-text-editor')
-    );
+    // Only replace in selectors, NOT in property names/values.
+    // vaadin-rich-text-editor appears in selectors AND in custom property
+    // names like --vaadin-rich-text-editor-background. We must preserve
+    // the property names (they're the API consumed by the component).
+    const proxyStyles = rteRules.map(cssText => {
+      const braceIdx = cssText.indexOf('{');
+      if (braceIdx === -1) return cssText;
+      const selector = cssText.substring(0, braceIdx);
+      const rest = cssText.substring(braceIdx);
+      return selector.replace(/vaadin-rich-text-editor/g,
+        'vcf-enhanced-rich-text-editor') + rest;
+    });
 
-    // Inject into document
     const styleEl = document.createElement('style');
-    styleEl.setAttribute('data-vcf-erte-spike-proxy', '');
-    styleEl.textContent = [
-      '/* ERTE Aura Style Proxy (SPIKE) */',
-      `/* Generated: ${new Date().toISOString()} */`,
-      `/* Cloned ${stats.matchedRules} rules */`,
-      '',
-      ...proxyStyles,
-    ].join('\n');
+    styleEl.setAttribute('data-vcf-erte-theme-proxy', '');
+    styleEl.textContent = proxyStyles.join('\n');
     document.head.appendChild(styleEl);
 
-    const endTime = performance.now();
-    const duration = (endTime - startTime).toFixed(2);
-
-    // Log stats
-    console.table(stats);
-    console.log(`Duration: ${duration}ms`);
-    console.log('Sample cloned rules:', proxyStyles.slice(0, 3));
-    console.log('Full injected stylesheet:', styleEl.textContent.substring(0, 500) + '...');
-    console.groupEnd();
-
-    // Write debug output to page
-    this._writeSpikeDebugOutput(stats, duration, rteRules.length);
-  }
-
-  /**
-   * SPIKE: Writes spike debug output to the page (if debug div exists).
-   * Part of Phase 3.4j spike investigation.
-   * @private
-   */
-  _writeSpikeDebugOutput(stats, duration, clonedCount) {
-    const debugDiv = document.getElementById('debug-output');
-    if (!debugDiv) return;
-
-    debugDiv.innerHTML = `
-      <h3>Spike Results</h3>
-      <ul>
-        <li><strong>Total Stylesheets:</strong> ${stats.totalSheets}</li>
-        <li><strong>Scanned:</strong> ${stats.scannedSheets}</li>
-        <li><strong>CORS Skipped:</strong> ${stats.corsSkipped}</li>
-        <li><strong>Total Rules:</strong> ${stats.totalRules}</li>
-        <li><strong>Matched RTE Rules:</strong> ${stats.matchedRules}</li>
-        <li><strong>Cloned Rules:</strong> ${clonedCount}</li>
-        <li><strong>Duration:</strong> ${duration}ms</li>
-      </ul>
-      <p><em>Check browser console for full details.</em></p>
-    `;
+    this.__themeProxyInjected = true;
   }
 
   /**
@@ -1194,40 +1129,11 @@ class VcfEnhancedRichTextEditor extends RteBase {
       this._syncButtonPressed(btn, format.align === 'justify');
     });
 
-    // Add SVG icon directly (vaadin-icon doesn't work with inline SVG)
-    // Icon: 4 horizontal lines, all equal length (justify alignment)
-    // Matches the style of built-in align buttons (left/center/right)
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    svg.setAttribute('viewBox', '0 0 24 24');
-    svg.setAttribute('width', '24');
-    svg.setAttribute('height', '24');
-    svg.setAttribute('part', 'toolbar-button-icon toolbar-button-align-justify-icon');
-    svg.style.display = 'inline-block';
-    svg.style.fill = 'none';
-    svg.style.stroke = 'currentColor';
-    svg.style.strokeWidth = '1.5';
-    svg.style.strokeLinecap = 'round';
-
-    // Four horizontal lines matching built-in align icons
-    // Centered horizontally and vertically in 24x24 viewBox
-    const yPositions = [6.5, 11, 15.5, 20];
-    for (let i = 0; i < 4; i++) {
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', '3');
-      line.setAttribute('y1', String(yPositions[i]));
-      line.setAttribute('x2', '21');
-      line.setAttribute('y2', String(yPositions[i]));
-      svg.appendChild(line);
-    }
-
-    // Inject slot for icon replacement (follows ERTE pattern)
+    // Inject slot for icon replacement (follows ERTE pattern).
+    // Default icon is rendered via ::before mask-image in CSS.
     const slot = document.createElement('slot');
     slot.name = 'toolbar-button-align-justify';
     btn.appendChild(slot);
-
-    // Add SVG as default content in slot
-    slot.appendChild(svg);
 
     // Insert after the align-right button (last in group)
     const rightBtn = alignGroup.querySelector('[part~="toolbar-button-align-right"]');
@@ -1260,10 +1166,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
     btn.setAttribute('aria-label', 'Readonly');
     btn.addEventListener('click', () => this._onReadonlyClick());
 
-    // Lock icon — using inline SVG to avoid dependency on vaadin-icon in shadow DOM
-    btn.innerHTML = `<svg viewBox="0 0 16 16" width="1em" height="1em" style="fill:currentColor">
-      <path d="M12 7h-1V5c0-1.7-1.3-3-3-3S5 3.3 5 5v2H4c-.6 0-1 .4-1 1v5c0 .6.4 1 1 1h8c.6 0 1-.4 1-1V8c0-.6-.4-1-1-1zM6 5c0-1.1.9-2 2-2s2 .9 2 2v2H6V5z"/>
-    </svg>`;
+    // Icon rendered via ::before mask-image in CSS
 
     // Place in format group (last standard group)
     const formatGroup = toolbar.querySelector('[part~="toolbar-group-format"]');
@@ -1329,10 +1232,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
     btn.setAttribute('aria-label', 'Show whitespace');
     btn.addEventListener('click', () => this._onWhitespaceClick());
 
-    // Pilcrow icon — inline SVG
-    btn.innerHTML = `<svg viewBox="0 0 24 24" width="1em" height="1em" style="fill:currentColor">
-      <text x="12" y="19" text-anchor="middle" font-family="serif" font-size="20" font-weight="bold">¶</text>
-    </svg>`;
+    // Icon rendered via ::before mask-image in CSS
 
     // Place in format group, before readonly button
     const formatGroup = toolbar.querySelector('[part~="toolbar-group-format"]');
