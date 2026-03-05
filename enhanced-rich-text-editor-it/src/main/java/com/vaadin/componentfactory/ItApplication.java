@@ -1,15 +1,18 @@
 package com.vaadin.componentfactory;
 
-import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.component.page.ColorScheme;
+import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.theme.lumo.Lumo;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * Minimal Spring Boot application for ERTE integration tests.
- * Serves only test views on port 8081.
+ * Minimal Spring Boot application for ERTE integration tests (Lumo theme).
+ * Serves test views on port 8081.
+ * <p>
+ * For Aura theme testing, use {@link ItApplicationAura} with the
+ * {@code -Paura} Maven profile (port 8082).
  */
 @SpringBootApplication
 @StyleSheet(Lumo.STYLESHEET)

@@ -196,6 +196,10 @@ The primary value format is HTML (matching RTE 2), with Delta access via `asDelt
 
 **Always use available MCP tools and skills to look things up instead of guessing or asking the user.**
 
+### Vaadin Expert Agent (FIRST choice for Vaadin questions)
+
+For ANY Vaadin-related question (components, APIs, theming, patterns, best practices), launch the **`vaadin-expert`** subagent FIRST. It uses official documentation and community sources to give accurate, up-to-date answers. Only fall back to MCP tools directly if the expert agent is insufficient.
+
 ### Vaadin MCP Plugin (always available)
 
 - `search_vaadin_docs` — Documentation search (hybrid: semantic + keyword)

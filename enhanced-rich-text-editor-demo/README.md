@@ -32,12 +32,11 @@ bash server-stop.sh
 | `/erte-samples` | `ErteSamplesView` | Pre-built sample content showcasing ERTE features |
 | `/rte-playground` | `RtePlaygroundView` | Stock Vaadin RTE 2 (unmodified) for side-by-side comparison |
 
-### Spike / Prototype
+### Prototype
 
 | Route | View Class | Description |
 |-------|-----------|-------------|
 | `/tab-stop` | *(frontend-only)* | Quill 2 tabstop prototype (pure JS, no ERTE) |
-| `/erte-spike/aura-proxy` | `ErteAuraSpikeView` | Aura theme proxy spike |
 
 ## Prototype Tests
 
@@ -85,7 +84,6 @@ enhanced-rich-text-editor-demo/
         ErtePlaygroundView.java       # Main ERTE demo
         ErteSamplesView.java          # Sample content showcase
         RtePlaygroundView.java        # Stock RTE 2 comparison
-        ErteAuraSpikeView.java        # Aura theme spike
       frontend/
         src/
           tab-stop-prototype.js       # Quill 2 tabstop prototype

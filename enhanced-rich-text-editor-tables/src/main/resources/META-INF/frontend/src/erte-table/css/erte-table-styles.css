@@ -9,7 +9,7 @@
    ============================================================================ */
 :host {
   /* Cell appearance */
-  --vaadin-erte-table-border-color: var(--vaadin-border-color, var(--lumo-contrast-30pct));
+  --vaadin-erte-table-border-color: var(--vaadin-border-color);
   --vaadin-erte-table-border-width: 1px;
   --vaadin-erte-table-border-style: solid;
   --vaadin-erte-table-cell-padding: 2px 5px;
@@ -19,10 +19,10 @@
   --vaadin-erte-table-cell-vertical-align: top;
 
   /* Cell states */
-  --vaadin-erte-table-cell-selected-background: var(--lumo-primary-color-10pct, rgba(25, 118, 210, 0.1));
+  --vaadin-erte-table-cell-selected-background: color-mix(in srgb, var(--vaadin-focus-ring-color, var(--lumo-primary-color, #0b69de)) 10%, transparent);
   --vaadin-erte-table-cell-hover-background: transparent;
   /* Focus ring: matches vaadin-grid cell focus pattern */
-  --vaadin-erte-table-cell-focus-color: var(--vaadin-focus-ring-color, var(--lumo-primary-color-50pct));
+  --vaadin-erte-table-cell-focus-color: var(--vaadin-focus-ring-color, var(--lumo-primary-color, #0b69de));
   --vaadin-erte-table-cell-focus-width: var(--vaadin-focus-ring-width, 2px);
 }
 

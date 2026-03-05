@@ -9,7 +9,7 @@
 
     <name>Enhanced Rich Text Editor Integration Tests</name>
 
-    <version>6.0.0</version>
+    <version>6.0.1-SNAPSHOT</version>
 
     <properties>
         <vaadin.version>25.0.6</vaadin.version>
@@ -17,6 +17,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <spring-boot.version>4.0.2</spring-boot.version>
+        <spring-boot.main-class>com.vaadin.componentfactory.ItApplication</spring-boot.main-class>
     </properties>
 
     <repositories>
@@ -72,12 +73,12 @@
         <dependency>
             <groupId>com.vaadin.componentfactory</groupId>
             <artifactId>enhanced-rich-text-editor</artifactId>
-            <version>6.0.0</version>
+            <version>6.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.vaadin.componentfactory</groupId>
             <artifactId>enhanced-rich-text-editor-tables</artifactId>
-            <version>6.0.0</version>
+            <version>6.0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
@@ -95,9 +96,21 @@
 
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>**/ItApplicationAura.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
+                <configuration>
+                    <mainClass>${spring-boot.main-class}</mainClass>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>com.vaadin</groupId>
@@ -115,6 +128,46 @@
     </build>
 
     <profiles>
+        <profile>
+            <!-- Aura theme: builds with ItApplicationAura, excludes ItApplication -->
+            <id>aura</id>
+            <properties>
+                <spring-boot.main-class>com.vaadin.componentfactory.ItApplicationAura</spring-boot.main-class>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/ItApplication.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <version>${spring-boot.version}</version>
+                        <configuration>
+                            <mainClass>${spring-boot.main-class}</mainClass>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.vaadin</groupId>
+                        <artifactId>vaadin-maven-plugin</artifactId>
+                        <version>${vaadin.version}</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>prepare-frontend</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <!-- Production mode is activated using -Pproduction -->
             <id>production</id>

@@ -30,6 +30,8 @@ import com.vaadin.flow.router.Layout;
  * Auto-layout for all ERTE test views under {@code /erte-test/*}.
  * <p>
  * Provides a side navigation organized by migration phase/feature tier.
+ * Theme is determined at build time: Lumo (default, port 8081) or
+ * Aura ({@code -Paura} Maven profile, port 8082).
  */
 @Layout("erte-test")
 public class ErteTestLayout extends AppLayout {
@@ -138,7 +140,15 @@ public class ErteTestLayout extends AppLayout {
                 "erte-test/tables",
                 VaadinIcon.TABLE.create()));
 
-        nav.addItem(tier1, tier3, phase34, phase4);
+        // -- Theme Testing --
+        var themes = new SideNavItem("Theme Testing");
+        themes.setPrefixComponent(VaadinIcon.PAINT_ROLL.create());
+
+        themes.addItem(new SideNavItem("Aura Theme",
+                "erte-test/aura",
+                VaadinIcon.PAINTBRUSH.create()));
+
+        nav.addItem(tier1, tier3, phase34, phase4, themes);
         return nav;
     }
 
