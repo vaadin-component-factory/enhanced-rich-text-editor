@@ -70,8 +70,6 @@ public class ErteSamplesView extends VerticalLayout {
 
         add(createDefaultEditor());
         add(createEditorWithTabstops());
-        add(createGetValue());
-        add(createGetHtmlValue());
         add(createEditorWithLimitedToolbar());
         add(createEditorWithReadonlySections());
         add(createEditorWithPlaceholders());
@@ -152,46 +150,6 @@ public class ErteSamplesView extends VerticalLayout {
                         + "tabStops.add(new TabStop(TabStop.Direction.MIDDLE, 550));\n"
                         + "rte.setTabStops(tabStops);\n"
                         + "rte.asDelta().setValue(\"...\"); // Delta with tab embeds"));
-    }
-
-    private Component createGetValue() {
-        var valueBlock = new TextArea();
-        valueBlock.setWidthFull();
-        var rte = new EnhancedRichTextEditor();
-        var saveBtn = new Button("Save value",
-                e -> valueBlock.setValue(rte.asDelta().getValue()));
-        var setBtn = new Button("Set value",
-                e -> rte.asDelta().setValue(valueBlock.getValue()));
-        var buttonRow = new HorizontalLayout(saveBtn, setBtn);
-        buttonRow.setSpacing(true);
-        buttonRow.setPadding(false);
-
-        return createCard("Save Rich Text Editor value", rte, buttonRow, valueBlock,
-                createSourceCode("TextArea valueBlock = new TextArea();\n"
-                        + "EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
-                        + "Button saveBtn = new Button(\"Save value\",\n"
-                        + "    e -> valueBlock.setValue(rte.asDelta().getValue()));\n"
-                        + "Button setBtn = new Button(\"Set value\",\n"
-                        + "    e -> rte.asDelta().setValue(valueBlock.getValue()));"));
-    }
-
-    private Component createGetHtmlValue() {
-        var htmlBlock = new Div();
-        var rte = new EnhancedRichTextEditor();
-        var showHtmlValue = new Button("Show html value", e -> {
-            String exsValue = htmlBlock.getElement().getProperty("innerHTML");
-            if (exsValue == null || !exsValue.equals(rte.getValue())) {
-                htmlBlock.getElement().setProperty("innerHTML", rte.getValue());
-            }
-        });
-        showHtmlValue.getStyle().set("align-self", "flex-start");
-
-        return createCard("Save Rich Text Editor htmlValue", rte, showHtmlValue, htmlBlock,
-                createSourceCode("Div htmlBlock = new Div();\n"
-                        + "EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
-                        + "Button showHtmlValue = new Button(\"Show html value\", e -> {\n"
-                        + "    htmlBlock.getElement().setProperty(\"innerHTML\",\n"
-                        + "        rte.getValue());\n" + "});"));
     }
 
     private Component createEditorWithLimitedToolbar() {
