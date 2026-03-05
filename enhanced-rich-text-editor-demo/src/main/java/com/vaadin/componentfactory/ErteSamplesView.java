@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+
 /**
  * V25 demo samples view matching the V24 original demo.
  * <p>
@@ -61,6 +62,12 @@ import java.util.Objects;
 @Route("erte-samples")
 @PageTitle("Enhanced RTE Samples")
 public class ErteSamplesView extends VerticalLayout {
+
+    // TODO: Replace hardcoded code snippet strings with live source extraction.
+    //  - Add //--begin-sample / //--end-sample markers around relevant code in each create...() method
+    //  - Include this .java file as a classpath resource (Maven <resource> config)
+    //  - Refactor createSourceCode() to read the source file and extract the marked block
+    //  - This ensures code snippets always match the actual implementation
 
     public ErteSamplesView() {
         setPadding(true);
