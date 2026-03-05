@@ -1,5 +1,3 @@
-# Enhanced Rich Text Editor Tables Extension V25
-
 Add professional table support to your ERTE documents: create tables, modify structure (rows, columns, merge/split cells), and apply reusable style templates.
 
 ## Features

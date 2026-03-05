@@ -1,5 +1,3 @@
-# Enhanced Rich Text Editor for Flow
-
 Enhanced Rich Text Editor (ERTE) for Flow is an extended version of the Vaadin Rich Text Editor with tabstops, placeholders, non-breaking space, rulers, customizable toolbar, readonly sections, whitespace indicators, and more.
 
 **Version 6.x** targets Vaadin 25.0.x, Java 21+, Spring Boot 4.x, and Quill 2.
