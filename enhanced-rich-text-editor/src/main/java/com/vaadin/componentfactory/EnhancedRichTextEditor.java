@@ -695,6 +695,11 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      * {@code dangerouslySetHtmlValue} call to avoid an HTML roundtrip that would
      * lose table structure data (template classes, cell IDs via clipboard
      * re-conversion).
+     * <p>
+     * Workaround for upstream issue where {@code asDelta().setValue()} content
+     * gets overwritten by the HTML roundtrip. Review whether this is still
+     * needed after: <a href="https://github.com/vaadin/flow-components/issues/8854">
+     * vaadin/flow-components#8854</a>
      */
     @Override
     protected void setPresentationValue(String newPresentationValue) {

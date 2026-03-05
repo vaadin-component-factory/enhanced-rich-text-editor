@@ -21,7 +21,10 @@ public abstract class PlaygroundView<T extends RichTextEditor> extends VerticalL
 
         // --- Pre-loaded content ---
         String initialContent = getInitialContent();
-        editor.asDelta().setValue(initialContent);
+
+
+        // workaround for https://github.com/vaadin/flow-components/issues/8854
+        editor.getElement().executeJs("").then(_unused -> editor.asDelta().setValue(initialContent));
 
         // --- Output panel ---
         var deltaOutput = createOutput();
