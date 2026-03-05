@@ -206,7 +206,7 @@ ERTE 2 adds several quality-of-life improvements that require no migration work:
 
 - **CSS custom properties** (`--vaadin-erte-*`) for fine-grained theming of colors, sizes, and spacing
 - **Toolbar part-based styling** — custom toolbar components get `part="toolbar-custom-component"` for easy CSS targeting
-- **Arrow key navigation** between toolbar buttons (left/right to move, Home/End to jump)
+- **Arrow key navigation** between custom toolbar buttons (left/right to move, Home/End to jump)
 - **Reliable `editor.focus()`** — works from any server-side context without timing workarounds
 
 ---

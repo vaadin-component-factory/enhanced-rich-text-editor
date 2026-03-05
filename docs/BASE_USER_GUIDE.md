@@ -190,6 +190,14 @@ toolbarSwitch.addActiveChangedListener(e ->
 editor.addCustomToolbarComponents(toolbarSwitch);
 ```
 
+When active, `ToolbarSwitch` sets an `[on]` HTML attribute on its element. You can use this to style the toggled state:
+
+```css
+vcf-enhanced-rich-text-editor vaadin-button.toolbar-switch[on] {
+    /* toggled-on overrides */
+}
+```
+
 ##### Toolbar Popovers
 
 `ToolbarPopover` anchors a popover to a `ToolbarSwitch` and syncs open/close state. Like Vaadin's `Popover` and `Dialog`, toolbar overlays self-attach to the page — no explicit `add()` call needed:
@@ -552,7 +560,10 @@ Press **Shift+Space** to insert a non-breaking space. Unlike regular spaces, it 
 
 **Soft-Break:** Press **Shift+Enter** to insert a line break *within* a paragraph (no new `<p>` tag). This is useful whenever you need a visual line break without starting a new block — addresses, poetry, multi-line labels, etc.
 
-**Tab Copying:** When you press Shift+Enter on a line that starts with tabs, the new line automatically gets the same leading tabs. This keeps your columnar alignment intact across multiple lines without re-pressing Tab on each new line. The number of copied tabs is limited by the number of defined tabstops — additional Tab presses beyond the last tabstop position have no effect. Tab copying only applies to soft-break lines (Shift+Enter) — it does not occur on hard paragraph breaks (Enter) or when text auto-wraps at the editor border.
+**Tab Copying**: When you press Shift+Enter, the new line automatically receives leading tabs (tabs produced by tabstops) up to the cursor's current column position. For example, if the cursor is between the
+second and third tabstop, the new line gets two tabs — placing you at exactly the same horizontal position. This way you can build columnar layouts without re-pressing Tab on every new line.
+
+Tab copying only applies to soft-break lines (Shift+Enter) and ignores all tabs beyond the last defined tabstop. Hard paragraph breaks (Enter) and auto-wrapped lines don't copy any tabs at all.
 
 ---
 
@@ -681,17 +692,7 @@ ERTE adds these shadow parts on top of the standard RTE 2 parts. Standard toolba
 | `toolbar-group-custom` | Custom button group container |
 | `toolbar-custom-component` | All components added via `addToolbarComponents()` |
 
-These CSS selectors let you style your custom toolbar buttons in different states (hover, active, disabled). The `[on]` attribute is present when a toggle button is active, and `part~=` matches elements whose `part` attribute contains that value.
-
-Slotted component state selectors:
-
-| State | Selector |
-|-------|----------|
-| Default | `::slotted([part~='toolbar-custom-component'])` |
-| Hover | `::slotted(button[part~='toolbar-custom-component']:not([on]):hover)` |
-| Focus | `::slotted(button[part~='toolbar-custom-component']:focus-visible)` |
-| Pressed | `::slotted([part~='toolbar-custom-component'][on])` |
-| Disabled | `::slotted([part~='toolbar-custom-component'][disabled])` |
+Custom toolbar components automatically receive styling that matches the built-in toolbar buttons — including hover, focus, active, and disabled states.
 
 **Ruler parts:**
 

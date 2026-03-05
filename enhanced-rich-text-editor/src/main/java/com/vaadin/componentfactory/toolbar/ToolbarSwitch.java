@@ -81,6 +81,7 @@ public class ToolbarSwitch extends Button {
     }
 
     private void init() {
+        addClassName("toolbar-switch");
         addClickListener(event -> updateActive(!active, event.isFromClient()));
     }
 

@@ -346,26 +346,28 @@ For **per-table** styling — giving individual tables their own colors, borders
 
 ### CSS Custom Properties
 
-ERTE Tables provides CSS custom properties for borders, padding, colors, and selection styling:
+ERTE Tables provides CSS custom properties for borders, padding, colors, and selection styling. Override them on the `vcf-enhanced-rich-text-editor` selector.
 
-```css
-vcf-enhanced-rich-text-editor {
-  /* Borders & Padding */
-  --vaadin-erte-table-border-color: var(--vaadin-border-color, var(--lumo-contrast-30pct));
-  --vaadin-erte-table-border-width: 1px;
-  --vaadin-erte-table-border-style: solid;
-  --vaadin-erte-table-cell-padding: 2px 5px;
-  --vaadin-erte-table-cell-min-height: 1.625em;
-  --vaadin-erte-table-cell-background: transparent;
-  --vaadin-erte-table-cell-vertical-align: top;
+**Borders & layout:**
 
-  /* Selection & Focus */
-  --vaadin-erte-table-cell-selected-background: var(--lumo-primary-color-10pct, rgba(25, 118, 210, 0.1));
-  --vaadin-erte-table-cell-hover-background: transparent;
-  --vaadin-erte-table-cell-focus-color: var(--vaadin-focus-ring-color, var(--lumo-primary-color-50pct));
-  --vaadin-erte-table-cell-focus-width: var(--vaadin-focus-ring-width, 2px);
-}
-```
+| Property | Description | Default |
+|----------|-------------|---------|
+| `--vaadin-erte-table-border-color` | Border color | `--vaadin-border-color` |
+| `--vaadin-erte-table-border-width` | Border width | `1px` |
+| `--vaadin-erte-table-border-style` | Border style | `solid` |
+| `--vaadin-erte-table-cell-padding` | Cell padding | `2px 5px` |
+| `--vaadin-erte-table-cell-min-height` | Minimum cell height | `1.625em` |
+| `--vaadin-erte-table-cell-background` | Cell background | `transparent` |
+| `--vaadin-erte-table-cell-vertical-align` | Cell vertical alignment | `top` |
+
+**Selection & focus:**
+
+| Property | Description | Default |
+|----------|-------------|---------|
+| `--vaadin-erte-table-cell-selected-background` | Selected cell overlay (layered over existing background) | `--lumo-primary-color-10pct` |
+| `--vaadin-erte-table-cell-hover-background` | Cell background on hover | `transparent` |
+| `--vaadin-erte-table-cell-focus-color` | Focused cell outline color | `--vaadin-focus-ring-color` |
+| `--vaadin-erte-table-cell-focus-width` | Focused cell outline width | `--vaadin-focus-ring-width` / `2px` |
 
 ### Programmatic Color Control
 
