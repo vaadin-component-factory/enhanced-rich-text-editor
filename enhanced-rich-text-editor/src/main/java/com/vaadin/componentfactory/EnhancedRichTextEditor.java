@@ -215,6 +215,7 @@ public class EnhancedRichTextEditor extends RichTextEditor {
     private boolean ertePendingPresentationUpdate;
     private final Set<String> dynamicAllowedClasses = new LinkedHashSet<>();
     private final Map<String, Set<String>> dynamicAllowedAttributes = new LinkedHashMap<>();
+    private final Set<String> dynamicAllowedCssProperties = new LinkedHashSet<>();
 
     /**
      * Sanitizes HTML with ERTE's extended whitelist using only static allowed
@@ -238,12 +239,12 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      */
     protected static String erteSanitize(String html,
             Set<String> extraClasses) {
-        return erteSanitize(html, extraClasses, Map.of());
+        return erteSanitize(html, extraClasses, Map.of(), Set.of());
     }
 
     /**
      * Sanitizes HTML with ERTE's extended whitelist plus additional dynamic
-     * classes and attributes.
+     * classes, attributes, and CSS properties.
      * <p>
      * The {@code extraClasses} set is trusted (no validation) — callers are
      * responsible for ensuring class names are safe. The public API
@@ -254,14 +255,16 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      * {@link #addAllowedHtmlAttributes(String, String...)} performs
      * validation.
      *
-     * @param html            the raw HTML
-     * @param extraClasses    additional CSS classes to preserve (may be empty)
-     * @param extraAttributes additional tag→attributes to preserve
+     * @param html               the raw HTML
+     * @param extraClasses       additional CSS classes to preserve
+     * @param extraAttributes    additional tag→attributes to preserve
+     * @param extraCssProperties additional CSS properties to preserve
      * @return sanitized HTML safe for ERTE rendering
      */
     protected static String erteSanitize(String html,
             Set<String> extraClasses,
-            Map<String, Set<String>> extraAttributes) {
+            Map<String, Set<String>> extraAttributes,
+            Set<String> extraCssProperties) {
         if (html == null || html.isEmpty()) {
             return html;
         }
@@ -301,7 +304,7 @@ public class EnhancedRichTextEditor extends RichTextEditor {
         safe = filterErteClasses(safe, extraClasses);
 
         // Post-filter: restrict style attributes to safe CSS properties
-        safe = filterStyleAttributes(safe);
+        safe = filterStyleAttributes(safe, extraCssProperties);
 
         // Post-filter: restrict data: URLs to safe image MIME types
         safe = filterDataUrls(safe);
@@ -360,7 +363,8 @@ public class EnhancedRichTextEditor extends RichTextEditor {
      * dangerous CSS functions (only whitelisted ones like rgb/calc allowed),
      * {@code @import} directives, and CSS comments.
      */
-    private static String filterStyleAttributes(String html) {
+    private static String filterStyleAttributes(String html,
+            Set<String> extraCssProperties) {
         Matcher m = STYLE_ATTR_PATTERN.matcher(html);
         StringBuilder sb = new StringBuilder();
         while (m.find()) {
@@ -378,7 +382,10 @@ public class EnhancedRichTextEditor extends RichTextEditor {
                         .toLowerCase(Locale.ROOT);
                 String value = decl.substring(colon + 1).trim();
                 // Skip unknown properties
-                if (!ALLOWED_CSS_PROPERTIES.contains(property)) continue;
+                if (!ALLOWED_CSS_PROPERTIES.contains(property)
+                        && (extraCssProperties.isEmpty()
+                            || !extraCssProperties.contains(property)))
+                    continue;
                 // Skip values containing @import
                 if (value.toLowerCase(Locale.ROOT).contains("@import"))
                     continue;
@@ -586,6 +593,72 @@ public class EnhancedRichTextEditor extends RichTextEditor {
         }
     }
 
+    // ---- Dynamic CSS property allowlist ----
+
+    private static final Pattern VALID_CSS_PROPERTY = Pattern
+            .compile("[a-z][a-z0-9\\-]*");
+
+    /**
+     * Registers additional CSS properties that the sanitizer should
+     * preserve in inline {@code style} attributes. Use this when your
+     * extension's blots produce inline styles with non-standard properties
+     * (e.g., {@code border-radius}, {@code box-shadow}).
+     * <p>
+     * Property names must be lowercase, hyphenated CSS property names
+     * matching {@code [a-z][a-z0-9-]*}.
+     * <p>
+     * Must be called from the Vaadin session (UI) thread.
+     *
+     * @param properties one or more CSS property names
+     * @throws IllegalArgumentException if a property name is invalid
+     * @since 6.0.0
+     */
+    public void addAllowedCssProperties(String... properties) {
+        for (String prop : properties) {
+            validateCssProperty(prop);
+            dynamicAllowedCssProperties.add(prop);
+        }
+    }
+
+    /**
+     * Removes previously registered dynamic CSS properties.
+     *
+     * @param properties one or more CSS property names to remove
+     * @since 6.0.0
+     */
+    public void removeAllowedCssProperties(String... properties) {
+        for (String prop : properties) {
+            dynamicAllowedCssProperties.remove(prop);
+        }
+    }
+
+    /**
+     * Returns the currently registered dynamic allowed CSS properties
+     * (unmodifiable view).
+     *
+     * @return unmodifiable set of registered CSS property names
+     * @since 6.0.0
+     */
+    public Set<String> getAllowedCssProperties() {
+        return Collections.unmodifiableSet(dynamicAllowedCssProperties);
+    }
+
+    /**
+     * Validates a CSS property name.
+     * Package-private for test access.
+     */
+    static void validateCssProperty(String prop) {
+        if (prop == null || prop.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "CSS property name must not be null or empty");
+        }
+        if (!VALID_CSS_PROPERTY.matcher(prop).matches()) {
+            throw new IllegalArgumentException(
+                    "Invalid CSS property name (must match "
+                            + "[a-z][a-z0-9-]*): " + prop);
+        }
+    }
+
     /**
      * Validates a CSS class name for use with {@link #addAllowedHtmlClasses}.
      * Package-private for test access.
@@ -624,7 +697,8 @@ public class EnhancedRichTextEditor extends RichTextEditor {
     @Override
     protected void setPresentationValue(String newPresentationValue) {
         String sanitized = erteSanitize(newPresentationValue,
-                dynamicAllowedClasses, dynamicAllowedAttributes);
+                dynamicAllowedClasses, dynamicAllowedAttributes,
+                dynamicAllowedCssProperties);
         getElement().setProperty("htmlValue", sanitized);
         if (!ertePendingPresentationUpdate) {
             ertePendingPresentationUpdate = true;
@@ -679,8 +753,8 @@ public class EnhancedRichTextEditor extends RichTextEditor {
         String rawHtml = getElement().getProperty("htmlValue", "");
         if (rawHtml != null && !rawHtml.isEmpty()) {
             super.setModelValue(erteSanitize(rawHtml,
-                    dynamicAllowedClasses, dynamicAllowedAttributes),
-                    fromClient);
+                    dynamicAllowedClasses, dynamicAllowedAttributes,
+                    dynamicAllowedCssProperties), fromClient);
         } else {
             super.setModelValue(newModelValue, fromClient);
         }

@@ -21,6 +21,7 @@ Everything you need to build, test, and run ERTE from source. Whether you're fix
 | Node.js | 20+ (for Playwright tests) |
 | Java | 21+ |
 | Maven | 3.9+ |
+| Vaadin Pro | ERTE depends on Vaadin's Rich Text Editor, which is part of the `vaadin` artifact (not `vaadin-core`). You need a valid Vaadin Pro subscription or trial to resolve the dependency. |
 
 ---
 

@@ -852,6 +852,16 @@ editor.removeAllowedHtmlAttributes("span", "data-footnote-id");
 
 Attribute names must not start with `on` (event handlers are never allowed).
 
+For custom CSS properties in inline `style` attributes:
+
+```java
+// Register custom CSS properties
+editor.addAllowedCssProperties("border-radius", "box-shadow");
+
+// Remove them later if needed
+editor.removeAllowedCssProperties("border-radius");
+```
+
 ---
 
 ## 4. Getting Help

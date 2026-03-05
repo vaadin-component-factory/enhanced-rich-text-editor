@@ -271,7 +271,12 @@ rte.addAllowedHtmlAttributes("span", "data-footnote-id", "data-footnote-ref");
 
 Attribute names must match `[a-zA-Z][a-zA-Z0-9-_]*` and must not start with `on` (event handlers are never allowed). Tag names must be lowercase.
 
-**CSS properties** — add to `ALLOWED_CSS_PROPERTIES` if your blot uses inline styles.
+**CSS properties (extension authors)** — use the public API from your extension code:
+```java
+rte.addAllowedCssProperties("border-radius", "box-shadow");
+```
+
+Property names must be lowercase, hyphenated CSS property names matching `[a-z][a-z0-9-]*`.
 
 The Table addon registers its allowed classes dynamically via `addAllowedHtmlClasses()`. Its table-specific attributes (`table_id`, `row_id`, `cell_id`, etc.) are part of ERTE core's sanitizer allowlist because tables are a first-party extension — third-party extensions use `addAllowedHtmlAttributes()` instead.
 
@@ -341,7 +346,7 @@ Use a unique ID on the `<style>` element to prevent duplicate injection on re-at
 
 ## Building a Java Extension
 
-An extension is a regular Java class in its own Maven module. It holds a reference to the editor and interacts with it exclusively through public API — `getElement()`, `addToolbarComponents()`, `addAllowedHtmlClasses()`, `addAllowedHtmlAttributes()`, `executeJs()`, and DOM event listeners. No subclassing, no access to ERTE internals.
+An extension is a regular Java class in its own Maven module. It holds a reference to the editor and interacts with it exclusively through public API — `getElement()`, `addToolbarComponents()`, `addAllowedHtmlClasses()`, `addAllowedHtmlAttributes()`, `addAllowedCssProperties()`, `executeJs()`, and DOM event listeners. No subclassing, no access to ERTE internals.
 
 The Table addon is the reference (simplified — see the actual source for the full implementation):
 
@@ -403,6 +408,7 @@ public class EnhancedRichTextEditorTables {
 | `addToolbarComponents(slot, ...)` | Place buttons and controls in the toolbar |
 | `addAllowedHtmlClasses(...)` | Register CSS classes with the sanitizer |
 | `addAllowedHtmlAttributes(...)` | Register HTML attributes with the sanitizer |
+| `addAllowedCssProperties(...)` | Register CSS properties with the sanitizer |
 | `addAttachListener(...)` | Re-initialize connector on re-attach |
 
 That's it. No protected methods, no package-private access, no reflection. The extension is completely decoupled from ERTE internals, which means ERTE can evolve its internal implementation without breaking extensions.
