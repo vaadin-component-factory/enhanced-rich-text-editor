@@ -50,7 +50,7 @@ notify "Build completed successfully"
 
 Enhanced Rich Text Editor (ERTE) for Vaadin — a rich text editor component extending Vaadin's built-in RTE with tabstops, placeholders, non-breaking space, rulers, customizable toolbar, read-only sections, and more.
 
-**Active work:** Migrating from Vaadin 24 / Quill 1 (ERTE 1) to Vaadin 25 / Quill 2 (ERTE 2). The old V24 modules remain in the repo as dead reference code (excluded from build). New V25 modules are created from scratch, using the old code as context.
+**Open item:** Aura theme support (currently Lumo only). See `migration_v25/progress/6.1_aura_theme_support.md` for context.
 
 **Screenshots:** Saved to `.claude/screenshots/` (working directory). The `~/transfer/erte` folder is read-only.
 
@@ -152,171 +152,45 @@ mvn clean package -Pproduction -DskipTests
 
 ## Project Structure
 
-Multi-module Maven project. V25 target: Java 21+, Vaadin 25.0.x, Spring Boot 4.x.
+Multi-module Maven project. Java 21+, Vaadin 25.0.x, Spring Boot 4.x.
 
 - **enhanced-rich-text-editor-demo/** — Demo application (user-facing views only)
 - **enhanced-rich-text-editor-it/** — Integration tests (test views + Playwright specs, port 8081)
-- **enhanced-rich-text-editor/** — V25 core component, extends Vaadin's RTE 2
-- **enhanced-rich-text-editor-tables/** — V25 tables addon
+- **enhanced-rich-text-editor/** — Core component, extends Vaadin's RTE 2
+- **enhanced-rich-text-editor-tables/** — Tables addon
 
 ### Data Format
 Content is stored as Quill Delta JSON. Tables encode cell metadata in a pipe-separated format within the `td` attribute:
 `{tableId}|{rowId}|{cellId}|{mergeId}|{colspan}|{rowspan}|{tableClass}`
 
-The V25 primary value format is HTML (matching RTE 2), with Delta access via `asDelta()` wrapper.
+The primary value format is HTML (matching RTE 2), with Delta access via `asDelta()` wrapper.
 
-## Migration Rules
+## Architecture
 
-### Git Workflow
-
-- **NEVER merge to `master`** — `master` is the V24 production branch.
-- Working branch: **`v25`**. All migration work lives here.
-- Feature/fix branches merge into `v25` (via PR or local merge), never into `master`.
-
-### Golden Rules
-
-1. **No feature regression.** Every ERTE 1 feature must exist in ERTE 2. If you encounter a feature where no clear migration path exists, STOP and ask.
-2. **Updatability over convenience.** Never copy RTE 2 source code. Extend at runtime. The only acceptable "fork" is the `render()` override in the JS subclass.
-3. **One feature at a time.** Complete and verify each feature before starting the next.
-4. **Tests first, status second.** NEVER mark a phase as COMPLETE in STATUS.md or progress files until tests actually pass. Verify implementation with passing tests BEFORE updating status.
-5. **Security fixes are mandatory.** See `SECURITY.md` — known XSS vectors from ERTE 1 must be fixed during migration, not reproduced.
-
-### Architecture Decisions (confirmed by spike — all PASS)
-
-- **JS extension strategy:** ES class extension of RTE 2's web component (not composition, not prototype patching). See `implementation_notes.md` section 6.
-- **Java packages:** `EnhancedRichTextEditor` in `com.vaadin.componentfactory` extends `RichTextEditor` directly. All ERTE logic in one package.
+- **JS extension strategy:** ES class extension of RTE 2's web component (not composition, not prototype patching).
+- **Java:** `EnhancedRichTextEditor` in `com.vaadin.componentfactory` extends `RichTextEditor` directly.
 - **Tag:** `vcf-enhanced-rich-text-editor` (own tag, own web component registration).
-- **Value format:** HTML-primary (matching RTE 2). Delta access via `asDelta()` wrapper. Clean break from ERTE 1's Delta-primary API.
-- **Theme:** Lumo. Use `--vaadin-*` custom properties where they exist. Loads via `@StyleSheet(Lumo.STYLESHEET)` on host app.
-- **Blot registration:** Global `Quill.register()` before element creation (proven pattern, used by RTE 2 itself).
-- **Toolbar:** `super.render()` passthrough + DOM injection of `<slot>` elements in `ready()`. CONFIRMED: injected slots survive all Lit re-renders (i18n change, readonly toggle, requestUpdate). No template copy — updatability preserved. See `migration_v25/progress/3.1a_custom_slots.md` for investigation results.
+- **Value format:** HTML-primary (matching RTE 2). Delta access via `asDelta()` wrapper.
+- **Theme:** Lumo. Use `--vaadin-*` custom properties where they exist.
+- **Blot registration:** Global `Quill.register()` before element creation.
+- **Toolbar:** `super.render()` passthrough + DOM injection of `<slot>` elements in `ready()`. Survives all Lit re-renders.
 
-### Migration Order
-
-Follow this exact sequence. Do not skip ahead. Full spec in `user_description.md`.
-
-1. **Step 0: Use Case Analysis** — Cross-reference each ERTE 1 feature with `feature_comparison.md`
-2. **Step 1: Project Base** — Vaadin 25.0.x, all dependencies, Maven profiles, Dockerfile
-3. **Step 2: ERTE Shell** — JS subclass + Java subclass, `render()` override, verify Lit lifecycle
-4. **Step 3: Feature Migration** — one subphase per feature, lettered 3a–3q:
-    **Work through subphases sequentially (one at a time).** Complete and verify
-    each subphase before starting the next. Tier 1 → Tier 2 → Tier 3.
-
-    **Phase 3 execution: always per subphase.** Each subphase (3.1a–3.3h) is planned,
-    implemented, tested, and committed independently. Do NOT create a "masterplan" for
-    all of Phase 3. Start each session by reading the next NOT STARTED progress file and
-    planning just that subphase. This keeps context small and allows learnings from one
-    subphase to inform the next.
-
-    **Cross-cutting concerns:** When implementing a subphase, if something is discovered
-    that affects later subphases, document it in the respective progress file(s) under a
-    "Cross-cutting notes from phase X.Y" section.
-
-    **Mandatory plan review:** Every plan created for a migration (sub)phase MUST be
-    reviewed before implementation begins. The orchestrator launches review agents
-    directly (at minimum `fullstack-developer`, `ui-designer`, and `requirements-reviewer`),
-    adding additional agents as needed based on the phase requirements (e.g.,
-    `security-reviewer`, `performance-auditor`, `architecture-guard`). Do NOT start
-    implementing until the review feedback has been incorporated.
-
-    **Exception:** Phase 3.5 (Documentation) and Phase 3.6 (Code Quality) do NOT require
-    fullstack-developer + ui-designer + requirements-reviewer review. This rule applies
-    only to code-migration phases (3.1-3.4, 4.x).
-
-    **CRITICAL: Planning and review in plan mode:** ALL planning and review activities
-    for migration phases MUST be performed in plan mode (triggered by EnterPlanMode).
-    This includes:
-    - Creating implementation plans for new phases
-    - Having plans reviewed by appropriate agents
-    - Incorporating review feedback
-    - Any design or architecture discussions
-    The ONLY exception is when a plan file already exists at `migration_v25/progress/PHASE__plan.md` —
-    in that case, the plan was previously prepared and reviewed in plan mode, so direct
-    implementation can proceed without re-entering plan mode.
-
-## Implementation Delegation
-
-**Plan execution and presumably non-trivial tasks** MUST be delegated to the
-appropriate specialized agents directly. The orchestrator selects the right agent(s)
-for each step. Examples: implementing a reviewed plan, fixing a bug, adding a feature.
-Counter-examples: creating a commit, updating a status file, answering a question.
-
-- **Parallel execution preferred:** Independent steps (e.g., Java backend + JS frontend,
-  or test view + test spec) SHOULD be delegated to separate agents running concurrently.
-- **Background tasks:** Consider using `run_in_background: true` for agents when appropriate,
-  especially for parallelizing multiple workstreams. The orchestrator monitors progress and
-  coordinates results.
-- **Sequential only when required:** Only truly dependent steps (e.g., build before test,
-  blot registration before keyboard bindings that use the blot) should block on each other.
-
-    **Phase plan files:** Before starting a phase, check if a plan file exists at
-    `migration_v25/progress/PHASE__plan.md` (e.g., `3.1c__plan.md`). If present, use
-    it as the **primary basis** for implementation — it was previously prepared and
-    reviewed. No additional review necessary, unless the user explicitly asks for it.
-    After successful implementation and verification of the phase, **delete**
-    the plan file. Plan files are working documents, not permanent records.
-
-    **Writing plan files:** After planning a phase (including agent reviews),
-    ALWAYS write the plan to `migration_v25/progress/PHASE__plan.md`. The plan must be
-    **self-contained and clear enough to be executed from a clean context** (no reliance
-    on conversation history). Each plan MUST include a **complexity recommendation**:
-    whether a specialized agent should handle implementation or the orchestrator can
-    do it directly.
-
-    **Tier 1 — Core Differentiators (fixed order):**
-    - **3.1a** Custom Slots / Toolbar Slot System (Feature 8)
-    - **3.1b** Readonly Sections (Feature 4) — *also establishes sanitizer override structure*
-    - **3.1c** Tabstops (Feature 1)
-    - **3.1d** Rulers (Feature 2)
-    - **3.1e** Soft-Break + Tab Copying (Feature 3)
-    - **3.1f** Placeholders (Feature 5)
-    - **3.1g** extendOptions Hook (Feature 16)
-
-    **Tier 2 — Important (fixed order):**
-    - **3.2a** Toolbar Button Visibility (Feature 9)
-    - **3.2b** Custom Keyboard Shortcuts (Feature 10)
-
-    **Tier 3 — Remaining (any order):**
-    - **3.3a** Non-Breaking Space (Feature 6)
-    - **3.3b** Whitespace Indicators (Feature 7)
-    - **3.3c** Security Hardening — Sanitization (Feature 11)
-    - **3.3d** I18n (Feature 12)
-    - **3.3e** Programmatic Text Insertion (Feature 14)
-    - **3.3f** Align Justify (Feature 18)
-    - **3.3g** Replace Toolbar Button Icons (Feature 19)
-    - **3.3h** Arrow Navigation (Feature 20)
-    - **3.4** Open Issues - fixing minor issues, left from the feature impl steps
-
-    *Tier 0 (Features 13, 15, 17) — inherited, no migration needed.*
-
-    **Sanitizer strategy:** Basic override structure in 3.1b, each feature adds its classes
-    to the whitelist incrementally. Phase 3.3c = security hardening only.
-
-5. **Step 4: Table Extension** (last) — Rewrite blots for Quill 2 / Parchment 3
-
-### Confirmed Patterns (from Spike)
-
-These patterns were validated in the spike (`SPIKE_RESULTS.md`). Use them as-is.
-
-- **Keyboard binding priority:** `addBinding()` appends to END of handler array. To override defaults, clear the array first, add ERTE handler, then re-add originals. See Item 7.
-- **Guard nodes:** Quill 2 Embed guard nodes (`\uFEFF`) are INSIDE the embed element. Measure the OUTER `.ql-tab` rect for tab widths, NOT `contentNode`. See Item 20.
-- **Sanitizer strips `class`:** RTE 2's `sanitize()` strips `class` and `contenteditable` from `<span>`. Override `sanitize()` to whitelist ERTE classes, or prefer `asDelta().setValue()`. See Item 19.
-- **Lumo loading:** V25 requires `@StyleSheet(Lumo.STYLESHEET)` on `AppShellConfigurator`. No ERTE-specific theme registration needed. See Item 11.
-- **Lifecycle:** `_editor` available immediately after `super.ready()`. Content set in `ready()` gets overwritten by Java value sync — always set content via Java API. See Item 14.
-- **Parchment 3 table blots:** 5 critical API changes required. See Phase 5.
-
-### What NOT to Do
+### Coding Guidelines
 
 - Do not use `innerHTML` with dynamic content — use `createElement`/`appendChild`
 - Do not access `Quill.imports.delta` — use `Quill.import('delta')`
-- Do not use numeric keyCodes for keyboard bindings — use string key names (`'Tab'`, `'Enter'`, etc.). Numeric codes create bindings under wrong keys and silently fail.
-- Do not access `domNode.__quill` — use `Quill.find(domNode)`
-- Do not access `domNode.__blot` — use `Quill.find(domNode)`
+- Do not use numeric keyCodes for keyboard bindings — use string key names (`'Tab'`, `'Enter'`, etc.)
+- Do not access `domNode.__quill` or `domNode.__blot` — use `Quill.find(domNode)`
 - Do not use `Parchment.create()` — removed in Parchment 3, use `this.scroll.create(blotName, value)`
 - Do not copy RTE 2 toolbar HTML — override `render()` in the JS subclass
 - Do not use Polymer patterns — this is Lit
 - Do not set content in `ready()` — it gets overwritten by Java value sync
-- Do not set `contenteditable="false"` on Embed blot outer `domNode` — Quill 2's guard nodes (zero-width text inside the domNode) must remain editable for cursor placement. The inner `contentNode` already has `contenteditable="false"`. V24 pattern was safe (no guard nodes), V25 pattern breaks cursor.
+- Do not set `contenteditable="false"` on Embed blot outer `domNode` — Quill 2's guard nodes must remain editable for cursor placement. The inner `contentNode` already has `contenteditable="false"`.
+
+## Git Workflow
+
+- Working branch: **`v25`**.
+- `master` is the V24 production branch.
 
 ## MCP Tools & Vaadin Skills — IMPORTANT, Use Before Asking
 
@@ -358,33 +232,16 @@ These skills load specialized context for Vaadin development tasks. **Use them p
 - **Playwright:** `browser_snapshot`, `browser_navigate`, `browser_evaluate`, etc. — for verifying UI state, testing interactions, inspecting DOM
 - **General:** `WebSearch`, `WebFetch` — for any external docs, Quill/Parchment APIs, npm packages
 
-## Tech Stack (V25)
+## Tech Stack
 
 - Java 21+
-- Vaadin 25.0.x (stable, no pre-releases) — RTE is now a **Pro component** (`vaadin` artifact, not `vaadin-core`)
+- Vaadin 25.0.x — RTE is a **Pro component** (`vaadin` artifact, not `vaadin-core`)
 - Spring Boot 4.x / Spring Framework 7
 - Quill 2.0.3 (vendored by RTE 2)
 - Parchment 3.x
-- Jackson 3 (`tools.jackson`, replaces `com.fasterxml.jackson`)
-- Mockito 5.x (replaces PowerMock + Mockito 1.x)
+- Jackson 3 (`tools.jackson`)
+- Mockito 5.x
 - JUnit 5
-
-## Reference Documents
-
-Use these as needed, do NOT try to load all of them as context simultaneously.
-
-| Document | When to consult |
-|----------|----------------|
-| `user_description.md` | Always — primary migration spec with full feature inventory |
-| `SPIKE_RESULTS.md` | Architecture/lifecycle questions, confirmed patterns, Parchment 3 breaking changes |
-| `feature_comparison.md` | Before implementing any feature — check what RTE 2 already provides |
-| `implementation_notes.md` | JS/Java architecture, shadow DOM structure, pre-spike design notes |
-| `quill_v1_to_v2_api_diff.md` | When touching any Quill API — keyboard bindings, blots, history, clipboard |
-| `SECURITY.md` | When implementing blots, sanitization, or any DOM manipulation |
-| `migration_v25/STATUS.md` | **Start here** — single-file dashboard showing which phase is next |
-| `migration_v25/progress/` | **Always update** after completing a task — one file per phase (e.g., `0_use_cases_tests.md`, `1_project_base.md`) |
-| `migration_v25/USE_CASE_ANALYSIS.md` | Feature inventory with migration paths for all 20 ERTE features |
-| `enhanced-rich-text-editor-it/tests/TEST_INVENTORY.md` | Full test listing grouped by feature (update when adding/removing tests) |
 
 ## Playwright Tests
 
@@ -418,13 +275,13 @@ bash it-server-stop.sh
 
 **Test views** (Java, in `enhanced-rich-text-editor-it`, package `com.vaadin.componentfactory`): `ErteTabStopTestView`, `ErtePlaceholderTestView`, `ErteReadonlyTestView`, `ErteToolbarTestView`, `ErteExtendOptionsTestView`, `ErteFeatureTestView`, `ErteShellTestView`, `ErteReplaceIconTestView`, `ErteTablesTestView`, `ErteToolbarDialogTestView`, `ErteToolbarPopoverTestView`, `ErteToolbarSelectPopupTestView`. Each provides a single editor (`id="test-editor"`), delta/HTML output elements, event log, and a ready indicator.
 
-**Side navigation:** `ErteTestLayout.java` provides an `AppLayout` with `SideNav` listing all phases. When implementing a new phase, always update this layout: change the `disabled(...)` entry to `new SideNavItem("label", "erte-test/route", icon)` so the link becomes active.
+**Side navigation:** `ErteTestLayout.java` provides an `AppLayout` with `SideNav` listing all test phases.
 
 **Shared helpers** (`enhanced-rich-text-editor-it/tests/erte/helpers.ts`): `waitForEditor()`, `getDelta()`, `getDeltaFromEditor()`, `getRuler()`, `getRulerMarkers()`, etc.
 
 ### Prototype Tests (75 tests in `tab-stop-prototype.spec.ts`)
 
-Original tabstop tests against the prototype view at `/tab-stop`. See [prototype_tests.md](enhanced-rich-text-editor-demo/prototype_tests.md). Remain in demo module.
+Original tabstop tests against the prototype view at `/tab-stop`. Remain in demo module.
 
 ### Key Test Patterns
 - Shadow DOM: Playwright locators pierce it, but `page.evaluate()`/`waitForFunction` do NOT — use `el.shadowRoot.querySelector()`
