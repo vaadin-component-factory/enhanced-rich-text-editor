@@ -607,7 +607,7 @@ ERTE builds on the Vaadin Lumo theme and adds its own CSS custom properties, sha
 - **Shadow parts** — target toolbar buttons, rulers, and custom components from external CSS
 - **Content classes** — style editor content elements (tabs, placeholders, readonly spans)
 
-For the standard RTE properties (`--vaadin-rich-text-editor-*`), see the [Vaadin RTE Styling docs](https://vaadin.com/docs/v25/components/rich-text-editor/styling).
+For the standard RTE properties (`--vaadin-rich-text-editor-*`), see the [Vaadin RTE Styling docs](https://vaadin.com/docs/latest/components/rich-text-editor/styling).
 
 > Please note that 6.0 does not yet support the new Aura theme.
 
@@ -673,7 +673,7 @@ vcf-enhanced-rich-text-editor.some-css-class {
 
 #### 2.10.2 ERTE Shadow Parts
 
-ERTE adds these shadow parts on top of the standard RTE 2 parts. Standard toolbar parts (bold, italic, etc.) and groups are provided by the Vaadin RTE 2 component — see [Vaadin RTE Styling docs](https://vaadin.com/docs/v25/components/rich-text-editor/styling).
+ERTE adds these shadow parts on top of the standard RTE 2 parts. Standard toolbar parts (bold, italic, etc.) and groups are provided by the Vaadin RTE 2 component — see [Vaadin RTE Styling docs](https://vaadin.com/docs/latest/components/rich-text-editor/styling).
 
 **ERTE toolbar buttons:**
 
@@ -712,30 +712,6 @@ vcf-enhanced-rich-text-editor::part(horizontalRuler) {
     background-color: var(--lumo-contrast-10pct);
 }
 ```
-
-#### 2.10.3 Content Classes
-
-These classes are applied to elements inside the editor content area (`.ql-editor`). You can use them in your own CSS to style specific content types — for example, to highlight all placeholders or change the background of readonly spans.
-
-| Class | Element | Purpose |
-|-------|---------|---------|
-| `.ql-tab` | `<span>` | Tab embed (calculated width) |
-| `.ql-placeholder` | `<span>` | Placeholder embed |
-| `.ql-readonly` | `<span>` | Readonly section (`contenteditable="false"`) |
-| `.ql-soft-break` | `<span>` | Soft-break embed (contains `<br>`) |
-| `.ql-nbsp` | `<span>` | Non-breaking space |
-
-Standard Quill classes (`ql-align-*`, `ql-indent-*`) are provided by the base RTE 2 component.
-
-> **Note:** The editor content lives inside the component's shadow DOM. To style these classes from your application's CSS, use `::part(content)` to scope into the content area:
-> ```css
-> vcf-enhanced-rich-text-editor::part(content) .ql-placeholder {
->     background: lightyellow;
-> }
-> vcf-enhanced-rich-text-editor::part(content) .ql-readonly {
->     background: lightgray;
-> }
-> ```
 
 ---
 
@@ -815,7 +791,7 @@ editor.setI18n(i18n);
 | `setPlaceholderAppearanceLabel2()` | "Value" |
 | `setAlignJustify()` | "Justify" |
 
-For the standard RTE 2 labels (bold, italic, headings, etc.), see the [Vaadin RTE i18n docs](https://vaadin.com/docs/v25/components/rich-text-editor#internationalization-i18n).
+For the standard RTE 2 labels (bold, italic, headings, etc.), see the [Vaadin RTE i18n docs](https://vaadin.com/docs/latest/components/rich-text-editor#internationalization-i18n).
 
 ---
 
