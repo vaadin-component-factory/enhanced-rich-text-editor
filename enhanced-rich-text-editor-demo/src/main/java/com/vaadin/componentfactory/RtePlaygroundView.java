@@ -31,60 +31,23 @@ import com.vaadin.flow.router.Route;
  */
 @Route("rte-playground")
 @PageTitle("RTE Playground")
-public class RtePlaygroundView extends HorizontalLayout {
+public class RtePlaygroundView extends PlaygroundView<RichTextEditor> {
 
-    public RtePlaygroundView() {
-        setSizeFull();
-        setPadding(false);
-        setSpacing(false);
-        getStyle().set("gap", "var(--lumo-space-m)");
+    public static final String INITIAL_DELTA = "[" +
+            "{\"insert\":\"Stock \"}," +
+            "{\"insert\":\"RTE\",\"attributes\":{\"bold\":true}}," +
+            "{\"insert\":\" from Vaadin 25\\n" +
+            "This is the unmodified Vaadin Rich Text Editor for comparison.\\n\"}" +
+            "]";
 
-        // --- Stock RTE ---
-        var rte = new RichTextEditor();
-        rte.setWidthFull();
-        rte.setValueChangeMode(ValueChangeMode.TIMEOUT);
-        var initialDelta = "[" +
-                "{\"insert\":\"Stock \"}," +
-                "{\"insert\":\"RTE\",\"attributes\":{\"bold\":true}}," +
-                "{\"insert\":\" from Vaadin 25\\n" +
-                "This is the unmodified Vaadin Rich Text Editor for comparison.\\n\"}" +
-                "]";
-        rte.asDelta().setValue(initialDelta);
 
-        // --- Delta output panel ---
-        var deltaOutput = new Pre();
-        deltaOutput.getStyle()
-                .set("white-space", "pre-wrap")
-                .set("word-break", "break-all")
-                .set("font-size", "var(--lumo-font-size-xs)")
-                .set("overflow", "auto")
-                .set("background", "var(--lumo-shade-5pct)")
-                .set("padding", "var(--lumo-space-s)")
-                .set("margin", "0")
-                .set("border-radius", "var(--lumo-border-radius-m)");
+    @Override
+    protected RichTextEditor createEditor() {
+        return new RichTextEditor();
+    }
 
-        deltaOutput.setText(initialDelta);
-        rte.asDelta().addValueChangeListener(e ->
-                deltaOutput.setText(e.getValue()));
-
-        // --- Layout: editor left (2), delta right (1) ---
-        var editorPanel = new VerticalLayout(rte);
-        editorPanel.setPadding(true);
-        editorPanel.setSpacing(false);
-        editorPanel.getStyle()
-                .set("flex", "2")
-                .set("min-width", "0");
-        editorPanel.setFlexGrow(1, rte);
-
-        var deltaPanel = new VerticalLayout(deltaOutput);
-        deltaPanel.setPadding(true);
-        deltaPanel.setSpacing(false);
-        deltaPanel.getStyle()
-                .set("flex", "1")
-                .set("min-width", "0")
-                .set("overflow", "hidden");
-        deltaPanel.setFlexGrow(1, deltaOutput);
-
-        add(editorPanel, deltaPanel);
+    @Override
+    protected String getInitialContent() {
+        return INITIAL_DELTA;
     }
 }

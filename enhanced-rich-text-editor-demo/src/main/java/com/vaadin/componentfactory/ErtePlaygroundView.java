@@ -16,19 +16,9 @@
  */
 package com.vaadin.componentfactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.vaadin.componentfactory.erte.tables.EnhancedRichTextEditorTables;
 import com.vaadin.componentfactory.erte.tables.templates.TemplateParser;
-import tools.jackson.databind.node.ObjectNode;
-import com.vaadin.componentfactory.toolbar.ToolbarDialog;
-import com.vaadin.componentfactory.toolbar.ToolbarPopover;
-import com.vaadin.componentfactory.toolbar.ToolbarSelectPopup;
-import com.vaadin.componentfactory.toolbar.ToolbarSlot;
-import com.vaadin.componentfactory.toolbar.ToolbarSwitch;
+import com.vaadin.componentfactory.toolbar.*;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.KeyModifier;
 import com.vaadin.flow.component.button.Button;
@@ -36,15 +26,15 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Hr;
-import com.vaadin.flow.component.html.Pre;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Interactive playground for the Enhanced Rich Text Editor.
@@ -56,18 +46,72 @@ import com.vaadin.flow.router.Route;
  */
 @Route("")
 @PageTitle("Enhanced RTE Playground")
-public class ErtePlaygroundView extends HorizontalLayout {
+public class ErtePlaygroundView extends PlaygroundView<EnhancedRichTextEditor> {
 
-    public ErtePlaygroundView() {
-        setSizeFull();
-        setPadding(false);
-        setSpacing(false);
-        getStyle().set("gap", "var(--lumo-space-m)");
+    public static final String INITIAL_DELTA = "[" +
+            "{\"insert\":\"Welcome to ERTE V25\",\"attributes\":{\"bold\":true}}," +
+            "{\"insert\":\"\\n\"}," +
+            "{\"insert\":\"This editor demonstrates all features.\"}," +
+            "{\"insert\":\"\\n\"}," +
+            "{\"insert\":\"Editable text. \"}," +
+            "{\"insert\":\"This section is protected.\",\"attributes\":{\"readonly\":true}}," +
+            "{\"insert\":\" More editable text.\"}," +
+            "{\"insert\":\"\\n\"}," +
+            "{\"insert\":\"Tab stops: \"}," +
+            "{\"insert\":{\"tab\":true}}," +
+            "{\"insert\":\"Left-aligned\"}," +
+            "{\"insert\":{\"tab\":true}}," +
+            "{\"insert\":\"Right-aligned\"}," +
+            "{\"insert\":{\"tab\":true}}," +
+            "{\"insert\":\"Centered\"}," +
+            "{\"insert\":\"\\n\"}," +
+            "{\"insert\":\"Placeholder: \"}," +
+            "{\"insert\":{\"placeholder\":{\"text\":\"V-1=Vaadin Ltd\"}}}," +
+            "{\"insert\":\" — founded \"}," +
+            "{\"insert\":{\"placeholder\":{\"text\":\"V-3=2000\"}}}," +
+            "{\"insert\":\" in \"}," +
+            "{\"insert\":{\"placeholder\":{\"text\":\"V-2=Turku, Finland\"}}}," +
+            "{\"insert\":\".\"}," +
+            "{\"insert\":\"\\n\"}," +
+            "{\"insert\":\"\\n\"}," +
+            "{\"insert\":\"Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+            "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. " +
+            "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris " +
+            "nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in " +
+            "reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla " +
+            "pariatur. Excepteur sint occaecat cupidatat non proident, sunt in " +
+            "culpa qui officia deserunt mollit anim id est laborum.\"}," +
+            "{\"insert\":\"\\n\",\"attributes\":{\"align\":\"justify\"}}," +
+            // --- Sample Table (3 columns x 3 rows) ---
+            "{\"insert\":\"\\n\"}," +
+            "{\"insert\":\"Sample Table\",\"attributes\":{\"bold\":true}}," +
+            "{\"insert\":\"\\n\"}," +
+            // Row 1 — Header
+            "{\"insert\":\"Feature\",\"attributes\":{\"bold\":true}}," +
+            "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r1|c1||||\"}}," +
+            "{\"insert\":\"Status\",\"attributes\":{\"bold\":true}}," +
+            "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r1|c2||||\"}}," +
+            "{\"insert\":\"Notes\",\"attributes\":{\"bold\":true}}," +
+            "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r1|c3||||\"}}," +
+            // Row 2
+            "{\"insert\":\"Tabstops\"}," +
+            "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r2|c1||||\"}}," +
+            "{\"insert\":\"Complete\"}," +
+            "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r2|c2||||\"}}," +
+            "{\"insert\":\"Left, right, center alignment\"}," +
+            "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r2|c3||||\"}}," +
+            // Row 3
+            "{\"insert\":\"Placeholders\"}," +
+            "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r3|c1||||\"}}," +
+            "{\"insert\":\"Complete\"}," +
+            "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r3|c2||||\"}}," +
+            "{\"insert\":\"Insert via dialog or shortcut\"}," +
+            "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r3|c3||||\"}}" +
+            "]";
 
-        // --- Editor ---
+    protected EnhancedRichTextEditor createEditor() {
         var editor = new EnhancedRichTextEditor();
-        editor.setWidthFull();
-        editor.setValueChangeMode(ValueChangeMode.TIMEOUT);
+
 
         // Tables addon
         var tables = EnhancedRichTextEditorTables.enable(editor);
@@ -187,116 +231,13 @@ public class ErtePlaygroundView extends HorizontalLayout {
         ToolbarDialog.vertical(settingsSwitch, showRulers, showWhitespace,
                 autoSave).openAtSwitch();
         editor.addToolbarComponents(ToolbarSlot.GROUP_CUSTOM, settingsSwitch);
-
-        // --- Pre-loaded content ---
-        var initialDelta =
-            "[" +
-                "{\"insert\":\"Welcome to ERTE V25\",\"attributes\":{\"bold\":true}}," +
-                "{\"insert\":\"\\n\"}," +
-                "{\"insert\":\"This editor demonstrates all features.\"}," +
-                "{\"insert\":\"\\n\"}," +
-                "{\"insert\":\"Editable text. \"}," +
-                "{\"insert\":\"This section is protected.\",\"attributes\":{\"readonly\":true}}," +
-                "{\"insert\":\" More editable text.\"}," +
-                "{\"insert\":\"\\n\"}," +
-                "{\"insert\":\"Tab stops: \"}," +
-                "{\"insert\":{\"tab\":true}}," +
-                "{\"insert\":\"Left-aligned\"}," +
-                "{\"insert\":{\"tab\":true}}," +
-                "{\"insert\":\"Right-aligned\"}," +
-                "{\"insert\":{\"tab\":true}}," +
-                "{\"insert\":\"Centered\"}," +
-                "{\"insert\":\"\\n\"}," +
-                "{\"insert\":\"Placeholder: \"}," +
-                "{\"insert\":{\"placeholder\":{\"text\":\"V-1=Vaadin Ltd\"}}}," +
-                "{\"insert\":\" — founded \"}," +
-                "{\"insert\":{\"placeholder\":{\"text\":\"V-3=2000\"}}}," +
-                "{\"insert\":\" in \"}," +
-                "{\"insert\":{\"placeholder\":{\"text\":\"V-2=Turku, Finland\"}}}," +
-                "{\"insert\":\".\"}," +
-                "{\"insert\":\"\\n\"}," +
-                "{\"insert\":\"\\n\"}," +
-                "{\"insert\":\"Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
-                    "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. " +
-                    "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris " +
-                    "nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in " +
-                    "reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla " +
-                    "pariatur. Excepteur sint occaecat cupidatat non proident, sunt in " +
-                    "culpa qui officia deserunt mollit anim id est laborum.\"}," +
-                "{\"insert\":\"\\n\",\"attributes\":{\"align\":\"justify\"}}," +
-                // --- Sample Table (3 columns x 3 rows) ---
-                "{\"insert\":\"\\n\"}," +
-                "{\"insert\":\"Sample Table\",\"attributes\":{\"bold\":true}}," +
-                "{\"insert\":\"\\n\"}," +
-                // Row 1 — Header
-                "{\"insert\":\"Feature\",\"attributes\":{\"bold\":true}}," +
-                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r1|c1||||\"}}," +
-                "{\"insert\":\"Status\",\"attributes\":{\"bold\":true}}," +
-                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r1|c2||||\"}}," +
-                "{\"insert\":\"Notes\",\"attributes\":{\"bold\":true}}," +
-                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r1|c3||||\"}}," +
-                // Row 2
-                "{\"insert\":\"Tabstops\"}," +
-                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r2|c1||||\"}}," +
-                "{\"insert\":\"Complete\"}," +
-                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r2|c2||||\"}}," +
-                "{\"insert\":\"Left, right, center alignment\"}," +
-                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r2|c3||||\"}}," +
-                // Row 3
-                "{\"insert\":\"Placeholders\"}," +
-                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r3|c1||||\"}}," +
-                "{\"insert\":\"Complete\"}," +
-                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r3|c2||||\"}}," +
-                "{\"insert\":\"Insert via dialog or shortcut\"}," +
-                "{\"insert\":\"\\n\",\"attributes\":{\"td\":\"demo|r3|c3||||\"}}" +
-            "]";
-        editor.asDelta().setValue(initialDelta);
-
-        // --- Delta output panel ---
-        var deltaOutput = new Pre();
-        deltaOutput.getStyle()
-                .set("white-space", "pre-wrap")
-                .set("word-break", "break-all")
-                .set("font-size", "var(--lumo-font-size-xs)")
-                .set("overflow", "auto")
-                .set("background", "var(--lumo-shade-5pct)")
-                .set("padding", "var(--lumo-space-s)")
-                .set("margin", "0")
-                .set("border-radius", "var(--lumo-border-radius-m)");
-
-        deltaOutput.setText(initialDelta);
-        editor.asDelta().addValueChangeListener(e ->
-                deltaOutput.setText(e.getValue()));
-
-        // --- Toolbar legend ---
-        var legend = new Span(
-                "Toolbar helpers: WS = ToolbarSwitch, " +
-                VaadinIcon.PAINTBRUSH.name() + " = ToolbarPopover, " +
-                VaadinIcon.PLUS.name() + " = ToolbarSelectPopup, " +
-                VaadinIcon.COG.name() + " = ToolbarDialog");
-        legend.getStyle()
-                .set("font-size", "var(--lumo-font-size-xs)")
-                .set("color", "var(--lumo-secondary-text-color)");
-
-        // --- Layout: editor left (2), delta right (1) ---
-        var editorPanel = new VerticalLayout(editor, legend);
-        editorPanel.setPadding(true);
-        editorPanel.setSpacing(false);
-        editorPanel.getStyle()
-                .set("flex", "2")
-                .set("min-width", "0")
-                .set("gap", "var(--lumo-space-xs)");
-        editorPanel.setFlexGrow(1, editor);
-
-        var deltaPanel = new VerticalLayout(deltaOutput);
-        deltaPanel.setPadding(true);
-        deltaPanel.setSpacing(false);
-        deltaPanel.getStyle()
-                .set("flex", "1")
-                .set("min-width", "0")
-                .set("overflow", "hidden");
-        deltaPanel.setFlexGrow(1, deltaOutput);
-
-        add(editorPanel, deltaPanel);
+        return editor;
     }
+
+    @Override
+    protected String getInitialContent() {
+        return INITIAL_DELTA;
+    }
+
+
 }

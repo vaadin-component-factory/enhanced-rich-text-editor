@@ -20,7 +20,7 @@
  *
  * Import path: package entry point (@vaadin/rich-text-editor), NOT the
  * internal /src/ path. customElements.get() decouples from internal module
- * structure. Import path is stable as of Vaadin 25.0.5.
+ * structure. Import path is stable as of Vaadin 25.
  */
 import '@vaadin/rich-text-editor';
 import { unsafeCSS } from 'lit';
