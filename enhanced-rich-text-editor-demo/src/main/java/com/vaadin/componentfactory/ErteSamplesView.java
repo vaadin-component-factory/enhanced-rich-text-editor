@@ -89,7 +89,7 @@ public class ErteSamplesView extends VerticalLayout {
                         + "  var link = document.createElement('link');"
                         + "  link.id = 'prism-css';"
                         + "  link.rel = 'stylesheet';"
-                        + "  link.href = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css';"
+                        + "  link.href = 'https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-coldark-dark.min.css';"
                         + "  document.head.appendChild(link);"
                         + "}"
                         + "function loadPrism() {"
