@@ -364,10 +364,10 @@ ERTE Tables provides CSS custom properties for borders, padding, colors, and sel
 
 | Property | Description | Default |
 |----------|-------------|---------|
-| `--vaadin-erte-table-cell-selected-background` | Selected cell overlay (layered over existing background) | `--lumo-primary-color-10pct` |
+| `--vaadin-erte-table-cell-selected-background` | Selected cell overlay (layered over existing background) | `color-mix(in srgb, var(--vaadin-focus-ring-color) 10%, transparent)` |
 | `--vaadin-erte-table-cell-hover-background` | Cell background on hover | `transparent` |
-| `--vaadin-erte-table-cell-focus-color` | Focused cell outline color | `--vaadin-focus-ring-color` |
-| `--vaadin-erte-table-cell-focus-width` | Focused cell outline width | `--vaadin-focus-ring-width` / `2px` |
+| `--vaadin-erte-table-cell-focus-color` | Focused cell outline color | `var(--vaadin-focus-ring-color)` |
+| `--vaadin-erte-table-cell-focus-width` | Focused cell outline width | `var(--vaadin-focus-ring-width, 2px)` |
 
 ### Programmatic Color Control
 

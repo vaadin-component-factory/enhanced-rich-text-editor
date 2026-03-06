@@ -102,7 +102,9 @@
 
 /* ============================================================================
    Aura Theme
-   Same pattern as Lumo block. Aura-specific tokens and overrides.
+   Applied when data-application-theme="aura" attribute is set by
+   ThemeDetectionMixin. :where() wrapper keeps specificity at (0,1,0) —
+   same as :host — so user overrides on :host are not outranked.
    ============================================================================ */
 :host(:where([data-application-theme="aura"])) {
   /* 3-line align-justify icon (matching Aura's base align icons) */

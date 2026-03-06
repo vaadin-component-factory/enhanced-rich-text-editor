@@ -347,7 +347,7 @@ See the [User Guide — Custom Properties](../BASE_USER_GUIDE.md#2101-erte-custo
 
 ### Blot Styles
 
-When styling your own blots, use `--vaadin-*` custom properties that fall back to `--lumo-*` tokens. This ensures correct appearance in both light and dark mode.
+When styling your own blots, prefer `--vaadin-*` shared custom properties (e.g. `--vaadin-focus-ring-color`, `--vaadin-text-color`). These work across both Lumo and Aura themes. For theme-specific values, use `:host(:where([data-application-theme="lumo"]))` / `"aura"` blocks — see the ERTE stylesheet (`styles/vcf-enhanced-rich-text-editor-styles.css`) for examples.
 
 **ERTE core contributors** can add styles directly in `static get styles()` of the web component class:
 
@@ -355,7 +355,7 @@ When styling your own blots, use `--vaadin-*` custom properties that fall back t
 static get styles() {
   return css`
     .ql-myformat {
-      color: var(--vaadin-my-format-color, var(--lumo-primary-color));
+      color: var(--vaadin-my-format-color, var(--vaadin-focus-ring-color));
     }
   `;
 }

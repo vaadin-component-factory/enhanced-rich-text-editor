@@ -50,7 +50,7 @@ notify "Build completed successfully"
 
 Enhanced Rich Text Editor (ERTE) for Vaadin — a rich text editor component extending Vaadin's built-in RTE with tabstops, placeholders, non-breaking space, rulers, customizable toolbar, read-only sections, and more.
 
-**Open item:** Aura theme support (currently Lumo only). See `migration_v25/progress/6.1_aura_theme_support.md` for context.
+**Themes:** Lumo and Aura, auto-detected via `ThemeDetectionMixin` (sets `data-application-theme` attribute on host).
 
 **Screenshots:** Saved to `.claude/screenshots/` (working directory). The `~/transfer/erte` folder is read-only.
 
@@ -171,7 +171,7 @@ The primary value format is HTML (matching RTE 2), with Delta access via `asDelt
 - **Java:** `EnhancedRichTextEditor` in `com.vaadin.componentfactory` extends `RichTextEditor` directly.
 - **Tag:** `vcf-enhanced-rich-text-editor` (own tag, own web component registration).
 - **Value format:** HTML-primary (matching RTE 2). Delta access via `asDelta()` wrapper.
-- **Theme:** Lumo. Use `--vaadin-*` custom properties where they exist.
+- **Theme:** Lumo + Aura via `ThemeDetectionMixin`. CSS uses `:host(:where([data-application-theme="lumo"]))` / `"aura"` blocks. Base block uses only `--vaadin-*` shared tokens.
 - **Blot registration:** Global `Quill.register()` before element creation.
 - **Toolbar:** `super.render()` passthrough + DOM injection of `<slot>` elements in `ready()`. Survives all Lit re-renders.
 

@@ -601,7 +601,8 @@ editor.setToolbarButtonsVisibility(Map.of(
 
 ### 2.10 Styling and Theming
 
-ERTE builds on the Vaadin Lumo theme and adds its own CSS custom properties, shadow parts, and content classes. You have three layers to work with:
+ERTE supports both Vaadin themes — Lumo and Aura — and adds its own CSS custom properties, shadow parts, and content classes. 
+
 
 - **CSS custom properties** (`--vaadin-erte-*`) — control colors, sizes, and spacing of ERTE-specific elements
 - **Shadow parts** — target toolbar buttons, rulers, and custom components from external CSS
@@ -609,7 +610,7 @@ ERTE builds on the Vaadin Lumo theme and adds its own CSS custom properties, sha
 
 For the standard RTE properties (`--vaadin-rich-text-editor-*`), see the [Vaadin RTE Styling docs](https://vaadin.com/docs/latest/components/rich-text-editor/styling).
 
-> Please note that 6.0 does not yet support the new Aura theme.
+The active theme is auto-detected and results in the `data-application-theme` attribute on the component, which either contains "aura" or "lumo". 
 
 #### 2.10.1 ERTE Custom Properties
 
@@ -633,38 +634,51 @@ vcf-enhanced-rich-text-editor.some-css-class {
 
 | Property | Description | Default |
 |----------|-------------|---------|
-| `--vaadin-erte-readonly-color` | Text color | `--vaadin-text-color-secondary` |
-| `--vaadin-erte-readonly-background` | Background color | `--vaadin-background-container` |
-| `--vaadin-erte-readonly-border-color` | Outline color | `--vaadin-border-color-secondary` |
+| `--vaadin-erte-readonly-color` | Text color | `var(--vaadin-text-color-secondary)` |
+| `--vaadin-erte-readonly-background` | Background color | `var(--vaadin-background-container)` |
+| `--vaadin-erte-readonly-border-color` | Outline color | `var(--vaadin-border-color-secondary)` |
 | `--vaadin-erte-readonly-border-width` | Outline width | `1px` |
-| `--vaadin-erte-readonly-border-radius` | Corner radius | `--lumo-border-radius-s` |
-| `--vaadin-erte-readonly-padding` | Inline padding | `--vaadin-padding-xs / 2` |
+| `--vaadin-erte-readonly-border-radius` | Corner radius | `var(--vaadin-radius-s)` |
+| `--vaadin-erte-readonly-padding` | Inline padding | `calc(var(--vaadin-padding-xs) / 2)` |
 
 **Placeholders:**
 
 | Property | Description | Default |
 |----------|-------------|---------|
 | `--vaadin-erte-placeholder-color` | Text color | `inherit` |
-| `--vaadin-erte-placeholder-background` | Background color | `--lumo-primary-color-10pct` |
+| `--vaadin-erte-placeholder-background` | Background color | `color-mix(in srgb, var(--vaadin-focus-ring-color) 10%, transparent)` |
 | `--vaadin-erte-placeholder-border-color` | Outline color | `transparent` |
 | `--vaadin-erte-placeholder-border-width` | Outline width | `0` |
-| `--vaadin-erte-placeholder-border-radius` | Corner radius | `--lumo-border-radius-s` |
-| `--vaadin-erte-placeholder-padding` | Inline padding | `--vaadin-padding-xs / 2` |
+| `--vaadin-erte-placeholder-border-radius` | Corner radius | `var(--vaadin-radius-s)` |
+| `--vaadin-erte-placeholder-padding` | Inline padding | `calc(var(--vaadin-padding-xs) / 2)` |
 
 **Whitespace indicators:**
 
 | Property | Description | Default |
 |----------|-------------|---------|
-| `--vaadin-erte-whitespace-indicator-color` | Color of tab/soft-break/NBSP markers | `--lumo-contrast-40pct` |
-| `--vaadin-erte-whitespace-paragraph-indicator-color` | Color of paragraph markers | `--lumo-contrast-30pct` |
-| `--vaadin-erte-whitespace-indicator-spacing` | Spacing around indicators | `--vaadin-padding-xs / 2` |
+| `--vaadin-erte-whitespace-indicator-color` | Color of tab/soft-break/NBSP markers | `color-mix(in srgb, var(--vaadin-text-color) 40%, transparent)` |
+| `--vaadin-erte-whitespace-paragraph-indicator-color` | Color of paragraph markers | `color-mix(in srgb, var(--vaadin-text-color) 30%, transparent)` |
+| `--vaadin-erte-whitespace-indicator-spacing` | Spacing around indicators | `calc(var(--vaadin-padding-xs) / 2)` |
+
+**Toolbar (custom components added via `addToolbarComponents()`):**
+
+| Property | Description | Default |
+|----------|-------------|---------|
+| `--vaadin-erte-toolbar-button-size` | Height of custom toolbar buttons | `auto` |
+| `--vaadin-erte-toolbar-display-button-size` | Min-width of display buttons | `auto` |
+| `--vaadin-erte-toolbar-display-button-padding` | Padding of display buttons | `0 0.25rem` |
+| `--vaadin-erte-toggle-background` | Toggle active background | `var(--vaadin-selection-color)` |
+| `--vaadin-erte-toggle-text-color` | Toggle active text color | `#fff` |
+| `--vaadin-erte-toggle-border-color` | Toggle active border color | `transparent` |
+
+> The Lumo theme block overrides toolbar sizing to `--lumo-size-m`/`--lumo-size-l` and toggle colors to `--lumo-primary-color`/`--lumo-primary-contrast-color`. The Aura theme block overrides toggle colors to match Aura's pressed-button style (`--vaadin-text-color` text, `--vaadin-text-color-disabled` border). See the ERTE stylesheet for details.
 
 **Rulers:**
 
 | Property | Description | Default |
 |----------|-------------|---------|
 | `--vaadin-erte-ruler-height` | Height of the horizontal ruler | `0.9375rem` |
-| `--vaadin-erte-ruler-border-color` | Ruler border color | `--vaadin-border-color` |
+| `--vaadin-erte-ruler-border-color` | Ruler border color | `var(--vaadin-border-color)` |
 | `--vaadin-erte-ruler-background` | Horizontal ruler background (tick-mark image) | base64 PNG |
 | `--vaadin-erte-ruler-marker-size` | Size of tabstop direction markers | `0.9375rem` |
 | `--vaadin-erte-ruler-marker-color` | Color of tabstop direction markers | `inherit` |
@@ -709,7 +723,7 @@ vcf-enhanced-rich-text-editor::part(toolbar-button-readonly) {
     color: red;
 }
 vcf-enhanced-rich-text-editor::part(horizontalRuler) {
-    background-color: var(--lumo-contrast-10pct);
+    background-color: var(--vaadin-background-container);
 }
 ```
 

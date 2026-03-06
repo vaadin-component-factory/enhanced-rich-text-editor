@@ -24,6 +24,10 @@
  */
 import '@vaadin/rich-text-editor';
 import { unsafeCSS } from 'lit';
+// ThemeDetectionMixin sets data-application-theme="lumo"|"aura" on the host.
+// The ERTE stylesheet uses :host(:where([data-application-theme="..."])) blocks for
+// theme-specific custom property overrides (sizing, toggle colors, icons).
+// Without this mixin, those CSS rules never match.
 import { ThemeDetectionMixin } from '@vaadin/vaadin-themable-mixin/vaadin-theme-detection-mixin.js';
 import erteStyles from './styles/vcf-enhanced-rich-text-editor-styles.css?inline';
 
