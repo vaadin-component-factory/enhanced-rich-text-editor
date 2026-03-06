@@ -52,10 +52,18 @@
   --vaadin-erte-icon-readonly: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='currentColor'><path d='M12 7h-1V5c0-1.7-1.3-3-3-3S5 3.3 5 5v2H4c-.6 0-1 .4-1 1v5c0 .6.4 1 1 1h8c.6 0 1-.4 1-1V8c0-.6-.4-1-1-1zM6 5c0-1.1.9-2 2-2s2 .9 2 2v2H6V5z'/></svg>");
   --vaadin-erte-icon-whitespace: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><text x='12' y='19' text-anchor='middle' font-family='serif' font-size='20' font-weight='bold'>¶</text></svg>");
 
-  /* Toolbar sizing (no cross-theme equivalent for Lumo size tokens) */
-  --vaadin-erte-toolbar-button-size: var(--lumo-size-m, 2.25rem);
-  --vaadin-erte-toolbar-display-button-size: var(--lumo-size-l, 2.75rem);
+  /* Toolbar sizing — Lumo defines --lumo-size-m/l; under Aura they are
+     undefined so we fall back to auto (= content-based, matching standard
+     toolbar buttons). */
+  --vaadin-erte-toolbar-button-size: var(--lumo-size-m, auto);
+  --vaadin-erte-toolbar-display-button-size: var(--lumo-size-l, auto);
   --vaadin-erte-toolbar-display-button-padding: 0 var(--lumo-space-xs, 0.25rem);
+
+  /* Toggle active state (ToolbarSwitch [on] attribute).
+     Lumo: solid primary.  Aura override below: subtle container + border. */
+  --vaadin-erte-toggle-background: var(--vaadin-selection-color, var(--lumo-primary-color, var(--aura-accent-color, #1a73e8)));
+  --vaadin-erte-toggle-text-color: var(--lumo-primary-contrast-color, var(--aura-accent-contrast-color, #fff));
+  --vaadin-erte-toggle-border-color: transparent;
 
   /* Ruler */
   --vaadin-erte-ruler-height: 0.9375rem;
@@ -73,6 +81,12 @@
 @container style(--vaadin-aura-theme: 1) {
   :host {
     --vaadin-erte-icon-align-justify: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 5H3'/><path d='M21 12H3'/><path d='M21 19H3'/></svg>");
+
+    /* Aura toggle pressed: subtle background + border (matching
+       vaadin-rich-text-editor:focus-within::part(toolbar-button-pressed)) */
+    --vaadin-erte-toggle-background: var(--vaadin-background-container-strong) padding-box;
+    --vaadin-erte-toggle-text-color: var(--vaadin-text-color);
+    --vaadin-erte-toggle-border-color: var(--vaadin-text-color-disabled);
   }
 }
 
@@ -238,6 +252,7 @@
 ::slotted([part~='toolbar-custom-component']) {
   width: auto;
   height: var(--vaadin-erte-toolbar-button-size);
+  align-self: center;
   flex-shrink: 0;
   padding: var(--vaadin-rich-text-editor-toolbar-button-padding, 0 var(--vaadin-gap-s));
   margin: 2px 1px;
@@ -274,11 +289,12 @@
 }
 
 /* Active/pressed state for toggle switches (ToolbarSwitch [on] attribute).
-   Matches RTE 2's built-in toolbar-button-pressed styling (solid primary).
-   Uses same custom properties as shadow DOM buttons for uniform theming. */
+   Matches RTE 2's built-in toolbar-button-pressed styling.
+   Lumo: solid primary.  Aura: subtle container + border (via custom props). */
 ::slotted([part~='toolbar-custom-component'][on]) {
-  --vaadin-rich-text-editor-toolbar-button-background: var(--vaadin-selection-color, var(--lumo-primary-color, var(--aura-accent-color, #1a73e8)));
-  --vaadin-rich-text-editor-toolbar-button-text-color: var(--lumo-primary-contrast-color, var(--aura-accent-contrast-color, #fff));
+  --vaadin-rich-text-editor-toolbar-button-background: var(--vaadin-erte-toggle-background);
+  --vaadin-rich-text-editor-toolbar-button-text-color: var(--vaadin-erte-toggle-text-color);
+  --vaadin-rich-text-editor-toolbar-button-border-color: var(--vaadin-erte-toggle-border-color);
 }
 
 /* Momentary press feedback (exclude active toggles) */

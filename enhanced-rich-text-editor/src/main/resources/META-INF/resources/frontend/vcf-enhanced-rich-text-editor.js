@@ -679,7 +679,7 @@ vcf-enhanced-rich-text-editor > vaadin-button[part~="toolbar-custom-component"] 
   background: var(--vaadin-rich-text-editor-toolbar-button-background, transparent);
   color: var(--vaadin-rich-text-editor-toolbar-button-text-color, inherit);
   box-shadow: none;
-  border-color: transparent;
+  border-color: var(--vaadin-rich-text-editor-toolbar-button-border-color, transparent);
   transition: color 80ms, background-color 80ms, scale 0.18s;
   /* Dimensions — override Aura's vaadin-button sizing so slotted buttons
      match the standard toolbar-button parts.  Don't set explicit height or
@@ -687,7 +687,7 @@ vcf-enhanced-rich-text-editor > vaadin-button[part~="toolbar-custom-component"] 
      Aura's light DOM.  Instead use content-based sizing (same strategy as
      the standard buttons under Aura): padding + line-height determine
      the height.  Under Lumo the ::slotted rules (lower cascade) still
-     provide explicit height: var(--lumo-size-m, 2.25rem) since we don't compete. */
+     provide explicit height: var(--lumo-size-m, auto) since we don't compete. */
   padding: var(--vaadin-rich-text-editor-toolbar-button-padding,
     var(--vaadin-padding-block-container) var(--vaadin-padding-inline-container));
   margin: 2px 1px;
