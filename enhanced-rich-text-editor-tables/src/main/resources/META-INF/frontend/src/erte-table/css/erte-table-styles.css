@@ -19,10 +19,10 @@
   --vaadin-erte-table-cell-vertical-align: top;
 
   /* Cell states */
-  --vaadin-erte-table-cell-selected-background: color-mix(in srgb, var(--vaadin-focus-ring-color, var(--lumo-primary-color, #0b69de)) 10%, transparent);
+  --vaadin-erte-table-cell-selected-background: color-mix(in srgb, var(--vaadin-focus-ring-color, var(--lumo-primary-color, var(--aura-accent-color, #1a73e8))) 10%, transparent);
   --vaadin-erte-table-cell-hover-background: transparent;
   /* Focus ring: matches vaadin-grid cell focus pattern */
-  --vaadin-erte-table-cell-focus-color: var(--vaadin-focus-ring-color, var(--lumo-primary-color, #0b69de));
+  --vaadin-erte-table-cell-focus-color: var(--vaadin-focus-ring-color, var(--lumo-primary-color, var(--aura-accent-color, #1a73e8)));
   --vaadin-erte-table-cell-focus-width: var(--vaadin-focus-ring-width, 2px);
 }
 

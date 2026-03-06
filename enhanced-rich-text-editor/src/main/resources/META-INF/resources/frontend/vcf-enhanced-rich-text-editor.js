@@ -658,22 +658,59 @@ class VcfEnhancedRichTextEditor extends RteBase {
 
     if (rteRules.length === 0) return;
 
-    // Only replace in selectors, NOT in property names/values.
-    // vaadin-rich-text-editor appears in selectors AND in custom property
-    // names like --vaadin-rich-text-editor-background. We must preserve
-    // the property names (they're the API consumed by the component).
-    const proxyStyles = rteRules.map(cssText => {
-      const braceIdx = cssText.indexOf('{');
-      if (braceIdx === -1) return cssText;
-      const selector = cssText.substring(0, braceIdx);
-      const rest = cssText.substring(braceIdx);
-      return selector.replace(/vaadin-rich-text-editor/g,
-        'vcf-enhanced-rich-text-editor') + rest;
-    });
+    // Replace element name in selectors, NOT in custom property names.
+    // vaadin-rich-text-editor appears in selectors AND in property names
+    // like --vaadin-rich-text-editor-background. Negative lookbehind
+    // (?<!-) skips occurrences preceded by a hyphen (i.e. custom props).
+    // Full-text replace also handles @media-wrapped rules correctly
+    // (the previous indexOf('{') approach broke on nested braces).
+    const proxyStyles = rteRules.map(cssText =>
+      cssText.replace(/(?<!-)vaadin-rich-text-editor/g,
+        'vcf-enhanced-rich-text-editor')
+    );
+
+    // Neutralize theme-specific vaadin-button chrome (background, shadow,
+    // border, hover overlay) so slotted toolbar buttons match the standard
+    // toolbar-button parts. The shadow-DOM ::slotted rules alone are not
+    // enough because light-DOM theme rules (e.g. Aura) target vaadin-button
+    // directly with higher cascade precedence.
+    const toolbarNormalization = `
+vcf-enhanced-rich-text-editor > vaadin-button[part~="toolbar-custom-component"] {
+  background: var(--vaadin-rich-text-editor-toolbar-button-background, transparent);
+  color: var(--vaadin-rich-text-editor-toolbar-button-text-color, inherit);
+  box-shadow: none;
+  border-color: transparent;
+  transition: color 80ms, background-color 80ms, scale 0.18s;
+  /* Dimensions — override Aura's vaadin-button sizing so slotted buttons
+     match the standard toolbar-button parts.  Don't set explicit height or
+     min-width with Lumo sizing tokens because they are unavailable in
+     Aura's light DOM.  Instead use content-based sizing (same strategy as
+     the standard buttons under Aura): padding + line-height determine
+     the height.  Under Lumo the ::slotted rules (lower cascade) still
+     provide explicit height: var(--lumo-size-m, 2.25rem) since we don't compete. */
+  padding: var(--vaadin-rich-text-editor-toolbar-button-padding,
+    var(--vaadin-padding-block-container) var(--vaadin-padding-inline-container));
+  margin: 2px 1px;
+  font: inherit;
+  line-height: inherit;
+}
+vcf-enhanced-rich-text-editor > vaadin-button[part~="toolbar-custom-component"]::before {
+  display: none;
+}
+@media (any-hover: hover) {
+  vcf-enhanced-rich-text-editor > vaadin-button[part~="toolbar-custom-component"]:hover:not([on], [disabled]) {
+    background: var(--vaadin-background-container);
+    color: var(--vaadin-text-color);
+  }
+}
+vcf-enhanced-rich-text-editor > vaadin-button[part~="toolbar-custom-component"]:active:not([disabled]) {
+  scale: 0.95;
+  transition-duration: 80ms, 80ms, 50ms;
+}`;
 
     const styleEl = document.createElement('style');
     styleEl.setAttribute('data-vcf-erte-theme-proxy', '');
-    styleEl.textContent = proxyStyles.join('\n');
+    styleEl.textContent = proxyStyles.join('\n') + toolbarNormalization;
     document.head.appendChild(styleEl);
 
     this.__themeProxyInjected = true;

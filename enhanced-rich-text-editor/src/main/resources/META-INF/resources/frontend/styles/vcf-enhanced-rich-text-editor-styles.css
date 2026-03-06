@@ -31,7 +31,7 @@
 
   /* Placeholders */
   --vaadin-erte-placeholder-color: inherit;
-  --vaadin-erte-placeholder-background: color-mix(in srgb, var(--vaadin-focus-ring-color, var(--lumo-primary-color, #0b69de)) 10%, transparent);
+  --vaadin-erte-placeholder-background: color-mix(in srgb, var(--vaadin-focus-ring-color, var(--lumo-primary-color, var(--aura-accent-color, #1a73e8))) 10%, transparent);
   --vaadin-erte-placeholder-border-color: transparent;
   --vaadin-erte-placeholder-border-width: 0;
   --vaadin-erte-placeholder-border-radius: var(--vaadin-radius-s);
@@ -52,6 +52,11 @@
   --vaadin-erte-icon-readonly: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='currentColor'><path d='M12 7h-1V5c0-1.7-1.3-3-3-3S5 3.3 5 5v2H4c-.6 0-1 .4-1 1v5c0 .6.4 1 1 1h8c.6 0 1-.4 1-1V8c0-.6-.4-1-1-1zM6 5c0-1.1.9-2 2-2s2 .9 2 2v2H6V5z'/></svg>");
   --vaadin-erte-icon-whitespace: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><text x='12' y='19' text-anchor='middle' font-family='serif' font-size='20' font-weight='bold'>¶</text></svg>");
 
+  /* Toolbar sizing (no cross-theme equivalent for Lumo size tokens) */
+  --vaadin-erte-toolbar-button-size: var(--lumo-size-m, 2.25rem);
+  --vaadin-erte-toolbar-display-button-size: var(--lumo-size-l, 2.75rem);
+  --vaadin-erte-toolbar-display-button-padding: 0 var(--lumo-space-xs, 0.25rem);
+
   /* Ruler */
   --vaadin-erte-ruler-height: 0.9375rem;
   --vaadin-erte-ruler-border-color: var(--vaadin-border-color);
@@ -64,7 +69,7 @@
 
 /* Aura theme: 3-line align-justify icon (matching Aura's base align icons).
    --vaadin-aura-theme is set to 1 by @vaadin/aura on :root/:host and inherits
-   through shadow DOM via CSS.registerProperty({ inherits: true }). */
+   through shadow DOM via standard CSS custom property inheritance. */
 @container style(--vaadin-aura-theme: 1) {
   :host {
     --vaadin-erte-icon-align-justify: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 5H3'/><path d='M21 12H3'/><path d='M21 19H3'/></svg>");
@@ -167,7 +172,7 @@
   right: var(--vaadin-erte-whitespace-indicator-spacing);
   top: 0;
   line-height: 1rem;
-  font-size: var(--lumo-font-size-m, 1rem);
+  font-size: var(--lumo-font-size-m, var(--aura-font-size-m, 1rem));
   overflow: visible;
   color: var(--vaadin-erte-whitespace-indicator-color);
   pointer-events: none;
@@ -182,7 +187,7 @@
 /* Soft-break indicator: ↵ (return symbol) */
 .show-whitespace span.ql-soft-break::before {
   content: '↵';
-  font-size: var(--lumo-font-size-s, 0.875rem);
+  font-size: var(--lumo-font-size-s, var(--aura-font-size-s, 0.875rem));
   color: var(--vaadin-erte-whitespace-indicator-color);
   vertical-align: baseline;
   pointer-events: none;
@@ -207,7 +212,7 @@
   content: '¶';
   position: absolute;
   bottom: 0;
-  font-size: var(--lumo-font-size-s, 0.875rem);
+  font-size: var(--lumo-font-size-s, var(--aura-font-size-s, 0.875rem));
   color: var(--vaadin-erte-whitespace-paragraph-indicator-color);
   pointer-events: none;
   margin-left: var(--vaadin-erte-whitespace-indicator-spacing);
@@ -216,7 +221,7 @@
 /* NBSP indicator: · (middle dot) */
 .show-whitespace span.ql-nbsp::before {
   content: '·';
-  font-size: var(--lumo-font-size-m, 1rem);
+  font-size: var(--lumo-font-size-m, var(--aura-font-size-m, 1rem));
   color: var(--vaadin-erte-whitespace-indicator-color);
   vertical-align: middle;
   pointer-events: none;
@@ -232,16 +237,16 @@
    ============================================================================ */
 ::slotted([part~='toolbar-custom-component']) {
   width: auto;
-  height: var(--lumo-size-m);
+  height: var(--vaadin-erte-toolbar-button-size);
   flex-shrink: 0;
-  padding: var(--vaadin-rich-text-editor-toolbar-button-padding, 0 var(--lumo-space-s));
+  padding: var(--vaadin-rich-text-editor-toolbar-button-padding, 0 var(--vaadin-gap-s));
   margin: 2px 1px;
-  border-radius: var(--vaadin-rich-text-editor-toolbar-button-border-radius, var(--vaadin-radius-m, var(--lumo-border-radius-m)));
+  border-radius: var(--vaadin-rich-text-editor-toolbar-button-border-radius, var(--vaadin-radius-m));
   color: var(--vaadin-rich-text-editor-toolbar-button-text-color, var(--vaadin-text-color));
   background: var(--vaadin-rich-text-editor-toolbar-button-background, transparent);
   border: var(--vaadin-rich-text-editor-toolbar-button-border-width, 1px) solid
     var(--vaadin-rich-text-editor-toolbar-button-border-color, transparent);
-  cursor: var(--lumo-clickable-cursor);
+  cursor: var(--vaadin-clickable-cursor);
   font: inherit;
   line-height: 1;
   text-transform: none;
@@ -254,8 +259,8 @@
    Uses RTE 2 custom properties so user overrides apply uniformly. */
 ::slotted(button[part~='toolbar-custom-component']:not([on]):hover),
 ::slotted(vaadin-button[part~='toolbar-custom-component']:not([on]):hover) {
-  --vaadin-rich-text-editor-toolbar-button-background: var(--lumo-contrast-5pct);
-  --vaadin-rich-text-editor-toolbar-button-text-color: var(--lumo-contrast-80pct);
+  --vaadin-rich-text-editor-toolbar-button-background: var(--vaadin-background-container);
+  --vaadin-rich-text-editor-toolbar-button-text-color: var(--vaadin-text-color);
   box-shadow: none;
   outline: none;
 }
@@ -263,7 +268,7 @@
 /* Focus ring for keyboard navigation (plain buttons only —
    vaadin-button manages its own focus ring internally) */
 ::slotted(button[part~='toolbar-custom-component']:focus-visible) {
-  outline: var(--vaadin-focus-ring-width, 2px) solid var(--vaadin-focus-ring-color, var(--lumo-primary-color-50pct));
+  outline: var(--vaadin-focus-ring-width, 2px) solid var(--vaadin-focus-ring-color, var(--lumo-primary-color-50pct, hsl(210 90% 50% / 0.5)));
   outline-offset: 1px;
   z-index: 1;
 }
@@ -272,21 +277,21 @@
    Matches RTE 2's built-in toolbar-button-pressed styling (solid primary).
    Uses same custom properties as shadow DOM buttons for uniform theming. */
 ::slotted([part~='toolbar-custom-component'][on]) {
-  --vaadin-rich-text-editor-toolbar-button-background: var(--vaadin-selection-color, var(--lumo-primary-color));
-  --vaadin-rich-text-editor-toolbar-button-text-color: var(--lumo-primary-contrast-color);
+  --vaadin-rich-text-editor-toolbar-button-background: var(--vaadin-selection-color, var(--lumo-primary-color, var(--aura-accent-color, #1a73e8)));
+  --vaadin-rich-text-editor-toolbar-button-text-color: var(--lumo-primary-contrast-color, var(--aura-accent-contrast-color, #fff));
 }
 
 /* Momentary press feedback (exclude active toggles) */
 ::slotted(button[part~='toolbar-custom-component']:not([on]):active),
 ::slotted(vaadin-button[part~='toolbar-custom-component']:not([on]):active) {
-  --vaadin-rich-text-editor-toolbar-button-background: var(--lumo-contrast-10pct);
-  --vaadin-rich-text-editor-toolbar-button-text-color: var(--lumo-contrast-90pct);
+  --vaadin-rich-text-editor-toolbar-button-background: var(--vaadin-background-container-strong);
+  --vaadin-rich-text-editor-toolbar-button-text-color: var(--vaadin-text-color);
 }
 
 /* Disabled state */
 ::slotted([part~='toolbar-custom-component'][disabled]) {
   --vaadin-rich-text-editor-toolbar-button-background: transparent;
-  --vaadin-rich-text-editor-toolbar-button-text-color: var(--lumo-disabled-text-color, var(--lumo-contrast-30pct));
+  --vaadin-rich-text-editor-toolbar-button-text-color: var(--vaadin-text-color-disabled);
   pointer-events: none;
 }
 
@@ -305,13 +310,13 @@
 
 /* Align the min-width with built-in toolbar buttons. */
 ::slotted(vaadin-button[part~='toolbar-custom-component']) {
-  min-width: var(--lumo-size-m);
+  min-width: var(--vaadin-erte-toolbar-button-size);
 }
 
 [part~='toolbar-button-placeholder-display'] {
   width: auto;
-  min-width: var(--lumo-size-l);
-  padding: 0 var(--lumo-space-xs);
+  min-width: var(--vaadin-erte-toolbar-display-button-size);
+  padding: var(--vaadin-erte-toolbar-display-button-padding);
   font-size: 0.875em;
 }
 
