@@ -1,5 +1,3 @@
-# Enhanced Rich Text Editor for Flow
-
 Enhanced Rich Text Editor (ERTE) for Flow is an extended version of the Vaadin Rich Text Editor with tabstops, placeholders, non-breaking space, rulers, customizable toolbar, readonly sections, whitespace indicators, and more.
 
 **Version 6.x** targets Vaadin 25.0.x, Java 21+, Spring Boot 4.x, and Quill 2.
@@ -24,6 +22,7 @@ Enhanced Rich Text Editor (ERTE) for Flow is an extended version of the Vaadin R
 | **I18n** | Full internationalization for all ERTE-specific labels |
 | **Sanitization** | Server-side HTML sanitizer with XSS protection |
 | **Programmatic Text** | Insert text at cursor or position, query length |
+
 
 ## Quick Start
 
@@ -64,16 +63,17 @@ String html = editor.getValue();
 // Listen for changes (fires on blur)
 editor.addValueChangeListener(e -> save(e.getValue()));
 ```
-
 ## Documentation
 
-- [User Guide](docs/BASE_USER_GUIDE.md) — Features, examples, and best practices
-- [Upgrade Guide](docs/BASE_UPGRADE_GUIDE.md) — Migrating from ERTE 1 (Vaadin 24) to ERTE 2 (Vaadin 25)
-- [Tables Guide](docs/TABLES_GUIDE.md) — Table support: setup, templates, events, and theming
-- [Tables Upgrade Guide](docs/TABLES_UPGRADE_GUIDE.md) — Migrating Tables addon from V1 to V2
-- [Architecture](docs/dev/ARCHITECTURE.md) — Internal structure and design decisions
-- [Developer Guide](docs/dev/DEVELOPER_GUIDE.md) — Building, running, and testing from source
-- [Extending ERTE](docs/dev/EXTENDING.md) — Building custom blots and extensions
+- [User Guide](https://github.com/vaadin-component-factory/enhanced-rich-text-editor/blob/master/docs/BASE_USER_GUIDE.md) — Features, examples, and best practices
+- [Upgrade Guide](https://github.com/vaadin-component-factory/enhanced-rich-text-editor/blob/master/docs/BASE_UPGRADE_GUIDE.md) — Migrating from ERTE 1 (Vaadin 24) to ERTE 2 (Vaadin 25)
+- [Tables Guide](https://github.com/vaadin-component-factory/enhanced-rich-text-editor/blob/master/docs/TABLES_GUIDE.md) — Table support: setup, templates, events, and theming
+- [Tables Upgrade Guide](https://github.com/vaadin-component-factory/enhanced-rich-text-editor/blob/master/docs/TABLES_UPGRADE_GUIDE.md) — Migrating Tables addon from V1 to V2
+- [Architecture](https://github.com/vaadin-component-factory/enhanced-rich-text-editor/blob/master/docs/dev/ARCHITECTURE.md) — Internal structure and design decisions
+- [Developer Guide](https://github.com/vaadin-component-factory/enhanced-rich-text-editor/blob/master/docs/dev/DEVELOPER_GUIDE.md) — Building, running, and testing from source
+- [Extending ERTE](https://github.com/vaadin-component-factory/enhanced-rich-text-editor/blob/master/docs/dev/EXTENDING.md) — Building custom blots and extensions
+
+Or visit [GitHub](https://github.com/vaadin-component-factory/enhanced-rich-text-editor) for more infos.
 
 ## Tables
 
@@ -91,7 +91,7 @@ To enable table functionality, add the separate Tables addon:
 EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte);
 ```
 
-See the [Tables Guide](docs/TABLES_GUIDE.md) for full documentation, and the [Tables Upgrade Guide](docs/TABLES_UPGRADE_GUIDE.md) for V1 → V2 migration.
+See the [Tables Guide](https://github.com/vaadin-component-factory/enhanced-rich-text-editor/blob/master/docs/TABLES_GUIDE.md) for full documentation, and the [Tables Upgrade Guide](https://github.com/vaadin-component-factory/enhanced-rich-text-editor/blob/master/docs/TABLES_UPGRADE_GUIDE.md) for V1 → V2 migration.
 
 ## Running the Demo
 

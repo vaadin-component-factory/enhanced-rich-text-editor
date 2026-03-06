@@ -1,5 +1,3 @@
-# Enhanced Rich Text Editor Tables Extension V25
-
 Add professional table support to your ERTE documents: create tables, modify structure (rows, columns, merge/split cells), and apply reusable style templates.
 
 ## Features
@@ -44,8 +42,10 @@ Three toolbar buttons appear automatically. Users can now insert and modify tabl
 
 ## Documentation
 
-- **[TABLES_GUIDE.md](../docs/TABLES_GUIDE.md)** — Complete developer guide with API reference, examples, and patterns
-- **[TABLES_UPGRADE_GUIDE.md](../docs/TABLES_UPGRADE_GUIDE.md)** — Migration guide from Tables V1 (Vaadin 24) to V2
+- **[TABLES_GUIDE.md](https://github.com/vaadin-component-factory/enhanced-rich-text-editor/blob/master/docs/TABLES_GUIDE.md)** — Complete developer guide with API reference, examples, and patterns
+- **[TABLES_UPGRADE_GUIDE.md](https://github.com/vaadin-component-factory/enhanced-rich-text-editor/blob/master/docs/TABLES_UPGRADE_GUIDE.md)** — Migration guide from Tables V1 (Vaadin 24) to V2
+
+Or visit [GitHub](https://github.com/vaadin-component-factory/enhanced-rich-text-editor/tree/master/enhanced-rich-text-editor-tables) for more infos.
 
 ## What's New in V2
 
@@ -59,4 +59,3 @@ Three toolbar buttons appear automatically. Users can now insert and modify tabl
 ## License
 
 [CVALv3](https://vaadin.com/license/cval-3) (Commercial Vaadin Add-On License)
-

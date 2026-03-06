@@ -13,7 +13,8 @@
 | Quill | 1.3.6 | 2.0.3 |
 | Parchment | 1.x | 3.x |
 | JSON Library | elemental `Json` | Jackson 3 (`tools.jackson`) |
-| Maven artifact | `enhanced-rich-text-editor-tables` | `enhanced-rich-text-editor-tables` |
+| Maven groupId | `com.vaadin.componentfactory` | `org.vaadin.addons.componentfactory` |
+| Maven artifactId | `enhanced-rich-text-editor-tables` | `enhanced-rich-text-editor-tables` |
 | Package | `com.vaadin.componentfactory.erte.tables` | (same) |
 | License | CVALv3 | CVALv3 |
 
@@ -78,7 +79,7 @@ Walk through these in order. Most are straightforward search-and-replace — you
 **1. Update pom.xml**
 ```xml
 <dependency>
-    <groupId>com.vaadin.componentfactory</groupId>
+    <groupId>org.vaadin.addons.componentfactory</groupId>
     <artifactId>enhanced-rich-text-editor-tables</artifactId>
     <version>2.0.0</version>
 </dependency>

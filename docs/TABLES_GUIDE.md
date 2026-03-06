@@ -40,7 +40,7 @@ Add this to your `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>com.vaadin.componentfactory</groupId>
+    <groupId>org.vaadin.addons.componentfactory</groupId>
     <artifactId>enhanced-rich-text-editor-tables</artifactId>
     <version>2.0.0</version>
 </dependency>
