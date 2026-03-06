@@ -31,6 +31,10 @@ import com.vaadin.flow.shared.Registration;
 public class ToolbarSwitch extends Button {
 
     private boolean active;
+    // When true, the built-in click-to-toggle is suppressed. Used by
+    // ToolbarPopover where the Popover web component handles the toggle
+    // via setTarget() and the click handler would cause a double-toggle.
+    boolean clickToggleSuppressed;
 
     public ToolbarSwitch() {
         init();
@@ -82,7 +86,11 @@ public class ToolbarSwitch extends Button {
 
     private void init() {
         addClassName("toolbar-switch");
-        addClickListener(event -> updateActive(!active, event.isFromClient()));
+        addClickListener(event -> {
+            if (!clickToggleSuppressed) {
+                updateActive(!active, event.isFromClient());
+            }
+        });
     }
 
     /**

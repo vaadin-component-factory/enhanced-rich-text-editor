@@ -677,7 +677,7 @@ class VcfEnhancedRichTextEditor extends RteBase {
     const toolbarNormalization = `
 vcf-enhanced-rich-text-editor > vaadin-button[part~="toolbar-custom-component"] {
   background: var(--vaadin-rich-text-editor-toolbar-button-background, transparent);
-  color: var(--vaadin-rich-text-editor-toolbar-button-text-color, inherit);
+  color: var(--vaadin-rich-text-editor-toolbar-button-text-color, var(--lumo-contrast-60pct, inherit));
   box-shadow: none;
   border-color: var(--vaadin-rich-text-editor-toolbar-button-border-color, transparent);
   transition: color 80ms, background-color 80ms, scale 0.18s;

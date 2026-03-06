@@ -101,6 +101,11 @@ public class ToolbarPopover extends Popover {
         setTarget(referencedSwitch);
         setAutofocus(true);
 
+        // Suppress the switch's built-in click toggle. The Popover web component
+        // handles click-to-toggle via setTarget(), so the switch's click handler
+        // would cause a double-toggle (inversion of the on state).
+        referencedSwitch.clickToggleSuppressed = true;
+
         // Sync popover opened state with switch active state
         addOpenedChangeListener(event -> referencedSwitch.setActive(event.isOpened()));
 

@@ -257,7 +257,7 @@
   padding: var(--vaadin-rich-text-editor-toolbar-button-padding, 0 var(--vaadin-gap-s));
   margin: 2px 1px;
   border-radius: var(--vaadin-rich-text-editor-toolbar-button-border-radius, var(--vaadin-radius-m));
-  color: var(--vaadin-rich-text-editor-toolbar-button-text-color, var(--vaadin-text-color));
+  color: var(--vaadin-rich-text-editor-toolbar-button-text-color, var(--lumo-contrast-60pct, inherit));
   background: var(--vaadin-rich-text-editor-toolbar-button-background, transparent);
   border: var(--vaadin-rich-text-editor-toolbar-button-border-width, 1px) solid
     var(--vaadin-rich-text-editor-toolbar-button-border-color, transparent);
