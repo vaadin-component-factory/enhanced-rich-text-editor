@@ -31,7 +31,7 @@
 
   /* Placeholders */
   --vaadin-erte-placeholder-color: inherit;
-  --vaadin-erte-placeholder-background: color-mix(in srgb, var(--vaadin-focus-ring-color, var(--lumo-primary-color, var(--aura-accent-color, #1a73e8))) 10%, transparent);
+  --vaadin-erte-placeholder-background: color-mix(in srgb, var(--vaadin-focus-ring-color, #1a73e8) 10%, transparent);
   --vaadin-erte-placeholder-border-color: transparent;
   --vaadin-erte-placeholder-border-width: 0;
   --vaadin-erte-placeholder-border-radius: var(--vaadin-radius-s);
@@ -47,23 +47,27 @@
        vcf-enhanced-rich-text-editor {
          --vaadin-erte-icon-align-justify: url("data:image/svg+xml;utf8,...");
        }
-     Lumo default (4-line). Aura override (3-line) via @container style() below. */
+     Default: 4-line (Lumo). Aura override (3-line) in Aura theme block below. */
   --vaadin-erte-icon-align-justify: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 5H3'/><path d='M21 10H3'/><path d='M21 15H3'/><path d='M21 20H3'/></svg>");
   --vaadin-erte-icon-readonly: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='currentColor'><path d='M12 7h-1V5c0-1.7-1.3-3-3-3S5 3.3 5 5v2H4c-.6 0-1 .4-1 1v5c0 .6.4 1 1 1h8c.6 0 1-.4 1-1V8c0-.6-.4-1-1-1zM6 5c0-1.1.9-2 2-2s2 .9 2 2v2H6V5z'/></svg>");
   --vaadin-erte-icon-whitespace: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><text x='12' y='19' text-anchor='middle' font-family='serif' font-size='20' font-weight='bold'>¶</text></svg>");
 
-  /* Toolbar sizing — Lumo defines --lumo-size-m/l; under Aura they are
-     undefined so we fall back to auto (= content-based, matching standard
-     toolbar buttons). */
-  --vaadin-erte-toolbar-button-size: var(--lumo-size-m, auto);
-  --vaadin-erte-toolbar-display-button-size: var(--lumo-size-l, auto);
-  --vaadin-erte-toolbar-display-button-padding: 0 var(--lumo-space-xs, 0.25rem);
+  /* Toolbar sizing — base uses content-based sizing (auto).
+     Lumo/Aura theme blocks provide theme-specific values. */
+  --vaadin-erte-toolbar-button-size: auto;
+  --vaadin-erte-toolbar-display-button-size: auto;
+  --vaadin-erte-toolbar-display-button-padding: 0 0.25rem;
 
   /* Toggle active state (ToolbarSwitch [on] attribute).
-     Lumo: solid primary.  Aura override below: subtle container + border. */
-  --vaadin-erte-toggle-background: var(--vaadin-selection-color, var(--lumo-primary-color, var(--aura-accent-color, #1a73e8)));
-  --vaadin-erte-toggle-text-color: var(--lumo-primary-contrast-color, var(--aura-accent-contrast-color, #fff));
+     Base: shared token + hardcoded fallback. Theme blocks override. */
+  --vaadin-erte-toggle-background: var(--vaadin-selection-color, #1a73e8);
+  --vaadin-erte-toggle-text-color: #fff;
   --vaadin-erte-toggle-border-color: transparent;
+
+  /* Whitespace indicator font sizes (used in descendant selectors).
+     Theme blocks map these to theme-specific tokens. */
+  --vaadin-erte-whitespace-font-size-m: 1rem;
+  --vaadin-erte-whitespace-font-size-s: 0.875rem;
 
   /* Ruler */
   --vaadin-erte-ruler-height: 0.9375rem;
@@ -75,19 +79,44 @@
   --vaadin-erte-ruler-vertical-background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAyBAMAAABxHJwKAAAAA3NCSVQICAjb4U/gAAAAG1BMVEXS0tLR0dHQ0NCfq7eeqradq7idqbWcqLT///+TeDeAAAAACXRSTlP//////////wBTT3gSAAAACXBIWXMAAAsSAAALEgHS3X78AAAAIHRFWHRTb2Z0d2FyZQBNYWNyb21lZGlhIEZpcmV3b3JrcyBNWLuRKiQAAAAWdEVYdENyZWF0aW9uIFRpbWUAMDUvMTAvMTKGkLEaAAAATklEQVR4nGPogIAABijDAMZwQGM0CqKLYGNAtDcK4lOcgGGyAS4pDF1NgoIJuJ2KLtKIUIxpcgKGmzHV4AkNTClc2pFDo4Bq4awoCAYOAKbZvafXusxYAAAAAElFTkSuQmCC') repeat-y;
 }
 
-/* Aura theme: 3-line align-justify icon (matching Aura's base align icons).
-   --vaadin-aura-theme is set to 1 by @vaadin/aura on :root/:host and inherits
-   through shadow DOM via standard CSS custom property inheritance. */
-@container style(--vaadin-aura-theme: 1) {
-  :host {
-    --vaadin-erte-icon-align-justify: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 5H3'/><path d='M21 12H3'/><path d='M21 19H3'/></svg>");
+/* ============================================================================
+   Lumo Theme
+   Applied when data-application-theme="lumo" attribute is set by
+   ThemeDetectionMixin. :where() wrapper keeps specificity at (0,1,0) —
+   same as :host — so source order decides and user overrides on :host win.
+   ============================================================================ */
+:host(:where([data-application-theme="lumo"])) {
+  /* Toolbar sizing */
+  --vaadin-erte-toolbar-button-size: var(--lumo-size-m);
+  --vaadin-erte-toolbar-display-button-size: var(--lumo-size-l);
+  --vaadin-erte-toolbar-display-button-padding: 0 var(--lumo-space-xs);
 
-    /* Aura toggle pressed: subtle background + border (matching
-       vaadin-rich-text-editor:focus-within::part(toolbar-button-pressed)) */
-    --vaadin-erte-toggle-background: var(--vaadin-background-container-strong) padding-box;
-    --vaadin-erte-toggle-text-color: var(--vaadin-text-color);
-    --vaadin-erte-toggle-border-color: var(--vaadin-text-color-disabled);
-  }
+  /* Toggle active state — solid primary */
+  --vaadin-erte-toggle-background: var(--lumo-primary-color);
+  --vaadin-erte-toggle-text-color: var(--lumo-primary-contrast-color);
+
+  /* Whitespace indicator font sizes */
+  --vaadin-erte-whitespace-font-size-m: var(--lumo-font-size-m);
+  --vaadin-erte-whitespace-font-size-s: var(--lumo-font-size-s);
+}
+
+/* ============================================================================
+   Aura Theme
+   Same pattern as Lumo block. Aura-specific tokens and overrides.
+   ============================================================================ */
+:host(:where([data-application-theme="aura"])) {
+  /* 3-line align-justify icon (matching Aura's base align icons) */
+  --vaadin-erte-icon-align-justify: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 5H3'/><path d='M21 12H3'/><path d='M21 19H3'/></svg>");
+
+  /* Toggle pressed: subtle background + border (matching
+     vaadin-rich-text-editor:focus-within::part(toolbar-button-pressed)) */
+  --vaadin-erte-toggle-background: var(--vaadin-background-container-strong) padding-box;
+  --vaadin-erte-toggle-text-color: var(--vaadin-text-color);
+  --vaadin-erte-toggle-border-color: var(--vaadin-text-color-disabled);
+
+  /* Whitespace indicator font sizes */
+  --vaadin-erte-whitespace-font-size-m: var(--aura-font-size-m);
+  --vaadin-erte-whitespace-font-size-s: var(--aura-font-size-s);
 }
 
 /* ============================================================================
@@ -186,7 +215,7 @@
   right: var(--vaadin-erte-whitespace-indicator-spacing);
   top: 0;
   line-height: 1rem;
-  font-size: var(--lumo-font-size-m, var(--aura-font-size-m, 1rem));
+  font-size: var(--vaadin-erte-whitespace-font-size-m);
   overflow: visible;
   color: var(--vaadin-erte-whitespace-indicator-color);
   pointer-events: none;
@@ -201,7 +230,7 @@
 /* Soft-break indicator: ↵ (return symbol) */
 .show-whitespace span.ql-soft-break::before {
   content: '↵';
-  font-size: var(--lumo-font-size-s, var(--aura-font-size-s, 0.875rem));
+  font-size: var(--vaadin-erte-whitespace-font-size-s);
   color: var(--vaadin-erte-whitespace-indicator-color);
   vertical-align: baseline;
   pointer-events: none;
@@ -226,7 +255,7 @@
   content: '¶';
   position: absolute;
   bottom: 0;
-  font-size: var(--lumo-font-size-s, var(--aura-font-size-s, 0.875rem));
+  font-size: var(--vaadin-erte-whitespace-font-size-s);
   color: var(--vaadin-erte-whitespace-paragraph-indicator-color);
   pointer-events: none;
   margin-left: var(--vaadin-erte-whitespace-indicator-spacing);
@@ -235,7 +264,7 @@
 /* NBSP indicator: · (middle dot) */
 .show-whitespace span.ql-nbsp::before {
   content: '·';
-  font-size: var(--lumo-font-size-m, var(--aura-font-size-m, 1rem));
+  font-size: var(--vaadin-erte-whitespace-font-size-m);
   color: var(--vaadin-erte-whitespace-indicator-color);
   vertical-align: middle;
   pointer-events: none;
@@ -257,7 +286,7 @@
   padding: var(--vaadin-rich-text-editor-toolbar-button-padding, 0 var(--vaadin-gap-s));
   margin: 2px 1px;
   border-radius: var(--vaadin-rich-text-editor-toolbar-button-border-radius, var(--vaadin-radius-m));
-  color: var(--vaadin-rich-text-editor-toolbar-button-text-color, var(--lumo-contrast-60pct, inherit));
+  color: var(--vaadin-rich-text-editor-toolbar-button-text-color, inherit);
   background: var(--vaadin-rich-text-editor-toolbar-button-background, transparent);
   border: var(--vaadin-rich-text-editor-toolbar-button-border-width, 1px) solid
     var(--vaadin-rich-text-editor-toolbar-button-border-color, transparent);
@@ -283,7 +312,7 @@
 /* Focus ring for keyboard navigation (plain buttons only —
    vaadin-button manages its own focus ring internally) */
 ::slotted(button[part~='toolbar-custom-component']:focus-visible) {
-  outline: var(--vaadin-focus-ring-width, 2px) solid var(--vaadin-focus-ring-color, var(--lumo-primary-color-50pct, hsl(210 90% 50% / 0.5)));
+  outline: var(--vaadin-focus-ring-width, 2px) solid var(--vaadin-focus-ring-color, hsl(210 90% 50% / 0.5));
   outline-offset: 1px;
   z-index: 1;
 }
@@ -324,9 +353,10 @@
   }
 }
 
-/* Align the min-width with built-in toolbar buttons. */
+/* Align the min-width with built-in toolbar buttons.
+   2rem floor ensures narrow-label buttons (e.g. "S") stay tappable. */
 ::slotted(vaadin-button[part~='toolbar-custom-component']) {
-  min-width: var(--vaadin-erte-toolbar-button-size);
+  min-width: max(2rem, var(--vaadin-erte-toolbar-button-size));
 }
 
 [part~='toolbar-button-placeholder-display'] {

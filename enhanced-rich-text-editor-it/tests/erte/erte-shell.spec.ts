@@ -16,6 +16,11 @@ test.describe('ERTE Shell (Phase 2)', () => {
     await waitForEditor(page);
   });
 
+  test('has data-application-theme attribute', async ({ page }) => {
+    const theme = await page.locator('#test-editor').getAttribute('data-application-theme');
+    expect(theme).toBe('lumo');
+  });
+
   test('tag is vcf-enhanced-rich-text-editor', async ({ page }) => {
     const el = page.locator('vcf-enhanced-rich-text-editor');
     await expect(el).toBeVisible();
