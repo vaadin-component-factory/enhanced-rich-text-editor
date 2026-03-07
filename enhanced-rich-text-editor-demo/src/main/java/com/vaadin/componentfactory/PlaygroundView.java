@@ -12,6 +12,7 @@ public abstract class PlaygroundView<T extends RichTextEditor> extends VerticalL
 
     public PlaygroundView() {
         setSizeFull();
+        setAlignItems(Alignment.STRETCH);
 
         // --- Editor ---
         var editor = createEditor();
@@ -46,8 +47,7 @@ public abstract class PlaygroundView<T extends RichTextEditor> extends VerticalL
 
         // --- Layout: editor left (2), delta right (1) ---
         var editorPanel = new VerticalLayout(editor, legend);
-        editorPanel.setPadding(true);
-        editorPanel.setSpacing(false);
+        editorPanel.setPadding(false);
         editorPanel.getStyle()
                 .set("flex", "2")
                 .set("min-width", "0")

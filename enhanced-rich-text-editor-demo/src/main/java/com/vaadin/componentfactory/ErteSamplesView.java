@@ -70,10 +70,8 @@ public class ErteSamplesView extends VerticalLayout {
     //  - This ensures code snippets always match the actual implementation
 
     public ErteSamplesView() {
-        setPadding(true);
-        setSpacing(true);
-        setMaxWidth("1200px");
-        getStyle().set("margin", "0 auto");
+        setSizeFull();
+        setAlignItems(Alignment.STRETCH);
 
         add(createDefaultEditor());
         add(createEditorWithTabstops());
