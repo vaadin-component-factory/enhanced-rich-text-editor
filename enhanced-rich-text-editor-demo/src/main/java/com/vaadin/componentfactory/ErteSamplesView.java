@@ -22,16 +22,11 @@ import com.vaadin.componentfactory.erte.tables.TablesI18n;
 import com.vaadin.componentfactory.erte.tables.templates.TemplateParser;
 import com.vaadin.componentfactory.toolbar.ToolbarSlot;
 import com.vaadin.componentfactory.toolbar.ToolbarSwitch;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Html;
-import com.vaadin.flow.component.Key;
-import com.vaadin.flow.component.KeyModifier;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -39,10 +34,10 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextArea;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import org.jspecify.annotations.NonNull;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -72,6 +67,7 @@ public class ErteSamplesView extends VerticalLayout {
     public ErteSamplesView() {
         setSizeFull();
         setAlignItems(Alignment.STRETCH);
+        getStyle().setGap("var(--vaadin-gap-xl)");
 
         add(createDefaultEditor());
         add(createEditorWithTabstops());
@@ -111,17 +107,25 @@ public class ErteSamplesView extends VerticalLayout {
     }
 
     private Component createDefaultEditor() {
-        var rte = new EnhancedRichTextEditor();
-        rte.setMaxHeight("200px");
+        var rte = createERTE();
+        rte.setMaxHeight("500px");
 
         return createCard("Basic Rich Text Editor", rte,
                 createSourceCode(
                         "EnhancedRichTextEditor rte = new EnhancedRichTextEditor();\n"
-                                + "rte.setMaxHeight(\"200px\");"));
+                                + "rte.setMinHeight(\"300px\");\n"
+                                + "rte.setMaxHeight(\"500px\");"
+                ));
+    }
+
+    private @NonNull EnhancedRichTextEditor createERTE() {
+        EnhancedRichTextEditor erte = new EnhancedRichTextEditor();
+        erte.setMinHeight(300, Unit.PIXELS);
+        return erte;
     }
 
     private Component createEditorWithTabstops() {
-        var rte = new EnhancedRichTextEditor();
+        var rte = createERTE();
         rte.setTabStops(List.of(new TabStop(TabStop.Direction.LEFT, 150),
                 new TabStop(TabStop.Direction.RIGHT, 350),
                 new TabStop(TabStop.Direction.MIDDLE, 550)));
@@ -158,7 +162,7 @@ public class ErteSamplesView extends VerticalLayout {
     }
 
     private Component createEditorWithLimitedToolbar() {
-        var rte = new EnhancedRichTextEditor();
+        var rte = createERTE();
         Map<ToolbarButton, Boolean> buttons = new HashMap<>();
         buttons.put(ToolbarButton.CLEAN, false);
         buttons.put(ToolbarButton.BLOCKQUOTE, false);
@@ -183,7 +187,7 @@ public class ErteSamplesView extends VerticalLayout {
     }
 
     private Component createEditorWithReadonlySections() {
-        var rte = new EnhancedRichTextEditor();
+        var rte = createERTE();
         rte.asDelta().setValue("["
                 + "{\"insert\":\"Some text\\n\"},"
                 + "{\"insert\":\"Some readonly text\\n\",\"attributes\":{\"readonly\":true}},"
@@ -202,7 +206,7 @@ public class ErteSamplesView extends VerticalLayout {
     }
 
     private Component createEditorWithPlaceholders() {
-        var rte = new EnhancedRichTextEditor();
+        var rte = createERTE();
 
         var p1 = new Placeholder();
         p1.setText("N-1=Vaadin");
@@ -311,7 +315,7 @@ public class ErteSamplesView extends VerticalLayout {
     }
 
     private Component createEditorWithCustomButtons() {
-        var rte = new EnhancedRichTextEditor();
+        var rte = createERTE();
 
         var textButton1 = new Button("");
         textButton1.setIcon(VaadinIcon.AIRPLANE.create());
@@ -344,7 +348,7 @@ public class ErteSamplesView extends VerticalLayout {
     }
 
     private Component createEditorWithCustomButtonsExtended() {
-        var rte = new EnhancedRichTextEditor();
+        var rte = createERTE();
 
         var presets = new ComboBox<String>("", "Preset 1", "Preset 2", "Preset 3");
         presets.setValue("Preset 1");
@@ -392,7 +396,7 @@ public class ErteSamplesView extends VerticalLayout {
     }
 
     private Component createEditorWithCustomShortcuts() {
-        var rte = new EnhancedRichTextEditor();
+        var rte = createERTE();
 
         // Shift+F9 for align center
         rte.addStandardToolbarButtonShortcut(ToolbarButton.ALIGN_CENTER, Key.F9, KeyModifier.SHIFT);
@@ -423,7 +427,7 @@ public class ErteSamplesView extends VerticalLayout {
     }
 
     private Component createEditorWithIconReplacement() {
-        var rte = new EnhancedRichTextEditor();
+        var rte = createERTE();
 
         var newUndoIcon = new Icon(VaadinIcon.ARROW_BACKWARD);
         newUndoIcon.setColor("grey");
@@ -449,7 +453,7 @@ public class ErteSamplesView extends VerticalLayout {
     }
 
     private Component createEditorWithNoRulers() {
-        var rte = new EnhancedRichTextEditor();
+        var rte = createERTE();
         rte.setMaxHeight("200px");
         rte.setNoRulers(true);
 
@@ -473,7 +477,7 @@ public class ErteSamplesView extends VerticalLayout {
             throw new RuntimeException(e);
         }
 
-        var rte = new EnhancedRichTextEditor();
+        var rte = createERTE();
         var tables = EnhancedRichTextEditorTables.enable(rte);
         tables.setTemplates(TemplateParser.parseJson(templatesString));
         rte.asDelta().setValue(deltaString);
@@ -503,7 +507,7 @@ public class ErteSamplesView extends VerticalLayout {
             throw new RuntimeException(e);
         }
 
-        var rte = new EnhancedRichTextEditor();
+        var rte = createERTE();
         var tablesI18n = new TablesI18n();
         tablesI18n.setInsertTableToolbarSwitchTooltip("Neue Tabelle hinzufügen");
         tablesI18n.setInsertTableRowsFieldLabel("Zeilen");
@@ -544,11 +548,11 @@ public class ErteSamplesView extends VerticalLayout {
 
     private Div createCard(String title, Component... content) {
         var card = new Div();
-        card.getStyle().set("border", "1px solid var(--lumo-contrast-10pct)")
-                .set("border-radius", "var(--lumo-border-radius-l)")
-                .set("padding", "var(--lumo-space-l)")
-                .set("background", "var(--lumo-base-color)").set("display", "flex")
-                .set("flex-direction", "column").set("gap", "var(--lumo-space-s)");
+        card.getStyle().set("border", "1px solid var(--vaadin-border-color-secondary)")
+                .set("border-radius", "var(--vaadin-radius-l)")
+                .set("padding", "var(--vaadin-padding-l)")
+                .set("background", "var(--vaadin-background-color)").set("display", "flex")
+                .set("flex-direction", "column").set("gap", "var(--vaadin-gap-s)");
 
         var h3 = new H3(title);
         h3.getStyle().set("margin", "0");
@@ -560,16 +564,26 @@ public class ErteSamplesView extends VerticalLayout {
         return card;
     }
 
-    private Component createSourceCode(String code) {
-        String escaped = code
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;");
-        var wrapper = new Div();
-        wrapper.getElement().setProperty("innerHTML",
-                "<pre style=\"border-radius:var(--lumo-border-radius-s);"
-                        + "font-size:var(--lumo-font-size-xs);margin:0;overflow-x:auto\">"
-                        + "<code class=\"language-java\">" + escaped + "</code></pre>");
-        return wrapper;
+    private Component createSourceCode(String sampleCode) {
+//        String escaped = sampleCode
+//                .replace("&", "&amp;")
+//                .replace("<", "&lt;")
+//                .replace(">", "&gt;");
+
+        Code code = new Code(sampleCode);
+        code.addClassName("language-java");
+
+        Pre pre = new Pre(code);
+        pre.getStyle()
+                .setBorderRadius("var(--vaadin-radius-m)")
+                .setFontSize("var(--lumo-font-size-m, var(--aura-font-size-m))")
+                .setMargin("0")
+                .set("overflow-x", "auto");
+        //        var wrapper = new Div();
+//        wrapper.getElement().setProperty("innerHTML",
+//                "<pre style=\"border-radius:var(--vaadin-radius-m);"
+//                        + "font-size:var(--lumo-font-size-m, var(--aura-font-size-m));margin:0;overflow-x:auto\">"
+//                        + "<code class=\"language-java\">" + escaped + "</code></pre>");
+        return pre;
     }
 }

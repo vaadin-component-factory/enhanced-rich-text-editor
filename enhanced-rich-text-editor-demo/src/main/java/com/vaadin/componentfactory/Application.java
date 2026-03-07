@@ -14,7 +14,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 @StyleSheet(Aura.STYLESHEET)
 @StyleSheet("styles.css")
-@ColorScheme(ColorScheme.Value.SYSTEM)
 public class Application implements AppShellConfigurator {
 
     public static void main(String[] args) {

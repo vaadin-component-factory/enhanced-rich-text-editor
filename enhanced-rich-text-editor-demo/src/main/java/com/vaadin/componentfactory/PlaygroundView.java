@@ -42,8 +42,8 @@ public abstract class PlaygroundView<T extends RichTextEditor> extends VerticalL
                         VaadinIcon.PLUS.name() + " = ToolbarSelectPopup, " +
                         VaadinIcon.COG.name() + " = ToolbarDialog");
         legend.getStyle()
-                .set("font-size", "var(--lumo-font-size-xs)")
-                .set("color", "var(--lumo-secondary-text-color)");
+                .set("font-size", "var(--lumo-font-size-xs, var(--aura-font-size-xs))")
+                .set("color", "var(--vaadin-text-color-secondary)");
 
         // --- Layout: editor left (2), delta right (1) ---
         var editorPanel = new VerticalLayout(editor, legend);
@@ -51,7 +51,7 @@ public abstract class PlaygroundView<T extends RichTextEditor> extends VerticalL
         editorPanel.getStyle()
                 .set("flex", "2")
                 .set("min-width", "0")
-                .set("gap", "var(--lumo-space-xs)");
+                .set("gap", "var(--vaadin-gap-xs)");
         editorPanel.setFlexGrow(1, editor);
 
         var htmlDetails = new Details("HTML-Output", htmlOutput);
@@ -71,12 +71,12 @@ public abstract class PlaygroundView<T extends RichTextEditor> extends VerticalL
         output.getStyle()
                 .set("white-space", "pre-wrap")
                 .set("word-break", "break-all")
-                .set("font-size", "var(--lumo-font-size-xs)")
+                .set("font-size", "var(--lumo-font-size-xs, var(--aura-font-size-xs))")
                 .set("overflow", "auto")
-                .set("background", "var(--lumo-shade-5pct)")
-                .set("padding", "var(--lumo-space-s)")
+                .set("background", "var(--vaadin-background-container)")
+                .set("padding", "var(--vaadin-padding-s)")
                 .set("margin", "0")
-                .set("border-radius", "var(--lumo-border-radius-m)");
+                .set("border-radius", "var(--vaadin-radius-m)");
 
         return output;
     }

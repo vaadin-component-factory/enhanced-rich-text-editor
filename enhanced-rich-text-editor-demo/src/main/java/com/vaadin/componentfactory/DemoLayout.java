@@ -70,7 +70,7 @@ public class DemoLayout extends AppLayout implements AfterNavigationObserver {
         // Drawer: heading + navigation
         var heading = new H2("Vaadin Enhanced RTE");
         heading.getStyle()
-                .set("font-size", "var(--lumo-font-size-l)")
+                .set("font-size", "var(--lumo-font-size-l, var(--aura-font-size-l))")
                 .set("margin", "0");
 
         var nav = createSideNav();
