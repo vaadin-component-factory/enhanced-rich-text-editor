@@ -14,16 +14,6 @@ Add professional table support to your ERTE documents: create tables, modify str
 
 ## Quick Start
 
-**Add the dependency:**
-
-```xml
-<dependency>
-    <groupId>org.vaadin.addons.componentfactory</groupId>
-    <artifactId>enhanced-rich-text-editor-tables</artifactId>
-    <version>2.0.0</version>
-</dependency>
-```
-
 **Enable tables on your editor:**
 
 ```java
@@ -31,14 +21,7 @@ EnhancedRichTextEditor rte = new EnhancedRichTextEditor();
 EnhancedRichTextEditorTables tables = EnhancedRichTextEditorTables.enable(rte);
 add(rte);
 ```
-
 Three toolbar buttons appear automatically. Users can now insert and modify tables.
-
-## Requirements
-
-- Java 21+
-- Vaadin 25.0.x
-- `enhanced-rich-text-editor` 6.0.0
 
 ## Documentation
 
