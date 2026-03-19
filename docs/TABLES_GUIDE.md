@@ -42,11 +42,11 @@ Add this to your `pom.xml`:
 <dependency>
     <groupId>org.vaadin.addons.componentfactory</groupId>
     <artifactId>enhanced-rich-text-editor-tables</artifactId>
-    <version>2.0.0</version>
+    <version>6.1.0</version>
 </dependency>
 ```
 
-**Requirements:** Vaadin 25.0.x, `enhanced-rich-text-editor` 6.0.0
+**Requirements:** Vaadin 25.0.x, `enhanced-rich-text-editor` 6.1.0
 
 ### Quickstart
 

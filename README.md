@@ -33,7 +33,7 @@ Enhanced Rich Text Editor (ERTE) for Flow is an extended version of the Vaadin R
 <dependency>
     <groupId>com.vaadin.componentfactory</groupId>
     <artifactId>enhanced-rich-text-editor</artifactId>
-    <version>6.0.0</version>
+    <version>6.1.0</version>
 </dependency>
 ```
 
@@ -83,7 +83,7 @@ To enable table functionality, add the separate Tables addon:
 <dependency>
     <groupId>org.vaadin.addons.componentfactory</groupId>
     <artifactId>enhanced-rich-text-editor-tables</artifactId>
-    <version>2.0.0</version>
+    <version>6.1.0</version>
 </dependency>
 ```
 
@@ -140,5 +140,6 @@ bash it-server-stop.sh
 
 | Version | Vaadin | Java | Quill | Status |
 |---------|--------|------|-------|--------|
-| 6.0.x | 25.0.x | 21+ | 2.0.3 | Active development |
+| 6.1.x | 25.0.x | 21+ | 2.0.3 | Active development — adds full Aura theme support |
+| 6.0.x | 25.0.x | 21+ | 2.0.3 | Stable |
 | 5.2.x | 24.x | 17+ | 1.3.6 | Maintenance (master branch) |

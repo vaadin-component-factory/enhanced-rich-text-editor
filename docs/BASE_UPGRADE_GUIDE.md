@@ -49,7 +49,7 @@ See [Section 2.1](#21-primary-value-format-delta-to-html) for details and migrat
 <dependency>
     <groupId>com.vaadin.componentfactory</groupId>
     <artifactId>enhanced-rich-text-editor</artifactId>
-    <version>6.0.0</version>
+    <version>6.1.0</version>
 </dependency>
 ```
 
@@ -208,6 +208,10 @@ ERTE 2 adds several quality-of-life improvements that require no migration work:
 - **Toolbar part-based styling** — custom toolbar components get `part="toolbar-custom-component"` for easy CSS targeting
 - **Arrow key navigation** between custom toolbar buttons (left/right to move, Home/End to jump)
 - **Reliable `editor.focus()`** — works from any server-side context without timing workarounds
+
+### New in 6.1.0
+
+- **Full Aura theme support** — ERTE now renders correctly under both Lumo and Aura without any configuration. The active theme is auto-detected via `ThemeDetectionMixin`, which sets `data-application-theme="lumo"` or `data-application-theme="aura"` on the host. The ERTE stylesheet uses this attribute to apply theme-appropriate toolbar sizing, toggle colors, icon sizes, and whitespace indicator font sizes. No Java code changes needed.
 
 ---
 

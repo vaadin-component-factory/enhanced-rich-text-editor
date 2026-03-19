@@ -39,7 +39,7 @@ ERTE v6.x requires Vaadin 25.0.x. Add the dependency to your `pom.xml`:
 <dependency>
     <groupId>com.vaadin.componentfactory</groupId>
     <artifactId>enhanced-rich-text-editor</artifactId>
-    <version>6.0.0</version>
+    <version>6.1.0</version>
 </dependency>
 ```
 
@@ -601,16 +601,15 @@ editor.setToolbarButtonsVisibility(Map.of(
 
 ### 2.10 Styling and Theming
 
-ERTE supports both Vaadin themes — Lumo and Aura — and adds its own CSS custom properties, shadow parts, and content classes. 
+ERTE supports both Vaadin themes — **Lumo** and **Aura** — without any additional configuration. The active theme is detected automatically via `ThemeDetectionMixin`, which sets a `data-application-theme` attribute (`"lumo"` or `"aura"`) on the host element. ERTE then applies theme-appropriate styles for toolbar sizing, toggle button colors, icon sizes, and font sizes.
 
+ERTE adds its own CSS custom properties, shadow parts, and content classes on top of both themes:
 
 - **CSS custom properties** (`--vaadin-erte-*`) — control colors, sizes, and spacing of ERTE-specific elements
 - **Shadow parts** — target toolbar buttons, rulers, and custom components from external CSS
 - **Content classes** — style editor content elements (tabs, placeholders, readonly spans)
 
 For the standard RTE properties (`--vaadin-rich-text-editor-*`), see the [Vaadin RTE Styling docs](https://vaadin.com/docs/latest/components/rich-text-editor/styling).
-
-The active theme is auto-detected and results in the `data-application-theme` attribute on the component, which either contains "aura" or "lumo". 
 
 #### 2.10.1 ERTE Custom Properties
 
@@ -671,7 +670,7 @@ vcf-enhanced-rich-text-editor.some-css-class {
 | `--vaadin-erte-toggle-text-color` | Toggle active text color | `#fff` |
 | `--vaadin-erte-toggle-border-color` | Toggle active border color | `transparent` |
 
-> The Lumo theme block overrides toolbar sizing to `--lumo-size-m`/`--lumo-size-l` and toggle colors to `--lumo-primary-color`/`--lumo-primary-contrast-color`. The Aura theme block overrides toggle colors to match Aura's pressed-button style (`--vaadin-text-color` text, `--vaadin-text-color-disabled` border). See the ERTE stylesheet for details.
+> **Theme overrides:** The Lumo theme block overrides toolbar button height to `--lumo-size-m`, custom display button minimum width to `--lumo-size-l`, and toggle colors to `--lumo-primary-color`/`--lumo-primary-contrast-color`. The Aura theme block overrides toolbar sizing to match Aura's compact scale (`--aura-size-m`), icon sizes to `--aura-icon-size-m`, toggle colors to match Aura's pressed-button style (`--vaadin-text-color` text on `--vaadin-text-color-disabled` background), and whitespace indicator font sizes to Aura's scale. These overrides apply automatically — no extra configuration needed.
 
 **Rulers:**
 

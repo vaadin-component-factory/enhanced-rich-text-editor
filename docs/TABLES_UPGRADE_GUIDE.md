@@ -81,10 +81,10 @@ Walk through these in order. Most are straightforward search-and-replace — you
 <dependency>
     <groupId>org.vaadin.addons.componentfactory</groupId>
     <artifactId>enhanced-rich-text-editor-tables</artifactId>
-    <version>2.0.0</version>
+    <version>6.1.0</version>
 </dependency>
 ```
-Also upgrade to Vaadin 25.0.x and ERTE 6.0.0.
+Also upgrade to Vaadin 25.0.x and ERTE 6.1.0.
 
 **2. Update template parsing**
 ```java
