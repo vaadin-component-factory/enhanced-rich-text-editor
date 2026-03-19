@@ -35,7 +35,7 @@ public class DimensionField extends CustomField<Dimension> {
 
         unitField = new Span();
         unitField.getStyle()
-                .set("margin-left", "var(--lumo-space-xs, 0.25rem)")
+                .set("margin-left", "var(--vaadin-gap-xs, 0.25rem)")
                 .set("font-size", "var(--lumo-font-size-s, var(--aura-font-size-s, 0.875rem))");
         add(valueField, unitField);
     }
