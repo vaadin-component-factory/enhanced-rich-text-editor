@@ -1,11 +1,11 @@
 # ERTE Test Suite Inventory
 
-> **V25 Status:** 298 pass, 8 skip, 0 fail across 306 tests.
-> Per spec: Shell (6), Toolbar (32), Readonly (17+1 skip), Tabstops (81+5 skip), Placeholders (30+2 skip), extendOptions (4), Features (36), Replace Icons (10), Tables (82).
+> **V25 Status:** 304 pass, 8 skip, 0 fail across 312 tests.
+> Per spec: Shell (6), Toolbar (32), Readonly (17+1 skip), Tabstops (87+5 skip), Placeholders (30+2 skip), extendOptions (4), Features (36), Replace Icons (10), Tables (82).
 > Skipped tests document known component bugs and Quill 2/Parchment 3 limitations, not ERTE core bugs.
 
-Total: 381 tests (75 prototype + 306 ERTE including Tables)
-V25 status: 296 passed, 10 skipped, 0 failed
+Total: 387 tests (75 prototype + 312 ERTE including Tables)
+V25 status: 302 passed, 10 skipped, 0 failed
 
 ---
 
@@ -20,7 +20,7 @@ V25 status: 296 passed, 10 skipped, 0 failed
 
 ---
 
-## Tabstops (86 tests) — `erte/tabstops.spec.ts`
+## Tabstops (92 tests) — `erte/tabstops.spec.ts`
 
 ### Hard-Break (Enter)
 - Tab in new paragraph aligns to first tabstop
@@ -150,6 +150,15 @@ V25 status: 296 passed, 10 skipped, 0 failed
 - Indicators visible for all whitespace types simultaneously
 - ~~Auto-wrap indicator shown for wrapped tabs~~ *(fixme — auto-wrap indicator disabled)*
 - ~~Auto-wrap class removed when tab not on wrapped line~~ *(fixme — auto-wrap indicator disabled)*
+
+### Server Synchronization
+*(runs against `/erte-test/tabstops-sync`, which also exposes the server-side `getTabStops()` result)*
+- tab-stops-changed fires when a tabstop is added via the ruler
+- tab-stops-changed fires on direction change and removal
+- Server sees the initial tabstops
+- Server sees a tabstop added via the ruler
+- Server sees a direction change made in the ruler
+- Server sees a tabstop removed in the ruler
 
 ### ERTE Integration
 - Java setTabStops reflects in UI

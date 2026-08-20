@@ -31,6 +31,7 @@ import com.vaadin.flow.component.EventData;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.KeyModifier;
+import com.vaadin.flow.component.Synchronize;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.UI;
@@ -1131,9 +1132,14 @@ public class EnhancedRichTextEditor extends RichTextEditor {
 
     /**
      * Returns the current tabstop configuration.
+     * <p>
+     * The {@code tabStops} property is synchronized from the client on every
+     * {@code tab-stops-changed} event, so changes made by the user in the ruler
+     * are reflected here.
      *
      * @return list of tab stops, never null
      */
+    @Synchronize(property = "tabStops", value = "tab-stops-changed")
     public List<TabStop> getTabStops() {
         ArrayNode raw = (ArrayNode) getElement().getPropertyRaw("tabStops");
         if (raw == null) {

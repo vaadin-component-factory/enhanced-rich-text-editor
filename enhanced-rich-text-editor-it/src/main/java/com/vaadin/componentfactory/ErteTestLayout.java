@@ -77,6 +77,10 @@ public class ErteTestLayout extends AppLayout {
                 "erte-test/tabstops",
                 VaadinIcon.ELLIPSIS_DOTS_H.create()));
 
+        tier1.addItem(new SideNavItem("3.1c Tabstops Server Sync",
+                "erte-test/tabstops-sync",
+                VaadinIcon.EXCHANGE.create()));
+
         tier1.addItem(new SideNavItem("3.1f Placeholders",
                 "erte-test/placeholders",
                 VaadinIcon.INPUT.create()));

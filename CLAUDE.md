@@ -249,7 +249,7 @@ These skills load specialized context for Vaadin development tasks. **Use them p
 
 ## Playwright Tests
 
-381 total tests: 75 prototype + 306 ERTE. Full listing in [TEST_INVENTORY.md](enhanced-rich-text-editor-it/tests/TEST_INVENTORY.md).
+387 total tests: 75 prototype + 312 ERTE. Full listing in [TEST_INVENTORY.md](enhanced-rich-text-editor-it/tests/TEST_INVENTORY.md).
 
 **Running ERTE tests:**
 ```bash
@@ -263,11 +263,11 @@ cd enhanced-rich-text-editor-it && npx playwright test tests/erte/
 bash it-server-stop.sh
 ```
 
-### ERTE Test Suite (306 tests in `enhanced-rich-text-editor-it/tests/erte/`)
+### ERTE Test Suite (312 tests in `enhanced-rich-text-editor-it/tests/erte/`)
 
 | Spec File | Tests | Covers |
 |-----------|-------|--------|
-| `tabstops.spec.ts` | 86 | Tabstops, rulers, soft-break, whitespace indicators |
+| `tabstops.spec.ts` | 92 | Tabstops, rulers, soft-break, whitespace indicators, server sync |
 | `tables.spec.ts` | 82 | Table operations, templates, undo/redo, value round-trip |
 | `features.spec.ts` | 36 | NBSP, addText, align, indent, i18n, sanitizer, focus |
 | `toolbar.spec.ts` | 32 | Slot system, visibility, shortcuts, icons, keyboard nav |
@@ -277,7 +277,7 @@ bash it-server-stop.sh
 | `erte-shell.spec.ts` | 6 | Shell basics, Lit lifecycle, value sync |
 | `extend-options.spec.ts` | 4 | extendQuill/extendEditor hooks, V24 deprecation |
 
-**Test views** (Java, in `enhanced-rich-text-editor-it`, package `com.vaadin.componentfactory`): `ErteTabStopTestView`, `ErtePlaceholderTestView`, `ErteReadonlyTestView`, `ErteToolbarTestView`, `ErteExtendOptionsTestView`, `ErteFeatureTestView`, `ErteShellTestView`, `ErteReplaceIconTestView`, `ErteTablesTestView`, `ErteToolbarDialogTestView`, `ErteToolbarPopoverTestView`, `ErteToolbarSelectPopupTestView`. Each provides a single editor (`id="test-editor"`), delta/HTML output elements, event log, and a ready indicator.
+**Test views** (Java, in `enhanced-rich-text-editor-it`, package `com.vaadin.componentfactory`): `ErteTabStopTestView`, `ErteTabStopSyncTestView`, `ErtePlaceholderTestView`, `ErteReadonlyTestView`, `ErteToolbarTestView`, `ErteExtendOptionsTestView`, `ErteFeatureTestView`, `ErteShellTestView`, `ErteReplaceIconTestView`, `ErteTablesTestView`, `ErteToolbarDialogTestView`, `ErteToolbarPopoverTestView`, `ErteToolbarSelectPopupTestView`. Each provides a single editor (`id="test-editor"`), delta/HTML output elements, event log, and a ready indicator.
 
 **Side navigation:** `ErteTestLayout.java` provides an `AppLayout` with `SideNav` listing all test phases.
 
