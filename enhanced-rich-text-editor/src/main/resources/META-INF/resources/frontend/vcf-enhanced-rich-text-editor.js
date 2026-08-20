@@ -2440,6 +2440,11 @@ vcf-enhanced-rich-text-editor:where([data-application-theme="lumo"]) > vaadin-bu
   /**
    * Observer for tabStops property. Converts external {direction, position}
    * format to internal {pos, align} format and updates ruler markers.
+   *
+   * Fires `tab-stops-changed` at the end so the server side can synchronize the
+   * `tabStops` property. This observer is the single choke point that runs for
+   * every change — ruler interaction (`_addTabStop`, marker click) as well as
+   * programmatic assignment.
    * @protected
    */
   _onTabStopsChanged(tabStops) {
@@ -2472,6 +2477,13 @@ vcf-enhanced-rich-text-editor:where([data-application-theme="lumo"]) > vaadin-bu
     if (this._editor) {
       this._requestTabUpdate();
     }
+
+    // Notify the server about the change. Dispatched on the host element
+    // itself, so Flow's synchronization listener catches it at AT_TARGET —
+    // independent of focus, bubbling and shadow DOM boundaries.
+    this.dispatchEvent(new CustomEvent('tab-stops-changed', {
+      bubbles: true, composed: true, cancelable: false
+    }));
   }
 
   /**

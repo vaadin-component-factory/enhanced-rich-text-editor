@@ -18,6 +18,7 @@ import {
 } from './helpers';
 
 const TABSTOPS_URL = `${ERTE_TEST_BASE}/tabstops`;
+const TABSTOPS_SYNC_URL = `${ERTE_TEST_BASE}/tabstops-sync`;
 
 test.describe('ERTE Tabstops', () => {
   test.beforeEach(async ({ page }) => {
@@ -667,6 +668,120 @@ test.describe('ERTE Tabstops', () => {
 
       // Width should be different (right alignment accounts for text)
       expect(widthAfter).not.toBe(widthBefore);
+    });
+  });
+
+  // ============================================
+  // SERVER SYNCHRONIZATION Tests
+  // ============================================
+
+  test.describe('Server Synchronization', () => {
+    // Uses a dedicated view that also exposes the server-side getTabStops()
+    // result, so ruler changes can be verified end to end.
+    test.beforeEach(async ({ page }) => {
+      await page.goto(TABSTOPS_SYNC_URL);
+      await waitForEditor(page);
+    });
+
+    /** Collect `tab-stops-changed` events on the host element. */
+    async function recordTabStopsChangedEvents(page: any) {
+      await page.evaluate(() => {
+        const el = document.getElementById('test-editor') as any;
+        (window as any).__tabStopsEvents = [];
+        el.addEventListener('tab-stops-changed', () => {
+          (window as any).__tabStopsEvents.push(el.tabStops.length);
+        });
+      });
+    }
+
+    async function getTabStopsChangedEvents(page: any): Promise<number[]> {
+      return page.evaluate(() => (window as any).__tabStopsEvents ?? []);
+    }
+
+    /** Output element holding the server-side getTabStops() result. */
+    function serverTabStops(page: any) {
+      return page.locator('#server-tabstops-output');
+    }
+
+    /** Trigger the server-side getTabStops() readout. */
+    async function readServerTabStops(page: any) {
+      await page.locator('#read-server-tabstops').click();
+    }
+
+    test('tab-stops-changed fires when a tabstop is added via the ruler', async ({ page }) => {
+      await recordTabStopsChangedEvents(page);
+
+      const rulerRect = await getRuler(page).boundingBox();
+      await page.mouse.click(rulerRect!.x + 200, rulerRect!.y + 7);
+
+      await expect(getRulerMarkers(page)).toHaveCount(4, { timeout: 5000 });
+      expect(await getTabStopsChangedEvents(page)).toEqual([4]);
+    });
+
+    test('tab-stops-changed fires on direction change and removal', async ({ page }) => {
+      await recordTabStopsChangedEvents(page);
+
+      const firstMarker = getRulerMarkers(page).first();
+      // left -> right -> middle -> removed
+      await firstMarker.click();
+      await firstMarker.click();
+      await firstMarker.click();
+
+      await expect(getRulerMarkers(page)).toHaveCount(2, { timeout: 5000 });
+      expect(await getTabStopsChangedEvents(page)).toEqual([3, 3, 2]);
+    });
+
+    test('Server sees the initial tabstops', async ({ page }) => {
+      await readServerTabStops(page);
+
+      await expect(serverTabStops(page)).toHaveText(
+        'LEFT@150.0, RIGHT@350.0, MIDDLE@550.0'
+      );
+    });
+
+    test('Server sees a tabstop added via the ruler', async ({ page }) => {
+      const rulerRect = await getRuler(page).boundingBox();
+      await page.mouse.click(rulerRect!.x + 200, rulerRect!.y + 7);
+      await expect(getRulerMarkers(page)).toHaveCount(4, { timeout: 5000 });
+
+      await readServerTabStops(page);
+
+      // The new tabstop's position depends on where the ruler was clicked, so
+      // only the count and the three known tabstops are asserted.
+      await expect(serverTabStops(page)).toContainText('LEFT@150.0');
+      await expect(serverTabStops(page)).toContainText('RIGHT@350.0');
+      await expect(serverTabStops(page)).toContainText('MIDDLE@550.0');
+      const text = (await serverTabStops(page).textContent())!;
+      expect(text.split(', ')).toHaveLength(4);
+    });
+
+    test('Server sees a direction change made in the ruler', async ({ page }) => {
+      const firstMarker = getRulerMarkers(page).first();
+      await firstMarker.click();
+      await expect
+        .poll(() => getRulerMarkerDirection(firstMarker))
+        .toBe('right');
+
+      await readServerTabStops(page);
+
+      await expect(serverTabStops(page)).toHaveText(
+        'RIGHT@150.0, RIGHT@350.0, MIDDLE@550.0'
+      );
+    });
+
+    test('Server sees a tabstop removed in the ruler', async ({ page }) => {
+      const firstMarker = getRulerMarkers(page).first();
+      // left -> right -> middle -> removed
+      await firstMarker.click();
+      await firstMarker.click();
+      await firstMarker.click();
+      await expect(getRulerMarkers(page)).toHaveCount(2, { timeout: 5000 });
+
+      await readServerTabStops(page);
+
+      await expect(serverTabStops(page)).toHaveText(
+        'RIGHT@350.0, MIDDLE@550.0'
+      );
     });
   });
 

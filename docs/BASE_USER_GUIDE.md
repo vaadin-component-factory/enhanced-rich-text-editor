@@ -482,6 +482,10 @@ editor.setTabStops(List.of(
 List<TabStop> current = editor.getTabStops();
 ```
 
+`getTabStops()` also reflects changes the user makes in the ruler: the component
+fires a `tab-stops-changed` event on every tabstop change and the `tabStops`
+property is bound to it via `@Synchronize`.
+
 **How alignment works:** The direction controls how text *after* the tab aligns relative to the tabstop position — like in a word processor:
 
 - **`LEFT`** — text starts at the tabstop and flows to the right (most common)
